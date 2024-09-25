@@ -15,7 +15,7 @@ const Page = async () => {
   return (
     <div>
       <h1 className="text-3xl">This is the database product Categories</h1>
-      <ol className="ml-8">
+      <ul className="ml-8">
         {safeCategories.length > 0 ? (
           safeCategories.map((category, index) => (
             <li key={index}>{category}</li>
@@ -23,7 +23,7 @@ const Page = async () => {
         ) : (
           <li>No categories available</li>
         )}
-      </ol>
+      </ul>
     </div>
   );
 };
