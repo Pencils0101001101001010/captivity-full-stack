@@ -20,7 +20,12 @@ const PreCurvedPeaksPage = async () => {
           <ul className="ml-8">
             {preCurvedPeaksUnderLeisure.map((product, index) => (
               <li key={index} className="my-2">
-                <Link href={`/products/${product.id}`}>{product.name}</Link>
+                <Link
+                  className="btn"
+                  href={`${process.env.BASE_URL}/pre-curved-peaks/${product.id}`}
+                >
+                  {product.name}
+                </Link>
               </li>
             ))}
           </ul>

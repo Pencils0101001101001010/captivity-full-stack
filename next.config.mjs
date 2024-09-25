@@ -5,6 +5,14 @@ const nextConfig = {
       dynamic: 30,
     },
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "captivity.co.za",
+      },
+    ],
+  },
   serverExternalPackages: ["@node-rs/argon2"],
 };
 
