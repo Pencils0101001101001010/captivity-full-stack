@@ -2,11 +2,13 @@
   "name": "captivity-full-stack",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed": "node --experimental-json-modules scripts/seed.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -69,6 +71,7 @@
     "prettier": "^3.3.2",
     "prettier-plugin-tailwindcss": "^0.6.5",
     "tailwindcss": "^3.4.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

@@ -31,6 +31,7 @@ model User {
   bio          String?
   role         UserRole  @default(USER)
   sessions     Session[]
+  Product      Product[]
 
   createdAt DateTime @default(now())
 
@@ -44,4 +45,39 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sessions")
+}
+
+// prisma/schema.prisma
+
+model Product {
+  id                Int     @id @default(autoincrement())
+  userId            String
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              String
+  sku               String
+  name              String
+  published         Boolean
+  isFeatured        Boolean
+  visibility        String
+  shortDescription  String
+  taxStatus         String
+  inStock           Boolean
+  backordersAllowed Boolean
+  soldIndividually  Boolean
+  allowReviews      Boolean
+  categories        String
+  tags              String
+  imageUrl          String
+  upsells           String?
+  position          Int
+  attribute1Name    String?
+  attribute1Values  String?
+  attribute2Name    String?
+  attribute2Values  String?
+  regularPrice      Float? // For variation types
+  stock             Int? // For variation types
+
+  createdAt DateTime @default(now())
+
+  @@map("products")
 }
