@@ -33,7 +33,7 @@ const GroupedCategoriesPage = async () => {
         )}
       </ul>
 
-      <h2 className="text-2xl mt-4">Other Categories</h2>
+      <h2 className="text-2xl mt-4">Other Category Collections</h2>
       <ul className="ml-8">
         {other.length > 0 ? (
           other.map((category, index) => <li key={index}>{category}</li>)
