@@ -1,7 +1,6 @@
 "use server";
 
 import prisma from "@/lib/prisma"; // Prisma client instance
-import { validateCategories } from "@/lib/validation"; // Category validation logic
 
 export async function fetchCategories() {
   try {
@@ -16,21 +15,12 @@ export async function fetchCategories() {
       const productCategories = product.categories
         .split(",")
         .map((category) => category.trim());
-
-      // Only add "Pre-Curved Peaks" to the categories set if it exists in the category string
-      productCategories.forEach((category) => {
-        if (category.includes("Pre-Curved Peaks")) {
-          categoriesSet.add("Pre-Curved Peaks");
-        }
-      });
+      productCategories.forEach((category) => categoriesSet.add(category));
     });
 
     const categories = Array.from(categoriesSet); // Convert Set to Array
 
-    // Validate the categories array
-    const validatedCategories = validateCategories(categories);
-
-    return { categories: validatedCategories };
+    return { categories };
   } catch (error) {
     console.error("Error fetching categories:", error);
     return { error: "Failed to fetch categories. Please try again." };
