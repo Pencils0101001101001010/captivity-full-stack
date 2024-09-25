@@ -1,6 +1,8 @@
 import React from "react";
 import { fetchCategories } from "./actions";
 
+// To view this data..... Click the help link in the navbar guys
+
 const Page = async () => {
   // Fetch the categories on the server
   const { categories, error } = await fetchCategories();
