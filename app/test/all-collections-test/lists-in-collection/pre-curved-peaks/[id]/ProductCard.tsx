@@ -34,8 +34,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <Image
           src={imageUrl}
           alt={sku}
-          width={400}
-          height={300}
+          width={400} // Define a specific width
+          height={300} // Define a specific height
+          style={{ height: "auto", width: "100%" }} // Ensure aspect ratio is maintained
           className="rounded"
         />
       </div>
