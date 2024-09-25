@@ -45,15 +45,16 @@ const GroupedCategoriesPage = async () => {
         </ul>
       </div>
       <div className="flex flex-wrap gap-4">
+        <Link className="btn" href={`${process.env.BASE_URL}/pre-curved-peaks`}>
+          Pre-curved Peaks
+        </Link>
         <Link
           className="btn"
           href={`${process.env.BASE_URL}/leisure-collection`}
         >
           Leasure Collection
         </Link>
-        <Link className="btn" href={`${process.env.BASE_URL}/pre-curved-peaks`}>
-          Pre-curved Peaks
-        </Link>
+
         <Link className="btn" href={`${process.env.BASE_URL}/sport-collection`}>
           Sport Collection
         </Link>
