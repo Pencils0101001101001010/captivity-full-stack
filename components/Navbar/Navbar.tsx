@@ -55,7 +55,19 @@ const Navbar = () => {
 
           <div className="hidden md:flex items-center space-x-20 ">
             <Link href="/test" className="hover:text-gray-300">
-              <span className="ml-5">Help</span>
+              <span className="ml-5">All Categories</span>
+            </Link>
+            <Link href="/test/headwear-test" className="hover:text-gray-300">
+              <span className="ml-5">Headwear</span>
+            </Link>
+            <Link href="/test/apparel-test" className="hover:text-gray-300">
+              <span className="ml-5">Apparel collection</span>
+            </Link>
+            <Link
+              href="/test/all-collections-test"
+              className="hover:text-gray-300"
+            >
+              <span className="ml-5">All collections</span>
             </Link>
             <div className="md:flex  md:flex-nowrap">
               <input
