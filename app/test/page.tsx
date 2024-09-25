@@ -1,7 +1,7 @@
 import React from "react";
 import { fetchCategories } from "./actions";
 
-// To view this data..... Click the help link in the navbar guys
+// To view this data..... Click the test links => Note: This data must be injected into a component that maps through the lists in the categories. Lmbimp you probably want me to do that neh......
 
 const Page = async () => {
   // Fetch the categories on the server
