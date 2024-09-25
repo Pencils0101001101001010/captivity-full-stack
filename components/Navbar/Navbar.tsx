@@ -54,7 +54,7 @@ const Navbar = () => {
           </Link>
 
           <div className="hidden md:flex items-center space-x-20 ">
-            <Link href="/Help" className="hover:text-gray-300">
+            <Link href="/test" className="hover:text-gray-300">
               <span className="ml-5">Help</span>
             </Link>
             <div className="md:flex  md:flex-nowrap">

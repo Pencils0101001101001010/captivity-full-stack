@@ -72,3 +72,11 @@ export const validateProduct = (data: unknown): Product => {
 export const validatePartialProduct = (data: unknown): Partial<Product> => {
   return ProductSchema.partial().parse(data);
 };
+
+export const CategorySchema = requiredString; // Categories must be non-empty strings
+
+// Function to validate categories array
+export const validateCategories = (categories: unknown): string[] => {
+  const CategoryArraySchema = z.array(CategorySchema);
+  return CategoryArraySchema.parse(categories);
+};
