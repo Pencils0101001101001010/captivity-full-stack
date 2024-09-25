@@ -31,3 +31,44 @@ export const loginSchema = z.object({
 });
 
 export type LoginValues = z.infer<typeof loginSchema>;
+
+///////////////////Product Schema Validation////////////////////////////
+
+export const ProductSchema = z.object({
+  id: z.number().int().positive(),
+  userId: requiredString,
+  type: requiredString,
+  sku: requiredString,
+  name: requiredString,
+  published: z.boolean(),
+  isFeatured: z.boolean(),
+  visibility: requiredString,
+  shortDescription: z.string(),
+  taxStatus: requiredString,
+  inStock: z.boolean(),
+  backordersAllowed: z.boolean(),
+  soldIndividually: z.boolean(),
+  allowReviews: z.boolean(),
+  categories: requiredString,
+  tags: z.string(),
+  imageUrl: z.string().url(),
+  upsells: z.string().nullable(),
+  position: z.number().int().nonnegative(),
+  attribute1Name: z.string().nullable(),
+  attribute1Values: z.string().nullable(),
+  attribute2Name: z.string().nullable(),
+  attribute2Values: z.string().nullable(),
+  regularPrice: z.number().positive().nullable(),
+  stock: z.number().int().nonnegative().nullable(),
+  createdAt: z.date(),
+});
+
+export type Product = z.infer<typeof ProductSchema>;
+
+export const validateProduct = (data: unknown): Product => {
+  return ProductSchema.parse(data);
+};
+
+export const validatePartialProduct = (data: unknown): Partial<Product> => {
+  return ProductSchema.partial().parse(data);
+};
