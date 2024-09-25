@@ -1,4 +1,3 @@
-// ProductCard.tsx
 import React from "react";
 import parse from "react-html-parser";
 import Image from "next/image";
@@ -22,6 +21,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
   allowReviews,
   categories,
 }) => {
+  // Replace "\n" with "<br />" in the description for proper line breaks
+  const formattedDescription = description.replace(/\n/g, "<br />");
+
+  // Split categories by comma and remove extra spaces
+  const formattedCategories = categories.split(",").map((cat) => cat.trim());
+
   return (
     <div className="border p-4 rounded shadow-lg max-w-md mx-auto bg-white">
       {/* Product Image */}
@@ -41,7 +46,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       {/* Description */}
       <div className="mb-4">
         <strong>Description:</strong>
-        <div>{parse(description)}</div>
+        <div>{parse(formattedDescription)}</div>
       </div>
 
       {/* Stock Status */}
@@ -61,7 +66,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* Categories */}
       <div className="mb-4">
-        <strong>Categories:</strong> {categories}
+        <strong>Categories:</strong>
+        <ul>
+          {formattedCategories.map((category, index) => (
+            <li key={index}>{category}</li>
+          ))}
+        </ul>
       </div>
     </div>
   );
