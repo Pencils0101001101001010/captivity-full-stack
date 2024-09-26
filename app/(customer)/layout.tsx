@@ -3,8 +3,6 @@ import { redirect } from "next/navigation";
 import SessionProvider from "./SessionProvider";
 import Navbar from "./_components/Navbar";
 import Sidebar from "./_components/Sidebar";
-// import Navbar from "./_components/Navbar";
-// import Sidebar from "./_components/Sidebar";
 
 export default async function Layout({
   children,
