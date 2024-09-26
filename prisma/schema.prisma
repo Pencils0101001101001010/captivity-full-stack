@@ -65,7 +65,7 @@ model Session {
   @@map("sessions")
 }
 
-// prisma/schema.prisma
+// Product model with user relationship => one to many
 
 model Product {
   id                Int     @id @default(autoincrement())
