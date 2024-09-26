@@ -80,7 +80,16 @@ export const signUpSchema = z.object({
   ),
   password: requiredString.min(8, "Must be at least 8 characters"),
   role: z
-    .enum(["USER", "ADMIN", "MONITOR", "DRIVER", "SKIPPER"])
+    .enum([
+      "USER",
+      "CUSTOMER",
+      "SUBSCRIBER",
+      "PROMO",
+      "DISTRIBUTOR",
+      "SHOPMANAGER",
+      "EDITOR",
+      "ADMIN",
+    ])
     .default("USER"),
 });
 
