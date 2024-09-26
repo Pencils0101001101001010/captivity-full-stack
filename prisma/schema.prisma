@@ -21,18 +21,36 @@ enum UserRole {
 }
 
 model User {
-  id           String     @id
-  username     String     @unique
-  displayName  String
-  email        String?    @unique
-  passwordHash String?
-  googleId     String?    @unique
-  avatarUrl    String?
-  bio          String?
-  role         UserRole   @default(USER)
-  sessions     Session[]
-  Product      Product[]
-  Register     Register[]
+  id               String    @id
+  companyName      String
+  vatNumber        String?
+  ckNumber         String?
+  username         String    @unique
+  displayName      String
+  email            String?   @unique
+  passwordHash     String?
+  firstName        String
+  lastName         String
+  phoneNumber      String
+  natureOfBusiness String
+  currentSupplier  String?
+  website          String?
+  resellingTo      String?
+  position         String?
+  streetAddress    String
+  addressLine2     String?
+  suburb           String?
+  townCity         String
+  postcode         String
+  country          String
+  salesRep         String?
+  agreeTerms       Boolean   @default(false)
+  googleId         String?   @unique
+  avatarUrl        String?
+  bio              String?
+  role             UserRole  @default(USER)
+  sessions         Session[]
+  Product          Product[]
 
   createdAt DateTime @default(now())
 
@@ -81,38 +99,4 @@ model Product {
   createdAt DateTime @default(now())
 
   @@map("products")
-}
-
-// This goes in your schema.prisma file
-model Register {
-  id     Int    @id @default(autoincrement())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  companyName      String
-  vatNumber        String?
-  ckNumber         String?
-  username         String   @unique
-  password         String
-  email            String   @unique
-  firstName        String
-  lastName         String
-  phoneNumber      String
-  natureOfBusiness String
-  currentSupplier  String?
-  website          String?
-  resellingTo      String?
-  position         String?
-  streetAddress    String
-  addressLine2     String?
-  suburb           String?
-  townCity         String
-  postcode         String
-  country          String
-  salesRep         String?
-  agreeTerms       Boolean
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  @@map("registers")
 }
