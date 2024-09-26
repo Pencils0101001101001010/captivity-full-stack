@@ -13,7 +13,7 @@ export default async function Layout({
 
   if (!session.user) redirect("/login");
 
-  if (session.user.role !== "CUSTOMER") redirect("login");
+  if (session.user.role !== "CUSTOMER") redirect("/login");
 
   return (
     <SessionProvider value={session}>
