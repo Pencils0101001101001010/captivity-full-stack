@@ -82,7 +82,7 @@ export async function signUp(
           companyName: validatedData.companyName,
           ckNumber: validatedData.ckNumber,
           agreeTerms: validatedData.agreeTerms,
-          role: "CUSTOMER", // Set default role to CUSTOMER for new registrations
+          role: "USER",
         },
       });
     });
@@ -95,7 +95,7 @@ export async function signUp(
       sessionCookie.attributes
     );
 
-    redirect("/"); // Redirect to dashboard after successful registration
+    redirect("/register-pending-message"); // Redirect to dashboard after successful registration
   } catch (error) {
     if (isRedirectError(error)) throw error;
     console.error(error);
