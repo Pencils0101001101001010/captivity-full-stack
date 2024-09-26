@@ -21,12 +21,12 @@ enum UserRole {
 }
 
 model User {
-  id               String  @id
-  username         String  @unique
+  id               String    @id
+  username         String    @unique
   firstName        String
   lastName         String
   displayName      String
-  email            String  @unique
+  email            String    @unique
   passwordHash     String
   vatNumber        String?
   phoneNumber      Int
@@ -42,18 +42,16 @@ model User {
   otherSupplier    String?
   resellingTo      String?
   salesRep         String
-
-  website     String?
-  companyName String
-
-  ckNumber   String?
-  avatarUrl  String?
-  bio        String?
-  agreeTerms Boolean   @default(false)
-  role       UserRole  @default(USER)
-  sessions   Session[]
-  Product    Product[]
-  createdAt  DateTime  @default(now())
+  website          String?
+  companyName      String
+  ckNumber         String?
+  avatarUrl        String?
+  bio              String?
+  agreeTerms       Boolean   @default(false)
+  role             UserRole  @default(USER)
+  sessions         Session[]
+  Product          Product[]
+  createdAt        DateTime  @default(now())
 
   @@map("users")
 }
