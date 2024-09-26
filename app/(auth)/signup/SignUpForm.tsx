@@ -23,7 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { registrationSchema, RegistrationFormData } from "@/lib/validation";
 import { signUp } from "./actions";
-import { useRouter } from "next/router";
+import { Scale } from "lucide-react";
 
 const RegistrationForm = () => {
   const form = useForm<RegistrationFormData>({
@@ -37,7 +37,7 @@ const RegistrationForm = () => {
       email: "",
       firstName: "",
       lastName: "",
-      phoneNumber: "",
+      phoneNumber: 0,
       natureOfBusiness: "distributors",
       currentSupplier: "none",
       otherSupplier: "",
@@ -191,9 +191,16 @@ const RegistrationForm = () => {
             name="phoneNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Phone Number</FormLabel>
+                <FormLabel className="flex items-center text-gray-700">
+                  Phone Number
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter phone number" {...field} />
+                  <Input
+                    type="number"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -466,7 +473,9 @@ const RegistrationForm = () => {
             )}
           />
 
-          <Button type="submit">Register</Button>
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? "Registering..." : "Register"}
+          </Button>
         </form>
       </Form>
     </div>

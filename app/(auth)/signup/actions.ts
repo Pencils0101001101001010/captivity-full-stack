@@ -65,7 +65,7 @@ export async function signUp(
           email: validatedData.email,
           passwordHash,
           vatNumber: validatedData.vatNumber,
-          phoneNumber: parseInt(validatedData.phoneNumber),
+          phoneNumber: validatedData.phoneNumber,
           streetAddress: validatedData.streetAddress,
           addressLine2: validatedData.addressLine2,
           suburb: validatedData.suburb,
@@ -78,7 +78,7 @@ export async function signUp(
           otherSupplier: validatedData.otherSupplier,
           resellingTo: validatedData.resellingLocation,
           salesRep: validatedData.salesRep,
-          website: validatedData.website,
+          website: validatedData.website || null,
           companyName: validatedData.companyName,
           ckNumber: validatedData.ckNumber,
           agreeTerms: validatedData.agreeTerms,
@@ -95,7 +95,7 @@ export async function signUp(
       sessionCookie.attributes
     );
 
-    return { success: true };
+    redirect("/"); // Redirect to dashboard after successful registration
   } catch (error) {
     if (isRedirectError(error)) throw error;
     console.error(error);
