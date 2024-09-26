@@ -1,20 +1,18 @@
 import { validateRequest } from "@/auth";
 import { redirect } from "next/navigation";
 import SessionProvider from "./SessionProvider";
-// import Navbar from "./_components/Navbar";
-// import Sidebar from "./_components/Sidebar";
 
 export default async function Layout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await validateRequest();
+  const user = await validateRequest();
 
-  if (!session.user) redirect("/login");
+  if (!user.session) redirect("/login");
 
   return (
-    <SessionProvider value={session}>
+    <SessionProvider value={user}>
       <div className="flex min-h-screen flex-col">
         {/* <Navbar /> */}
         <div className="flex w-full grow">

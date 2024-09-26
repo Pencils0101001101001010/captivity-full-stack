@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 
 // Define the routes for each role
 const roleRoutes = {
-  USER: "/dashboard",
-  ADMIN: "/admin",
+  USER: "/",
+  ADMIN: "/dashboard",
 };
 
 type UserRole = keyof typeof roleRoutes;

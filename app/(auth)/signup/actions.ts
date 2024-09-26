@@ -87,14 +87,6 @@ export async function signUp(
       });
     });
 
-    const session = await lucia.createSession(userId, {});
-    const sessionCookie = lucia.createSessionCookie(session.id);
-    cookies().set(
-      sessionCookie.name,
-      sessionCookie.value,
-      sessionCookie.attributes
-    );
-
     redirect("/register-pending-message"); // Redirect to dashboard after successful registration
   } catch (error) {
     if (isRedirectError(error)) throw error;
