@@ -9,9 +9,33 @@ import { isRedirectError } from "next/dist/client/components/redirect";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+// Import or define your UserRole enum
+enum UserRole {
+  USER = "USER",
+  CUSTOMER = "CUSTOMER",
+  SUBSCRIBER = "SUBSCRIBER",
+  PROMO = "PROMO",
+  DISTRIBUTOR = "DISTRIBUTOR",
+  SHOPMANAGER = "SHOPMANAGER",
+  EDITOR = "EDITOR",
+  ADMIN = "ADMIN",
+}
+
+// Define the routes for each role (same as in your layout)
+const roleRoutes: Record<UserRole, string> = {
+  [UserRole.USER]: "/dashboard",
+  [UserRole.CUSTOMER]: "/customer",
+  [UserRole.SUBSCRIBER]: "/subscriber",
+  [UserRole.PROMO]: "/promo",
+  [UserRole.DISTRIBUTOR]: "/distributor",
+  [UserRole.SHOPMANAGER]: "/shop",
+  [UserRole.EDITOR]: "/editor",
+  [UserRole.ADMIN]: "/admin",
+};
+
 export async function login(
   credentials: LoginValues
-): Promise<{ error: string }> {
+): Promise<{ error: string } | void> {
   try {
     const { username, password } = loginSchema.parse(credentials);
 
@@ -51,7 +75,11 @@ export async function login(
       sessionCookie.attributes
     );
 
-    return redirect("/");
+    // Determine the redirect path based on the user's role
+    const userRole = existingUser.role as UserRole;
+    const redirectPath = roleRoutes[userRole] || "/";
+
+    return redirect(redirectPath);
   } catch (error) {
     if (isRedirectError(error)) throw error;
     console.error(error);

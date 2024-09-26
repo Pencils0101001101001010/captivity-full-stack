@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// ... (keep existing code)
+////////////// Register Validation   /////////////////
 const requiredInt = z.number().int().min(1, "Must be greater than 0");
 
 export const registrationSchema = z
@@ -67,3 +67,28 @@ export const registrationSchema = z
   );
 
 export type RegistrationFormData = z.infer<typeof registrationSchema>;
+
+////////////// Login Validation   /////////////////
+
+const requiredString = z.string().trim().min(1, "Required");
+
+export const signUpSchema = z.object({
+  email: requiredString.email("Invalid email address"),
+  username: requiredString.regex(
+    /^[a-zA-Z0-9_-]+$/,
+    "Only letters, numbers, - and _ allowed"
+  ),
+  password: requiredString.min(8, "Must be at least 8 characters"),
+  role: z
+    .enum(["USER", "ADMIN", "MONITOR", "DRIVER", "SKIPPER"])
+    .default("USER"),
+});
+
+export type SignUpValues = z.infer<typeof signUpSchema>;
+
+export const loginSchema = z.object({
+  username: requiredString,
+  password: requiredString,
+});
+
+export type LoginValues = z.infer<typeof loginSchema>;
