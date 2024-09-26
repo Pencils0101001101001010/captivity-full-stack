@@ -1,92 +1,476 @@
 "use client";
 
+import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
-  FormControl,
   FormField,
   FormItem,
   FormLabel,
+  FormControl,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { signUpSchema, SignUpValues } from "@/lib/validation";
-
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { registrationSchema, RegistrationFormData } from "@/lib/validation";
 import { signUp } from "./actions";
-import { PasswordInput } from "@/components/PasswordInput";
-import LoadingButton from "@/components/LoadingButton";
+import { useRouter } from "next/router";
 
-export default function SignUpForm() {
-  const [error, setError] = useState<string>();
-
-  const [isPending, startTransition] = useTransition();
-
-  const form = useForm<SignUpValues>({
-    resolver: zodResolver(signUpSchema),
+const RegistrationForm = () => {
+  const form = useForm<RegistrationFormData>({
+    resolver: zodResolver(registrationSchema),
     defaultValues: {
-      email: "",
+      companyName: "",
+      vatNumber: "",
+      ckNumber: "",
       username: "",
       password: "",
+      email: "",
+      firstName: "",
+      lastName: "",
+      phoneNumber: "",
+      natureOfBusiness: "distributors",
+      currentSupplier: "none",
+      otherSupplier: "",
+      website: "",
+      resellingLocation: "",
+      position: "",
+      streetAddress: "",
+      addressLine2: "",
+      suburb: "",
+      townCity: "",
+      postcode: "",
+      country: "southAfrica",
+      salesRep: "noOne",
+      agreeTerms: false,
     },
   });
 
-  async function onSubmit(values: SignUpValues) {
-    setError(undefined);
-    startTransition(async () => {
-      const { error } = await signUp(values);
-      if (error) setError(error);
-    });
-  }
+  const onSubmit = async (data: RegistrationFormData) => {
+    const result = await signUp(data);
+    if (result.error) {
+      // Handle the error, e.g., display it to the user
+      console.error(result.error);
+    }
+  };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-        {error && <p className="text-center text-destructive">{error}</p>}
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder="Username" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+    <div className="max-w-2xl mx-auto p-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <FormField
+            control={form.control}
+            name="companyName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Company Name / Account Number</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter company name or account number"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="vatNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>VAT Number</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter VAT number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="ckNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>CK Number</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter CK number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Username</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter a unique username" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="Enter password"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>User Email</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="Enter email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter first name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter last name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="phoneNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone Number</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter phone number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="natureOfBusiness"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nature of Business</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select nature of business" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="distributors">Distributors</SelectItem>
+                    <SelectItem value="retailer">Retailer</SelectItem>
+                    <SelectItem value="manufacturer">Manufacturer</SelectItem>
+                    <SelectItem value="service">Service Provider</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="currentSupplier"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Who are you currently buying from?</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select current supplier" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="supplier1">Supplier 1</SelectItem>
+                    <SelectItem value="supplier2">Supplier 2</SelectItem>
+                    <SelectItem value="supplier3">Supplier 3</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {form.watch("currentSupplier") === "other" && (
+            <FormField
+              control={form.control}
+              name="otherSupplier"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Other Supplier</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Specify other supplier" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           )}
-        />
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input placeholder="Email" type="email" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <PasswordInput placeholder="Password" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <LoadingButton loading={isPending} type="submit" className="w-full">
-          Create account
-        </LoadingButton>
-      </form>
-    </Form>
+
+          <FormField
+            control={form.control}
+            name="website"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Website or Social Media Page</FormLabel>
+                <FormControl>
+                  <Input placeholder="www.yourcompany.co.za" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="resellingLocation"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Where would you be reselling our products?
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter reselling location" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="position"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Position held in company</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter your position" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="streetAddress"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Street Address</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="House number and street name"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="addressLine2"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Address line 2 (Optional)</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Apartment, suite, unit, etc."
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="suburb"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Suburb</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter suburb" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="townCity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Town / City</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter town or city" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="postcode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Postcode / ZIP</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter postcode or ZIP" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Country</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="southAfrica">South Africa</SelectItem>
+                    <SelectItem value="namibia">Namibia</SelectItem>
+                    <SelectItem value="botswana">Botswana</SelectItem>
+                    <SelectItem value="zimbabwe">Zimbabwe</SelectItem>
+                    <SelectItem value="mozambique">Mozambique</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="salesRep"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>The sales rep. that helped you?</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select sales rep" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="noOne">No one yet</SelectItem>
+                    <SelectItem value="rep1">Sales Rep 1</SelectItem>
+                    <SelectItem value="rep2">Sales Rep 2</SelectItem>
+                    <SelectItem value="rep3">Sales Rep 3</SelectItem>
+                    <SelectItem value="rep4">Sales Rep 4</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="agreeTerms"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>I agree to the Terms & Conditions</FormLabel>
+                </div>
+              </FormItem>
+            )}
+          />
+
+          <Button type="submit">Register</Button>
+        </form>
+      </Form>
+    </div>
   );
-}
+};
+
+export default RegistrationForm;

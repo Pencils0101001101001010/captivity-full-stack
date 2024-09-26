@@ -2,7 +2,7 @@
 
 import { lucia } from "@/auth";
 import prisma from "@/lib/prisma";
-import { signUpSchema, SignUpValues } from "@/lib/validation";
+import { registrationSchema, RegistrationFormData } from "@/lib/validation";
 import { hash } from "@node-rs/argon2";
 import { generateIdFromEntropySize } from "lucia";
 import { isRedirectError } from "next/dist/client/components/redirect";
@@ -10,29 +10,24 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export async function signUp(
-  credentials: SignUpValues
-): Promise<{ error: string }> {
+  formData: RegistrationFormData
+): Promise<{ error?: string; success?: boolean }> {
   try {
-    const {
-      username,
-      email,
-      password,
-      role = "USER",
-    } = signUpSchema.parse(credentials);
+    const validatedData = registrationSchema.parse(formData);
 
-    const passwordHash = await hash(password, {
+    const userId = generateIdFromEntropySize(10);
+
+    const passwordHash = await hash(validatedData.password, {
       memoryCost: 19456,
       timeCost: 2,
       outputLen: 32,
       parallelism: 1,
     });
 
-    const userId = generateIdFromEntropySize(10);
-
     const existingUsername = await prisma.user.findFirst({
       where: {
         username: {
-          equals: username,
+          equals: validatedData.username,
           mode: "insensitive",
         },
       },
@@ -47,7 +42,7 @@ export async function signUp(
     const existingEmail = await prisma.user.findFirst({
       where: {
         email: {
-          equals: email,
+          equals: validatedData.email,
           mode: "insensitive",
         },
       },
@@ -63,11 +58,31 @@ export async function signUp(
       await tx.user.create({
         data: {
           id: userId,
-          username,
-          displayName: username,
-          email,
+          username: validatedData.username,
+          firstName: validatedData.firstName,
+          lastName: validatedData.lastName,
+          displayName: `${validatedData.firstName} ${validatedData.lastName}`,
+          email: validatedData.email,
           passwordHash,
-          role,
+          vatNumber: validatedData.vatNumber,
+          phoneNumber: parseInt(validatedData.phoneNumber),
+          streetAddress: validatedData.streetAddress,
+          addressLine2: validatedData.addressLine2,
+          suburb: validatedData.suburb,
+          townCity: validatedData.townCity,
+          postcode: validatedData.postcode,
+          country: validatedData.country,
+          position: validatedData.position,
+          natureOfBusiness: validatedData.natureOfBusiness,
+          currentSupplier: validatedData.currentSupplier,
+          otherSupplier: validatedData.otherSupplier,
+          resellingTo: validatedData.resellingLocation,
+          salesRep: validatedData.salesRep,
+          website: validatedData.website,
+          companyName: validatedData.companyName,
+          ckNumber: validatedData.ckNumber,
+          agreeTerms: validatedData.agreeTerms,
+          role: "CUSTOMER", // Set default role to CUSTOMER for new registrations
         },
       });
     });
@@ -80,7 +95,7 @@ export async function signUp(
       sessionCookie.attributes
     );
 
-    return redirect("/");
+    return { success: true };
   } catch (error) {
     if (isRedirectError(error)) throw error;
     console.error(error);
