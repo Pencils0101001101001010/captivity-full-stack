@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 // Define the routes for each role
 const roleRoutes = {
   USER: "/",
+  CUSTOMER: "/customer",
   ADMIN: "/dashboard",
 };
 
