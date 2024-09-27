@@ -36,18 +36,20 @@ const Sidebar = ({ className }: { className?: string }) => {
 
   const navItems: Section[] = [
     {
-      section: "DASHBOARD",
-      items: [{ href: "/", icon: Home, label: "Home (Dashboard)" }],
-    },
-    {
-      section: "PERMITS",
+      section: "USERS",
       items: [
-        { href: "/permits/apply", icon: FileText, label: "Apply" },
-        { href: "/permits/list", icon: FileText, label: "List Applications" },
+        { href: "/admin/update/user-role", icon: Home, label: "UPDATE ROLES" },
       ],
     },
     {
-      section: "USERS",
+      section: "PRODUCTS",
+      items: [
+        { href: "/permits/apply", icon: FileText, label: "CREATE" },
+        { href: "/permits/list", icon: FileText, label: "UPDATE" },
+      ],
+    },
+    {
+      section: "CUSTOMERS",
       items: [
         { href: "/users/list", icon: Users, label: "List Users" },
         { href: "/users/profile", icon: User, label: "View Profile" },
@@ -55,7 +57,7 @@ const Sidebar = ({ className }: { className?: string }) => {
       ],
     },
     {
-      section: "SUBMISSIONS",
+      section: "PROMOS",
       items: [
         { href: "/skipper", icon: Anchor, label: "Skipper" },
         { href: "/admin", icon: Eye, label: "Admin" },
