@@ -1,8 +1,8 @@
 import { validateRequest } from "@/auth";
 import { redirect } from "next/navigation";
 import SessionProvider from "./SessionProvider";
-// import Navbar from "./_components/Navbar";
-// import Sidebar from "./_components/Sidebar";
+import Navbar from "./_components/Navbar";
+import Sidebar from "./_components/Sidebar";
 
 export default async function Layout({
   children,
@@ -18,10 +18,10 @@ export default async function Layout({
   return (
     <SessionProvider value={session}>
       <div className="flex min-h-screen flex-col">
-        {/* <Navbar /> */}
+        <Navbar />
         <div className="flex w-full grow">
           {/* Sidebar will be hidden on small screens and a toggle button can be added */}
-          {/* <Sidebar className="hidden h-screen w-64 lg:block" /> */}
+          <Sidebar className="hidden h-screen w-64 lg:block" />
           <main className="flex-grow p-5">{children}</main>
         </div>
       </div>
