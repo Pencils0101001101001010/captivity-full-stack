@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Footer/Footer";
 import Categories from "@/components/Categories/Categories";
 import CopyRight from "@/components/CopyRight/CopyRight";
+import { ThemeProvider } from "next-themes";
 
 export const metadata = {
   title: "Captivity-Headwear And Apparel",
@@ -19,11 +20,18 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg">
         <div>
-          <Navbar />
-          <Categories />
-          {children}
-          <Footer />
-          <CopyRight />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Navbar />
+            <Categories />
+            {children}
+            <Footer />
+            <CopyRight />
+          </ThemeProvider>
         </div>
       </body>
     </html>
