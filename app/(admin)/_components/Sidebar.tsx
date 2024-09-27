@@ -115,7 +115,7 @@ const Sidebar = ({ className }: { className?: string }) => {
             strokeLinejoin="round"
           />
         </svg>
-        <span className="text-xl font-semibold text-blue-500">Customer</span>
+        <span className="text-xl font-semibold text-blue-500">Admin</span>
       </div>
 
       {navItems.map((section) => (
