@@ -13,7 +13,7 @@ export const registrationSchema = z
     email: z.string().email("Invalid email address"),
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
-    phoneNumber: requiredInt.max(10),
+    phoneNumber: requiredInt,
     natureOfBusiness: z.enum([
       "distributors",
       "retailer",
