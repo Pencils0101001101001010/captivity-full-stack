@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 ////////////// Register Validation   /////////////////
-const requiredInt = z.number().int().min(1, "Must be greater than 0");
+const requiredInt = z.number().int().min(10, "Must be greater than 0");
 
 export const registrationSchema = z
   .object({
