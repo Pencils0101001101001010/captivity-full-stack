@@ -11,7 +11,7 @@ import { redirect } from "next/navigation";
 
 export async function signUp(
   formData: RegistrationFormData
-): Promise<{ error?: string; success?: boolean }> {
+): Promise<{ error?: string } | never> {
   try {
     const validatedData = registrationSchema.parse(formData);
 
@@ -87,7 +87,7 @@ export async function signUp(
       });
     });
 
-    redirect("/register-pending-message"); // Redirect to dashboard after successful registration
+    redirect("/register-pending-message");
   } catch (error) {
     if (isRedirectError(error)) throw error;
     console.error(error);

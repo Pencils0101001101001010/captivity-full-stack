@@ -24,6 +24,12 @@ import { Button } from "@/components/ui/button";
 import { registrationSchema, RegistrationFormData } from "@/lib/validation";
 import { signUp } from "./actions";
 import { Scale } from "lucide-react";
+import { isRedirectError } from "next/dist/client/components/redirect";
+
+type SignUpResult = {
+  error?: string;
+  // Add other properties if needed
+};
 
 const RegistrationForm = () => {
   const form = useForm<RegistrationFormData>({
@@ -56,10 +62,21 @@ const RegistrationForm = () => {
   });
 
   const onSubmit = async (data: RegistrationFormData) => {
-    const result = await signUp(data);
-    if (result.error) {
-      // Handle the error, e.g., display it to the user
-      console.error(result.error);
+    try {
+      const result = await signUp(data);
+      if (result && result.error) {
+        // Handle the error, e.g., display it to the user
+        console.error(result.error);
+      }
+      // If we get here, it means the redirect didn't happen (which shouldn't occur in normal operation)
+    } catch (error) {
+      if (isRedirectError(error)) {
+        // The redirect happened, which is actually our success case
+        // We don't need to do anything here as the redirect will be handled automatically
+      } else {
+        // Handle any other unexpected errors
+        console.error("An unexpected error occurred:", error);
+      }
     }
   };
 
