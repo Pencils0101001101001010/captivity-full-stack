@@ -9,39 +9,6 @@ type UpdateUserRoleResult =
   | { success: true; message: string }
   | { success: false; error: string };
 
-export async function updateUserRole(
-  userId: string,
-  newRole: UserRole
-): Promise<UpdateUserRoleResult> {
-  try {
-    // Validate user session
-    const { user } = await validateRequest();
-    if (!user || user.role !== "ADMIN") {
-      throw new Error("Unauthorized. Only admins can update user roles.");
-    }
-
-    // Update the user's role in the database
-    await prisma.user.update({
-      where: { id: userId },
-      data: { role: newRole },
-    });
-
-    // Revalidate the admin users page
-    revalidatePath("/admin/users");
-
-    return { success: true, message: "User role updated successfully" };
-  } catch (error) {
-    console.error("Error updating user role:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
-  }
-}
-
-//////////////////////////////////////////////////////
-
 type User = {
   id: string;
   username: string;
@@ -92,6 +59,39 @@ export async function fetchAllUsers(): Promise<FetchAllUsersResult> {
     return { success: true, data: users };
   } catch (error) {
     console.error("Error fetching users:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
+  }
+}
+
+//////////////////////////////////////////////////////
+
+export async function updateUserRole(
+  userId: string,
+  newRole: UserRole
+): Promise<UpdateUserRoleResult> {
+  try {
+    // Validate user session
+    const { user } = await validateRequest();
+    if (!user || user.role !== "ADMIN") {
+      throw new Error("Unauthorized. Only admins can update user roles.");
+    }
+
+    // Update the user's role in the database
+    await prisma.user.update({
+      where: { id: userId },
+      data: { role: newRole },
+    });
+
+    // Revalidate the admin users page
+    revalidatePath("/admin/users");
+
+    return { success: true, message: "User role updated successfully" };
+  } catch (error) {
+    console.error("Error updating user role:", error);
     return {
       success: false,
       error:
