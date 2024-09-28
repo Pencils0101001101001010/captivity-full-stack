@@ -87,7 +87,7 @@ export async function updateUserRole(
     });
 
     // Revalidate the admin users page
-    revalidatePath("/admin/users");
+    revalidatePath("/admin/update/user-role");
 
     return { success: true, message: "User role updated successfully" };
   } catch (error) {
