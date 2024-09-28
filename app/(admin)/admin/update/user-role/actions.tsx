@@ -54,7 +54,7 @@ export async function fetchAllUsers(): Promise<FetchAllUsersResult> {
     });
 
     // Revalidate the admin users page
-    revalidatePath("/admin/users");
+    revalidatePath("/admin/update/user-role");
 
     return { success: true, data: users };
   } catch (error) {
