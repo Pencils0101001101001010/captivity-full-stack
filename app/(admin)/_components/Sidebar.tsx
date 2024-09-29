@@ -44,8 +44,10 @@ const Sidebar = ({ className }: { className?: string }) => {
     {
       section: "PRODUCTS",
       items: [
-        { href: "/permits/apply", icon: FileText, label: "CREATE" },
-        { href: "/admin/update/product", icon: FileText, label: "UPDATE" },
+        { href: "/admin/products", icon: FileText, label: "PRODUCTS" },
+        { href: "/admin/products/create", icon: FileText, label: "CREATE" },
+        { href: "/admin/products/delete", icon: FileText, label: "DELETE" },
+        { href: "/admin/products/update", icon: FileText, label: "UPDATE" },
       ],
     },
     {
