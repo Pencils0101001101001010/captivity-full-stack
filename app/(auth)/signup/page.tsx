@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import SignUpForm from "./SignUpForm";
+import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "Sign Up",
@@ -24,6 +25,18 @@ export default function Page() {
               Already have an account? Log in
             </Link>
           </div>
+        </div>
+        <div>
+          {/* Right side: Adding the logo image */}
+        <div className="hidden md:flex w-1/2 items-center justify-center bg-white">
+          <Image
+            src="/captivity-logo-white.png" // Path to the image in the public folder
+            alt="Captivity Logo"
+            width={331} 
+            height={54} 
+            className="object-contain"
+          />
+        </div>
         </div>
       </div>
     </main>
