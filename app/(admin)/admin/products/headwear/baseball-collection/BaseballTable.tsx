@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Product } from "@prisma/client";
 import { fetchBaseballCollections } from "./actions";
 
-const LeisureTable = () => {
+const BaseballTable = () => {
   const [baseballProducts, setBaseballProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,4 +75,4 @@ const LeisureTable = () => {
   );
 };
 
-export default LeisureTable;
+export default BaseballTable;
