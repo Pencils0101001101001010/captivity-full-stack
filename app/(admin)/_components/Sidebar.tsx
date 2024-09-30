@@ -121,7 +121,7 @@ const Sidebar = ({ className }: { className?: string }) => {
             {
               href: "/apparel",
               icon: FileText,
-              label: "APPAREL COLL",
+              label: "APPAREL",
               subItems: [
                 {
                   href: "/new-in-apparel-collection",
