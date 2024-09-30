@@ -4,20 +4,20 @@ import { Product } from "@prisma/client";
 import { Eye, Pencil, Trash } from "lucide-react";
 import Link from "next/link";
 import SearchField from "@/app/(admin)/_components/SearchField";
-import { fetchMenCollections } from "./actions";
+import { fetchWomenCollections } from "./actions";
 
-const MenTable = () => {
-  const [menProducts, setMenProducts] = useState<Product[]>([]);
+const WomanTable = () => {
+  const [womanProducts, setWomanProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    const loadMenProducts = async () => {
+    const loadWomanProducts = async () => {
       setIsLoading(true);
-      const result = await fetchMenCollections(undefined, searchQuery);
+      const result = await fetchWomenCollections(undefined, searchQuery);
       if (result.success) {
-        setMenProducts(result.data);
+        setWomanProducts(result.data);
         setError(null);
       } else {
         setError(result.error);
@@ -25,7 +25,7 @@ const MenTable = () => {
       setIsLoading(false);
     };
 
-    loadMenProducts();
+    loadWomanProducts();
   }, [searchQuery]);
 
   const handleSearch = (query: string) => {
@@ -38,7 +38,7 @@ const MenTable = () => {
   return (
     <div className="overflow-x-auto">
       <div className="m-6 flex space-x-9 items-center">
-        <h1 className="text-2xl font-extrabold">MENS COLLECTION</h1>
+        <h1 className="text-2xl font-extrabold">WOMAN COLLECTION</h1>
         <div className="w-52">
           <SearchField onSearch={handleSearch} />
         </div>
@@ -71,7 +71,7 @@ const MenTable = () => {
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200 text-black">
-          {menProducts.map((product) => (
+          {womanProducts.map((product) => (
             <tr key={product.id}>
               <td className="px-6 py-4 whitespace-nowrap">{product.name}</td>
               <td className="px-6 py-4 whitespace-nowrap">{product.sku}</td>
@@ -115,4 +115,4 @@ const MenTable = () => {
   );
 };
 
-export default MenTable;
+export default WomanTable;
