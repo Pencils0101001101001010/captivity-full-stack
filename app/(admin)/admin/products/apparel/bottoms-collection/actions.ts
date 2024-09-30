@@ -8,7 +8,7 @@ type FetchLeisureCollectionsResult =
   | { success: true; data: Product[] }
   | { success: false; error: string };
 
-export async function fetchAfricanCollections(
+export async function fetchBottomsCollections(
   type?: string,
   searchQuery?: string
 ): Promise<FetchLeisureCollectionsResult> {
@@ -28,9 +28,9 @@ export async function fetchAfricanCollections(
     const baseWhereCondition: Prisma.ProductWhereInput = {
       OR: [
         {
-          categories: { contains: "Apparel Collection > Bottoms Collection" },
+          categories: { contains: "Apparel Collection > Bottoms" },
         },
-        { categories: { contains: "Bottoms Collection" } },
+        { categories: { contains: "Bottoms" } },
       ],
     };
 
@@ -56,7 +56,7 @@ export async function fetchAfricanCollections(
     }
 
     // Fetch leisure collection products from the database
-    const africanProducts = await prisma.product.findMany({
+    const bottomsProducts = await prisma.product.findMany({
       where: whereCondition,
       orderBy: {
         position: "asc",
@@ -64,9 +64,9 @@ export async function fetchAfricanCollections(
     });
 
     // Revalidate the correct admin path
-    revalidatePath("/admin/products/headwear/baseball-collection");
+    revalidatePath("/admin/products/apparel/bottoms-collection");
 
-    return { success: true, data: africanProducts };
+    return { success: true, data: bottomsProducts };
   } catch (error) {
     console.error("Error fetching leisure collections:", error);
     return {
