@@ -10,7 +10,8 @@ type FetchLeisureCollectionsResult =
   | { success: false; error: string };
 
 export async function fetchLeisureCollections(
-  type?: string
+  type?: string,
+  query?: string
 ): Promise<FetchLeisureCollectionsResult> {
   try {
     // Validate user session
@@ -35,11 +36,27 @@ export async function fetchLeisureCollections(
     };
 
     // If type is provided, add it to the query
-    const whereCondition: Prisma.ProductWhereInput = type
+    let whereCondition: Prisma.ProductWhereInput = type
       ? {
           AND: [baseWhereCondition, { type: type }],
         }
       : baseWhereCondition;
+
+    // If query is provided, add it to the search conditions
+    if (query) {
+      whereCondition = {
+        AND: [
+          whereCondition,
+          {
+            OR: [
+              { name: { contains: query, mode: "insensitive" } },
+              { sku: { contains: query, mode: "insensitive" } },
+              { type: { contains: query, mode: "insensitive" } },
+            ],
+          },
+        ],
+      };
+    }
 
     // Fetch leisure collection products from the database
     const leisureProducts = await prisma.product.findMany({
