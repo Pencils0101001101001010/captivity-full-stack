@@ -121,40 +121,6 @@ const Sidebar = ({ className }: { className?: string }) => {
             },
           ],
         },
-        { href: "/admin/products/create", icon: FileText, label: "CREATE" },
-        { href: "/admin/products/delete", icon: FileText, label: "DELETE" },
-        { href: "/admin/products/update", icon: FileText, label: "UPDATE" },
-      ],
-    },
-    {
-      section: "CUSTOMERS",
-      items: [
-        { href: "/users/list", icon: Users, label: "List Users" },
-        { href: "/users/profile", icon: User, label: "View Profile" },
-        { href: "/users/tracking", icon: FileText, label: "Tracking" },
-      ],
-    },
-    {
-      section: "PROMOS",
-      items: [
-        { href: "/skipper", icon: Anchor, label: "Skipper" },
-        { href: "/admin", icon: Eye, label: "Admin" },
-        { href: "/driver", icon: Truck, label: "Truck Driver" },
-        {
-          href: "/submissions/factory-controller",
-          icon: Building2,
-          label: "Factory Controller",
-        },
-        {
-          href: "/submissions/permit-holder",
-          icon: Shield,
-          label: "Permit Holder",
-        },
-        {
-          href: "/submissions/system-admin",
-          icon: Settings,
-          label: "Systems Administrator",
-        },
       ],
     },
   ];

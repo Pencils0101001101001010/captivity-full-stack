@@ -5,7 +5,7 @@ import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
 
 const Footer = () => {
   return (
-    <footer className="bg-black text-gray-400 font-sans text-xs py-20">
+    <footer className="bg-black text-gray-400 font-sans text-xs py-20 w-full">
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 px-4">
         <div className="mx-5">
           <h3 className="font-bold mb-4 text-white">FOLLOW US</h3>
@@ -67,7 +67,9 @@ const Footer = () => {
               <Link href="/terms-conditions">Terms & Conditions</Link>
             </li>
             <li className="mb-2 hover:text-red-600">
-              <Link href="/international-tolerances">International Tolerances on Apparel</Link>
+              <Link href="/international-tolerances">
+                International Tolerances on Apparel
+              </Link>
             </li>
           </ul>
         </div>

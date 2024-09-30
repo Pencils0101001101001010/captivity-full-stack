@@ -1,7 +1,12 @@
 import React from "react";
+import IndustrialTable from "./IndustrialTable";
 
 const Page = () => {
-  return <div>Industrial Collection</div>;
+  return (
+    <div>
+      <IndustrialTable />
+    </div>
+  );
 };
 
 export default Page;
