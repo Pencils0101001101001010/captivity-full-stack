@@ -2,16 +2,20 @@
 import React, { useEffect, useState } from "react";
 import { Product } from "@prisma/client";
 import { fetchSignatureCollections } from "./actions";
+import SearchField from "@/app/(admin)/_components/SearchField";
+import Link from "next/link";
+import { Eye, Pencil, Trash } from "lucide-react";
 
 const SignatureTable = () => {
   const [signatureProducts, setSignatureProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const loadSignatureProducts = async () => {
       setIsLoading(true);
-      const result = await fetchSignatureCollections();
+      const result = await fetchSignatureCollections(undefined, searchQuery);
       if (result.success) {
         setSignatureProducts(result.data);
         setError(null);
@@ -22,13 +26,23 @@ const SignatureTable = () => {
     };
 
     loadSignatureProducts();
-  }, []);
+  }, [searchQuery]);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="overflow-x-auto">
+      <div className="m-6 flex space-x-9 items-center">
+        <h1 className="text-2xl font-extrabold">SIGNATURE COLLECTION</h1>
+        <div className="w-52">
+          <SearchField onSearch={handleSearch} />
+        </div>
+      </div>
       <table className="min-w-full bg-white">
         <thead className="bg-gray-100">
           <tr>
@@ -50,6 +64,9 @@ const SignatureTable = () => {
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Published
             </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
@@ -66,6 +83,28 @@ const SignatureTable = () => {
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 {product.published ? "Yes" : "No"}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex space-x-6">
+                  <Link
+                    href={`/admin/products/headwear/${product.id}`}
+                    className="text-blue-600 hover:text-blue-900"
+                  >
+                    <Eye size={18} />
+                  </Link>
+                  <Link
+                    href={`/admin/products/headwear/${product.id}/edit`}
+                    className="text-green-600 hover:text-green-900"
+                  >
+                    <Pencil size={18} />
+                  </Link>
+                  <Link
+                    href={`/admin/products/headwear/${product.id}/delete`}
+                    className="text-red-600 hover:text-red-900"
+                  >
+                    <Trash size={18} />
+                  </Link>
+                </div>
               </td>
             </tr>
           ))}

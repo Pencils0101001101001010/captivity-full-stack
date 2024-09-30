@@ -10,7 +10,8 @@ type FetchLeisureCollectionsResult =
   | { success: false; error: string };
 
 export async function fetchSignatureCollections(
-  type?: string
+  type?: string,
+  searchQuery?: string
 ): Promise<FetchLeisureCollectionsResult> {
   try {
     // Validate user session
@@ -37,14 +38,28 @@ export async function fetchSignatureCollections(
     };
 
     // If type is provided, add it to the query
-    const whereCondition: Prisma.ProductWhereInput = type
-      ? {
-          AND: [baseWhereCondition, { type: type }],
-        }
+    let whereCondition: Prisma.ProductWhereInput = type
+      ? { AND: [baseWhereCondition, { type: type }] }
       : baseWhereCondition;
 
+    // If searchQuery is provided, add it to the query
+    if (searchQuery) {
+      whereCondition = {
+        AND: [
+          whereCondition,
+          {
+            OR: [
+              { name: { contains: searchQuery, mode: "insensitive" } },
+              { sku: { contains: searchQuery, mode: "insensitive" } },
+              { type: { contains: searchQuery, mode: "insensitive" } },
+            ],
+          },
+        ],
+      };
+    }
+
     // Fetch leisure collection products from the database
-    const leisureProducts = await prisma.product.findMany({
+    const signatureProducts = await prisma.product.findMany({
       where: whereCondition,
       orderBy: {
         position: "asc",
@@ -54,7 +69,7 @@ export async function fetchSignatureCollections(
     // Revalidate the correct admin path
     revalidatePath("/admin/products/headwear/signature-collection");
 
-    return { success: true, data: leisureProducts };
+    return { success: true, data: signatureProducts };
   } catch (error) {
     console.error("Error fetching leisure collections:", error);
     return {

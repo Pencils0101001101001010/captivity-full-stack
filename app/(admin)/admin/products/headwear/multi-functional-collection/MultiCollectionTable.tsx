@@ -7,9 +7,7 @@ import { Eye, Pencil, Trash } from "lucide-react";
 import SearchField from "@/app/(admin)/_components/SearchField";
 
 const MultiFuctionalTable = () => {
-  const [multiFuctionalProducts, setMultiFuctionalProducts] = useState<
-    Product[]
-  >([]);
+  const [multiFuctionalProducts, setMultiFuctionalProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,10 +15,7 @@ const MultiFuctionalTable = () => {
   useEffect(() => {
     const loadMultiFuctionalProducts = async () => {
       setIsLoading(true);
-      const result = await fetchMultiFuctionalCollections(
-        undefined,
-        searchQuery
-      );
+      const result = await fetchMultiFuctionalCollections(undefined, searchQuery);
       if (result.success) {
         setMultiFuctionalProducts(result.data);
         setError(null);
