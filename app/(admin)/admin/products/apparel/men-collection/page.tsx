@@ -1,7 +1,12 @@
 import React from "react";
+import MenTable from "./MenTable";
 
 const Page = () => {
-  return <div>men aparels</div>;
+  return (
+    <div>
+      <MenTable />
+    </div>
+  );
 };
 
 export default Page;
