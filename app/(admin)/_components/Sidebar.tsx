@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -21,14 +21,33 @@ type Section = {
 
 const Sidebar = ({ className }: { className?: string }) => {
   const pathname = usePathname();
-  const [openSections, setOpenSections] = useState<string[]>([]); // Track open sections as an array of strings
+  const [openSections, setOpenSections] = useState<string[]>([]);
+  const [activeItems, setActiveItems] = useState<string[]>([]);
+
+  useEffect(() => {
+    const updateActiveItems = (items: NavItem[], parentPath: string = "") => {
+      for (const item of items) {
+        const fullPath = `${parentPath}${item.href}`;
+        if (pathname?.startsWith(fullPath)) {
+          setActiveItems((prev) => [...new Set([...prev, fullPath])]);
+          setOpenSections((prev) => [...new Set([...prev, item.label])]);
+
+          if (item.subItems) {
+            updateActiveItems(item.subItems, fullPath);
+          }
+        }
+      }
+    };
+
+    setActiveItems([]);
+    navItems.forEach((section) => updateActiveItems(section.items));
+  }, [pathname]);
 
   const toggleSection = (section: string) => {
-    setOpenSections(
-      (prev) =>
-        prev.includes(section)
-          ? prev.filter((sec) => sec !== section) // Close section
-          : [...prev, section] // Open section
+    setOpenSections((prev) =>
+      prev.includes(section)
+        ? prev.filter((sec) => sec !== section)
+        : [...prev, section]
     );
   };
 
@@ -48,111 +67,111 @@ const Sidebar = ({ className }: { className?: string }) => {
           label: "PRODUCTS",
           subItems: [
             {
-              href: "/admin/products/headwear",
+              href: "/headwear",
               icon: FileText,
               label: "HEADWEAR",
               subItems: [
                 {
-                  href: "/admin/products/headwear/leisure-collection",
+                  href: "/leisure-collection",
                   icon: FileText,
                   label: "Leisure Collection",
                 },
                 {
-                  href: "/admin/products/headwear/industrial-collection",
+                  href: "/industrial-collection",
                   icon: FileText,
                   label: "Industrial Collection",
                 },
                 {
-                  href: "/admin/products/headwear/signature-collection",
+                  href: "/signature-collection",
                   icon: FileText,
                   label: "Signature Collection",
                 },
                 {
-                  href: "/admin/products/headwear/baseball-collection",
+                  href: "/baseball-collection",
                   icon: FileText,
                   label: "Baseball Collection",
                 },
                 {
-                  href: "/admin/products/headwear/fashion-collection",
+                  href: "/fashion-collection",
                   icon: FileText,
                   label: "Fashion Collection",
                 },
                 {
-                  href: "/admin/products/headwear/sport-collection",
+                  href: "/sport-collection",
                   icon: FileText,
                   label: "Sport Collection",
                 },
                 {
-                  href: "/admin/products/headwear/multi-functional-collection",
+                  href: "/multi-functional-collection",
                   icon: FileText,
                   label: "Multifunctional",
                 },
                 {
-                  href: "/admin/products/headwear/new-in-headwear-collection",
+                  href: "/new-in-headwear-collection",
                   icon: FileText,
                   label: "New in Headwear",
                 },
                 {
-                  href: "/admin/products/headwear/african-collection",
+                  href: "/african-collection",
                   icon: FileText,
                   label: "African Collection",
                 },
               ],
             },
             {
-              href: "/admin/products/apparel",
+              href: "/aparel",
               icon: FileText,
               label: "APPAREL COLL",
               subItems: [
                 {
-                  href: "/admin/products/apparel/new-in-apparel-collection",
+                  href: "/new-in-aparel-collection",
                   icon: FileText,
                   label: "New in Apparel",
                 },
                 {
-                  href: "/admin/products/apparel/men-collection",
+                  href: "/men-collection",
                   icon: FileText,
                   label: "MEN",
                 },
                 {
-                  href: "/admin/products/apparel/woman-collection",
+                  href: "/woman-collection",
                   icon: FileText,
                   label: "WOMAN",
                 },
                 {
-                  href: "/admin/products/apparel/kids-collection",
+                  href: "/kids-collection",
                   icon: FileText,
                   label: "KIDS",
                 },
                 {
-                  href: "/admin/products/apparel/t-shirts-collection",
+                  href: "/t-shirts-collection",
                   icon: FileText,
                   label: "T-SHIRTS",
                 },
                 {
-                  href: "/admin/products/apparel/golfers-collection",
+                  href: "/golfers-collection",
                   icon: FileText,
                   label: "GOLFERS",
                 },
                 {
-                  href: "/admin/products/apparel/hoodies-collection",
+                  href: "/hoodies-collection",
                   icon: FileText,
                   label: "HOODIES",
                 },
                 {
-                  href: "/admin/products/apparel/jackets-collection",
+                  href: "/jackets-collection",
                   icon: FileText,
                   label: "JACKETS",
                 },
                 {
-                  href: "/admin/products/apparel/bottoms-collection",
+                  href: "/bottoms-collection",
                   icon: FileText,
                   label: "BOTTOMS",
                 },
               ],
             },
             {
-              href: "/admin/products/other",
+              href: "/other",
               icon: FileText,
               label: "ALL COLLECT",
             },
@@ -162,19 +181,19 @@ const Sidebar = ({ className }: { className?: string }) => {
     },
   ];
 
-  // Recursive function to check active path for both parent and sub-items
   const isItemActive = (href: string): boolean => {
-    return pathname ? pathname === href || pathname.startsWith(href) : false;
+    return activeItems.includes(href);
   };
 
-  const renderNavItem = (item: NavItem, depth = 0) => {
-    const isActive = isItemActive(item.href);
+  const renderNavItem = (item: NavItem, parentPath: string = "") => {
+    const fullPath = `${parentPath}${item.href}`;
+    const isActive = isItemActive(fullPath);
     const isOpen = openSections.includes(item.label);
     const hasSubItems = item.subItems && item.subItems.length > 0;
 
     return (
-      <React.Fragment key={item.href}>
-        <Link href={item.href} passHref>
+      <React.Fragment key={fullPath}>
+        <Link href={fullPath} passHref>
           <Button
             variant="ghost"
             className={cn(
@@ -182,11 +201,11 @@ const Sidebar = ({ className }: { className?: string }) => {
               isActive
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-              depth > 0 && `pl-[${depth * 1.5}rem]`
+              parentPath && "pl-4"
             )}
             onClick={(e) => {
               if (hasSubItems) {
-                e.preventDefault(); // Prevent navigation and toggle section
+                e.preventDefault();
                 toggleSection(item.label);
               }
             }}
@@ -206,13 +225,8 @@ const Sidebar = ({ className }: { className?: string }) => {
           </Button>
         </Link>
         {hasSubItems && isOpen && item.subItems && (
-          <div
-            className={cn(
-              "mt-1 space-y-1",
-              depth > 0 && "border-l border-accent pl-4"
-            )}
-          >
-            {item.subItems.map((subItem) => renderNavItem(subItem, depth + 1))}
+          <div className="mt-1 space-y-1 border-l border-accent pl-4">
+            {item.subItems.map((subItem) => renderNavItem(subItem, fullPath))}
           </div>
         )}
       </React.Fragment>
