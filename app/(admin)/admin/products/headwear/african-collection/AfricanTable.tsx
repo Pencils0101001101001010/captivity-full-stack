@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { Product } from "@prisma/client";
 import { fetchAfricanCollections } from "./actions";
-import { Eye, Pencil } from "lucide-react";
+import { Eye, Pencil, Trash } from "lucide-react";
+import Link from "next/link";
 
 const LeisureTable = () => {
   const [africanProducts, setAfricanProducts] = useState<Product[]>([]);
@@ -73,18 +74,24 @@ const LeisureTable = () => {
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex space-x-6">
-                  <a
-                    href={`${process.env.BASE_URL_ADMIN}/${product.id}`}
+                  <Link
+                    href={`/admin/products/headwear/${product.id}`}
                     className="text-blue-600 hover:text-blue-900"
                   >
                     <Eye size={18} />
-                  </a>
-                  <a
-                    href={`${process.env.BASE_URL_ADMIN}/${product.id}/edit`}
+                  </Link>
+                  <Link
+                    href={`/admin/products/headwear/${product.id}/edit`}
                     className="text-green-600 hover:text-green-900"
                   >
                     <Pencil size={18} />
-                  </a>
+                  </Link>
+                  <Link
+                    href={`/admin/products/headwear/${product.id}/delete`}
+                    className="text-red-600 hover:text-red-900"
+                  >
+                    <Trash size={18} />
+                  </Link>
                 </div>
               </td>
             </tr>

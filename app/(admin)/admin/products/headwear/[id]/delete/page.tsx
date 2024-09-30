@@ -3,7 +3,7 @@ import React from "react";
 const Page = () => {
   return (
     <div>
-      <h1>Product id</h1>
+      <h1>Delete Page</h1>
     </div>
   );
 };
