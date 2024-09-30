@@ -98,7 +98,7 @@ const Sidebar = ({ className }: { className?: string }) => {
                   label: "Multifunctional Headwear",
                 },
                 {
-                  href: "/admin/products/headwear/new-in-headwear",
+                  href: "/admin/products/headwear/new-in-headwear-collection",
                   icon: FileText,
                   label: "New in Headwear",
                 },
