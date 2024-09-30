@@ -5,20 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Home,
-  FileText,
-  Users,
-  User,
-  Truck,
-  Building2,
-  Shield,
-  Settings,
-  ChevronRight,
-  Anchor,
-  Eye,
-  ChevronDown,
-} from "lucide-react";
+import { Home, FileText, ChevronDown } from "lucide-react";
 
 type NavItem = {
   href: string;
@@ -34,12 +21,15 @@ type Section = {
 
 const Sidebar = ({ className }: { className?: string }) => {
   const pathname = usePathname();
-  const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>(
-    {}
-  );
+  const [openSections, setOpenSections] = useState<string[]>([]); // Track open sections as an array of strings
 
   const toggleSection = (section: string) => {
-    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
+    setOpenSections(
+      (prev) =>
+        prev.includes(section)
+          ? prev.filter((sec) => sec !== section) // Close section
+          : [...prev, section] // Open section
+    );
   };
 
   const navItems: Section[] = [
@@ -127,7 +117,7 @@ const Sidebar = ({ className }: { className?: string }) => {
 
   const renderNavItem = (item: NavItem, depth = 0) => {
     const isActive = pathname ? pathname.startsWith(item.href) : false;
-    const isOpen = openSections[item.label] || isActive;
+    const isOpen = openSections.includes(item.label);
     const hasSubItems = item.subItems && item.subItems.length > 0;
 
     return (
@@ -144,7 +134,7 @@ const Sidebar = ({ className }: { className?: string }) => {
             )}
             onClick={(e) => {
               if (hasSubItems) {
-                e.preventDefault();
+                e.preventDefault(); // Prevent navigation and toggle section
                 toggleSection(item.label);
               }
             }}
