@@ -95,7 +95,7 @@ const Sidebar = ({ className }: { className?: string }) => {
                 {
                   href: "/admin/products/headwear/multi-functional-collection",
                   icon: FileText,
-                  label: "Multifunctional Headwear",
+                  label: "Multifunctional",
                 },
                 {
                   href: "/admin/products/headwear/new-in-headwear-collection",
