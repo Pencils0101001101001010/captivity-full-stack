@@ -1,7 +1,12 @@
 import React from "react";
+import NewTable from "./NewTable";
 
 const Page = () => {
-  return <div>new in aparels</div>;
+  return (
+    <div>
+      <NewTable />
+    </div>
+  );
 };
 
 export default Page;
