@@ -119,12 +119,12 @@ const Sidebar = ({ className }: { className?: string }) => {
               ],
             },
             {
-              href: "/aparel",
+              href: "/apparel",
               icon: FileText,
               label: "APPAREL COLL",
               subItems: [
                 {
-                  href: "/new-in-aparel-collection",
+                  href: "/new-in-apparel-collection",
                   icon: FileText,
                   label: "New in Apparel",
                 },
