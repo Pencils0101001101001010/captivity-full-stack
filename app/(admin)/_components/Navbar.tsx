@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import UserButton from "./UserButton";
-import SearchField from "./SearchField";
 import Sidebar from "./Sidebar";
 
 export default function Navbar() {
@@ -31,7 +30,6 @@ export default function Navbar() {
             ADMIN DASHBOARD
           </div>
         </div>
-        <SearchField />
         <UserButton className="sm:ms-auto" />
       </div>
 

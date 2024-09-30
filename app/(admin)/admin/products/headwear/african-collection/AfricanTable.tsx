@@ -4,16 +4,18 @@ import { Product } from "@prisma/client";
 import { fetchAfricanCollections } from "./actions";
 import { Eye, Pencil, Trash } from "lucide-react";
 import Link from "next/link";
+import SearchField from "@/app/(admin)/_components/SearchField";
 
-const LeisureTable = () => {
+const AfricanTable = () => {
   const [africanProducts, setAfricanProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const loadAfricanProducts = async () => {
       setIsLoading(true);
-      const result = await fetchAfricanCollections();
+      const result = await fetchAfricanCollections(undefined, searchQuery);
       if (result.success) {
         setAfricanProducts(result.data);
         setError(null);
@@ -24,13 +26,21 @@ const LeisureTable = () => {
     };
 
     loadAfricanProducts();
-  }, []);
+  }, [searchQuery]);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="overflow-x-auto">
+      <div className="w-52 m-6">
+        <SearchField onSearch={handleSearch} />
+      </div>
+
       <table className="min-w-full bg-white">
         <thead className="bg-gray-100">
           <tr>
@@ -102,4 +112,4 @@ const LeisureTable = () => {
   );
 };
 
-export default LeisureTable;
+export default AfricanTable;
