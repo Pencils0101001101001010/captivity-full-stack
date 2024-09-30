@@ -37,8 +37,11 @@ const AfricanTable = () => {
 
   return (
     <div className="overflow-x-auto">
-      <div className="w-52 m-6">
-        <SearchField onSearch={handleSearch} />
+      <div className="m-6 flex space-x-9 items-center">
+        <h1 className="text-2xl font-extrabold">AFRICAN COLLECTION</h1>
+        <div className="w-52">
+          <SearchField onSearch={handleSearch} />
+        </div>
       </div>
 
       <table className="min-w-full bg-white">
