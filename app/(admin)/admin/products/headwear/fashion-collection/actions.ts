@@ -5,13 +5,14 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Product, Prisma } from "@prisma/client";
 
-type FetchLeisureCollectionsResult =
+type FetchFashionCollectionsResult =
   | { success: true; data: Product[] }
   | { success: false; error: string };
 
 export async function fetchFashionCollections(
-  type?: string
-): Promise<FetchLeisureCollectionsResult> {
+  type?: string,
+  query?: string
+): Promise<FetchFashionCollectionsResult> {
   try {
     // Validate user session
     const { user } = await validateRequest();
@@ -21,10 +22,10 @@ export async function fetchFashionCollections(
 
     // Check if the user has the ADMIN role
     if (user.role !== "ADMIN") {
-      throw new Error("Only admins can fetch leisure collections.");
+      throw new Error("Only admins can fetch fashion collections.");
     }
 
-    // Base query for leisure collections
+    // Base query for fashion collections
     const baseWhereCondition: Prisma.ProductWhereInput = {
       OR: [
         {
@@ -35,13 +36,29 @@ export async function fetchFashionCollections(
     };
 
     // If type is provided, add it to the query
-    const whereCondition: Prisma.ProductWhereInput = type
+    let whereCondition: Prisma.ProductWhereInput = type
       ? {
           AND: [baseWhereCondition, { type: type }],
         }
       : baseWhereCondition;
 
-    // Fetch leisure collection products from the database
+    // If query is provided, add it to the search conditions
+    if (query) {
+      whereCondition = {
+        AND: [
+          whereCondition,
+          {
+            OR: [
+              { name: { contains: query, mode: "insensitive" } },
+              { sku: { contains: query, mode: "insensitive" } },
+              { type: { contains: query, mode: "insensitive" } },
+            ],
+          },
+        ],
+      };
+    }
+
+    // Fetch fashion collection products from the database
     const fashionProducts = await prisma.product.findMany({
       where: whereCondition,
       orderBy: {
@@ -54,7 +71,7 @@ export async function fetchFashionCollections(
 
     return { success: true, data: fashionProducts };
   } catch (error) {
-    console.error("Error fetching leisure collections:", error);
+    console.error("Error fetching fashion collections:", error);
     return {
       success: false,
       error:
