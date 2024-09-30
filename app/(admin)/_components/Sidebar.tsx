@@ -102,7 +102,54 @@ const Sidebar = ({ className }: { className?: string }) => {
             {
               href: "/admin/products/apparel",
               icon: FileText,
-              label: "APAREL",
+              label: "APPAREL COLL",
+              subItems: [
+                {
+                  href: "/admin/products/apparel/new-in-apparel-collection",
+                  icon: FileText,
+                  label: "New in Apparel",
+                },
+                {
+                  href: "/admin/products/apparel/men-collection",
+                  icon: FileText,
+                  label: "MEN",
+                },
+                {
+                  href: "/admin/products/apparel/woman-collection",
+                  icon: FileText,
+                  label: "WOMAN",
+                },
+                {
+                  href: "/admin/products/apparel/kids-collection",
+                  icon: FileText,
+                  label: "KIDS",
+                },
+                {
+                  href: "/admin/products/apparel/t-shirts-collection",
+                  icon: FileText,
+                  label: "T-SHIRTS",
+                },
+                {
+                  href: "/admin/products/apparel/golfers-collection",
+                  icon: FileText,
+                  label: "GOLFERS",
+                },
+                {
+                  href: "/admin/products/apparel/hoodies-collection",
+                  icon: FileText,
+                  label: "HOODIES",
+                },
+                {
+                  href: "/admin/products/apparel/jackets-collection",
+                  icon: FileText,
+                  label: "JACKETS",
+                },
+                {
+                  href: "/admin/products/apparel/bottoms-collection",
+                  icon: FileText,
+                  label: "BOTTOMS",
+                },
+              ],
             },
             {
               href: "/admin/products/other",
@@ -115,8 +162,13 @@ const Sidebar = ({ className }: { className?: string }) => {
     },
   ];
 
+  // Recursive function to check active path for both parent and sub-items
+  const isItemActive = (href: string): boolean => {
+    return pathname ? pathname === href || pathname.startsWith(href) : false;
+  };
+
   const renderNavItem = (item: NavItem, depth = 0) => {
-    const isActive = pathname ? pathname.startsWith(item.href) : false;
+    const isActive = isItemActive(item.href);
     const isOpen = openSections.includes(item.label);
     const hasSubItems = item.subItems && item.subItems.length > 0;
 
