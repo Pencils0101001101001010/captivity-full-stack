@@ -102,12 +102,12 @@ const Sidebar = ({ className }: { className?: string }) => {
             {
               href: "/admin/products/apparel",
               icon: FileText,
-              label: "Apparel Collection",
+              label: "APAREL",
             },
             {
               href: "/admin/products/other",
               icon: FileText,
-              label: "Other Category Collections",
+              label: "ALL COLLECT",
             },
           ],
         },
