@@ -40,7 +40,7 @@ const LeisureTable = () => {
     <div>
       <div className="overflow-x-auto mt-4">
         <div className="m-6 flex space-x-9 items-center">
-          <h1 className="text-2xl font-extrabold">MULTIFUNCTIONAL HEADWEAR</h1>
+          <h1 className="text-2xl font-extrabold">LEISURE COLLECTION</h1>
           <div className="w-52">
             <SearchField onSearch={handleSearch} />
           </div>
