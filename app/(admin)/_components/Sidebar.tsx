@@ -74,47 +74,47 @@ const Sidebar = ({ className }: { className?: string }) => {
                 {
                   href: "/leisure-collection",
                   icon: FileText,
-                  label: "Leisure Collection",
+                  label: "LEISURE",
                 },
                 {
                   href: "/industrial-collection",
                   icon: FileText,
-                  label: "Industrial Collection",
+                  label: "INDUSTRIAL",
                 },
                 {
                   href: "/signature-collection",
                   icon: FileText,
-                  label: "Signature Collection",
+                  label: "SIGNATURE",
                 },
                 {
                   href: "/baseball-collection",
                   icon: FileText,
-                  label: "Baseball Collection",
+                  label: "BASEBALL",
                 },
                 {
                   href: "/fashion-collection",
                   icon: FileText,
-                  label: "Fashion Collection",
+                  label: "FASHION",
                 },
                 {
                   href: "/sport-collection",
                   icon: FileText,
-                  label: "Sport Collection",
+                  label: "SPORT",
                 },
                 {
                   href: "/multi-functional-collection",
                   icon: FileText,
-                  label: "Multifunctional",
+                  label: "MULTI-FUNC",
                 },
                 {
                   href: "/new-in-headwear-collection",
                   icon: FileText,
-                  label: "New in Headwear",
+                  label: "NEW",
                 },
                 {
                   href: "/african-collection",
                   icon: FileText,
-                  label: "African Collection",
+                  label: "AFRICAN",
                 },
               ],
             },
@@ -126,7 +126,7 @@ const Sidebar = ({ className }: { className?: string }) => {
                 {
                   href: "/new-in-apparel-collection",
                   icon: FileText,
-                  label: "New in Apparel",
+                  label: "NEW",
                 },
                 {
                   href: "/men-collection",
