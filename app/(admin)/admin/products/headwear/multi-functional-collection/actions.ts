@@ -1,5 +1,4 @@
 "use server";
-
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -10,7 +9,8 @@ type FetchLeisureCollectionsResult =
   | { success: false; error: string };
 
 export async function fetchMultiFuctionalCollections(
-  type?: string
+  type?: string,
+  searchQuery?: string
 ): Promise<FetchLeisureCollectionsResult> {
   try {
     // Validate user session
@@ -37,11 +37,25 @@ export async function fetchMultiFuctionalCollections(
     };
 
     // If type is provided, add it to the query
-    const whereCondition: Prisma.ProductWhereInput = type
-      ? {
-          AND: [baseWhereCondition, { type: type }],
-        }
+    let whereCondition: Prisma.ProductWhereInput = type
+      ? { AND: [baseWhereCondition, { type: type }] }
       : baseWhereCondition;
+
+    // If searchQuery is provided, add it to the query
+    if (searchQuery) {
+      whereCondition = {
+        AND: [
+          whereCondition,
+          {
+            OR: [
+              { name: { contains: searchQuery, mode: "insensitive" } },
+              { sku: { contains: searchQuery, mode: "insensitive" } },
+              { type: { contains: searchQuery, mode: "insensitive" } },
+            ],
+          },
+        ],
+      };
+    }
 
     // Fetch leisure collection products from the database
     const multiFunctionalHeadwearProducts = await prisma.product.findMany({
