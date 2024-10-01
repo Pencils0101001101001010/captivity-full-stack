@@ -234,6 +234,7 @@ const Sidebar = ({ className }: { className?: string }) => {
             },
           ],
         },
+        { href: "/admin/products/create", icon: FileText, label: "CREATE" },
       ],
     },
   ];
@@ -254,7 +255,7 @@ const Sidebar = ({ className }: { className?: string }) => {
           <Button
             variant="ghost"
             className={cn(
-              "w-full justify-start transition-colors duration-200",
+              "mb-2 w-full justify-start transition-colors duration-200",
               isActive
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
