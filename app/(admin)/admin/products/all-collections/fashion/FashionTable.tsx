@@ -38,7 +38,7 @@ const AfricanTable = () => {
   return (
     <div className="overflow-x-auto">
       <div className="m-6 flex space-x-9 items-center">
-        <h1 className="text-2xl font-extrabold">AFRICAN COLLECTION</h1>
+        <h1 className="text-2xl font-extrabold">FASHION COLLECTION</h1>
         <div className="w-52">
           <SearchField onSearch={handleSearch} />
         </div>
