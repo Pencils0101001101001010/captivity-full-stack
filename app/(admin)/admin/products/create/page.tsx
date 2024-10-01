@@ -1,11 +1,12 @@
-import React from 'react'
+import React from "react";
+import ProductForm from "./ProductForm";
 
 const Page = () => {
   return (
     <div>
-      Create Product
+      <ProductForm />
     </div>
-  )
-}
+  );
+};
 
-export default Page
+export default Page;
