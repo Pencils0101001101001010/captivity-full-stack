@@ -211,6 +211,11 @@ const Sidebar = ({ className }: { className?: string }) => {
                   label: "CAMO",
                 },
                 {
+                  href: "/summer",
+                  icon: FileText,
+                  label: "SUMMER",
+                },
+                {
                   href: "/winter",
                   icon: FileText,
                   label: "WINTER",
