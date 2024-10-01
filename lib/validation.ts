@@ -101,3 +101,50 @@ export const loginSchema = z.object({
 });
 
 export type LoginValues = z.infer<typeof loginSchema>;
+
+////////////////////////////////////////////////////
+
+export const productSchema = z.object({
+  type: z.string().min(1, "Type is required"),
+  sku: z.string().min(1, "SKU is required"),
+  name: z.string().min(1, "Name is required"),
+  published: z.boolean(),
+  isFeatured: z.boolean(),
+  visibility: z.string().min(1, "Visibility is required"),
+  shortDescription: z.string().min(1, "Short description is required"),
+  taxStatus: z.string().min(1, "Tax status is required"),
+  inStock: z.boolean(),
+  backordersAllowed: z.boolean(),
+  soldIndividually: z.boolean(),
+  allowReviews: z.boolean(),
+  categories: z.array(z.string()).min(1, "At least one category is required"),
+  tags: z.array(z.string()),
+  imageUrl: z.string().url("Invalid image URL"),
+  upsells: z.array(z.string()),
+  position: z.number().int().min(0, "Position must be a non-negative integer"),
+  attribute1Name: z.string().optional(),
+  attribute1Values: z.array(z.string()).optional(),
+  attribute2Name: z.string().optional(),
+  attribute2Values: z.array(z.string()).optional(),
+  regularPrice: z.number().min(0, "Price must be non-negative"),
+  stock: z.number().int().min(0, "Stock must be non-negative"),
+});
+
+export type ProductFormValues = z.infer<typeof productSchema>;
+
+export const categoryOptions = [
+  { value: "electronics", label: "Electronics" },
+  { value: "clothing", label: "Clothing" },
+  { value: "books", label: "Books" },
+  // Add more categories as needed
+];
+
+export const colorOptions = [
+  { value: "red", label: "Red" },
+  { value: "blue", label: "Blue" },
+  { value: "green", label: "Green" },
+  { value: "yellow", label: "Yellow" },
+  { value: "black", label: "Black" },
+  { value: "white", label: "White" },
+  // Add more colors as needed
+];
