@@ -1,6 +1,5 @@
 import React from "react";
 
-import { UserRole } from "@prisma/client";
 import { User } from "lucide-react";
 import UserRoleSelect from "./UserRoleSelect";
 import { fetchAllUsers } from "./actions";
