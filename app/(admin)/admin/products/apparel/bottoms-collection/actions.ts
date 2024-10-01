@@ -4,14 +4,14 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Product, Prisma } from "@prisma/client";
 
-type FetchLeisureCollectionsResult =
+type FetchBottomsCollectionsResult =
   | { success: true; data: Product[] }
   | { success: false; error: string };
 
 export async function fetchBottomsCollections(
   type?: string,
   searchQuery?: string
-): Promise<FetchLeisureCollectionsResult> {
+): Promise<FetchBottomsCollectionsResult> {
   try {
     // Validate user session
     const { user } = await validateRequest();
