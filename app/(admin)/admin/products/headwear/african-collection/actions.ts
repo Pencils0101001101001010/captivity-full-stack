@@ -4,14 +4,14 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Product, Prisma } from "@prisma/client";
 
-type FetchLeisureCollectionsResult =
+type FetchAfricanCollectionsResult =
   | { success: true; data: Product[] }
   | { success: false; error: string };
 
 export async function fetchAfricanCollections(
   type?: string,
   searchQuery?: string
-): Promise<FetchLeisureCollectionsResult> {
+): Promise<FetchAfricanCollectionsResult> {
   try {
     // Validate user session
     const { user } = await validateRequest();
@@ -64,11 +64,11 @@ export async function fetchAfricanCollections(
     });
 
     // Revalidate the correct admin path
-    revalidatePath("/admin/products/headwear/baseball-collection");
+    revalidatePath("/admin/products/headwear/afican-collection");
 
     return { success: true, data: africanProducts };
   } catch (error) {
-    console.error("Error fetching leisure collections:", error);
+    console.error("Error fetching african collections:", error);
     return {
       success: false,
       error:
