@@ -1,8 +1,7 @@
+"use client";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,6 +27,7 @@ import {
   ProductFormValues,
   productSchema,
 } from "@/lib/validation";
+import { Button } from "@/components/ui/button";
 
 export default function ProductForm() {
   const form = useForm<ProductFormValues>({
