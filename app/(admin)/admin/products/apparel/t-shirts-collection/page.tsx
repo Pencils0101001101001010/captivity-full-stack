@@ -1,7 +1,12 @@
 import React from "react";
+import TshirtTable from "./TShirtTable";
 
 const Page = () => {
-  return <div>t-shirts aparels</div>;
+  return (
+    <div>
+      <TshirtTable />
+    </div>
+  );
 };
 
 export default Page;
