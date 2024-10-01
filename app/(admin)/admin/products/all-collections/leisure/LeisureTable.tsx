@@ -1,23 +1,23 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Product } from "@prisma/client";
-import { fetchAfricanCollections } from "./actions";
+import { fetchLeisureCollections } from "./actions";
 import { Eye, Pencil, Trash } from "lucide-react";
 import Link from "next/link";
 import SearchField from "@/app/(admin)/_components/SearchField";
 
-const AfricanTable = () => {
-  const [africanProducts, setAfricanProducts] = useState<Product[]>([]);
+const LeisureTable = () => {
+  const [leisureProducts, setLeisureProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    const loadAfricanProducts = async () => {
+    const loadLeisureProducts = async () => {
       setIsLoading(true);
-      const result = await fetchAfricanCollections(undefined, searchQuery);
+      const result = await fetchLeisureCollections(undefined, searchQuery);
       if (result.success) {
-        setAfricanProducts(result.data);
+        setLeisureProducts(result.data);
         setError(null);
       } else {
         setError(result.error);
@@ -25,7 +25,7 @@ const AfricanTable = () => {
       setIsLoading(false);
     };
 
-    loadAfricanProducts();
+    loadLeisureProducts();
   }, [searchQuery]);
 
   const handleSearch = (query: string) => {
@@ -38,7 +38,7 @@ const AfricanTable = () => {
   return (
     <div className="overflow-x-auto">
       <div className="m-6 flex space-x-9 items-center">
-        <h1 className="text-2xl font-extrabold">AFRICAN COLLECTION</h1>
+        <h1 className="text-2xl font-extrabold">LEISURE COLLECTION</h1>
         <div className="w-52">
           <SearchField onSearch={handleSearch} />
         </div>
@@ -71,7 +71,7 @@ const AfricanTable = () => {
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200 text-black">
-          {africanProducts.map((product) => (
+          {leisureProducts.map((product) => (
             <tr key={product.id}>
               <td className="px-6 py-4 whitespace-nowrap">{product.name}</td>
               <td className="px-6 py-4 whitespace-nowrap">{product.sku}</td>
@@ -115,4 +115,4 @@ const AfricanTable = () => {
   );
 };
 
-export default AfricanTable;
+export default LeisureTable;

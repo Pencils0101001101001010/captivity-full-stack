@@ -4,14 +4,14 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Product, Prisma } from "@prisma/client";
 
-type FetchAfricanCollectionsResult =
+type FetchLeisureCollectionsResult =
   | { success: true; data: Product[] }
   | { success: false; error: string };
 
-export async function fetchAfricanCollections(
+export async function fetchLeisureCollections(
   type?: string,
   searchQuery?: string
-): Promise<FetchAfricanCollectionsResult> {
+): Promise<FetchLeisureCollectionsResult> {
   try {
     // Validate user session
     const { user } = await validateRequest();
@@ -21,14 +21,14 @@ export async function fetchAfricanCollections(
 
     // Check if the user has the ADMIN role
     if (user.role !== "ADMIN") {
-      throw new Error("Only admins can fetch african collections.");
+      throw new Error("Only admins can fetch leisure collections.");
     }
 
     // Base query for leisure collections
     const baseWhereCondition: Prisma.ProductWhereInput = {
       OR: [
         {
-          categories: { contains: "African Collection" },
+          categories: { contains: "Leisure Collection" },
         },
       ],
     };
@@ -63,7 +63,7 @@ export async function fetchAfricanCollections(
     });
 
     // Revalidate the correct admin path
-    revalidatePath("/admin/products/all-collectins/afican");
+    revalidatePath("/admin/products/all-collectins/leisure");
 
     return { success: true, data: africanProducts };
   } catch (error) {
