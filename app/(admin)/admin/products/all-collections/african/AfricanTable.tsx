@@ -88,19 +88,19 @@ const AfricanTable = () => {
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex space-x-6">
                   <Link
-                    href={`/admin/products/headwear/${product.id}`}
+                    href={`/admin/products/all-collections/${product.id}`}
                     className="text-blue-600 hover:text-blue-900"
                   >
                     <Eye size={18} />
                   </Link>
                   <Link
-                    href={`/admin/products/headwear/${product.id}/edit`}
+                    href={`/admin/products/all-collections/${product.id}/edit`}
                     className="text-green-600 hover:text-green-900"
                   >
                     <Pencil size={18} />
                   </Link>
                   <Link
-                    href={`/admin/products/headwear/${product.id}/delete`}
+                    href={`/admin/products/all-collections/${product.id}/delete`}
                     className="text-red-600 hover:text-red-900"
                   >
                     <Trash size={18} />
