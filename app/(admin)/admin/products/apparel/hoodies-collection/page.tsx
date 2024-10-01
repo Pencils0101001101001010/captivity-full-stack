@@ -1,7 +1,12 @@
 import React from "react";
+import HoodiesTable from "./HoodiesTable";
 
 const Page = () => {
-  return <div>hoodies aparels</div>;
+  return (
+    <div>
+      <HoodiesTable />
+    </div>
+  );
 };
 
 export default Page;
