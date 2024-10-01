@@ -4,14 +4,14 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Product, Prisma } from "@prisma/client";
 
-type FetchAfricanCollectionsResult =
+type FetchWinterCollectionsResult =
   | { success: true; data: Product[] }
   | { success: false; error: string };
 
-export async function fetchAfricanCollections(
+export async function fetchWinterCollections(
   type?: string,
   searchQuery?: string
-): Promise<FetchAfricanCollectionsResult> {
+): Promise<FetchWinterCollectionsResult> {
   try {
     // Validate user session
     const { user } = await validateRequest();
@@ -21,14 +21,14 @@ export async function fetchAfricanCollections(
 
     // Check if the user has the ADMIN role
     if (user.role !== "ADMIN") {
-      throw new Error("Only admins can fetch african collections.");
+      throw new Error("Only admins can fetch winter collections.");
     }
 
     // Base query for leisure collections
     const baseWhereCondition: Prisma.ProductWhereInput = {
       OR: [
         {
-          categories: { contains: "African Collection" },
+          categories: { contains: "Winter Collection" },
         },
       ],
     };
@@ -55,7 +55,7 @@ export async function fetchAfricanCollections(
     }
 
     // Fetch leisure collection products from the database
-    const africanProducts = await prisma.product.findMany({
+    const winterProducts = await prisma.product.findMany({
       where: whereCondition,
       orderBy: {
         position: "asc",
@@ -65,9 +65,9 @@ export async function fetchAfricanCollections(
     // Revalidate the correct admin path
     revalidatePath("/admin/products/all-collectins/afican");
 
-    return { success: true, data: africanProducts };
+    return { success: true, data: winterProducts };
   } catch (error) {
-    console.error("Error fetching leisure collections:", error);
+    console.error("Error fetching winter collections:", error);
     return {
       success: false,
       error:
