@@ -171,9 +171,61 @@ const Sidebar = ({ className }: { className?: string }) => {
               ],
             },
             {
-              href: "/other",
+              href: "/all-collections",
               icon: FileText,
-              label: "ALL COLLECT",
+              label: "ALL COLLECTIONS",
+              subItems: [
+                {
+                  href: "/signature",
+                  icon: FileText,
+                  label: "SIGNATURE",
+                },
+                {
+                  href: "/baseball",
+                  icon: FileText,
+                  label: "BASEBALL",
+                },
+                {
+                  href: "/fashion",
+                  icon: FileText,
+                  label: "FASHION",
+                },
+                {
+                  href: "/leisure",
+                  icon: FileText,
+                  label: "LEISURE",
+                },
+                {
+                  href: "/sport",
+                  icon: FileText,
+                  label: "SPORT",
+                },
+                {
+                  href: "/industrial",
+                  icon: FileText,
+                  label: "INDUSTRIAL",
+                },
+                {
+                  href: "/camo",
+                  icon: FileText,
+                  label: "CAMO",
+                },
+                {
+                  href: "/winter",
+                  icon: FileText,
+                  label: "WINTER",
+                },
+                {
+                  href: "/kids",
+                  icon: FileText,
+                  label: "KIDS",
+                },
+                {
+                  href: "/african",
+                  icon: FileText,
+                  label: "AFRICAN",
+                },
+              ],
             },
           ],
         },
