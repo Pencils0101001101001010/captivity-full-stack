@@ -30,6 +30,7 @@ export async function fetchAfricanCollections() {
         stock: true,
       },
     });
+    //TODO: DONT FOR GET TO REVALIDATE YOUR PATH WHEN YOUB FETCH DATA
     return { success: true, data: africanProducts };
   } catch (error) {
     console.error("Error fetching African collections:", error);
