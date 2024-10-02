@@ -133,9 +133,9 @@ export const productSchema = z.object({
 export type ProductFormValues = z.infer<typeof productSchema>;
 
 export const categoryOptions = [
-  { value: "electronics", label: "Electronics" },
-  { value: "clothing", label: "Clothing" },
-  { value: "books", label: "Books" },
+  { value: "Headwear Collection", label: "Headwear Collection" },
+  { value: "Men Collection", label: "Men" },
+  { value: "Woman Collection", label: "Woman" },
   // Add more categories as needed
 ];
 

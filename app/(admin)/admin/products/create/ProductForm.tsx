@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -28,9 +28,11 @@ import {
   ProductFormValues,
   productSchema,
 } from "@/lib/validation";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"; // Button from shadcn
+import { createProduct } from "./actions";
 
 export default function ProductForm() {
+  const [loading, setLoading] = useState(false); // State for loading
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -60,9 +62,25 @@ export default function ProductForm() {
     },
   });
 
-  function onSubmit(values: ProductFormValues) {
-    console.log(values);
-    // Here you would typically send the data to your API
+  // Handle form submission
+  async function onSubmit(values: ProductFormValues) {
+    setLoading(true); // Set loading state to true
+    try {
+      const result = await createProduct(values); // Call the server action
+
+      if (result.success) {
+        // Server-side will handle the redirect, no need for client-side routing
+        // For example, you can just log the success for debugging here
+        console.log("Product created successfully");
+      } else {
+        // Handle server error (optional: display a message to the user)
+        console.error(result.error);
+      }
+    } catch (error) {
+      console.error("Error creating product:", error);
+    } finally {
+      setLoading(false); // Reset loading state after submission completes
+    }
   }
 
   return (
@@ -305,8 +323,9 @@ export default function ProductForm() {
           />
         </div>
 
-        <Button type="submit" className="w-full md:w-auto">
-          Create Product
+        {/* Submit Button with Loading State */}
+        <Button type="submit" className="w-full md:w-auto" disabled={loading}>
+          {loading ? "Creating..." : "Create Product"}
         </Button>
       </form>
     </Form>
