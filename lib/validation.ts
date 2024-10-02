@@ -134,8 +134,20 @@ export type ProductFormValues = z.infer<typeof productSchema>;
 
 export const categoryOptions = [
   { value: "Headwear Collection", label: "Headwear Collection" },
-  { value: "Men Collection", label: "Men" },
-  { value: "Women Collection", label: "Women" },
+  { value: "Apparel Collection", label: "Apparel Collection" },
+  { value: "All Collection", label: "All Collection" },
+  { value: "Men", label: "Men" },
+  { value: "Women", label: "Women" },
+  { value: "Summer", label: "Summer" },
+  { value: "Winter", label: "Winter" },
+  { value: "Baseball", label: "Baseball" },
+  { value: "Kids", label: "Kids" },
+  { value: "Fashion", label: "Fashion" },
+  { value: "Leisure", label: "Leisure" },
+  { value: "Signature", label: "Signature" },
+  { value: "Sport", label: "Sport" },
+  { value: "African", label: "African" },
+
   // Add more categories as needed
 ];
 

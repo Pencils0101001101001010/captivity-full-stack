@@ -28,7 +28,7 @@ export async function fetchSignatureCollections(
     const baseWhereCondition: Prisma.ProductWhereInput = {
       OR: [
         {
-          categories: { contains: "Signature Collection" },
+          categories: { contains: "Signature" },
         },
       ],
     };
