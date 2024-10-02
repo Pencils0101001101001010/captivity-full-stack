@@ -18,123 +18,119 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   // Function to format the description
   const formatDescription = (description: string) => {
-    // Remove all '\n' characters
     let formattedDesc = description.replace(/\\n/g, "");
-
-    // Split the description into lines
     const lines = formattedDesc.split("*").filter((line) => line.trim() !== "");
-
-    // Create HTML list items
     const listItems = lines.map((line) => `<li>${line.trim()}</li>`).join("");
-
-    // Wrap list items in a ul tag
     formattedDesc = `<ul>${listItems}</ul>`;
-
-    // Replace the last list item with a paragraph for "Recommended Branding"
     formattedDesc = formattedDesc.replace(
       /<li>(Recommended Branding:.*?)<\/li>/,
       "</ul><p><strong>$1</strong></p>"
     );
-
     return { __html: formattedDesc };
   };
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-2xl">
       <CardHeader>
         <CardTitle>{product.name}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {product.imageUrl && (
-            <div className="relative w-full h-64">
+            <div className="aspect-video relative">
               <Image
                 src={product.imageUrl}
                 alt={product.name}
-                layout="fill"
-                objectFit="cover"
-                className="rounded-md"
+                width={300}
+                height={300}
+                priority
+                className="w-full rounded-lg h-[500px]"
               />
             </div>
           )}
-          <div className="space-y-2">
-            <p>
-              <strong>SKU:</strong> {product.sku}
-            </p>
-            <p>
-              <strong>Type:</strong> {product.type}
-            </p>
-            <p>
-              <strong>Published:</strong> {product.published ? "Yes" : "No"}
-            </p>
-            <p>
-              <strong>Featured:</strong> {product.isFeatured ? "Yes" : "No"}
-            </p>
-            <p>
-              <strong>Visibility:</strong> {product.visibility}
-            </p>
-            <div>
-              <strong>Short Description:</strong>
-              <div
-                dangerouslySetInnerHTML={formatDescription(
-                  product.shortDescription
-                )}
-                className="mt-2 pl-4 description-content"
-              />
+          <div className="md:grid md:grid-cols-2 md:gap-4 space-y-2 md:space-y-0">
+            <div className="space-y-2">
+              <p>
+                <strong>SKU:</strong> {product.sku}
+              </p>
+              <p>
+                <strong>Type:</strong> {product.type}
+              </p>
+              <p>
+                <strong>Published:</strong> {product.published ? "Yes" : "No"}
+              </p>
+              <p>
+                <strong>Featured:</strong> {product.isFeatured ? "Yes" : "No"}
+              </p>
+              <p>
+                <strong>Visibility:</strong> {product.visibility}
+              </p>
+              <div>
+                <strong>Short Description:</strong>
+                <div
+                  dangerouslySetInnerHTML={formatDescription(
+                    product.shortDescription
+                  )}
+                  className="mt-2 pl-4 description-content"
+                />
+              </div>
+              <p>
+                <strong>Tax Status:</strong> {product.taxStatus}
+              </p>
+              <p>
+                <strong>In Stock:</strong> {product.inStock ? "Yes" : "No"}
+              </p>
             </div>
-            <p>
-              <strong>Tax Status:</strong> {product.taxStatus}
-            </p>
-            <p>
-              <strong>In Stock:</strong> {product.inStock ? "Yes" : "No"}
-            </p>
-            <p>
-              <strong>Backorders Allowed:</strong>{" "}
-              {product.backordersAllowed ? "Yes" : "No"}
-            </p>
-            <p>
-              <strong>Sold Individually:</strong>{" "}
-              {product.soldIndividually ? "Yes" : "No"}
-            </p>
-            <p>
-              <strong>Allow Reviews:</strong>{" "}
-              {product.allowReviews ? "Yes" : "No"}
-            </p>
-            <p>
-              <strong>Categories:</strong> {product.categories}
-            </p>
-            <p>
-              <strong>Tags:</strong> {product.tags}
-            </p>
-            <p>
-              <strong>Position:</strong> {product.position}
-            </p>
-            {product.attribute1Name && (
+            <div className="space-y-2">
               <p>
-                <strong>{product.attribute1Name}:</strong>{" "}
-                {product.attribute1Values}
+                <strong>Backorders Allowed:</strong>{" "}
+                {product.backordersAllowed ? "Yes" : "No"}
               </p>
-            )}
-            {product.attribute2Name && (
               <p>
-                <strong>{product.attribute2Name}:</strong>{" "}
-                {product.attribute2Values}
+                <strong>Sold Individually:</strong>{" "}
+                {product.soldIndividually ? "Yes" : "No"}
               </p>
-            )}
-            {product.regularPrice !== null && (
               <p>
-                <strong>Regular Price:</strong> $
-                {product.regularPrice.toFixed(2)}
+                <strong>Allow Reviews:</strong>{" "}
+                {product.allowReviews ? "Yes" : "No"}
               </p>
-            )}
-            {product.stock !== null && (
               <p>
-                <strong>Stock:</strong> {product.stock}
+                <strong>Categories:</strong> {product.categories}
               </p>
-            )}
-            <p>
-              <strong>Created At:</strong> {product.createdAt.toLocaleString()}
-            </p>
+              <p>
+                <strong>Tags:</strong> {product.tags}
+              </p>
+              <p>
+                <strong>Position:</strong> {product.position}
+              </p>
+              {product.attribute1Name && (
+                <p>
+                  <strong>{product.attribute1Name}:</strong>{" "}
+                  {product.attribute1Values}
+                </p>
+              )}
+              {product.attribute2Name && (
+                <p>
+                  <strong>{product.attribute2Name}:</strong>{" "}
+                  {product.attribute2Values}
+                </p>
+              )}
+              {product.regularPrice !== null && (
+                <p>
+                  <strong>Regular Price:</strong> $
+                  {product.regularPrice.toFixed(2)}
+                </p>
+              )}
+              {product.stock !== null && (
+                <p>
+                  <strong>Stock:</strong> {product.stock}
+                </p>
+              )}
+              <p>
+                <strong>Created At:</strong>{" "}
+                {product.createdAt.toLocaleString()}
+              </p>
+            </div>
           </div>
         </div>
       </CardContent>
