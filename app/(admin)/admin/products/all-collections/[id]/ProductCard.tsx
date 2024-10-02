@@ -16,6 +16,29 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  // Function to format the description
+  const formatDescription = (description: string) => {
+    // Remove all '\n' characters
+    let formattedDesc = description.replace(/\\n/g, "");
+
+    // Split the description into lines
+    const lines = formattedDesc.split("*").filter((line) => line.trim() !== "");
+
+    // Create HTML list items
+    const listItems = lines.map((line) => `<li>${line.trim()}</li>`).join("");
+
+    // Wrap list items in a ul tag
+    formattedDesc = `<ul>${listItems}</ul>`;
+
+    // Replace the last list item with a paragraph for "Recommended Branding"
+    formattedDesc = formattedDesc.replace(
+      /<li>(Recommended Branding:.*?)<\/li>/,
+      "</ul><p><strong>$1</strong></p>"
+    );
+
+    return { __html: formattedDesc };
+  };
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
@@ -50,9 +73,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <p>
               <strong>Visibility:</strong> {product.visibility}
             </p>
-            <p>
-              <strong>Short Description:</strong> {product.shortDescription}
-            </p>
+            <div>
+              <strong>Short Description:</strong>
+              <div
+                dangerouslySetInnerHTML={formatDescription(
+                  product.shortDescription
+                )}
+                className="mt-2 pl-4 description-content"
+              />
+            </div>
             <p>
               <strong>Tax Status:</strong> {product.taxStatus}
             </p>
@@ -110,16 +139,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Link
-          href={`/admin/products/all-collections/${product.id}/edit`}
-          passHref
-        >
+        <Link href={`/admin/products/edit/${product.id}`} passHref>
           <Button variant="outline">Update</Button>
         </Link>
-        <Link
-          href={`/admin/products/all-collections/${product.id}/delete`}
-          passHref
-        >
+        <Link href={`/admin/products/delete/${product.id}`} passHref>
           <Button variant="destructive">Delete</Button>
         </Link>
       </CardFooter>
