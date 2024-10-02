@@ -1,6 +1,8 @@
 import { Metadata } from "next";
+import loginImage from "@/app/(admin)/assets/login-image.jpg";
 import Link from "next/link";
 import LoginForm from "./LoginForm";
+import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "Login",
@@ -10,7 +12,8 @@ export default function Page() {
   return (
     <main className="flex h-screen items-center justify-center p-5">
       <div className="flex h-full max-h-[40rem] w-full max-w-[64rem] overflow-hidden rounded-2xl bg-card shadow-2xl">
-        <div className="w-full space-y-10 overflow-y-auto p-10 md:w-1/2">
+        {/* Left side: Login form */}
+        <div className="flex w-1/2 flex-col space-y-10 overflow-y-auto p-10">
           <h1 className="text-center text-3xl font-bold">Login to bugbook</h1>
           <div className="space-y-5">
             <div className="flex items-center gap-3">
@@ -23,6 +26,14 @@ export default function Page() {
               Don&apos;t have an account? Sign up
             </Link>
           </div>
+        </div>
+        {/* Right side: Adding the image */}
+        <div className="flex w-1/2 items-center justify-center">
+          <Image
+            src={loginImage}
+            alt=" Image"
+            className="object-cover w-full h-full"
+          />
         </div>
       </div>
     </main>
