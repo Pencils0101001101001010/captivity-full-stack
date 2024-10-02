@@ -10,25 +10,13 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Product } from "@prisma/client";
+import { formatDescription } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  // Function to format the description
-  const formatDescription = (description: string) => {
-    let formattedDesc = description.replace(/\\n/g, "");
-    const lines = formattedDesc.split("*").filter((line) => line.trim() !== "");
-    const listItems = lines.map((line) => `<li>${line.trim()}</li>`).join("");
-    formattedDesc = `<ul>${listItems}</ul>`;
-    formattedDesc = formattedDesc.replace(
-      /<li>(Recommended Branding:.*?)<\/li>/,
-      "</ul><p><strong>$1</strong></p>"
-    );
-    return { __html: formattedDesc };
-  };
-
   return (
     <Card className="w-full max-w-2xl">
       <CardHeader>
