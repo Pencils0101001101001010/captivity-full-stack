@@ -135,7 +135,7 @@ export type ProductFormValues = z.infer<typeof productSchema>;
 export const categoryOptions = [
   { value: "Headwear Collection", label: "Headwear Collection" },
   { value: "Men Collection", label: "Men" },
-  { value: "Woman Collection", label: "Woman" },
+  { value: "Women Collection", label: "Women" },
   // Add more categories as needed
 ];
 
