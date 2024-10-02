@@ -86,12 +86,12 @@ export default function ProductForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 shadow-xl shadow-gray-400 p-10 rounded-md">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-4 shadow-xl shadow-gray-400 p-10 rounded-md">
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>Product Name</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter product name" {...field} />
@@ -105,7 +105,7 @@ export default function ProductForm() {
             control={form.control}
             name="type"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>Product Type</FormLabel>
                 <Select
                   onValueChange={field.onChange}
@@ -131,7 +131,7 @@ export default function ProductForm() {
             control={form.control}
             name="sku"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>SKU</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter SKU" {...field} />
@@ -145,7 +145,7 @@ export default function ProductForm() {
             control={form.control}
             name="regularPrice"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>Regular Price</FormLabel>
                 <FormControl>
                   <Input
@@ -163,7 +163,7 @@ export default function ProductForm() {
             control={form.control}
             name="stock"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>Stock Quantity</FormLabel>
                 <FormControl>
                   <Input
@@ -181,54 +181,9 @@ export default function ProductForm() {
 
           <FormField
             control={form.control}
-            name="categories"
-            render={() => (
-              <FormItem className="space-y-2">
-                <FormLabel>Categories</FormLabel>
-                <FormControl>
-                  <div className="grid grid-cols-2 gap-2">
-                    {categoryOptions.map((category) => (
-                      <div
-                        key={category.value}
-                        className="flex items-center space-x-2"
-                      >
-                        <Checkbox
-                          id={`category-${category.value}`}
-                          onCheckedChange={(checked) => {
-                            const currentCategories =
-                              form.getValues("categories");
-                            if (checked) {
-                              form.setValue("categories", [
-                                ...currentCategories,
-                                category.value,
-                              ]);
-                            } else {
-                              form.setValue(
-                                "categories",
-                                currentCategories.filter(
-                                  (c) => c !== category.value
-                                )
-                              );
-                            }
-                          }}
-                        />
-                        <label htmlFor={`category-${category.value}`}>
-                          {category.label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
             name="attribute1Values"
             render={() => (
-              <FormItem className="space-y-2">
+              <FormItem className="w-full space-y-2">
                 <FormLabel>Colors</FormLabel>
                 <FormControl>
                   <div className="grid grid-cols-2 gap-2">
@@ -271,7 +226,7 @@ export default function ProductForm() {
             control={form.control}
             name="imageUrl"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>Product Image URL</FormLabel>
                 <FormControl>
                   <Input type="url" placeholder="Enter image URL" {...field} />
@@ -288,7 +243,7 @@ export default function ProductForm() {
             control={form.control}
             name="shortDescription"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>Short Description</FormLabel>
                 <FormControl>
                   <Textarea
@@ -318,6 +273,50 @@ export default function ProductForm() {
                     This product will be visible on the store
                   </FormDescription>
                 </div>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="categories"
+            render={() => (
+              <FormItem className="w-full space-y-2">
+                <FormLabel>Categories</FormLabel>
+                <FormControl>
+                  <div className="grid grid-cols-2 gap-2">
+                    {categoryOptions.map((category) => (
+                      <div
+                        key={category.value}
+                        className="flex items-center space-x-2"
+                      >
+                        <Checkbox
+                          id={`category-${category.value}`}
+                          onCheckedChange={(checked) => {
+                            const currentCategories =
+                              form.getValues("categories");
+                            if (checked) {
+                              form.setValue("categories", [
+                                ...currentCategories,
+                                category.value,
+                              ]);
+                            } else {
+                              form.setValue(
+                                "categories",
+                                currentCategories.filter(
+                                  (c) => c !== category.value
+                                )
+                              );
+                            }
+                          }}
+                        />
+                        <label htmlFor={`category-${category.value}`}>
+                          {category.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
