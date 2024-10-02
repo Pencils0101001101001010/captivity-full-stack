@@ -14,7 +14,7 @@ export default function Page() {
       <div className="flex h-full max-h-[40rem] w-full max-w-[64rem] overflow-hidden rounded-2xl bg-card shadow-2xl">
         {/* Left side: Login form */}
         <div className="flex w-1/2 flex-col space-y-10 overflow-y-auto p-10">
-          <h1 className="text-center text-3xl font-bold">Login to bugbook</h1>
+          <h1 className="text-center text-3xl font-bold">Login to Captivity</h1>
           <div className="space-y-5">
             <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-muted" />
