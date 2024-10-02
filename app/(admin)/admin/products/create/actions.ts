@@ -20,7 +20,7 @@ export async function createProduct(productData: ProductFormValues) {
     }
 
     // Create the new product in the database
-    const newProduct = await prisma.product.create({
+    await prisma.product.create({
       data: {
         userId: user.id,
         name: productData.name,
