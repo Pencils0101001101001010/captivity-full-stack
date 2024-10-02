@@ -32,7 +32,8 @@ import { Button } from "@/components/ui/button"; // Button from shadcn
 import { createProduct } from "./actions";
 
 export default function ProductForm() {
-  const [loading, setLoading] = useState(false); // State for loading
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -64,22 +65,18 @@ export default function ProductForm() {
 
   // Handle form submission
   async function onSubmit(values: ProductFormValues) {
-    setLoading(true); // Set loading state to true
+    setLoading(true);
+    setError(null);
     try {
-      const result = await createProduct(values); // Call the server action
-
-      if (result.success) {
-        // Server-side will handle the redirect, no need for client-side routing
-        // For example, you can just log the success for debugging here
-        console.log("Product created successfully");
-      } else {
-        // Handle server error (optional: display a message to the user)
-        console.error(result.error);
-      }
+      await createProduct(values);
+      // If we reach this point, it means the redirect didn't happen,
+      // which is unexpected. We can handle this case if needed.
+      console.error("Unexpected: createProduct completed without redirecting");
     } catch (error) {
       console.error("Error creating product:", error);
+      setError("Failed to create product. Please try again.");
     } finally {
-      setLoading(false); // Reset loading state after submission completes
+      setLoading(false);
     }
   }
 

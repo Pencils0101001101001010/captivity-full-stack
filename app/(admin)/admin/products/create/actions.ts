@@ -1,17 +1,12 @@
 "use server";
+
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { ProductFormValues } from "@/lib/validation";
-import { Product } from "@prisma/client";
+import { redirect } from "next/navigation";
 
-type CreateProductResult =
-  | { success: true; data: Product }
-  | { success: false; error: string };
-
-export async function createProduct(
-  productData: ProductFormValues
-): Promise<CreateProductResult> {
+export async function createProduct(productData: ProductFormValues) {
   try {
     // Validate user session
     const { user } = await validateRequest();
@@ -40,10 +35,10 @@ export async function createProduct(
         backordersAllowed: productData.backordersAllowed,
         soldIndividually: productData.soldIndividually,
         allowReviews: productData.allowReviews,
-        categories: productData.categories.join(", "), // Assuming categories are stored as a comma-separated string
-        tags: productData.tags.join(", "), // Assuming tags are stored as a comma-separated string
+        categories: productData.categories.join(", "),
+        tags: productData.tags.join(", "),
         imageUrl: productData.imageUrl,
-        upsells: productData.upsells.join(", "), // Assuming upsells are stored as a comma-separated string
+        upsells: productData.upsells.join(", "),
         position: productData.position,
         attribute1Name: productData.attribute1Name || null,
         attribute1Values: productData.attribute1Values?.join(", ") || null,
@@ -55,15 +50,15 @@ export async function createProduct(
     });
 
     // Revalidate the path to ensure that new product data is reflected
-    revalidatePath("/admin/products");
+    revalidatePath("/admin/products/create");
 
-    return { success: true, data: newProduct };
+    // Redirect to the products page
+    redirect("/admin");
   } catch (error) {
+    // Log the error
     console.error("Error creating product:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
+
+    // Rethrow the error to be handled by the client
+    throw error;
   }
 }
