@@ -283,7 +283,7 @@ export default function ProductForm() {
               <FormItem className="w-full space-y-2">
                 <FormLabel>Categories</FormLabel>
                 <FormControl>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-x-6">
                     {categoryOptions.map((category) => (
                       <div
                         key={category.value}
