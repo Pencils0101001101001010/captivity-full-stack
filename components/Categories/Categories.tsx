@@ -1,3 +1,4 @@
+import CategoryDropdown from "@/app/(user)/_components/CategoryDropdown";
 import Link from "next/link";
 import React from "react";
 import { MdKeyboardArrowDown } from "react-icons/md";
@@ -8,43 +9,7 @@ const Categories = () => {
       <div className="flex items-center w-full text-sm font-bold justify-center gap-5">
         <div className="hidden md:flex items-center space-x-8 px-20 md:px-20 ">
           <div className="relative group ">
-            <button className="focus:outline-none px-10 py-2 items-center flex text-gray-600 hover:text-gray-400">
-              <Link href="/headwear/HeadwearCollection">
-                Headwear Collection{" "}
-              </Link>
-              <MdKeyboardArrowDown />
-            </button>
-
-            <div className=" z-10 items-center absolute left-0 ml-8 mt-0 w-52 bg-white text-gray-600 rounded-md shadow-lg hidden group-hover:block">
-              <ul>
-                <li className="px-4 py-2  hover:text-red-600 hover:bg-gray-200">
-                  <Link href="/headwear/newInHeadwear">NEW in Headwear</Link>
-                </li>
-                <li className="px-4 py-2  hover:text-red-600 hover:bg-gray-200">
-                  <Link href="/headwear/FlatPeaks">Flat peaks</Link>
-                </li>
-                <li className="px-4 py-2  hover:text-red-600 hover:bg-gray-200">
-                  <Link href="/headwear/preCurvedPeaks">Pre-curved Peaks</Link>
-                </li>
-                <li className="px-4 py-2  hover:text-red-600 hover:bg-gray-200">
-                  <Link href="/headwear/hats">Hats</Link>
-                </li>
-                <li className="px-4 py-2  hover:text-red-600 hover:bg-gray-200">
-                  <Link href="/headwear/multifunctionalHeadwear">
-                    Multifunctional Headwear
-                  </Link>
-                </li>
-                <li className="px-4 py-2  hover:text-red-600 hover:bg-gray-200">
-                  <Link href="/headwear/beanies">Beanies</Link>
-                </li>
-                <li className="px-4 py-2  hover:text-red-600 hover:bg-gray-200">
-                  <Link href="/headwear/truckerCaps">Trucker Caps</Link>
-                </li>
-                <li className="px-4 py-2  hover:text-red-600 hover:bg-gray-200">
-                  <Link href="/headwear/bucketHats">Bucket Hats</Link>
-                </li>
-              </ul>
-            </div>
+            <CategoryDropdown />
           </div>
           <div className="relative group">
             <button className="focus:outline-none flex items-center px-10 py-2 text-gray-600 hover:text-gray-400">

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Footer/Footer";
-import Categories from "@/components/Categories/Categories";
 import CopyRight from "@/components/CopyRight/CopyRight";
 import { ThemeProvider } from "next-themes";
+import CategoriesDropDown from "./(user)/_compnents/CategoriesDropDown";
 
 export const metadata = {
   title: "Captivity-Headwear And Apparel",
@@ -27,7 +27,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <Navbar />
-            <Categories />
+            <CategoriesDropDown />
             {children}
             <Footer />
             <CopyRight />
