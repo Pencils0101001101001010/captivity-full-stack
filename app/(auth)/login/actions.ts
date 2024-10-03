@@ -20,7 +20,7 @@ enum UserRole {
 }
 
 const roleRoutes: Record<UserRole, string> = {
-  [UserRole.USER]: "/await-approval",
+  [UserRole.USER]: "/register-pending-message",
   [UserRole.CUSTOMER]: "/customer",
   [UserRole.SUBSCRIBER]: "/subscriber",
   [UserRole.PROMO]: "/promo",
