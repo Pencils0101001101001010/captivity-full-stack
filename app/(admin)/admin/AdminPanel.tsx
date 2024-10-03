@@ -38,7 +38,7 @@ const TrackerCard = ({
   return (
     <div className="bg-card text-card-foreground shadow-md rounded-lg p-6 flex flex-col items-center">
       <h2 className="text-xl font-semibold mb-4">{title}</h2>
-      <div className="w-32 h-32">
+      <div className="w-60 h-60">
         <CircularProgressbar
           value={value}
           text={`${value}%`}
