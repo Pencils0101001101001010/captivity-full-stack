@@ -21,7 +21,7 @@ export default async function Layout({
         <Navbar />
         <div className="flex w-full grow">
           {/* Sidebar will be hidden on small screens and a toggle button can be added */}
-          <Sidebar className="hidden h-screen w-64 lg:block" />
+          <Sidebar className="hidden w-64 lg:block" />
           <main className="flex-grow p-5">{children}</main>
         </div>
       </div>

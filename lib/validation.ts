@@ -145,7 +145,8 @@ export const categoryOptions = [
   { value: "Fashion", label: "Fashion" },
   { value: "Leisure", label: "Leisure" },
   { value: "Signature", label: "Signature" },
-  { value: "Sport Collection", label: "Sport" },
+  { value: "Sport", label: "Sport" },
+  { value: "Hats", label: "Hats" },
   { value: "African", label: "African" },
 
   // Add more categories as needed
