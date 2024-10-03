@@ -1,136 +1,54 @@
 "use client";
-import React, { useState } from "react";
-import { TrackerData } from "./types";
-// Import necessary components from Chart.js
-import { Line, Bar, Pie } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  BarElement,
-  LineElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-// Register components for Chart.js
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  BarElement,
-  LineElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import React from "react";
+import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css"; // Import the styles for the progress bar
 
 const AdminPanel = () => {
-  const [trackerData, setTrackerData] = useState<TrackerData>({
-    deletedProducts: 10,
-    updatedProducts: 5,
-    createdProducts: 20,
-    upgradedUserRoles: 3,
-  });
+  const trackerData = {
+    deletedProducts: 70,
+    updatedProducts: 55,
+    createdProducts: 90,
+    upgradedUserRoles: 40,
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="min-h-screen bg-background text-foreground p-8">
       <h1 className="text-3xl font-bold mb-8">Welcome to the Admin Panel</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <TrackerCard
-          title="Deleted Products"
-          value={trackerData.deletedProducts}
-          chartType="line"
-        />
-        <TrackerCard
-          title="Updated Products"
-          value={trackerData.updatedProducts}
-          chartType="bar"
-        />
-        <TrackerCard
-          title="Created Products"
-          value={trackerData.createdProducts}
-          chartType="pie"
-        />
-        <TrackerCard
-          title="Upgraded User Roles"
-          value={trackerData.upgradedUserRoles}
-          chartType="line"
-        />
+        <TrackerCard title="Deleted Products" value={trackerData.deletedProducts} color="#ff6b6b" />
+        <TrackerCard title="Updated Products" value={trackerData.updatedProducts} color="#feca57" />
+        <TrackerCard title="Created Products" value={trackerData.createdProducts} color="#54a0ff" />
+        <TrackerCard title="Upgraded User Roles" value={trackerData.upgradedUserRoles} color="#1dd1a1" />
       </div>
     </div>
   );
 };
 
-// TrackerCard Component with multiple chart types and fixed Pie chart
+// TrackerCard component using CircularProgressbar with custom hex colors
 const TrackerCard = ({
   title,
   value,
-  chartType,
+  color,
 }: {
   title: string;
   value: number;
-  chartType: "line" | "bar" | "pie";
+  color: string;
 }) => {
-  const data = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    datasets: [
-      {
-        label: title,
-        data: [10, 15, 20, 25, 30, 35, 40], // Example static data
-        borderColor: "rgba(75, 192, 192, 1)",
-        backgroundColor:
-          chartType === "pie"
-            ? ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40", "#FF6384"]
-            : "rgba(75, 192, 192, 0.2)",
-        hoverBackgroundColor:
-          chartType === "pie"
-            ? ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40", "#FF6384"]
-            : undefined,
-      },
-    ],
-  };
-
-  const options = {
-    maintainAspectRatio: chartType === "pie" ? false : true,
-    responsive: true,
-    plugins: {
-      legend: {
-        display: chartType === "pie" ? true : false,
-        position: "bottom" as const, // Use exact literal type for position
-      },
-    },
-    scales: {
-      x: chartType !== "pie" ? { 
-        ticks: { 
-          maxRotation: 0, // Prevents label rotation
-          minRotation: 0 
-        } 
-      } : undefined,
-      y: chartType !== "pie" ? {
-        beginAtZero: true,
-      } : undefined,
-    },
-  };
-
   return (
-    <div className="bg-white shadow-md rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-2">{title}</h2>
-      <p className="text-3xl font-bold">{value}</p>
-      {/* Dynamic Chart based on chartType */}
-      <div
-        className={`mt-4 ${
-          chartType === "pie" ? "w-60 h-60 mx-auto" : "" // Adjusted size and centered Pie chart
-        }`}
-      >
-        {chartType === "line" && <Line data={data} options={options} />}
-        {chartType === "bar" && <Bar data={data} options={options} />}
-        {chartType === "pie" && <Pie data={data} options={options} />}
+    <div className="bg-card text-card-foreground shadow-md rounded-lg p-6 flex flex-col items-center">
+      <h2 className="text-xl font-semibold mb-4">{title}</h2>
+      <div className="w-32 h-32">
+        <CircularProgressbar
+          value={value}
+          text={`${value}%`}
+          styles={buildStyles({
+            textColor: "#333",           // Color for the text inside the circle
+            pathColor: color,            // Hex color for the progress path
+            trailColor: "#e0e0e0",       // Light gray background color for the trail (behind the progress)
+            textSize: "16px",            // Text size inside the circular progress bar
+          })}
+        />
       </div>
     </div>
   );
