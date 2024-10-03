@@ -102,7 +102,7 @@ const TrackerCard = ({
     plugins: {
       legend: {
         display: chartType === "pie" ? true : false,
-        position: "bottom", // Legend under pie chart
+        position: "bottom" as const, // Use exact literal type for position
       },
     },
     scales: {
