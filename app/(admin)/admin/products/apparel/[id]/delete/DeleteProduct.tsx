@@ -105,9 +105,10 @@ const DeleteProduct = () => {
               <Image
                 src={productDetails.imageUrl}
                 alt={productDetails.sku}
-                layout="fill"
-                objectFit="cover"
-                className="rounded"
+                width={300}
+                height={300}
+                className="rounded w-full"
+                priority
               />
             </div>
             <div>
