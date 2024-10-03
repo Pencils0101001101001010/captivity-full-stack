@@ -3,13 +3,11 @@
 import { lucia } from "@/auth";
 import prisma from "@/lib/prisma";
 import { loginSchema, LoginValues } from "@/lib/validation";
-
 import { verify } from "@node-rs/argon2";
 import { isRedirectError } from "next/dist/client/components/redirect";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-// Import or define your UserRole enum
 enum UserRole {
   USER = "USER",
   CUSTOMER = "CUSTOMER",
@@ -21,9 +19,8 @@ enum UserRole {
   ADMIN = "ADMIN",
 }
 
-// Define the routes for each role (same as in your layout)
 const roleRoutes: Record<UserRole, string> = {
-  [UserRole.USER]: "/dashboard",
+  [UserRole.USER]: "/await-approval",
   [UserRole.CUSTOMER]: "/customer",
   [UserRole.SUBSCRIBER]: "/subscriber",
   [UserRole.PROMO]: "/promo",
@@ -67,19 +64,24 @@ export async function login(
       };
     }
 
-    const session = await lucia.createSession(existingUser.id, {});
-    const sessionCookie = lucia.createSessionCookie(session.id);
-    cookies().set(
-      sessionCookie.name,
-      sessionCookie.value,
-      sessionCookie.attributes
-    );
-
-    // Determine the redirect path based on the user's role
     const userRole = existingUser.role as UserRole;
-    const redirectPath = roleRoutes[userRole] || "/";
 
-    return redirect(redirectPath);
+    if (userRole === UserRole.USER) {
+      // For USER role, don't create a session, just redirect
+      return redirect("/await-approval");
+    } else {
+      // For all other roles, create a session and redirect
+      const session = await lucia.createSession(existingUser.id, {});
+      const sessionCookie = lucia.createSessionCookie(session.id);
+      cookies().set(
+        sessionCookie.name,
+        sessionCookie.value,
+        sessionCookie.attributes
+      );
+
+      const redirectPath = roleRoutes[userRole] || "/";
+      return redirect(redirectPath);
+    }
   } catch (error) {
     if (isRedirectError(error)) throw error;
     console.error(error);

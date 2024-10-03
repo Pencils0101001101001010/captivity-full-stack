@@ -5,7 +5,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export async function logout() {
-  const { session } = await validateRequest();
+  
+  const { session, user } = await validateRequest();
 
   if (!session) {
     throw new Error("Unauthorized");

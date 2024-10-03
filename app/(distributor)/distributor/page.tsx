@@ -1,7 +1,8 @@
 import React from "react";
+import DistributorDashboard from "./DistributorPannel";
 
 const Page = () => {
-  return <div>Welcome to the Distributor Panel</div>;
+  return <div><DistributorDashboard/></div>;
 };
 
 export default Page;
