@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 export async function getProductDetails(id: number) {
   const product = await prisma.product.findUnique({
     where: { id },
-    select: { sku: true, imageUrl: true }
+    select: { sku: true, imageUrl: true },
   });
 
   if (!product) {
@@ -17,6 +17,8 @@ export async function getProductDetails(id: number) {
 
   return product;
 }
+
+/////////////////////////////////////////////////////////////////////////////////
 
 export async function deleteProduct(id: number) {
   try {
@@ -29,12 +31,12 @@ export async function deleteProduct(id: number) {
       throw new Error("Only admins can delete products.");
     }
 
-    await prisma.product.delete({
+    const product = await prisma.product.delete({
       where: { id },
     });
 
     revalidatePath(`/admin/products/all-collections/${id}/delete`);
-    redirect("/admin");
+    return { success: true, product };
   } catch (error) {
     console.error("Error deleting product:", error);
     throw error;

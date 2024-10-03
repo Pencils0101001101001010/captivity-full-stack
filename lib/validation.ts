@@ -49,7 +49,7 @@ export const registrationSchema = z
       .boolean()
       .refine(
         (val) => val === true,
-        "You must agree to the terms and conditions"
+        "You must agree to the terms and conditions",
       ),
     displayName: z.string().optional(), // Add this line
   })
@@ -63,7 +63,7 @@ export const registrationSchema = z
     {
       message: "Please specify the other supplier",
       path: ["otherSupplier"],
-    }
+    },
   );
 
 export type RegistrationFormData = z.infer<typeof registrationSchema>;
@@ -76,7 +76,7 @@ export const signUpSchema = z.object({
   email: requiredString.email("Invalid email address"),
   username: requiredString.regex(
     /^[a-zA-Z0-9_-]+$/,
-    "Only letters, numbers, - and _ allowed"
+    "Only letters, numbers, - and _ allowed",
   ),
   password: requiredString.min(8, "Must be at least 8 characters"),
   role: z
@@ -147,6 +147,7 @@ export const categoryOptions = [
   { value: "Signature", label: "Signature" },
   { value: "Sport", label: "Sport" },
   { value: "Hats", label: "Hats" },
+  { value: "T- Shirts", label: "T- shirts" },
   { value: "African", label: "African" },
 
   // Add more categories as needed
