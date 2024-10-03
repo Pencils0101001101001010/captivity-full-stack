@@ -138,7 +138,7 @@ export const categoryOptions = [
   { value: "All Collection", label: "ALL" },
   { value: "Men", label: "Men" },
   { value: "Women", label: "Women" },
-  { value: "Summer", label: "Summer" },
+  { value: "Summer Collection", label: "Summer" },
   { value: "Winter", label: "Winter" },
   { value: "Baseball", label: "Baseball" },
   { value: "Kids", label: "Kids" },
@@ -152,11 +152,12 @@ export const categoryOptions = [
 ];
 
 export const colorOptions = [
-  { value: "red", label: "Red" },
-  { value: "blue", label: "Blue" },
-  { value: "green", label: "Green" },
-  { value: "yellow", label: "Yellow" },
-  { value: "black", label: "Black" },
-  { value: "white", label: "White" },
+  { value: "Red", label: "Red" },
+  { value: "Blue", label: "Blue" },
+  { value: "Green", label: "Green" },
+  { value: "Yellow", label: "Yellow" },
+  { value: "Black", label: "Black" },
+  { value: "White", label: "White" },
+  { value: "Camo Green", label: "Camo Green" },
   // Add more colors as needed
 ];
