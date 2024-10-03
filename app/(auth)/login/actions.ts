@@ -7,6 +7,7 @@ import { verify } from "@node-rs/argon2";
 import { isRedirectError } from "next/dist/client/components/redirect";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { User } from "@prisma/client";  // Import the User type from Prisma
 
 enum UserRole {
   USER = "USER",
@@ -43,7 +44,7 @@ export async function login(
           mode: "insensitive",
         },
       },
-    });
+    }) as User | null;  // Explicitly type the result
 
     if (!existingUser || !existingUser.passwordHash) {
       return {
@@ -68,7 +69,7 @@ export async function login(
 
     if (userRole === UserRole.USER) {
       // For USER role, don't create a session, just redirect
-      return redirect("/await-approval");
+      return redirect("/register-pending-message");
     } else {
       // For all other roles, create a session and redirect
       const session = await lucia.createSession(existingUser.id, {});

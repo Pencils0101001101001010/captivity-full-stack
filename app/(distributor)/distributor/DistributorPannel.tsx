@@ -1,3 +1,4 @@
+"use client"
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Table, AlertCircle, TruckIcon, Package, DollarSign } from 'lucide-react';
