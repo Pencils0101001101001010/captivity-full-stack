@@ -1,9 +1,10 @@
 import React from "react";
+import DeleteProduct from "./DeleteProduct";
 
 const Page = () => {
   return (
     <div>
-      <h1>Delete Product</h1>
+      <DeleteProduct />
     </div>
   );
 };
