@@ -158,6 +158,10 @@ export const colorOptions = [
   { value: "Yellow", label: "Yellow" },
   { value: "Black", label: "Black" },
   { value: "White", label: "White" },
+  { value: "Stone", label: "Stone" },
+  { value: "Grey", label: "Grey" },
+  { value: "Army Green", label: "Army Green" },
+  { value: "Army Brown", label: "Army Brown" },
   { value: "Camo Green", label: "Camo Green" },
   // Add more colors as needed
 ];

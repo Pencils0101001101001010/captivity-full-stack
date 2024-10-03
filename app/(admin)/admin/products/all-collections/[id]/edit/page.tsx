@@ -58,7 +58,7 @@ export default async function EditProductPage({
 
   return (
     <div>
-      <h1>Edit Product</h1>
+      <h1 className="text-3xl font-bold">Edit Product</h1>
       <UpdateProductForm id={parseInt(params.id, 10)} initialData={product} />
     </div>
   );

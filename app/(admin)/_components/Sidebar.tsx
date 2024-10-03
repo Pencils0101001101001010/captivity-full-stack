@@ -294,7 +294,7 @@ const Sidebar = ({ className }: { className?: string }) => {
   return (
     <div
       className={cn(
-        "sticky top-[60px] flex h-screen w-64 flex-col bg-background p-4 shadow-md",
+        "sticky top-[60px] flex h-full w-64 flex-col bg-background p-4 shadow-md",
         className
       )}
     >
