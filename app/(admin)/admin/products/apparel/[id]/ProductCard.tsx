@@ -124,7 +124,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </CardContent>
       <CardFooter className="flex justify-between">
         <Link href={`/admin/products/apparel/${product.id}/edit`} passHref>
-          <Button variant="outline">Update</Button>
+          <Button color="blue">Update</Button>
         </Link>
         <Link href={`/admin/products/apparel/${product.id}/delete`} passHref>
           <Button variant="destructive">Delete</Button>
