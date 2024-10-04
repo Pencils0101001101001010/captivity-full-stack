@@ -17,6 +17,18 @@ const Navbar = () => {
   const session = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(3); // Example count, replace with actual logic
+
+  const renderCartIcon = () => (
+    <div className="relative">
+      <ShoppingCart />
+      {cartCount > 0 && (
+        <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+          {cartCount}
+        </span>
+      )}
+    </div>
+  );
 
   return (
     <div>
@@ -58,7 +70,7 @@ const Navbar = () => {
             {session?.user ? (
               <div className="flex gap-4 items-center">
                 <UserButton className="text-lg" />
-                <ShoppingCart />
+                {renderCartIcon()}
               </div>
             ) : (
               <Link
@@ -87,7 +99,7 @@ const Navbar = () => {
             {session?.user ? (
               <div className="flex space-x-10 items-center">
                 <UserButton className="text-lg" />
-                <ShoppingCart />
+                {renderCartIcon()}
               </div>
             ) : (
               <>
