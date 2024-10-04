@@ -48,6 +48,8 @@ async function main() {
         attribute1Values: product["Attribute 1 value(s)"] || null,
         attribute2Name: product["Attribute 2 name"] || null,
         attribute2Values: product["Attribute 2 value(s)"] || null,
+        attribute1Default: product["Attribute 1 default"] || null,
+        attribute2Default: product["Attribute 2 default"] || null,
         regularPrice: product["Regular price"]
           ? parseFloat(product["Regular price"])
           : null,

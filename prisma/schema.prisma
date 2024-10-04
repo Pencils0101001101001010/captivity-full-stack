@@ -79,6 +79,8 @@ model Product {
   attribute1Values  String?
   attribute2Name    String?
   attribute2Values  String?
+  attribute1Default String?
+  attribute2Default String?
   regularPrice      Float?
   stock             Int?
   updatedAt         DateTime @updatedAt
