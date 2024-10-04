@@ -11,6 +11,7 @@ import { FaHeart } from "react-icons/fa";
 import { MdAccountCircle } from "react-icons/md";
 import { RxDividerVertical } from "react-icons/rx";
 import React from "react";
+import { ShoppingCart } from "lucide-react";
 
 const Navbar = () => {
   const session = useSession();
@@ -55,8 +56,9 @@ const Navbar = () => {
           {/* Mobile Phone login/user button */}
           <div className="md:hidden absolute top-6 right-7">
             {session?.user ? (
-              <div>
+              <div className="flex gap-4 items-center">
                 <UserButton className="text-lg" />
+                <ShoppingCart />
               </div>
             ) : (
               <Link
@@ -83,7 +85,10 @@ const Navbar = () => {
               </button>
             </div>
             {session?.user ? (
-              <UserButton />
+              <div className="flex space-x-10 items-center">
+                <UserButton className="text-lg" />
+                <ShoppingCart />
+              </div>
             ) : (
               <>
                 <Link href="/login">
