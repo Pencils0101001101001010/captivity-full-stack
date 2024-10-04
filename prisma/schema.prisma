@@ -39,6 +39,7 @@ model User {
   agreeTerms       Boolean   @default(false)
   role             UserRole  @default(USER)
   createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
   Product          Product[]
   sessions         Session[]
 
