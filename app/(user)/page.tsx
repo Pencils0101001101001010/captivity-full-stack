@@ -1,4 +1,3 @@
-import "./globals.css";
 import CustomContainer from "@/components/CustomContainer/CustomContainer";
 import HowToRegister from "@/components/Register/HowToRegister";
 import BestSeller from "@/components/BestSeller/BestSeller";
