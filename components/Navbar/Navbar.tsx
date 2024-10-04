@@ -42,6 +42,7 @@ const Navbar = () => {
                 width={331}
                 height={54}
                 className="flex items-center justify-between md:min-w-40 h-auto "
+                priority
               />
             </span>
           </Link>

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { fetchPreCurvedPeaks } from "./actions";
+import { fetchMensApparel } from "./actions";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +23,7 @@ export default function ProductList() {
   useEffect(() => {
     async function loadProducts() {
       setLoading(true);
-      const result = await fetchPreCurvedPeaks();
+      const result = await fetchMensApparel();
       if (result?.success) {
         setProducts(result.data || []);
       } else {
@@ -44,14 +44,17 @@ export default function ProductList() {
 
   return (
     <div className="container mx-auto my-8">
-      <h1 className="text-3xl font-bold mb-6">Pre-Curved Peaks</h1>
+      <h1 className="text-3xl font-bold mb-6">Mens</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         {loading
           ? Array(6)
               .fill(0)
               .map((_, index) => <ProductCardSkeleton key={index} />)
           : products.map((product) => (
-              <Link href={`/products/headwear/${product.id}`} key={product.id}>
+              <Link
+                href={`/products/headwear/pre-curved-peaks/${product.id}`}
+                key={product.id}
+              >
                 <ProductCard product={product} />
               </Link>
             ))}
@@ -91,7 +94,7 @@ function ProductCard({ product }: { product: Product }) {
         />
       </div>
       <CardContent className="p-4">
-        <h2 className="font-semibold text-lg mb-2">{product.name}</h2>
+        <h4 className="font-semibold text-sm mb-2">{product.name}</h4>
         <Badge
           variant={
             product.stock && product.stock > 0 ? "secondary" : "destructive"

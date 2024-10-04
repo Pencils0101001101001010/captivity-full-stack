@@ -28,15 +28,16 @@ export default function Page() {
         </div>
         <div>
           {/* Right side: Adding the logo image */}
-        <div className="hidden md:flex w-1/2 items-center justify-center bg-white">
-          <Image
-            src="/captivity-logo-white.png" // Path to the image in the public folder
-            alt="Captivity Logo"
-            width={331} 
-            height={54} 
-            className="object-contain"
-          />
-        </div>
+          <div className="hidden md:flex w-1/2 items-center justify-center bg-white">
+            <Image
+              src="/captivity-logo-white.png" // Path to the image in the public folder
+              alt="Captivity Logo"
+              width={331}
+              height={54}
+              className="object-contain"
+              priority
+            />
+          </div>
         </div>
       </div>
     </main>

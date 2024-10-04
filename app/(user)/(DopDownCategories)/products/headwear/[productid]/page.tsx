@@ -1,5 +1,5 @@
 import React from "react";
-import ProductDetail from "./FlatPeakDetailPage";
+import ProductDetail from "./ProductDetailsPage";
 
 const Page = () => {
   return (

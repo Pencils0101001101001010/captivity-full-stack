@@ -51,10 +51,7 @@ export default function ProductList() {
               .fill(0)
               .map((_, index) => <ProductCardSkeleton key={index} />)
           : products.map((product) => (
-              <Link
-                href={`/products/headwear/flat-peaks/${product.id}`}
-                key={product.id}
-              >
+              <Link href={`/products/headwear/${product.id}`} key={product.id}>
                 <ProductCard product={product} />
               </Link>
             ))}

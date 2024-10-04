@@ -52,7 +52,7 @@ export default function ProductList() {
               .map((_, index) => <ProductCardSkeleton key={index} />)
           : products.map((product) => (
               <Link
-                href={`/products/all-collections/african-collection/${product.id}`}
+                href={`/products/all-collections/${product.id}`}
                 key={product.id}
               >
                 <ProductCard product={product} />
