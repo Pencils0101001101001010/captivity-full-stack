@@ -19,9 +19,9 @@ export default async function Layout({
     <SessionProvider value={session}>
       <div className="flex min-h-screen flex-col">
         <Navbar />
-          <div className="bg-slate-300">
-            <CategoriesDropDown/>
-          </div>
+        <div className="bg-slate-300">
+          <CategoriesDropDown />
+        </div>
         <div className="flex w-full grow">
           <main className="flex-grow p-5">{children}</main>
         </div>
