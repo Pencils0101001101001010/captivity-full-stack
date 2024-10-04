@@ -13,7 +13,7 @@ import { RxDividerVertical } from "react-icons/rx";
 import React from "react";
 
 const Navbar = () => {
-  const  session  = useSession();
+  const session = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
@@ -51,16 +51,18 @@ const Navbar = () => {
               />
             </span>
           </Link>
-          
+
           {/* Mobile Phone login/user button */}
           <div className="md:hidden absolute top-6 right-7">
             {session?.user ? (
               <div>
                 <UserButton className="text-lg" />
               </div>
-              
             ) : (
-              <Link href="/login" className="font-bold text-lg hover:text-gray-300">
+              <Link
+                href="/login"
+                className="font-bold text-lg hover:text-gray-300"
+              >
                 Login
               </Link>
             )}
@@ -129,7 +131,7 @@ const Navbar = () => {
           </ul>
         </div>
       )}
-      
+
       {/* Mobile search bar */}
       <div className="md:hidden lg:hidden m-2">
         <div className="flex items-center justify-center border-b-2 p-2">
@@ -143,7 +145,7 @@ const Navbar = () => {
           </button>
         </div>
       </div>
-      
+
       {/* Mobile bottom Nav */}
       <div className="md:hidden fixed inset-x-0 bottom-0 bg-white shadow-xl shadow-gray-400 border-t-2 border-t-gray-400 border-2 ml-5 mr-5 z-10">
         <div className="flex justify-around text-gray-500 m-auto">
@@ -181,4 +183,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar
+export default Navbar;
