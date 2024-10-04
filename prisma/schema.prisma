@@ -9,6 +9,17 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
+enum UserRole {
+  USER
+  CUSTOMER
+  SUBSCRIBER
+  PROMO
+  DISTRIBUTOR
+  SHOPMANAGER
+  EDITOR
+  ADMIN
+}
+
 model User {
   id               String    @id
   username         String    @unique
@@ -88,15 +99,4 @@ model Product {
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("products")
-}
-
-enum UserRole {
-  USER
-  CUSTOMER
-  SUBSCRIBER
-  PROMO
-  DISTRIBUTOR
-  SHOPMANAGER
-  EDITOR
-  ADMIN
 }
