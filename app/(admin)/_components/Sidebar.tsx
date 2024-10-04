@@ -156,7 +156,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className, onClose }) => {
         <Button
           variant="ghost"
           className={cn(
-            "w-full justify-start text-left transition-colors duration-200",
+            "w-full justify-start text-left transition-colors duration-200 mb-2",
             isActive
               ? "bg-primary text-primary-foreground"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
