@@ -17,7 +17,7 @@ export default function Navbar() {
           left: 0;
           right: 0;
           z-index: 50;
-          background-color: var(--card-bg);
+          background-color: blue;
           box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
         .navbar-content {
