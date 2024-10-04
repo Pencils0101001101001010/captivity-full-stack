@@ -15,6 +15,7 @@ import React from "react";
 const Navbar = () => {
   const  session  = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   return (
     <div>
@@ -54,7 +55,10 @@ const Navbar = () => {
           {/* Mobile Phone login/user button */}
           <div className="md:hidden absolute top-6 right-7">
             {session?.user ? (
-              <UserButton className="text-lg" />
+              <div>
+                <UserButton className="text-lg" />
+              </div>
+              
             ) : (
               <Link href="/login" className="font-bold text-lg hover:text-gray-300">
                 Login
@@ -177,4 +181,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default Navbar
