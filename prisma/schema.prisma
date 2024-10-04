@@ -40,8 +40,8 @@ model User {
   role             UserRole  @default(USER)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
-  Product          Product[]
   sessions         Session[]
+  Product          Product[]
 
   @@map("users")
 }
