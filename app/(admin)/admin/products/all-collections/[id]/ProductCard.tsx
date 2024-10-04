@@ -123,10 +123,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Link href={`/admin/products/edit/${product.id}`} passHref>
+        <Link href={`/admin/products/all-collections/${product.id}/edit`} passHref>
           <Button variant="outline">Update</Button>
         </Link>
-        <Link href={`/admin/products/delete/${product.id}`} passHref>
+        <Link href={`/admin/products/all-collections/${product.id}/delete`} passHref>
           <Button variant="destructive">Delete</Button>
         </Link>
       </CardFooter>
