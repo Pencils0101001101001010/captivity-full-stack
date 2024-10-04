@@ -28,7 +28,7 @@ export async function fetchSportCollections(
     const baseWhereCondition: Prisma.ProductWhereInput = {
       OR: [
         {
-          categories: { contains: "Sport Collection" },
+          categories: { contains: "Sport" },
         },
       ],
     };

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import "../../app/globals.css";
 import React from "react";
 import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
 

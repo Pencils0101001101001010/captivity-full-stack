@@ -1,5 +1,5 @@
 import React from "react";
-import TshirtTable from "./TShirtTable";
+import TshirtTable from "./TshirtTable";
 
 const Page = () => {
   return (

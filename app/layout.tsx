@@ -6,6 +6,8 @@ import CopyRight from "@/components/CopyRight/CopyRight";
 import { ThemeProvider } from "next-themes";
 import CategoriesDropDown from "./(user)/_compnents/CategoriesDropDown";
 
+
+
 export const metadata = {
   title: "Captivity-Headwear And Apparel",
   description: "Headwear and Apparel",
@@ -26,11 +28,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <Navbar />
-            <CategoriesDropDown />
             {children}
-            <Footer />
-            <CopyRight />
           </ThemeProvider>
         </div>
       </body>

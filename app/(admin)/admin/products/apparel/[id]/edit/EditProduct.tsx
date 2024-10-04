@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,53 +27,41 @@ import {
   ProductFormValues,
   productSchema,
 } from "@/lib/validation";
-import { Button } from "@/components/ui/button"; // Button from shadcn
-import { createProduct } from "./actions";
+import { Button } from "@/components/ui/button";
+import { updateProduct } from "./actions";
 
-export default function ProductForm() {
+interface UpdateProductFormProps {
+  id: number;
+  initialData: ProductFormValues;
+}
+
+export default function UpdateProductForm({
+  id,
+  initialData,
+}: UpdateProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      type: "",
-      sku: "",
-      name: "",
-      published: false,
-      isFeatured: false,
-      visibility: "public",
-      shortDescription: "",
-      taxStatus: "taxable",
-      inStock: true,
-      backordersAllowed: false,
-      soldIndividually: false,
-      allowReviews: true,
-      categories: [],
-      tags: [],
-      imageUrl: "",
-      upsells: [],
-      position: 0,
-      attribute1Name: "Color",
-      attribute1Values: [],
-      attribute2Name: "",
-      attribute2Values: [],
-      regularPrice: 0,
-      stock: 0,
+      ...initialData,
+      categories: initialData.categories || [],
+      attribute1Values: initialData.attribute1Values || [],
     },
   });
 
-  // Handle form submission
   async function onSubmit(values: ProductFormValues) {
     setLoading(true);
     setError(null);
     try {
-      await createProduct(values);
+      await updateProduct(id, values);
       // If we reach this point, it means the redirect didn't happen,
       // which is unexpected. We can handle this case if needed.
-      console.error("Unexpected: createProduct completed without redirecting");
+      console.error("Unexpected: updateProduct completed without redirecting");
     } catch (error) {
-      console.error("Error creating product:", error);
-      setError("Failed to create product. Please try again.");
+      console.error("Error updating product:", error);
+      setError("Failed to update product. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -191,6 +178,9 @@ export default function ProductForm() {
                       >
                         <Checkbox
                           id={`color-${color.value}`}
+                          checked={(
+                            form.watch("attribute1Values") || []
+                          ).includes(color.value)}
                           onCheckedChange={(checked) => {
                             const currentColors =
                               form.getValues("attribute1Values") || [];
@@ -288,6 +278,9 @@ export default function ProductForm() {
                       >
                         <Checkbox
                           id={`category-${category.value}`}
+                          checked={form
+                            .watch("categories")
+                            .includes(category.value)}
                           onCheckedChange={(checked) => {
                             const currentCategories =
                               form.getValues("categories");
@@ -321,7 +314,7 @@ export default function ProductForm() {
 
         {/* Submit Button with Loading State */}
         <Button type="submit" className="w-full md:w-auto" disabled={loading}>
-          {loading ? "Creating..." : "Create Product"}
+          {loading ? "Updating..." : "Update Product"}
         </Button>
       </form>
     </Form>

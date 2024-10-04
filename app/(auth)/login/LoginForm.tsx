@@ -33,8 +33,11 @@ export default function LoginForm() {
   async function onSubmit(values: LoginValues) {
     setError(undefined);
     startTransition(async () => {
-      const { error } = await login(values);
-      if (error) setError(error);
+      const result = await login(values);
+      // Check if result exists and has an error property
+      if (result && result.error) {
+        setError(result.error);
+      }
     });
   }
 

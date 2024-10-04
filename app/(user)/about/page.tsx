@@ -1,14 +1,16 @@
 import React from "react";
 import styles from "./About.module.css";
+import Image from "next/image";
 
 const About = () => {
   return (
     <div>
       <div className={styles.aboutImageContainer}>
-        <img
+        <Image
           src="/About.jpg"
           alt="Headwear Collection"
           className={styles.aboutImage}
+          priority
         />
         <div className={styles.headingOverlay}>
           <span className={styles.headwear}>HEADWEAR</span>

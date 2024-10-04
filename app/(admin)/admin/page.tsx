@@ -1,7 +1,8 @@
 import React from "react";
+import AdminPanel from "./AdminPanel";
 
 const Page = () => {
-  return <div>Welcome to the Admin Panel</div>;
+  return <div><AdminPanel/></div>;
 };
 
 export default Page;

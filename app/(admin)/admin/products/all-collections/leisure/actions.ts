@@ -28,7 +28,7 @@ export async function fetchLeisureCollections(
     const baseWhereCondition: Prisma.ProductWhereInput = {
       OR: [
         {
-          categories: { contains: "Leisure Collection" },
+          categories: { contains: "Leisure" },
         },
       ],
     };

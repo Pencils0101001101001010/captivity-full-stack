@@ -6,7 +6,10 @@ import { revalidatePath } from "next/cache";
 import { ProductFormValues } from "@/lib/validation";
 import { redirect } from "next/navigation";
 
-export async function createProduct(productData: ProductFormValues) {
+export async function updateProduct(
+  id: number,
+  productData: ProductFormValues
+) {
   try {
     // Validate user session
     const { user } = await validateRequest();
@@ -16,11 +19,12 @@ export async function createProduct(productData: ProductFormValues) {
 
     // Check if the user has the ADMIN role
     if (user.role !== "ADMIN") {
-      throw new Error("Only admins can create products.");
+      throw new Error("Only admins can update products.");
     }
 
-    // Create the new product in the database
-    await prisma.product.create({
+    // Update the existing product in the database
+    await prisma.product.update({
+      where: { id },
       data: {
         userId: user.id,
         name: productData.name,
@@ -49,14 +53,14 @@ export async function createProduct(productData: ProductFormValues) {
       },
     });
 
-    // Revalidate the path to ensure that new product data is reflected
-    revalidatePath("/admin/products/create");
+    // Revalidate the path to ensure that updated product data is reflected
+    revalidatePath(`/admin/products/all-collections/${id}/edit`);
 
     // Redirect to the products page
     redirect("/admin");
   } catch (error) {
     // Log the error
-    console.error("Error creating product:", error);
+    console.error("Error updating product:", error);
 
     // Rethrow the error to be handled by the client
     throw error;

@@ -49,7 +49,7 @@ export const registrationSchema = z
       .boolean()
       .refine(
         (val) => val === true,
-        "You must agree to the terms and conditions"
+        "You must agree to the terms and conditions",
       ),
     displayName: z.string().optional(), // Add this line
   })
@@ -63,7 +63,7 @@ export const registrationSchema = z
     {
       message: "Please specify the other supplier",
       path: ["otherSupplier"],
-    }
+    },
   );
 
 export type RegistrationFormData = z.infer<typeof registrationSchema>;
@@ -76,7 +76,7 @@ export const signUpSchema = z.object({
   email: requiredString.email("Invalid email address"),
   username: requiredString.regex(
     /^[a-zA-Z0-9_-]+$/,
-    "Only letters, numbers, - and _ allowed"
+    "Only letters, numbers, - and _ allowed",
   ),
   password: requiredString.min(8, "Must be at least 8 characters"),
   role: z
@@ -133,18 +133,37 @@ export const productSchema = z.object({
 export type ProductFormValues = z.infer<typeof productSchema>;
 
 export const categoryOptions = [
-  { value: "electronics", label: "Electronics" },
-  { value: "clothing", label: "Clothing" },
-  { value: "books", label: "Books" },
+  { value: "Headwear Collection", label: "HEADWEAR" },
+  { value: "Apparel Collection", label: "APPAREL" },
+  { value: "All Collection", label: "ALL" },
+  { value: "Men", label: "Men" },
+  { value: "Women", label: "Women" },
+  { value: "Summer Collection", label: "Summer" },
+  { value: "Winter", label: "Winter" },
+  { value: "Baseball", label: "Baseball" },
+  { value: "Kids", label: "Kids" },
+  { value: "Fashion", label: "Fashion" },
+  { value: "Leisure", label: "Leisure" },
+  { value: "Signature", label: "Signature" },
+  { value: "Sport", label: "Sport" },
+  { value: "Hats", label: "Hats" },
+  { value: "T- Shirts", label: "T- shirts" },
+  { value: "African", label: "African" },
+
   // Add more categories as needed
 ];
 
 export const colorOptions = [
-  { value: "red", label: "Red" },
-  { value: "blue", label: "Blue" },
-  { value: "green", label: "Green" },
-  { value: "yellow", label: "Yellow" },
-  { value: "black", label: "Black" },
-  { value: "white", label: "White" },
+  { value: "Red", label: "Red" },
+  { value: "Blue", label: "Blue" },
+  { value: "Green", label: "Green" },
+  { value: "Yellow", label: "Yellow" },
+  { value: "Black", label: "Black" },
+  { value: "White", label: "White" },
+  { value: "Stone", label: "Stone" },
+  { value: "Grey", label: "Grey" },
+  { value: "Army Green", label: "Army Green" },
+  { value: "Army Brown", label: "Army Brown" },
+  { value: "Camo Green", label: "Camo Green" },
   // Add more colors as needed
 ];
