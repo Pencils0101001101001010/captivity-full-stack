@@ -23,7 +23,7 @@ export default async function Layout({
           <CategoriesDropDown />
         </div>
         <div className="flex w-full grow">
-          <main className="flex-grow p-5">{children}</main>
+          <main className="flex-grow">{children}</main>
         </div>
       </div>
     </SessionProvider>
