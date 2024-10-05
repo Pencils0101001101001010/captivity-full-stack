@@ -1,9 +1,10 @@
 import React from 'react'
+import ProductList from './ProductList';
 
 const Page = () => {
   return (
     <div>
-      <h1>Quick order page</h1>
+      <h1><ProductList/></h1>
     </div>
   )
 }
