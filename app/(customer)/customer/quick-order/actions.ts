@@ -2,22 +2,24 @@
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 
-
 const ITEMS_PER_PAGE = 10;
+
+type GroupedProduct = {
+  baseProduct: string;
+  shortDescription: string;
+  imageUrl: string;
+  regularPrice: number | null;
+  variants: Array<{
+    size: string;
+    stock: number | null;
+    sku: string;
+  }>;
+};
 
 type FetchProductsResult = {
   success: boolean;
   data?: {
-    products: Array<{
-      id: number;
-      sku: string;
-      shortDescription: string;
-      attribute1Values: string[] | null;
-      attribute2Values: string[] | null;
-      imageUrl: string;
-      regularPrice: number | null;
-      stock: number | null;
-    }>;
+    products: GroupedProduct[];
     totalPages: number;
   };
   error?: string;
@@ -38,9 +40,8 @@ export async function fetchProducts(
         select: {
           id: true,
           sku: true,
+          name: true,
           shortDescription: true,
-          attribute1Values: true,
-          attribute2Values: true,
           imageUrl: true,
           regularPrice: true,
           stock: true,
@@ -52,16 +53,34 @@ export async function fetchProducts(
       prisma.product.count(),
     ]);
 
-    const parsedProducts = products.map(product => ({
-      ...product,
-      attribute1Values: product.attribute1Values ? product.attribute1Values.split(',').map(s => s.trim()) : null,
-      attribute2Values: product.attribute2Values ? product.attribute2Values.split(',').map(s => s.trim()) : null,
-    }));
+    const groupedProducts: { [key: string]: GroupedProduct } = {};
+
+    products.forEach(product => {
+      const nameParts = product.name.split(',');
+      const baseProduct = nameParts[0].trim();
+      const size = nameParts[1] ? nameParts[1].trim() : 'One Size';
+
+      if (!groupedProducts[baseProduct]) {
+        groupedProducts[baseProduct] = {
+          baseProduct,
+          shortDescription: product.shortDescription || '',
+          imageUrl: product.imageUrl || '',
+          regularPrice: product.regularPrice,
+          variants: [],
+        };
+      }
+
+      groupedProducts[baseProduct].variants.push({
+        size,
+        stock: product.stock,
+        sku: product.sku,
+      });
+    });
 
     return {
       success: true,
       data: {
-        products: parsedProducts,
+        products: Object.values(groupedProducts),
         totalPages: Math.ceil(totalCount / ITEMS_PER_PAGE),
       },
     };
