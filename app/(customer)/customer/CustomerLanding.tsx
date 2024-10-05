@@ -32,11 +32,11 @@ const CustomerLandingPage = () => {
   }
 
   const quickLinks = [
-    { title: "Previous Orders", icon: ShoppingBag },
-    { title: "Account Info", icon: User },
-    { title: "Address Info", icon: MapPin },
-    { title: "View Price List", icon: FileText },
-    { title: "Product Images", icon: Image },
+    { title: "Previous Orders", icon: ShoppingBag, href:"/customer/previous-orders" },
+    { title: "Account Info", icon: User, href:"/customer/account-info" },
+    { title: "Address Info", icon: MapPin, href:"/customer/address-info" },
+    { title: "View Price List", icon: FileText, href:"/customer/view-price-list" },
+    { title: "Product Images", icon: Image, href:"/customer/product-images" },
   ];
 
   return (
