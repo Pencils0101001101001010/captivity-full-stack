@@ -14,7 +14,7 @@ import {
 import { FixedSizeList as List } from "react-window";
 import { CSSProperties } from "react"; // For the style type
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { GroupedProduct } from "@/lib/types";
+import { GroupedProduct } from "@/app/(customer)/customer/types";
 
 interface ScrollableSelectProps {
   value: number;

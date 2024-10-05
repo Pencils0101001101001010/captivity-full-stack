@@ -1,7 +1,7 @@
 "use server";
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import { CartData, getCartDataInclude } from "@/lib/types";
+import { CartData, getCartDataInclude } from "@/app/(customer)/customer/types";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
