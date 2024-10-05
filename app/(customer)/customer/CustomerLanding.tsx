@@ -145,16 +145,6 @@ const CustomerLandingPage = () => {
           </Card>
         </section>
       </main>
-
-      <footer className="mt-6 sm:mt-8 text-center">
-        <Button
-          variant="ghost"
-          className="text-gray-500 hover:text-red-500 text-sm sm:text-base"
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Log out
-        </Button>
-      </footer>
     </div>
   );
 };
