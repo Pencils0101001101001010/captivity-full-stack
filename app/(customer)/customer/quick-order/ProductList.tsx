@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { fetchProducts } from './actions';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 type GroupedProduct = {
   baseProduct: string;
@@ -76,7 +77,7 @@ const ProductList = () => {
                   ))}
                 </select>
                 <Input type="number" defaultValue={1} min={1} className="border rounded w-16 px-2 py-1 mr-2" />
-                <button className="bg-gray-800 text-white px-4 py-2 rounded">ADD TO BASKET</button>
+                <Button className="bg-gray-800 text-white px-4 py-2 rounded">ADD TO BASKET</Button>
               </div>
             </div>
           </div>
