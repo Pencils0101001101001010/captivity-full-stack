@@ -70,7 +70,7 @@ model Session {
 }
 
 model Product {
-  id                Int     @id @default(autoincrement())
+  id                Int        @id @default(autoincrement())
   userId            String
   type              String
   sku               String
@@ -97,11 +97,9 @@ model Product {
   attribute2Default String?
   regularPrice      Float?
   stock             Int?
-
-  Cart Cart[]
-
-  updatedAt DateTime @updatedAt
-  createdAt DateTime @default(now())
+  CartItem          CartItem[]
+  updatedAt         DateTime   @updatedAt
+  createdAt         DateTime   @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -114,13 +112,24 @@ model Cart {
   userId String
   users  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  productId Int
-  products  Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  quanity Int
+  CartItem CartItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("carts")
+}
+
+model CartItem {
+  id Int @id @default(autoincrement())
+
+  productId Int
+  products  Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  quanity Int
+
+  cartId Int
+  carts  Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  @@map("cartItems")
 }
