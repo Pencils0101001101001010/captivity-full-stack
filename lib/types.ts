@@ -30,6 +30,9 @@ export type ProductData = Prisma.ProductGetPayload<{
 
 export function getCartDataInclude() {
   return {
+    users: {
+      select: getUserDataSelect(),
+    },
     products: {
       include: getProductDataInclude(),
     },
