@@ -45,6 +45,7 @@ export type CartData = Prisma.CartGetPayload<{
 
 // Type Definitions
 export type GroupedProduct = {
+  id(id: any, arg1: number): void;
   baseProduct: string;
   shortDescription: string;
   imageUrl: string;
