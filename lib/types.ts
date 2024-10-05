@@ -42,3 +42,16 @@ export function getCartDataInclude() {
 export type CartData = Prisma.CartGetPayload<{
   include: ReturnType<typeof getCartDataInclude>;
 }>;
+
+// Type Definitions
+export type GroupedProduct = {
+  baseProduct: string;
+  shortDescription: string;
+  imageUrl: string;
+  regularPrice: number | null;
+  variants: Array<{
+    size: string;
+    stock: number | null;
+    sku: string;
+  }>;
+};

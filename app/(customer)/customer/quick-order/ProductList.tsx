@@ -14,19 +14,7 @@ import {
 import { FixedSizeList as List } from "react-window";
 import { CSSProperties } from "react"; // For the style type
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-// Type Definitions
-type GroupedProduct = {
-  baseProduct: string;
-  shortDescription: string;
-  imageUrl: string;
-  regularPrice: number | null;
-  variants: Array<{
-    size: string;
-    stock: number | null;
-    sku: string;
-  }>;
-};
+import { GroupedProduct } from "@/lib/types";
 
 interface ScrollableSelectProps {
   value: number;
