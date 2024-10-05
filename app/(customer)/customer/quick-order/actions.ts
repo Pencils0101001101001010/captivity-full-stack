@@ -3,7 +3,7 @@ import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { CartData, getCartDataInclude } from "@/lib/types";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/dist/server/api-utils";
+import { redirect } from "next/navigation";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -153,6 +153,7 @@ export async function addToCart(
 
     revalidatePath("/customer/quick-order");
     revalidatePath("/customer/cart");
+    redirect("/customer/cart");
   } catch (error) {
     console.error("Error adding to cart:", error);
     return {
