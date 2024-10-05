@@ -1,4 +1,4 @@
-"use server"
+"use server";
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 
@@ -48,7 +48,7 @@ export async function fetchProducts(
         },
         skip,
         take: ITEMS_PER_PAGE,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
       }),
       prisma.product.count(),
     ]);
@@ -56,15 +56,15 @@ export async function fetchProducts(
     const groupedProducts: { [key: string]: GroupedProduct } = {};
 
     products.forEach(product => {
-      const nameParts = product.name.split(',');
+      const nameParts = product.name.split(",");
       const baseProduct = nameParts[0].trim();
-      const size = nameParts[1] ? nameParts[1].trim() : 'One Size';
+      const size = nameParts[1] ? nameParts[1].trim() : "One Size";
 
       if (!groupedProducts[baseProduct]) {
         groupedProducts[baseProduct] = {
           baseProduct,
-          shortDescription: product.shortDescription || '',
-          imageUrl: product.imageUrl || '',
+          shortDescription: product.shortDescription || "",
+          imageUrl: product.imageUrl || "",
           regularPrice: product.regularPrice,
           variants: [],
         };
@@ -88,7 +88,8 @@ export async function fetchProducts(
     console.error("Error fetching products:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "An unexpected error occurred",
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
     };
   }
 }
