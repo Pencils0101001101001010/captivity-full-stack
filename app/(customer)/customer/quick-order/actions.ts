@@ -15,7 +15,6 @@ type GroupedProduct = {
     sku: string;
   }>;
 };
-
 type FetchProductsResult = {
   success: boolean;
   data?: {
