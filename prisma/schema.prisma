@@ -21,12 +21,12 @@ enum UserRole {
 }
 
 model User {
-  id               String    @id
-  username         String    @unique
+  id               String  @id
+  username         String  @unique
   firstName        String
   lastName         String
   displayName      String
-  email            String    @unique
+  email            String  @unique
   passwordHash     String
   vatNumber        String?
   phoneNumber      Int
@@ -47,12 +47,15 @@ model User {
   ckNumber         String?
   avatarUrl        String?
   bio              String?
-  agreeTerms       Boolean   @default(false)
-  role             UserRole  @default(USER)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  sessions         Session[]
-  Product          Product[]
+  agreeTerms       Boolean @default(false)
+
+  role     UserRole  @default(USER)
+  sessions Session[]
+  Product  Product[]
+  Cart     Cart[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("users")
 }
@@ -67,7 +70,7 @@ model Session {
 }
 
 model Product {
-  id                Int      @id @default(autoincrement())
+  id                Int     @id @default(autoincrement())
   userId            String
   type              String
   sku               String
@@ -94,9 +97,30 @@ model Product {
   attribute2Default String?
   regularPrice      Float?
   stock             Int?
-  updatedAt         DateTime @updatedAt
-  createdAt         DateTime @default(now())
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  Cart Cart[]
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("products")
+}
+
+model Cart {
+  id Int @id @default(autoincrement())
+
+  userId String
+  users  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  productId Int
+  products  Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  quanity Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("carts")
 }
