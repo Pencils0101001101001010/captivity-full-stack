@@ -16,7 +16,6 @@ import { ShoppingCart } from "lucide-react";
 const Navbar = () => {
   const session = useSession();
   const [isOpen, setIsOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartCount, setCartCount] = useState(3);
 
   const renderCartIcon = () => (
