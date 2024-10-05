@@ -12,6 +12,7 @@ import {
   Image,
   LogOut,
 } from "lucide-react";
+import Link from "next/link";
 
 const CustomerLandingPage = () => {
   const session = useSession();
@@ -57,8 +58,9 @@ const CustomerLandingPage = () => {
               <p className="mb-4 text-sm sm:text-base">
                 Unlock the Speed of Our Quick Order Page Today!
               </p>
-              <Button className="bg-white text-blue-600 hover:bg-blue-100 text-sm sm:text-base">
-                Quick Order
+              <Button asChild className="bg-white text-blue-600 hover:bg-blue-100 text-sm sm:text-base">
+                <Link href={"/customer/quick-order"}>Quick Order</Link>
+                
               </Button>
             </CardContent>
           </Card>
