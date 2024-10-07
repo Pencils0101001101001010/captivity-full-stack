@@ -19,12 +19,8 @@ export default async function Page({ params }: { params: { id: string } }) {
   // Map attribute1Values to availableSizes and attribute2Values to availableColors
   const productWithAttributes = {
     ...product,
-    availableSizes: product.attribute1Values
-      ? product.attribute1Values.split(",")
-      : [], // Convert comma-separated values to an array
-    availableColors: product.attribute2Values
-      ? product.attribute2Values.split(",")
-      : [], // Convert comma-separated values to an array
+    availableSizes: product.attribute2Values?.split(",") ?? [],
+    availableColors: product.attribute1Values?.split(",") ?? [],
   };
 
   return (

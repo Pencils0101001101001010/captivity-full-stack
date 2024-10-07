@@ -3,21 +3,23 @@ import React from "react";
 interface AddToCartProps {
   selectedSize: string;
   selectedColor: string;
+  selectedQuantity: number; // Added selectedQuantity prop
 }
 
 const AddToCart: React.FC<AddToCartProps> = ({
   selectedSize,
   selectedColor,
+  selectedQuantity, // Destructure selectedQuantity
 }) => {
   const handleAddToCart = () => {
-    if (!selectedSize || !selectedColor) {
-      alert("Please select both size and color.");
+    if (!selectedSize || !selectedColor || selectedQuantity <= 0) {
+      alert("Please select size, color, and quantity.");
       return;
     }
 
-    // Logic for adding product with selectedSize and selectedColor to the cart
+    // Logic for adding product with selectedSize, selectedColor, and selectedQuantity to the cart
     console.log(
-      `Adding to cart: Size - ${selectedSize}, Color - ${selectedColor}`
+      `Adding to cart: Size - ${selectedSize}, Color - ${selectedColor}, Quantity - ${selectedQuantity}`
     );
   };
 

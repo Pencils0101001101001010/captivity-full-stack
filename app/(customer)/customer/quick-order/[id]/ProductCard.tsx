@@ -1,183 +1,162 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Product } from "@prisma/client";
-import { formatDescription } from "@/lib/utils";
 import AddToCart from "./AddToCart";
+import { formatDescription } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product & {
-    availableSizes: string[]; // Sizes from the database
-    availableColors: string[]; // Colors from the database
+    availableSizes?: string[]; // List of available sizes
+    availableColors?: string[]; // List of available colors
+    quantities?: Record<string, number>; // Quantities mapped by size and color (if used)
   };
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const [selectedSize, setSelectedSize] = useState<string>(""); // State for size
-  const [selectedColor, setSelectedColor] = useState<string>(""); // State for color
+  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [selectedColor, setSelectedColor] = useState<string>("");
+  const [availableQuantity, setAvailableQuantity] = useState<number>(0);
+  const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
+
+  // Effect to update available quantity when size/color changes
+  useEffect(() => {
+    // You can set available quantity based on the product's stock
+    if (product.inStock && product.stock) {
+      // Here we assume that you have a fixed stock for simplicity
+      setAvailableQuantity(product.stock);
+      setSelectedQuantity(product.stock > 0 ? 1 : 0); // Reset quantity if no stock
+    } else {
+      setAvailableQuantity(0);
+      setSelectedQuantity(0); // Set to 0 if out of stock
+    }
+  }, [product]);
 
   return (
-    <Card className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-4 gap-6 bg-white shadow-lg rounded-lg overflow-hidden">
-      {/* Product Image */}
-      <div className="md:col-span-1 flex items-center justify-center bg-gray-100 p-6">
-        {product.imageUrl && (
-          <div className="relative w-full h-[300px]">
-            <Image
-              src={product.imageUrl}
-              alt={product.name}
-              layout="fill"
-              objectFit="contain"
-              className="rounded-lg"
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Product Details */}
-      <div className="md:col-span-3 p-6 space-y-4">
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-2xl font-bold text-gray-800">
-            {product.name}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* Details Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Column 1 */}
-            <div className="space-y-2">
-              <p className="text-gray-600">
-                <strong>SKU:</strong> {product.sku}
-              </p>
-              <p className="text-gray-600">
-                <strong>Type:</strong> {product.type}
-              </p>
-              <p className="text-gray-600">
-                <strong>Published:</strong> {product.published ? "Yes" : "No"}
-              </p>
-              <p className="text-gray-600">
-                <strong>Featured:</strong> {product.isFeatured ? "Yes" : "No"}
-              </p>
-              <p className="text-gray-600">
-                <strong>Visibility:</strong> {product.visibility}
-              </p>
-              <p className="text-gray-600">
-                <strong>In Stock:</strong> {product.inStock ? "Yes" : "No"}
-              </p>
-              {product.regularPrice !== null && (
-                <p className="text-lg text-green-600 font-semibold">
-                  Regular Price: ${product.regularPrice.toFixed(2)}
-                </p>
-              )}
-            </div>
-
-            {/* Column 2 */}
-            <div className="space-y-2">
-              <p className="text-gray-600">
-                <strong>Backorders Allowed:</strong>{" "}
-                {product.backordersAllowed ? "Yes" : "No"}
-              </p>
-              <p className="text-gray-600">
-                <strong>Sold Individually:</strong>{" "}
-                {product.soldIndividually ? "Yes" : "No"}
-              </p>
-              <p className="text-gray-600">
-                <strong>Allow Reviews:</strong>{" "}
-                {product.allowReviews ? "Yes" : "No"}
-              </p>
-              <p className="text-gray-600">
-                <strong>Categories:</strong> {product.categories}
-              </p>
-              <p className="text-gray-600">
-                <strong>Tags:</strong> {product.tags}
-              </p>
-              <p className="text-gray-600">
-                <strong>Position:</strong> {product.position}
-              </p>
-            </div>
-
-            {/* Column 3 */}
-            <div className="space-y-2">
-              {product.attribute1Name && (
-                <p className="text-gray-600">
-                  <strong>{product.attribute1Name}:</strong>{" "}
-                  {product.attribute1Values}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Dropdown for Size */}
-          {product.availableSizes && product.availableSizes.length > 0 && (
-            <div className="mt-4">
-              <label className="block text-gray-700 font-bold mb-2">
-                Select Size:
-              </label>
-              <select
-                value={selectedSize}
-                onChange={e => setSelectedSize(e.target.value)}
-                className="block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none"
-              >
-                <option value="" disabled>
-                  Choose a size
-                </option>
-                {product.availableSizes.map(size => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
-                ))}
-              </select>
+    <Card className="w-full max-w-6xl bg-white shadow-lg rounded-lg overflow-hidden">
+      <div className="flex flex-col md:flex-row">
+        {/* Product Image */}
+        <div className="md:w-1/2 bg-gray-100 p-6 flex items-center justify-center">
+          {product.imageUrl && (
+            <div className="relative w-full h-[400px]">
+              <Image
+                src={product.imageUrl}
+                alt={product.name}
+                layout="fill"
+                objectFit="contain"
+                className="rounded-lg"
+              />
             </div>
           )}
+        </div>
 
-          {/* Dropdown for Color */}
-          {product.availableColors && product.availableColors.length > 0 && (
-            <div className="mt-4">
-              <label className="block text-gray-700 font-bold mb-2">
-                Select Color:
-              </label>
-              <select
-                value={selectedColor}
-                onChange={e => setSelectedColor(e.target.value)}
-                className="block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none"
-              >
-                <option value="" disabled>
-                  Choose a color
-                </option>
-                {product.availableColors.map(color => (
-                  <option key={color} value={color}>
-                    {color}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Short Description */}
-          <div className="mt-4">
-            <strong className="text-gray-700">Short Description:</strong>
-            <div
-              className="mt-2 pl-4 text-gray-600 leading-relaxed"
-              dangerouslySetInnerHTML={formatDescription(
-                product.shortDescription
+        {/* Product Details */}
+        <div className="md:w-1/2 p-6 space-y-4">
+          <CardHeader className="space-y-2 p-0">
+            <CardTitle className="text-2xl font-bold text-gray-800">
+              {product.name}
+            </CardTitle>
+            {product.regularPrice !== null && (
+              <p className="text-xl font-semibold text-blue-600">
+                Price: ${product.regularPrice?.toFixed(2)}
+              </p>
+            )}
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="space-y-2">
+              <p className="text-green-600 font-semibold">
+                {product.inStock ? "In Stock" : "Out of stock"}
+              </p>
+              {product.shortDescription && (
+                <div>
+                  <strong>Short Description:</strong>
+                  <div
+                    dangerouslySetInnerHTML={formatDescription(
+                      product.shortDescription
+                    )}
+                    className="mt-2 pl-4 description-content"
+                  />
+                </div>
               )}
-            />
-          </div>
-        </CardContent>
+            </div>
 
-        {/* Add to Cart Button */}
-        <CardFooter className="pt-4">
-          <AddToCart
-            selectedSize={selectedSize}
-            selectedColor={selectedColor}
-          />
-        </CardFooter>
+            {/* Color Selection */}
+            {product.availableColors && product.availableColors.length > 0 && (
+              <div className="mt-4">
+                <label className="block text-gray-700 font-bold mb-2">
+                  Select Color:
+                </label>
+                <select
+                  value={selectedColor}
+                  onChange={e => setSelectedColor(e.target.value)}
+                  className="block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none"
+                >
+                  <option value="" disabled>
+                    Choose a color
+                  </option>
+                  {product.availableColors.map(color => (
+                    <option key={color} value={color}>
+                      {color}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Size Selection */}
+            {product.availableSizes && product.availableSizes.length > 0 && (
+              <div className="mt-4">
+                <label className="block text-gray-700 font-bold mb-2">
+                  Select Size:
+                </label>
+                <select
+                  value={selectedSize}
+                  onChange={e => setSelectedSize(e.target.value)}
+                  className="block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none"
+                >
+                  <option value="" disabled>
+                    Choose a size
+                  </option>
+                  {product.availableSizes.map(size => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Quantity Selection */}
+            {availableQuantity > 0 && (
+              <div className="mt-4">
+                <label className="block text-gray-700 font-bold mb-2">
+                  Select Quantity:
+                </label>
+                <select
+                  value={selectedQuantity}
+                  onChange={e => setSelectedQuantity(Number(e.target.value))}
+                  className="block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none"
+                >
+                  {[...Array(availableQuantity)].map((_, index) => (
+                    <option key={index + 1} value={index + 1}>
+                      {index + 1}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Add to Cart Button */}
+            <div className="mt-6">
+              <AddToCart
+                selectedSize={selectedSize}
+                selectedColor={selectedColor}
+                selectedQuantity={selectedQuantity}
+              />
+            </div>
+          </CardContent>
+        </div>
       </div>
     </Card>
   );
