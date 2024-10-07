@@ -224,7 +224,7 @@ const CategoriesDropDown = () => {
   return (
     <nav className="relative flex justify-center w-full">
       <div className="hidden md:flex space-x-4">
-        {navItems.map((section) => (
+        {navItems.map(section => (
           <div
             key={section.label}
             className="relative"
@@ -242,8 +242,8 @@ const CategoriesDropDown = () => {
             </Button>
 
             {openDropdown === section.label && (
-              <div className="absolute top-full mt-1 w-56 rounded-md bg-background shadow-lg z-10">
-                {section.items.map((subItem) => renderNavItem(subItem))}
+              <div className="absolute top-full mt-0 w-56  bg-background shadow-lg z-10">
+                {section.items.map(subItem => renderNavItem(subItem))}
               </div>
             )}
           </div>
