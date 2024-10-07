@@ -9,9 +9,6 @@ type GroupedProduct = {
   name: string;
   shortDescription: string;
   imageUrls: string[];
-  regularPrice: number | null;
-  colors: string[];
-  sizes: string[];
 };
 
 type FetchProductsResult =
@@ -60,23 +57,13 @@ export async function fetchProducts(
             name: baseName,
             shortDescription: product.shortDescription,
             imageUrls: [product.imageUrl],
-            regularPrice: product.regularPrice,
-            colors: [],
-            sizes: [],
           };
         } else {
           if (!acc[baseName].imageUrls.includes(product.imageUrl)) {
             acc[baseName].imageUrls.push(product.imageUrl);
           }
         }
-        const color = product.name.split(" - ")[1]?.split(", ")[0];
-        const size = product.name.split(" - ")[1]?.split(", ")[1];
-        if (color && !acc[baseName].colors.includes(color)) {
-          acc[baseName].colors.push(color);
-        }
-        if (size && !acc[baseName].sizes.includes(size)) {
-          acc[baseName].sizes.push(size);
-        }
+
         return acc;
       },
       {}
