@@ -41,7 +41,7 @@ const ProductCard = ({ product }: { product: GroupedProduct }) => {
   return (
     <Link href={`/customer/quick-order/${product.id}`}>
       <Card
-        className="h-full overflow-hidden hover:shadow-lg transition-shadow duration-300"
+        className="h-full w-[300px] overflow-hidden hover:shadow-lg transition-shadow duration-300"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >

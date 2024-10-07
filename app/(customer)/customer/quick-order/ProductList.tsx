@@ -25,7 +25,7 @@ const ProductList = () => {
   useEffect(() => {
     const loadProducts = async () => {
       setIsLoading(true);
-      const result = await fetchProducts(currentPage, 9, searchQuery);
+      const result = await fetchProducts(currentPage, 8, searchQuery);
       if (result.success) {
         setProducts(result.data);
         setTotalPages(result.totalPages);
@@ -59,7 +59,7 @@ const ProductList = () => {
       </div>
 
       {/* Product Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
         {products.map(product => (
           <ProductCard key={product.id} product={product} />
         ))}

@@ -20,7 +20,7 @@ type FetchProductsResult =
 
 export async function fetchProducts(
   page: number = 1,
-  pageSize: number = 9,
+  pageSize: number = 8,
   query?: string
 ): Promise<FetchProductsResult> {
   try {
