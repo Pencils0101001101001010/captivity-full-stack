@@ -23,11 +23,6 @@ interface Category {
   slug: string;
 }
 
-
-
-
-
-
 function HeroSection({ imageUrl }: { imageUrl: string }) {
   return (
     <div className="relative w-full h-[350px] mb-8">
@@ -47,8 +42,6 @@ function HeroSection({ imageUrl }: { imageUrl: string }) {
     </div>
   );
 }
-
-
 
 export default function ProductList() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -98,9 +91,9 @@ export default function ProductList() {
       <div className="container mx-auto my-8">
         <div className="flex">
           <SideMenu />
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold mb-6">Flat Peaks</h1>
-            <div className="mb-6">
+          <div className="flex-1 ">
+            <div className="mb-6 flex justify-between">
+              <h1 className="text-3xl font-bold mb-6">Flat Peaks</h1>{" "}
               <SearchField onSearch={handleSearch} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -108,7 +101,7 @@ export default function ProductList() {
                 ? Array(6)
                     .fill(0)
                     .map((_, index) => <ProductCardSkeleton key={index} />)
-                : products.map((product) => (
+                : products.map(product => (
                     <Link
                       href={`/products/headwear/${product.id}`}
                       key={product.id}
@@ -125,7 +118,7 @@ export default function ProductList() {
 }
 
 function ProductCard({ product }: { product: Product }) {
-  const imageUrls = product.imageUrl.split(",").map((url) => url.trim());
+  const imageUrls = product.imageUrl.split(",").map(url => url.trim());
   const [isHovered, setIsHovered] = useState(false);
 
   const handleMouseEnter = () => {
