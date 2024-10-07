@@ -30,12 +30,9 @@ export async function fetchHeroImage(): Promise<HeroImageResult> {
     });
 
     if (heroProduct && heroProduct.imageUrl) {
-      const images = heroProduct.imageUrl.split(",").map((url) => url.trim());
+      const images = heroProduct.imageUrl.split(",").map(url => url.trim());
       const heroImage = images.find(
-        (url) =>
-          url.includes("model") ||
-          url.includes("header") 
-         
+        url => url.includes("model") || url.includes("header")
       );
 
       if (heroImage) {
@@ -116,8 +113,8 @@ export async function fetchNewInHeadwear(
         stock: true,
         createdAt: true,
         attribute1Default: true,
-        attribute2Default:true ,
-        updatedAt:true,
+        attribute2Default: true,
+        updatedAt: true,
       },
     });
     return { success: true, data: NewInHeadwearProducts };
@@ -154,16 +151,22 @@ export async function fetchProductById(id: string) {
       return { success: false, error: "Product not found" };
     }
     // Split the imageUrl into an array and process thumbnails
-    const images = product.imageUrl.split(",").map((url) => url.trim());
+    const images = product.imageUrl.split(",").map(url => url.trim());
     const mainImage = images[0];
     const thumbnails = images.filter(
-      (url) =>
+      url =>
         url.includes("Foc") ||
         url.includes("Boc") ||
         url.includes("Soc") ||
         url.includes("Boc1") ||
         url.includes("Soc1") ||
         url.includes("Foc1") ||
+        url.includes("foc1") ||
+        url.includes("soc1") ||
+        url.includes("boc1") ||
+        url.includes("foc") ||
+        url.includes("soc") ||
+        url.includes("boc") ||
         url.includes(product.name)
     );
     return {
