@@ -17,7 +17,6 @@ interface GroupedProduct {
   name: string;
   imageUrls: string[];
   regularPrice: number | null;
-  colors: string[];
   sizes: string[];
 }
 
@@ -77,9 +76,6 @@ const ProductCard = ({ product }: { product: GroupedProduct }) => {
         </CardContent>
         <CardFooter className="bg-secondary">
           <div className="w-full">
-            <p className="text-sm text-secondary-foreground">
-              Colors: {product.colors.join(", ")}
-            </p>
             <p className="text-sm text-secondary-foreground">
               Sizes: {product.sizes.join(", ")}
             </p>
