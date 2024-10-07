@@ -9,13 +9,24 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
+enum UserRole {
+  USER
+  CUSTOMER
+  SUBSCRIBER
+  PROMO
+  DISTRIBUTOR
+  SHOPMANAGER
+  EDITOR
+  ADMIN
+}
+
 model User {
-  id               String    @id
-  username         String    @unique
+  id               String  @id
+  username         String  @unique
   firstName        String
   lastName         String
   displayName      String
-  email            String    @unique
+  email            String  @unique
   passwordHash     String
   vatNumber        String?
   phoneNumber      Int
@@ -36,12 +47,15 @@ model User {
   ckNumber         String?
   avatarUrl        String?
   bio              String?
-  agreeTerms       Boolean   @default(false)
-  role             UserRole  @default(USER)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  Product          Product[]
-  sessions         Session[]
+  agreeTerms       Boolean @default(false)
+
+  role     UserRole  @default(USER)
+  sessions Session[]
+  Product  Product[]
+  Cart     Cart[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("users")
 }
@@ -56,7 +70,7 @@ model Session {
 }
 
 model Product {
-  id                Int      @id @default(autoincrement())
+  id                Int        @id @default(autoincrement())
   userId            String
   type              String
   sku               String
@@ -83,20 +97,39 @@ model Product {
   attribute2Default String?
   regularPrice      Float?
   stock             Int?
-  updatedAt         DateTime @updatedAt
-  createdAt         DateTime @default(now())
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  CartItem          CartItem[]
+  updatedAt         DateTime   @updatedAt
+  createdAt         DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("products")
 }
 
-enum UserRole {
-  USER
-  CUSTOMER
-  SUBSCRIBER
-  PROMO
-  DISTRIBUTOR
-  SHOPMANAGER
-  EDITOR
-  ADMIN
+model Cart {
+  id Int @id @default(autoincrement())
+
+  userId String
+  users  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  CartItem CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("carts")
+}
+
+model CartItem {
+  id Int @id @default(autoincrement())
+
+  productId Int
+  products  Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  quanity Int
+
+  cartId Int
+  carts  Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  @@map("cartItems")
 }

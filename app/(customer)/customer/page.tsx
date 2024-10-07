@@ -1,7 +1,8 @@
 import React from "react";
+import CustomerLandingPage from "./CustomerLanding";
 
 const Page = () => {
-  return <div>Custorm Landing Page</div>;
+  return <div><CustomerLandingPage/></div>;
 };
 
 export default Page;
