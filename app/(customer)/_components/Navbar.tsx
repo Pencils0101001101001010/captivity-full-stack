@@ -1,9 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useSession } from "../SessionProvider";
-import UserButton from "./UserButton";
 
 import { GoHomeFill } from "react-icons/go";
 import { TbCategoryFilled } from "react-icons/tb";
@@ -12,20 +10,28 @@ import { MdAccountCircle } from "react-icons/md";
 import { RxDividerVertical } from "react-icons/rx";
 import React from "react";
 import { ShoppingCart } from "lucide-react";
+import { useSession } from "../SessionProvider";
+import { useCart } from "@/app/CartContext";
+import UserButton from "./UserButton";
 
 const Navbar = () => {
   const session = useSession();
   const [isOpen, setIsOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(3);
+  const { cartItemCount } = useCart();
+
+  useEffect(() => {
+    console.log("Navbar cartItemCount:", cartItemCount);
+  }, [cartItemCount]);
 
   const renderCartIcon = () => (
     <div className="relative">
       <ShoppingCart />
-      {cartCount > 0 && (
-        <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-          {cartCount}
-        </span>
-      )}
+      <span
+        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold"
+        style={{ border: "2px solid white" }}
+      >
+        {cartItemCount}
+      </span>
     </div>
   );
 

@@ -1,12 +1,7 @@
-import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "@/components/Navbar/Navbar";
-import Footer from "@/components/Footer/Footer";
-import CopyRight from "@/components/CopyRight/CopyRight";
 import { ThemeProvider } from "next-themes";
-import CategoriesDropDown from "./(user)/_components/CategoriesDropDown";
-
-
+import { Toaster } from "react-hot-toast";
+import { CartProvider } from "./CartContext";
 
 export const metadata = {
   title: "Captivity-Headwear And Apparel",
@@ -28,8 +23,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <CartProvider>{children}</CartProvider>
           </ThemeProvider>
+          <Toaster />
         </div>
       </body>
     </html>

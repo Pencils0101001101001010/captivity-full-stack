@@ -33,7 +33,7 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [selectedAttr1, setSelectedAttr1] = useState<string>("");
   const [selectedAttr2, setSelectedAttr2] = useState<string>("");
-  const [availableStock, setAvailableStock] = useState<number>(5); // Set initial stock to 5
+  const [availableStock, setAvailableStock] = useState<number>(0);
   const [selectedQuantity, setSelectedQuantity] = useState<string>("1");
 
   const attr1Values = product.attribute1Values
@@ -48,7 +48,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     if (attr2Values.length > 0) setSelectedAttr2(attr2Values[0]);
   }, []);
 
-  // Remove the useEffect that was randomly setting the stock
+  useEffect(() => {
+    // Simulate stock check based on selected attributes
+    // Replace this with your actual stock checking logic
+    if (selectedAttr1 && selectedAttr2) {
+      setAvailableStock(Math.floor(Math.random() * 10) + 1); // Ensure at least 1 stock
+    }
+  }, [selectedAttr1, selectedAttr2]);
 
   return (
     <Card className="w-[350px]">
@@ -115,7 +121,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
       </CardContent>
       <CardFooter>
-        <AddToCart quantity={parseInt(selectedQuantity)} />
+        <AddToCart
+          quantity={parseInt(selectedQuantity)}
+          productId={product.id}
+        />
       </CardFooter>
     </Card>
   );

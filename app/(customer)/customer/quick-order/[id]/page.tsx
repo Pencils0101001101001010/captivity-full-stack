@@ -2,6 +2,8 @@ import React from "react";
 import ProductCard from "./ProductCard";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: { id: string };
 }
@@ -27,15 +29,8 @@ async function getProduct(id: number) {
   return product;
 }
 
-export async function generateStaticParams() {
-  const products = await prisma.product.findMany({
-    select: { id: true },
-  });
-
-  return products.map(product => ({
-    id: product.id.toString(),
-  }));
-}
+// Remove generateStaticParams as it's not needed with dynamic rendering
+// export async function generateStaticParams() { ... }
 
 const Page: React.FC<PageProps> = async ({ params }) => {
   const productId = Number(params.id);
