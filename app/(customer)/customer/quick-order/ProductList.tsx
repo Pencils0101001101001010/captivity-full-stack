@@ -9,9 +9,6 @@ interface GroupedProduct {
   id: number;
   name: string;
   imageUrls: string[];
-  regularPrice: number | null;
-  colors: string[];
-  sizes: string[];
 }
 
 const ProductList = () => {
