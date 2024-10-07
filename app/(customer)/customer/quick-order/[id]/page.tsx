@@ -16,11 +16,22 @@ export default async function Page({ params }: { params: { id: string } }) {
     return <div>Product not found</div>;
   }
 
+  // Map attribute1Values to availableSizes and attribute2Values to availableColors
+  const productWithAttributes = {
+    ...product,
+    availableSizes: product.attribute1Values
+      ? product.attribute1Values.split(",")
+      : [], // Convert comma-separated values to an array
+    availableColors: product.attribute2Values
+      ? product.attribute2Values.split(",")
+      : [], // Convert comma-separated values to an array
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4 text-center">Product Details</h1>
       <div className="flex justify-center">
-        <ProductCard product={product} />
+        <ProductCard product={productWithAttributes} />
       </div>
     </div>
   );
