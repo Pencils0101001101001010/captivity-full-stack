@@ -12,7 +12,6 @@ interface GroupedProduct {
   id: number;
   name: string;
   imageUrls: string[];
-  regularPrice: number | null;
 }
 
 const ProductCard = ({ product }: { product: GroupedProduct }) => {
@@ -43,7 +42,7 @@ const ProductCard = ({ product }: { product: GroupedProduct }) => {
   return (
     <Link href={`/customer/quick-order/${product.id}`}>
       <Card
-        className="h-full w-[300px] overflow-hidden hover:shadow-lg transition-shadow duration-300"
+        className="h-full w-[300px] overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:scale-95" // Added hover:scale-95 for zoom out effect
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -70,15 +69,7 @@ const ProductCard = ({ product }: { product: GroupedProduct }) => {
               </div>
             )}
           </div>
-          <div className="p-4">
-            <p className="font-bold text-2xl text-primary">
-              {product.regularPrice
-                ? `$${product.regularPrice.toFixed(2)}`
-                : "Price Unavailable"}
-            </p>
-          </div>
         </CardContent>
-        <CardFooter className="bg-secondary">Rating</CardFooter>
       </Card>
     </Link>
   );
