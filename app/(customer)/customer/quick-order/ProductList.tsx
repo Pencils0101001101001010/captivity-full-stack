@@ -25,7 +25,7 @@ const ProductList = () => {
   useEffect(() => {
     const loadProducts = async () => {
       setIsLoading(true);
-      const result = await fetchProducts(currentPage, 10, searchQuery);
+      const result = await fetchProducts(currentPage, 9, searchQuery);
       if (result.success) {
         setProducts(result.data);
         setTotalPages(result.totalPages);
