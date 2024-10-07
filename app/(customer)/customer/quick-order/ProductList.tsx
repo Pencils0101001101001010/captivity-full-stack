@@ -11,7 +11,6 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface GroupedProduct {
   id: number;
