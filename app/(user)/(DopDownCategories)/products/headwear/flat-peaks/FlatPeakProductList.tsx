@@ -2,12 +2,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { fetchNewInHeadwear, fetchHeroImage } from "./actions";
+import { fetchFlatPeaks, fetchHeroImage } from "./actions";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import SearchField from "@/app/(user)/_components/SearchField";
 import SideMenu from "@/app/(user)/_components/SideMenu";
+import { Button } from "@/components/ui/button";
 
 interface Product {
   id: number;
@@ -30,13 +31,13 @@ function HeroSection({ imageUrl }: { imageUrl: string }) {
         src={imageUrl}
         alt="Headwear Hero"
         className="fill"
-        style={{ objectFit: "cover" }}
+        style={{ objectFit: "cover", objectPosition: "center 20%" }}
         priority
         fill
       />
-      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-        <h1 className="text-4xl font-bold text-white">
-          Discover Our Headwear Collection
+      <div className="absolute bg-black bg-opacity-50 flex items-center inset-0 bg-gradient-to-r from-gray-500 via-transparent to-cyan-500 opacity-60">
+        <h1 className=" sm:text-8xl text-4xl pl-10 font-bold text-white">
+          FLAT PEAKS
         </h1>
       </div>
     </div>
@@ -49,17 +50,20 @@ export default function ProductList() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [heroImageUrl, setHeroImageUrl] = useState("/hero-image.jpg");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     async function loadData() {
       setLoading(true);
       const [productsResult, heroImageResult] = await Promise.all([
-        fetchNewInHeadwear(undefined, searchQuery),
+        fetchFlatPeaks(undefined, searchQuery, currentPage, 9),
         fetchHeroImage(),
       ]);
 
       if (productsResult?.success) {
         setProducts(productsResult.data || []);
+        setTotalPages(Math.ceil(productsResult.totalCount / 9));
       } else {
         setError(productsResult?.error || "Failed to load products");
       }
@@ -71,10 +75,15 @@ export default function ProductList() {
       setLoading(false);
     }
     loadData();
-  }, [searchQuery]);
+  }, [searchQuery, currentPage]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
   };
 
   if (error) {
@@ -91,14 +100,16 @@ export default function ProductList() {
       <div className="container mx-auto my-8">
         <div className="flex">
           <SideMenu />
-          <div className="flex-1 ">
-            <div className="mb-6 flex justify-between">
-              <h1 className="text-3xl font-bold mb-6">Flat Peaks</h1>{" "}
+          <div className="flex-1">
+            <div className="mb-6 flex justify-between ">
+              <h1 className="text-3xl font-bold mb-6">
+                Discover new headwear...
+              </h1>{" "}
               <SearchField onSearch={handleSearch} />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
               {loading
-                ? Array(6)
+                ? Array(9)
                     .fill(0)
                     .map((_, index) => <ProductCardSkeleton key={index} />)
                 : products.map(product => (
@@ -109,6 +120,25 @@ export default function ProductList() {
                       <ProductCard product={product} />
                     </Link>
                   ))}
+            </div>
+            <div className="mt-8 flex justify-center">
+              <Button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="mr-2"
+              >
+                Previous
+              </Button>
+              <span className="mx-4 self-center">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="ml-2"
+              >
+                Next
+              </Button>
             </div>
           </div>
         </div>

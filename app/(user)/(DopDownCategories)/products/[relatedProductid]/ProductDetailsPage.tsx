@@ -51,7 +51,9 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
-  const [selectedThumbnail, setSelectedThumbnail] = useState<number | null>(null);
+  const [selectedThumbnail, setSelectedThumbnail] = useState<number | null>(
+    null
+  );
 
   useEffect(() => {
     async function loadProductDetails() {
@@ -111,9 +113,10 @@ export default function ProductDetail() {
     );
   }
 
-  const selectedProduct = selectedThumbnail === product.id
-    ? product
-    : product.thumbnails.find(t => t.id === selectedThumbnail) || product;
+  const selectedProduct =
+    selectedThumbnail === product.id
+      ? product
+      : product.thumbnails.find(t => t.id === selectedThumbnail) || product;
 
   return (
     <div className="container mx-auto p-8">
@@ -133,11 +136,16 @@ export default function ProductDetail() {
               </div>
               <div className="max-w-[500px] overflow-x-auto">
                 <div className="flex gap-2 pb-2 min-w-0 items-center">
-                  {[{ id: product.id, imageUrl: product.mainImage }, ...product.thumbnails].map((item) => (
+                  {[
+                    { id: product.id, imageUrl: product.mainImage },
+                    ...product.thumbnails,
+                  ].map(item => (
                     <div
                       key={item.id}
                       className={`relative h-20 w-20 cursor-pointer transition-all duration-200 flex-shrink-0`}
-                      onClick={() => handleThumbnailClick(item.imageUrl, item.id)}
+                      onClick={() =>
+                        handleThumbnailClick(item.imageUrl, item.id)
+                      }
                     >
                       <Image
                         src={item.imageUrl}
@@ -152,17 +160,25 @@ export default function ProductDetail() {
               </div>
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-4">{selectedProduct.name}</h1>
-              {selectedProduct.regularPrice && (
+              <h1 className="text-3xl font-bold mb-4">
+                {selectedProduct.name}
+              </h1>
+              {/* {selectedProduct.regularPrice && (
                 <p className="text-xl font-semibold mb-4">
                   Price: ${selectedProduct.regularPrice.toFixed(2)}
                 </p>
-              )}
+              )} */}
               <div className="mb-4">
                 <Badge
-                  variant={selectedProduct.stock && selectedProduct.stock > 0 ? "default" : "secondary"}
+                  variant={
+                    selectedProduct.stock && selectedProduct.stock > 0
+                      ? "default"
+                      : "secondary"
+                  }
                 >
-                  {selectedProduct.stock && selectedProduct.stock > 0 ? "In Stock" : "Out of Stock"}
+                  {selectedProduct.stock && selectedProduct.stock > 0
+                    ? "In Stock"
+                    : "Out of Stock"}
                 </Badge>
                 {selectedProduct.stock !== null && (
                   <span className="ml-2 text-sm text-gray-600">
@@ -171,22 +187,24 @@ export default function ProductDetail() {
                 )}
               </div>
               <div className="mb-4">
-                {product.attribute1Name && selectedProduct.attribute1Default && (
-                  <div>
-                    <span className="font-semibold">
-                      {product.attribute1Name}:{" "}
-                    </span>
-                    <span>{selectedProduct.attribute1Default}</span>
-                  </div>
-                )}
-                {product.attribute2Name && selectedProduct.attribute2Default && (
-                  <div>
-                    <span className="font-semibold">
-                      {product.attribute2Name}:{" "}
-                    </span>
-                    <span>{selectedProduct.attribute2Default}</span>
-                  </div>
-                )}
+                {product.attribute1Name &&
+                  selectedProduct.attribute1Default && (
+                    <div>
+                      <span className="font-semibold">
+                        {product.attribute1Name}:{" "}
+                      </span>
+                      <span>{selectedProduct.attribute1Default}</span>
+                    </div>
+                  )}
+                {product.attribute2Name &&
+                  selectedProduct.attribute2Default && (
+                    <div>
+                      <span className="font-semibold">
+                        {product.attribute2Name}:{" "}
+                      </span>
+                      <span>{selectedProduct.attribute2Default}</span>
+                    </div>
+                  )}
               </div>
               <div>
                 <strong>Short Description:</strong>
@@ -202,7 +220,7 @@ export default function ProductDetail() {
         </CardContent>
       </Card>
 
-      {relatedProducts.length > 0 && (
+      {/* {relatedProducts.length > 0 && (
         <div className="mt-8">
           <h2 className="text-2xl font-bold mb-4">Related Products</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -229,7 +247,7 @@ export default function ProductDetail() {
             ))}
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }
