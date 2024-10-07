@@ -8,8 +8,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDescription } from "@/lib/utils";
-import RelatedProducts from "@/app/(user)/_components/RelatedProducts";
-
 
 interface Thumbnail {
   id: number;
@@ -127,13 +125,13 @@ export default function ProductDetail() {
                 <Image
                   src={currentImage || product.mainImage}
                   alt={selectedProduct.name}
-                  className="rounded-lg object-cover"
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className="rounded-lg object-cover fill"
+                  width={500}
+                  height={500}
                   priority
                 />
               </div>
-              <div className="max-w-[700px] overflow-x-auto">
+              <div className="max-w-[500px] overflow-x-auto">
                 <div className="flex gap-2 pb-2 min-w-0 items-center">
                   {[{ id: product.id, imageUrl: product.mainImage }, ...product.thumbnails].map((item) => (
                     <div
@@ -144,9 +142,9 @@ export default function ProductDetail() {
                       <Image
                         src={item.imageUrl}
                         alt={`Product view ${item.id}`}
-                        className="rounded object-cover"
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="rounded object-cover fill"
+                        width={60}
+                        height={60}
                       />
                     </div>
                   ))}
@@ -157,7 +155,7 @@ export default function ProductDetail() {
               <h1 className="text-3xl font-bold mb-4">{selectedProduct.name}</h1>
               {selectedProduct.regularPrice && (
                 <p className="text-xl font-semibold mb-4">
-                  Price: R{selectedProduct.regularPrice.toFixed(2)}
+                  Price: ${selectedProduct.regularPrice.toFixed(2)}
                 </p>
               )}
               <div className="mb-4">
@@ -204,8 +202,34 @@ export default function ProductDetail() {
         </CardContent>
       </Card>
 
-      {/* Use the new RelatedProducts component */}
-      <RelatedProducts products={relatedProducts} />
+      {relatedProducts.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4">Related Products</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          
+            {relatedProducts.map((relatedProduct) => (
+              <Card key={relatedProduct.id}>
+                <CardContent className="p-4">
+                  <div className="relative h-40 mb-2">
+                    <Image
+                      src={relatedProduct.imageUrl}
+                      alt={relatedProduct.name}
+                      className="rounded-lg  fill object-cover"
+                      width={2}
+                      height={2}
+                      priority
+                    />
+                  </div>
+                  <h3 className="text-sm font-semibold mb-1">{relatedProduct.name}</h3>
+                  {relatedProduct.regularPrice && (
+                    <p className="text-sm">${relatedProduct.regularPrice.toFixed(2)}</p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

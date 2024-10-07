@@ -1,7 +1,7 @@
 import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Footer/Footer";
 import CopyRight from "@/components/CopyRight/CopyRight";
-import CategoriesDropDown from "./_compnents/CategoriesDropDown";
+import CategoriesDropDown from "./_components/CategoriesDropDown";
 
 
 export default function Layout({

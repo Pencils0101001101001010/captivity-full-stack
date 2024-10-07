@@ -34,11 +34,9 @@ export async function fetchHeroImage(): Promise<HeroImageResult> {
       const heroImage = images.find(
         (url) =>
           url.includes("model") ||
-          url.includes("Camper") ||
-          url.includes("Urban") ||
-          url.includes("Phoenix") ||
-          url.includes("Ranger") ||
-          url.includes("Bandana")
+          url.includes("header") || 
+          url.includes("New in Headwear")
+         
       );
 
       if (heroImage) {
@@ -118,6 +116,9 @@ export async function fetchNewInHeadwear(
         regularPrice: true,
         stock: true,
         createdAt: true,
+        attribute1Default: true,
+        attribute2Default:true ,
+        updatedAt:true,
       },
     });
     return { success: true, data: NewInHeadwearProducts };

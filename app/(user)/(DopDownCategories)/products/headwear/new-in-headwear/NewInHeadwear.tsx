@@ -6,7 +6,8 @@ import { fetchNewInHeadwear, fetchHeroImage } from "./actions";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import SearchField from "@/app/(user)/_compnents/SearchField";
+import SearchField from "@/app/(user)/_components/SearchField";
+import SideMenu from "@/app/(user)/_components/SideMenu";
 
 interface Product {
   id: number;
@@ -22,15 +23,21 @@ interface Category {
   slug: string;
 }
 
+
+
+
+
+
 function HeroSection({ imageUrl }: { imageUrl: string }) {
   return (
     <div className="relative w-full h-[350px] mb-8">
       <Image
         src={imageUrl}
         alt="Headwear Hero"
-        fill
+        className="fill"
         style={{ objectFit: "cover" }}
         priority
+        fill
       />
       <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
         <h1 className="text-4xl font-bold text-white">
@@ -41,16 +48,7 @@ function HeroSection({ imageUrl }: { imageUrl: string }) {
   );
 }
 
-function SideMenu() {
-  return (
-    <aside className="w-64 pr-8">
-      <h2 className="text-xl font-semibold mb-4">Categories</h2>
-      <div>
-        <Link href="/products/headwear/flat-peaks">Headwear</Link>
-      </div>
-    </aside>
-  );
-}
+
 
 export default function ProductList() {
   const [products, setProducts] = useState<Product[]>([]);

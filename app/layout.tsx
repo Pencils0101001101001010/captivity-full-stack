@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Footer/Footer";
 import CopyRight from "@/components/CopyRight/CopyRight";
 import { ThemeProvider } from "next-themes";
-import CategoriesDropDown from "./(user)/_compnents/CategoriesDropDown";
+import CategoriesDropDown from "./(user)/_components/CategoriesDropDown";
 
 
 
