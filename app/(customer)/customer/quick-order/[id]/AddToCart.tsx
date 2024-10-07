@@ -1,35 +1,15 @@
+import { Button } from "@/components/ui/button";
 import React from "react";
 
 interface AddToCartProps {
-  selectedSize: string;
-  selectedColor: string;
-  selectedQuantity: number; // Added selectedQuantity prop
+  quantity: number;
 }
 
-const AddToCart: React.FC<AddToCartProps> = ({
-  selectedSize,
-  selectedColor,
-  selectedQuantity, // Destructure selectedQuantity
-}) => {
-  const handleAddToCart = () => {
-    if (!selectedSize || !selectedColor || selectedQuantity <= 0) {
-      alert("Please select size, color, and quantity.");
-      return;
-    }
-
-    // Logic for adding product with selectedSize, selectedColor, and selectedQuantity to the cart
-    console.log(
-      `Adding to cart: Size - ${selectedSize}, Color - ${selectedColor}, Quantity - ${selectedQuantity}`
-    );
-  };
-
+const AddToCart: React.FC<AddToCartProps> = ({ quantity }) => {
   return (
-    <button
-      onClick={handleAddToCart}
-      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-    >
-      Add to Cart
-    </button>
+    <div>
+      <Button>Add to Cart</Button>
+    </div>
   );
 };
 

@@ -1,34 +1,56 @@
 import React from "react";
-import { fetchProductById } from "./actions";
 import ProductCard from "./ProductCard";
+import prisma from "@/lib/prisma";
 
-export default async function Page({ params }: { params: { id: string } }) {
-  const productId = parseInt(params.id, 10);
-  const result = await fetchProductById(productId);
+interface PageProps {
+  params: { id: string };
+}
 
-  if (!result.success) {
-    return <div>Error: {result.error}</div>;
-  }
-
-  const product = result.data;
+async function getProduct(id: number) {
+  const product = await prisma.product.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      inStock: true,
+      attribute1Values: true,
+      attribute2Values: true,
+      regularPrice: true,
+      imageUrl: true,
+    },
+  });
 
   if (!product) {
-    return <div>Product not found</div>;
+    throw new Error("Product not found");
   }
 
-  // Map attribute1Values to availableSizes and attribute2Values to availableColors
-  const productWithAttributes = {
-    ...product,
-    availableSizes: product.attribute2Values?.split(",") ?? [],
-    availableColors: product.attribute1Values?.split(",") ?? [],
-  };
+  return product;
+}
+
+export async function generateStaticParams() {
+  const products = await prisma.product.findMany({
+    select: { id: true },
+  });
+
+  return products.map(product => ({
+    id: product.id.toString(),
+  }));
+}
+
+const Page: React.FC<PageProps> = async ({ params }) => {
+  const productId = Number(params.id);
+
+  if (isNaN(productId)) {
+    throw new Error("Invalid product ID");
+  }
+
+  const product = await getProduct(productId);
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4 text-center">Product Details</h1>
-      <div className="flex justify-center">
-        <ProductCard product={productWithAttributes} />
-      </div>
+    <div>
+      <ProductCard product={product} />
     </div>
   );
-}
+};
+
+export default Page;
