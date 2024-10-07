@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { fetchProducts } from "./actions";
-import ProductCard from "./ProductCard"; // Import the separated ProductCard component
+import ProductCard from "./ProductCard";
 import { Button } from "@/components/ui/button";
 
 interface GroupedProduct {
@@ -60,7 +60,9 @@ const ProductList = () => {
         <Button
           onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
-          className="btn flex items-center justify-center"
+          className={`px-6 py-2 bg-primary text-white font-semibold rounded-lg transition-colors duration-300 ease-in-out hover:bg-primary-dark hover:shadow-md ${
+            currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+          }`}
         >
           Previous
         </Button>
@@ -70,9 +72,11 @@ const ProductList = () => {
         <Button
           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
           disabled={currentPage === totalPages}
-          className="btn flex items-center justify-center"
+          className={`px-6 py-2 bg-primary text-white font-semibold rounded-lg transition-colors duration-300 ease-in-out hover:bg-primary-dark hover:shadow-md ${
+            currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
+          }`}
         >
-          <span>Next</span>
+          Next
         </Button>
       </div>
     </div>
