@@ -61,7 +61,7 @@ export async function fetchProductById(id: string) {
       console.error("Invalid product ID:", id);
       return { success: false, error: "Invalid product ID" };
     }
-   
+
     const product = await prisma.product.findUnique({
       where: { id: numericId },
       select: {
@@ -114,7 +114,7 @@ export async function fetchProductById(id: string) {
         OR: words.map(word => ({
           name: {
             contains: word,
-            mode: 'insensitive',
+            mode: "insensitive",
           },
         })),
         NOT: {
@@ -131,16 +131,27 @@ export async function fetchProductById(id: string) {
     });
 
     // Process images
-    const mainImage = product.imageUrl.split(",")[0].trim();
-    const thumbnails = productVariants.map(pv => ({
-      id: pv.id,
-      name: pv.name,
-      imageUrl: pv.imageUrl.split(",")[0].trim(),
-      stock: pv.stock,
-      regularPrice: pv.regularPrice,
-      attribute1Default: pv.attribute1Default,
-      attribute2Default: pv.attribute2Default,
-    }));
+    const allImages = product.imageUrl.split(",").map(url => url.trim());
+    const productImages = allImages.filter(
+      url => !url.toLowerCase().includes("model")
+    );
+    const mainImage = productImages[0] || allImages[0]; // Fallback to first image if no product images
+
+    const thumbnails = productVariants.map(pv => {
+      const variantImages = pv.imageUrl.split(",").map(url => url.trim());
+      const variantProductImages = variantImages.filter(
+        url => !url.toLowerCase().includes("model")
+      );
+      return {
+        id: pv.id,
+        name: pv.name,
+        imageUrl: variantProductImages[0] || variantImages[0], // Fallback to first image if no product images
+        stock: pv.stock,
+        regularPrice: pv.regularPrice,
+        attribute1Default: pv.attribute1Default,
+        attribute2Default: pv.attribute2Default,
+      };
+    });
 
     return {
       success: true,
@@ -148,11 +159,18 @@ export async function fetchProductById(id: string) {
         ...product,
         mainImage,
         thumbnails,
+        productImages, // Add this to include all product images
       },
-      relatedProducts: relatedProducts.map(rp => ({
-        ...rp,
-        imageUrl: rp.imageUrl.split(",")[0].trim(),
-      })),
+      relatedProducts: relatedProducts.map(rp => {
+        const rpImages = rp.imageUrl.split(",").map(url => url.trim());
+        const rpProductImages = rpImages.filter(
+          url => !url.toLowerCase().includes("model")
+        );
+        return {
+          ...rp,
+          imageUrl: rpProductImages[0] || rpImages[0], // Fallback to first image if no product images
+        };
+      }),
     };
   } catch (error) {
     console.error("Error fetching product:", error);
@@ -163,9 +181,24 @@ export async function fetchProductById(id: string) {
 function getBaseProductName(fullName: string): string {
   const cleanName = fullName.split(/[-–—,]/)[0].trim();
   const colorKeywords = [
-    "black", "navy", "grey", "charcoal", "pink", "burgundy", "bottle",
-    "olive", "tan", "mustard", "orange", "blue", "white", "red",
-    "green", "yellow", "purple", "brown",
+    "black",
+    "navy",
+    "grey",
+    "charcoal",
+    "pink",
+    "burgundy",
+    "bottle",
+    "olive",
+    "tan",
+    "mustard",
+    "orange",
+    "blue",
+    "white",
+    "red",
+    "green",
+    "yellow",
+    "purple",
+    "brown",
   ];
   let finalName = cleanName;
   for (const color of colorKeywords) {

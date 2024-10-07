@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { Prisma, Product } from "@prisma/client";
 
 type FetchPreCurvedPeaksResult =
-  | { success: true; data: Product[] }
+  | { success: true; data: Product[]; totalCount: number }
   | { success: false; error: string };
 
 type HeroImageResult =
@@ -30,13 +30,12 @@ export async function fetchHeroImage(): Promise<HeroImageResult> {
     });
 
     if (heroProduct && heroProduct.imageUrl) {
-      const images = heroProduct.imageUrl.split(",").map((url) => url.trim());
+      const images = heroProduct.imageUrl.split(",").map(url => url.trim());
       const heroImage = images.find(
-        (url) =>
+        url =>
           url.includes("model") ||
-          url.includes("header") || 
+          url.includes("header") ||
           url.includes("New in Headwear")
-         
       );
 
       if (heroImage) {
@@ -58,7 +57,9 @@ export async function fetchHeroImage(): Promise<HeroImageResult> {
 
 export async function fetchNewInHeadwear(
   type?: string,
-  searchQuery?: string
+  searchQuery?: string,
+  page: number = 1,
+  pageSize: number = 9
 ): Promise<FetchPreCurvedPeaksResult> {
   try {
     const baseWhereCondition: Prisma.ProductWhereInput = {
@@ -84,44 +85,51 @@ export async function fetchNewInHeadwear(
     const whereCondition: Prisma.ProductWhereInput = {
       AND: conditions,
     };
-    const NewInHeadwearProducts = await prisma.product.findMany({
-      where: whereCondition,
-      orderBy: {
-        position: "asc",
-      },
-      select: {
-        id: true,
-        userId: true,
-        type: true,
-        sku: true,
-        name: true,
-        published: true,
-        isFeatured: true,
-        visibility: true,
-        shortDescription: true,
-        taxStatus: true,
-        inStock: true,
-        backordersAllowed: true,
-        soldIndividually: true,
-        allowReviews: true,
-        categories: true,
-        tags: true,
-        imageUrl: true,
-        upsells: true,
-        position: true,
-        attribute1Name: true,
-        attribute1Values: true,
-        attribute2Name: true,
-        attribute2Values: true,
-        regularPrice: true,
-        stock: true,
-        createdAt: true,
-        attribute1Default: true,
-        attribute2Default:true ,
-        updatedAt:true,
-      },
-    });
-    return { success: true, data: NewInHeadwearProducts };
+
+    const [NewInHeadwearProducts, totalCount] = await Promise.all([
+      prisma.product.findMany({
+        where: whereCondition,
+        orderBy: {
+          position: "asc",
+        },
+        select: {
+          id: true,
+          userId: true,
+          type: true,
+          sku: true,
+          name: true,
+          published: true,
+          isFeatured: true,
+          visibility: true,
+          shortDescription: true,
+          taxStatus: true,
+          inStock: true,
+          backordersAllowed: true,
+          soldIndividually: true,
+          allowReviews: true,
+          categories: true,
+          tags: true,
+          imageUrl: true,
+          upsells: true,
+          position: true,
+          attribute1Name: true,
+          attribute1Values: true,
+          attribute2Name: true,
+          attribute2Values: true,
+          regularPrice: true,
+          stock: true,
+          createdAt: true,
+          attribute1Default: true,
+          attribute2Default: true,
+          updatedAt: true,
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.product.count({ where: whereCondition }),
+    ]);
+
+    return { success: true, data: NewInHeadwearProducts, totalCount };
   } catch (error) {
     console.error("Error fetching New in Headwear:", error);
     return {
@@ -155,16 +163,22 @@ export async function fetchProductById(id: string) {
       return { success: false, error: "Product not found" };
     }
     // Split the imageUrl into an array and process thumbnails
-    const images = product.imageUrl.split(",").map((url) => url.trim());
+    const images = product.imageUrl.split(",").map(url => url.trim());
     const mainImage = images[0];
     const thumbnails = images.filter(
-      (url) =>
+      url =>
         url.includes("Foc") ||
         url.includes("Boc") ||
         url.includes("Soc") ||
         url.includes("Boc1") ||
         url.includes("Soc1") ||
         url.includes("Foc1") ||
+        url.includes("foc1") ||
+        url.includes("soc1") ||
+        url.includes("boc1") ||
+        url.includes("foc") ||
+        url.includes("soc") ||
+        url.includes("boc") ||
         url.includes(product.name)
     );
     return {

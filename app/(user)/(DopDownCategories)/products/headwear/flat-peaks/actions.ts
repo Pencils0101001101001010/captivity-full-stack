@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { Prisma, Product } from "@prisma/client";
 
 type FetchPreCurvedPeaksResult =
-  | { success: true; data: Product[] }
+  | { success: true; data: Product[]; totalCount: number }
   | { success: false; error: string };
 
 type HeroImageResult =
@@ -15,7 +15,7 @@ export async function fetchHeroImage(): Promise<HeroImageResult> {
     const heroProduct = await prisma.product.findFirst({
       where: {
         categories: {
-          contains: "Headwear Collection",
+          contains: "Flat Peaks",
         },
         imageUrl: {
           contains: "model",
@@ -32,7 +32,10 @@ export async function fetchHeroImage(): Promise<HeroImageResult> {
     if (heroProduct && heroProduct.imageUrl) {
       const images = heroProduct.imageUrl.split(",").map(url => url.trim());
       const heroImage = images.find(
-        url => url.includes("model") || url.includes("header")
+        url =>
+          url.includes("model") ||
+          url.includes("header") ||
+          url.includes("Flat Peaks")
       );
 
       if (heroImage) {
@@ -52,9 +55,11 @@ export async function fetchHeroImage(): Promise<HeroImageResult> {
   }
 }
 
-export async function fetchNewInHeadwear(
+export async function fetchFlatPeaks(
   type?: string,
-  searchQuery?: string
+  searchQuery?: string,
+  page: number = 1,
+  pageSize: number = 9
 ): Promise<FetchPreCurvedPeaksResult> {
   try {
     const baseWhereCondition: Prisma.ProductWhereInput = {
@@ -80,44 +85,51 @@ export async function fetchNewInHeadwear(
     const whereCondition: Prisma.ProductWhereInput = {
       AND: conditions,
     };
-    const NewInHeadwearProducts = await prisma.product.findMany({
-      where: whereCondition,
-      orderBy: {
-        position: "asc",
-      },
-      select: {
-        id: true,
-        userId: true,
-        type: true,
-        sku: true,
-        name: true,
-        published: true,
-        isFeatured: true,
-        visibility: true,
-        shortDescription: true,
-        taxStatus: true,
-        inStock: true,
-        backordersAllowed: true,
-        soldIndividually: true,
-        allowReviews: true,
-        categories: true,
-        tags: true,
-        imageUrl: true,
-        upsells: true,
-        position: true,
-        attribute1Name: true,
-        attribute1Values: true,
-        attribute2Name: true,
-        attribute2Values: true,
-        regularPrice: true,
-        stock: true,
-        createdAt: true,
-        attribute1Default: true,
-        attribute2Default: true,
-        updatedAt: true,
-      },
-    });
-    return { success: true, data: NewInHeadwearProducts };
+
+    const [flatPeaksProducts, totalCount] = await Promise.all([
+      prisma.product.findMany({
+        where: whereCondition,
+        orderBy: {
+          position: "asc",
+        },
+        select: {
+          id: true,
+          userId: true,
+          type: true,
+          sku: true,
+          name: true,
+          published: true,
+          isFeatured: true,
+          visibility: true,
+          shortDescription: true,
+          taxStatus: true,
+          inStock: true,
+          backordersAllowed: true,
+          soldIndividually: true,
+          allowReviews: true,
+          categories: true,
+          tags: true,
+          imageUrl: true,
+          upsells: true,
+          position: true,
+          attribute1Name: true,
+          attribute1Values: true,
+          attribute2Name: true,
+          attribute2Values: true,
+          regularPrice: true,
+          stock: true,
+          createdAt: true,
+          attribute1Default: true,
+          attribute2Default: true,
+          updatedAt: true,
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.product.count({ where: whereCondition }),
+    ]);
+
+    return { success: true, data: flatPeaksProducts, totalCount };
   } catch (error) {
     console.error("Error fetching Flat Peaks:", error);
     return {
