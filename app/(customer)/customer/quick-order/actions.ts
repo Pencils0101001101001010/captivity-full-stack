@@ -8,7 +8,7 @@ type GroupedProduct = {
   id: number;
   name: string;
   shortDescription: string;
-  imageUrls: string[]; // Changed from imageUrl to imageUrls
+  imageUrls: string[];
   regularPrice: number | null;
   colors: string[];
   sizes: string[];
@@ -20,7 +20,8 @@ type FetchProductsResult =
 
 export async function fetchProducts(
   page: number = 1,
-  pageSize: number = 10
+  pageSize: number = 9,
+  query?: string
 ): Promise<FetchProductsResult> {
   try {
     const { user } = await validateRequest();
@@ -29,14 +30,27 @@ export async function fetchProducts(
     }
 
     if (user.role !== "CUSTOMER") {
-      throw new Error("Only customers can fetch african collections.");
+      throw new Error("Only customers can fetch products.");
     }
+
     const skip = (page - 1) * pageSize;
 
+    // Build the 'where' clause based on the search query
+    const productWhere: Prisma.ProductWhereInput = {};
+    if (query) {
+      productWhere.name = {
+        contains: query,
+        mode: "insensitive",
+      };
+    }
+
+    // Fetch products from the database with optional filtering
     const allProducts = await prisma.product.findMany({
+      where: productWhere,
       orderBy: { name: "asc" },
     });
 
+    // Group products by base name
     const groupedProducts = allProducts.reduce<Record<string, GroupedProduct>>(
       (acc, product) => {
         const baseName = product.name.split(" - ")[0];
@@ -45,13 +59,12 @@ export async function fetchProducts(
             id: product.id,
             name: baseName,
             shortDescription: product.shortDescription,
-            imageUrls: [product.imageUrl], // Initialize with the first image
+            imageUrls: [product.imageUrl],
             regularPrice: product.regularPrice,
             colors: [],
             sizes: [],
           };
         } else {
-          // Add additional images if they're different
           if (!acc[baseName].imageUrls.includes(product.imageUrl)) {
             acc[baseName].imageUrls.push(product.imageUrl);
           }
@@ -69,12 +82,12 @@ export async function fetchProducts(
       {}
     );
 
-    const paginatedProducts = Object.values(groupedProducts).slice(
-      skip,
-      skip + pageSize
-    );
-    const totalCount = Object.keys(groupedProducts).length;
+    const groupedProductsArray = Object.values(groupedProducts);
+    const totalCount = groupedProductsArray.length;
     const totalPages = Math.ceil(totalCount / pageSize);
+
+    // Apply pagination
+    const paginatedProducts = groupedProductsArray.slice(skip, skip + pageSize);
 
     return {
       success: true,

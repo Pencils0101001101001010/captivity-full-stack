@@ -1,17 +1,9 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { fetchProducts } from "./actions";
-import Link from "next/link";
-import Image from "next/image";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+import ProductCard from "./ProductCard";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import SearchField from "../../_components/SearchField";
 
 interface GroupedProduct {
   id: number;
@@ -22,86 +14,18 @@ interface GroupedProduct {
   sizes: string[];
 }
 
-const ProductCard = ({ product }: { product: GroupedProduct }) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [imageError, setImageError] = useState(false);
-
-  const handleMouseEnter = () => {
-    if (product.imageUrls.length > 1) {
-      setCurrentImageIndex(1);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setCurrentImageIndex(imageError ? 1 : 0);
-  };
-
-  const handleImageError = () => {
-    if (currentImageIndex === 0 && product.imageUrls.length > 1) {
-      setCurrentImageIndex(1);
-      setImageError(true);
-    }
-  };
-
-  return (
-    <Link href={`/customer/quick-order/${product.id}`}>
-      <Card
-        className="h-full overflow-hidden hover:shadow-lg transition-shadow duration-300"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        <CardHeader className="bg-primary text-primary-foreground">
-          <h2 className="text-lg font-bold truncate">{product.name}</h2>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="relative w-full h-64">
-            {product.imageUrls.length > 0 ? (
-              <Image
-                src={product.imageUrls[currentImageIndex]}
-                alt={product.name}
-                width={200}
-                height={200}
-                className="transition-opacity duration-300 w-full h-[250px]"
-                onError={handleImageError}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
-                No Image Available
-              </div>
-            )}
-          </div>
-          <div className="p-4">
-            <p className="font-bold text-2xl text-primary">
-              ${product.regularPrice?.toFixed(2)}
-            </p>
-          </div>
-        </CardContent>
-        <CardFooter className="bg-secondary">
-          <div className="w-full">
-            <p className="text-sm text-secondary-foreground">
-              Colors: {product.colors.join(", ")}
-            </p>
-            <p className="text-sm text-secondary-foreground">
-              Sizes: {product.sizes.join(", ")}
-            </p>
-          </div>
-        </CardFooter>
-      </Card>
-    </Link>
-  );
-};
-
 const ProductList = () => {
   const [products, setProducts] = useState<GroupedProduct[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   useEffect(() => {
     const loadProducts = async () => {
       setIsLoading(true);
-      const result = await fetchProducts(currentPage);
+      const result = await fetchProducts(currentPage, 9, searchQuery);
       if (result.success) {
         setProducts(result.data);
         setTotalPages(result.totalPages);
@@ -113,7 +37,7 @@ const ProductList = () => {
     };
 
     loadProducts();
-  }, [currentPage]);
+  }, [currentPage, searchQuery]);
 
   if (isLoading)
     return <div className="text-center py-8 text-2xl">Loading...</div>;
@@ -126,19 +50,29 @@ const ProductList = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold text-center mb-8 text-primary">
-        Our Products
-      </h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Flex container for header and search */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold text-primary">Our Products</h1>
+        <div className="mt-4 md:mt-0">
+          <SearchField onSearch={setSearchQuery} />
+        </div>
+      </div>
+
+      {/* Product Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
         {products.map(product => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
-      <div className="flex justify-center items-center mt-8 space-x-4">
+
+      {/* Pagination */}
+      <div className="flex justify-center items-center my-8 space-x-4">
         <Button
           onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
-          className="btn flex items-center justify-center"
+          className={`px-6 py-2 bg-primary text-white font-semibold rounded-lg transition-colors duration-300 ease-in-out hover:bg-primary-dark hover:shadow-md ${
+            currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+          }`}
         >
           Previous
         </Button>
@@ -148,9 +82,11 @@ const ProductList = () => {
         <Button
           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
           disabled={currentPage === totalPages}
-          className="btn flex items-center justify-center"
+          className={`px-6 py-2 bg-primary text-white font-semibold rounded-lg transition-colors duration-300 ease-in-out hover:bg-primary-dark hover:shadow-md ${
+            currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
+          }`}
         >
-          <span>Next</span>
+          Next
         </Button>
       </div>
     </div>
