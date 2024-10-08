@@ -3,6 +3,7 @@ import Image from "next/image";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/app/CartContext";
+import Link from "next/link";
 
 interface SlideInCartProps {
   isOpen: boolean;
@@ -60,8 +61,13 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
           Subtotal: R{cartTotal.toFixed(2)}
         </p>
         <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" className="w-full" onClick={onClose}>
-            View basket
+          <Button
+            asChild
+            variant="outline"
+            className="w-full"
+            onClick={onClose}
+          >
+            <Link href={"/customer/cart"}>View basket</Link>
           </Button>
           <Button className="w-full">Checkout</Button>
         </div>
