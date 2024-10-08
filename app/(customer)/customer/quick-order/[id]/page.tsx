@@ -29,9 +29,6 @@ async function getProduct(id: number) {
   return product;
 }
 
-// Remove generateStaticParams as it's not needed with dynamic rendering
-// export async function generateStaticParams() { ... }
-
 const Page: React.FC<PageProps> = async ({ params }) => {
   const productId = Number(params.id);
 

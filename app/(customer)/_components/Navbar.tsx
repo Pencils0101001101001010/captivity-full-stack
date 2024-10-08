@@ -13,18 +13,33 @@ import { ShoppingCart } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import { useCart } from "@/app/CartContext";
 import UserButton from "./UserButton";
+import SlideInCart from "./SlideInCart";
 
 const Navbar = () => {
   const session = useSession();
   const [isOpen, setIsOpen] = useState(false);
-  const { cartItemCount } = useCart();
+  const { cartItemCount, fetchCartData } = useCart();
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
-    console.log("Navbar cartItemCount:", cartItemCount);
-  }, [cartItemCount]);
+    // Fetch cart data when component mounts
+    fetchCartData();
+
+    // Set up an interval to fetch cart data every minute
+    const intervalId = setInterval(fetchCartData, 60000);
+
+    // Clear the interval when component unmounts
+    return () => clearInterval(intervalId);
+  }, [fetchCartData]);
+
+  const handleCartClick = () => {
+    setIsCartOpen(true);
+    // Fetch fresh data in the background
+    fetchCartData();
+  };
 
   const renderCartIcon = () => (
-    <div className="relative">
+    <div className="relative cursor-pointer" onClick={handleCartClick}>
       <ShoppingCart />
       <span
         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold"
@@ -201,6 +216,7 @@ const Navbar = () => {
           </Link>
         </div>
       </div>
+      <SlideInCart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
 };

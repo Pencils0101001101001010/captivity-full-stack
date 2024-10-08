@@ -6,9 +6,14 @@ import toast from "react-hot-toast";
 interface AddToCartProps {
   productId: number;
   quantity: number;
+  className: string;
 }
 
-const AddToCart: React.FC<AddToCartProps> = ({ productId, quantity }) => {
+const AddToCart: React.FC<AddToCartProps> = ({
+  productId,
+  quantity,
+  className,
+}) => {
   const [isLoading, setIsLoading] = useState(false);
   const { addItemToCart } = useCart();
 
@@ -22,7 +27,7 @@ const AddToCart: React.FC<AddToCartProps> = ({ productId, quantity }) => {
       });
     } catch (error) {
       console.error("Error adding to cart:", error);
-      toast.error("An error occurred. Please try again later.", {
+      toast.error("Failed to add item to cart. Please try again.", {
         duration: 3000,
         position: "bottom-right",
       });
@@ -32,11 +37,13 @@ const AddToCart: React.FC<AddToCartProps> = ({ productId, quantity }) => {
   };
 
   return (
-    <div>
-      <Button onClick={handleAddToCart} disabled={isLoading}>
-        {isLoading ? "Adding..." : "Add to Cart"}
-      </Button>
-    </div>
+    <Button
+      onClick={handleAddToCart}
+      disabled={isLoading}
+      className={className}
+    >
+      {isLoading ? "Adding..." : "Add to Cart"}
+    </Button>
   );
 };
 
