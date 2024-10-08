@@ -2,7 +2,7 @@
 
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import { Product, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 type GroupedProduct = {
   id: number;

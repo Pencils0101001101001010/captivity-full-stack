@@ -8,7 +8,9 @@ type FetchProductByIdResult =
   | { success: true; data: Product | null }
   | { success: false; error: string };
 
-export async function fetchProductById(id: number) {
+export async function fetchProductById(
+  id: number
+): Promise<FetchProductByIdResult> {
   try {
     const { user } = await validateRequest();
     if (!user || user.role !== "CUSTOMER") {
