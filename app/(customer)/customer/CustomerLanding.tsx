@@ -70,7 +70,7 @@ const CustomerLandingPage = () => {
                 asChild
                 className="bg-white text-blue-600 hover:bg-blue-100 text-sm sm:text-base"
               >
-                <Link href={"/customer/quick-order"}>Quick Order</Link>
+                <Link href={"/customer/shopping/products"}>Quick Order</Link>
               </Button>
             </CardContent>
           </Card>

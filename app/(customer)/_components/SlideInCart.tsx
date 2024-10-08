@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
+import React from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
