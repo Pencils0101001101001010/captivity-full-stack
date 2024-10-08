@@ -166,7 +166,7 @@ function ProductCard({ product }: { product: Product }) {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="relative h-48">
+        <div className="relative h-48 w-auto">
           <Image
             src={imageUrls[0]}
             alt={product.name}
