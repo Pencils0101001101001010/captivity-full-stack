@@ -44,7 +44,7 @@ export async function fetchProducts(
     // Fetch products from the database with optional filtering
     const allProducts = await prisma.product.findMany({
       where: productWhere,
-      orderBy: { name: "asc" },
+      orderBy: { id: "asc" },
     });
 
     // Group products by base name

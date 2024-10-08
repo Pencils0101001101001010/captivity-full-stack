@@ -1,38 +1,51 @@
 import React from "react";
-import { fetchProductById } from "./actions";
 import ProductCard from "./ProductCard";
+import prisma from "@/lib/prisma";
 
-export default async function Page({ params }: { params: { id: string } }) {
-  const productId = parseInt(params.id, 10);
-  const result = await fetchProductById(productId);
+export const dynamic = "force-dynamic";
 
-  if (!result.success) {
-    return <div>Error: {result.error}</div>;
-  }
+interface PageProps {
+  params: { id: string };
+}
 
-  const product = result.data;
+async function getProduct(id: number) {
+  const product = await prisma.product.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      inStock: true,
+      attribute1Values: true,
+      attribute2Values: true,
+      regularPrice: true,
+      imageUrl: true,
+    },
+  });
 
   if (!product) {
-    return <div>Product not found</div>;
+    throw new Error("Product not found");
   }
 
-  // Map attribute1Values to availableSizes and attribute2Values to availableColors
-  const productWithAttributes = {
-    ...product,
-    availableSizes: product.attribute1Values
-      ? product.attribute1Values.split(",")
-      : [], // Convert comma-separated values to an array
-    availableColors: product.attribute2Values
-      ? product.attribute2Values.split(",")
-      : [], // Convert comma-separated values to an array
-  };
+  return product;
+}
+
+// Remove generateStaticParams as it's not needed with dynamic rendering
+// export async function generateStaticParams() { ... }
+
+const Page: React.FC<PageProps> = async ({ params }) => {
+  const productId = Number(params.id);
+
+  if (isNaN(productId)) {
+    throw new Error("Invalid product ID");
+  }
+
+  const product = await getProduct(productId);
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4 text-center">Product Details</h1>
-      <div className="flex justify-center">
-        <ProductCard product={productWithAttributes} />
-      </div>
+    <div>
+      <ProductCard product={product} />
     </div>
   );
-}
+};
+
+export default Page;

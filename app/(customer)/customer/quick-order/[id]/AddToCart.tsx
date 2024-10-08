@@ -1,33 +1,42 @@
-import React from "react";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { useCart } from "@/app/CartContext";
+import toast from "react-hot-toast";
 
 interface AddToCartProps {
-  selectedSize: string;
-  selectedColor: string;
+  productId: number;
+  quantity: number;
 }
 
-const AddToCart: React.FC<AddToCartProps> = ({
-  selectedSize,
-  selectedColor,
-}) => {
-  const handleAddToCart = () => {
-    if (!selectedSize || !selectedColor) {
-      alert("Please select both size and color.");
-      return;
-    }
+const AddToCart: React.FC<AddToCartProps> = ({ productId, quantity }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const { addItemToCart } = useCart();
 
-    // Logic for adding product with selectedSize and selectedColor to the cart
-    console.log(
-      `Adding to cart: Size - ${selectedSize}, Color - ${selectedColor}`
-    );
+  const handleAddToCart = async () => {
+    setIsLoading(true);
+    try {
+      await addItemToCart(productId, quantity);
+      toast.success("Added to cart successfully!", {
+        duration: 3000,
+        position: "bottom-right",
+      });
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast.error("An error occurred. Please try again later.", {
+        duration: 3000,
+        position: "bottom-right",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <button
-      onClick={handleAddToCart}
-      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-    >
-      Add to Cart
-    </button>
+    <div>
+      <Button onClick={handleAddToCart} disabled={isLoading}>
+        {isLoading ? "Adding..." : "Add to Cart"}
+      </Button>
+    </div>
   );
 };
 

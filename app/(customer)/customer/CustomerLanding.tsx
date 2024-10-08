@@ -33,11 +33,19 @@ const CustomerLandingPage = () => {
   }
 
   const quickLinks = [
-    { title: "Previous Orders", icon: ShoppingBag, href:"/customer/previous-orders" },
-    { title: "Account Info", icon: User, href:"/customer/account-info" },
-    { title: "Address Info", icon: MapPin, href:"/customer/address-info" },
-    { title: "View Price List", icon: FileText, href:"/customer/view-price-list" },
-    { title: "Product Images", icon: Image, href:"/customer/product-images" },
+    {
+      title: "Previous Orders",
+      icon: ShoppingBag,
+      href: "/customer/previous-orders",
+    },
+    { title: "Account Info", icon: User, href: "/customer/account-info" },
+    { title: "Address Info", icon: MapPin, href: "/customer/address-info" },
+    {
+      title: "View Price List",
+      icon: FileText,
+      href: "/customer/view-price-list",
+    },
+    { title: "Product Images", icon: Image, href: "/customer/product-images" },
   ];
 
   return (
@@ -58,9 +66,11 @@ const CustomerLandingPage = () => {
               <p className="mb-4 text-sm sm:text-base">
                 Unlock the Speed of Our Quick Order Page Today!
               </p>
-              <Button asChild className="bg-white text-blue-600 hover:bg-blue-100 text-sm sm:text-base">
+              <Button
+                asChild
+                className="bg-white text-blue-600 hover:bg-blue-100 text-sm sm:text-base"
+              >
                 <Link href={"/customer/quick-order"}>Quick Order</Link>
-                
               </Button>
             </CardContent>
           </Card>
