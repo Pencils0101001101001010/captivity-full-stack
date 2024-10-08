@@ -25,11 +25,12 @@ export async function fetchProductById(
     return { success: false, error: "Failed to fetch product" };
   }
 }
+///////////////////////////////////////////////////////////////////////
 export async function addToCart(productId: number, quantity: number) {
   try {
     const { user } = await validateRequest();
-    if (!user) {
-      throw new Error("You must be logged in to add items to cart");
+    if (!user || user.role !== "CUSTOMER") {
+      throw new Error("Unauthorized");
     }
 
     let cart = await prisma.cart.findFirst({
@@ -76,10 +77,13 @@ export async function addToCart(productId: number, quantity: number) {
     };
   }
 }
-
+////////////////////////////////////////////////////////////////////////
 export async function getCartItemCount() {
   try {
     const { user } = await validateRequest();
+    if (!user || user.role !== "CUSTOMER") {
+      throw new Error("Unauthorized");
+    }
     if (!user) {
       return 0;
     }
@@ -102,10 +106,13 @@ export async function getCartItemCount() {
     return 0;
   }
 }
-
+////////////////////////////////////////////////////////////////////////
 export async function fetchCartItems() {
   try {
     const { user } = await validateRequest();
+    if (!user || user.role !== "CUSTOMER") {
+      throw new Error("Unauthorized");
+    }
     if (!user) {
       return [];
     }
@@ -141,7 +148,7 @@ export async function fetchCartItems() {
     return [];
   }
 }
-
+////////////////////////////////////////////////////////////////////////
 export async function calculateAvailableStock(
   productId: number,
   attr1: string,
