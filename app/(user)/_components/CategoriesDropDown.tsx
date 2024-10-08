@@ -164,17 +164,12 @@ const navItems: Section[] = [
     ],
   },
   {
-    label: "Catalog",
+    label: "Catalogue",
     items: [
       {
         href: "/products/catalog/spring-2024",
         icon: DotIcon,
         label: "Spring 2024",
-      },
-      {
-        href: "/products/catalog/fall-2024",
-        icon: DotIcon,
-        label: "Fall 2024",
       },
     ],
   },

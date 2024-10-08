@@ -9,6 +9,15 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDescription } from "@/lib/utils";
 import RelatedProducts from "@/app/(user)/_components/RelatedProducts";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import Link from "next/link";
 
 interface Thumbnail {
   id: number;
@@ -55,6 +64,7 @@ export default function ProductDetail() {
   const [selectedThumbnail, setSelectedThumbnail] = useState<number | null>(
     null
   );
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     async function loadProductDetails() {
@@ -165,11 +175,11 @@ export default function ProductDetail() {
               <h1 className="text-3xl font-bold mb-4">
                 {selectedProduct.name}
               </h1>
-              {selectedProduct.regularPrice && (
+              {/* {selectedProduct.regularPrice && (
                 <p className="text-xl font-semibold mb-4">
                   Price: R{selectedProduct.regularPrice.toFixed(2)}
                 </p>
-              )}
+              )} */}
               <div className="mb-4">
                 <Badge
                   variant={
@@ -208,15 +218,49 @@ export default function ProductDetail() {
                     </div>
                   )}
               </div>
-              <div>
-                <strong>Short Description:</strong>
-                <div
-                  dangerouslySetInnerHTML={formatDescription(
-                    product.shortDescription
-                  )}
-                  className="mt-2 pl-4 description-content"
+
+              <div className="mb-4">
+                <label
+                  htmlFor="quantity"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Quantity
+                </label>
+                <Input
+                  type="number"
+                  id="quantity"
+                  value={quantity}
+                  onChange={e =>
+                    setQuantity(Math.max(1, parseInt(e.target.value) || 1))
+                  }
+                  min="1"
+                  className="mt-1"
                 />
               </div>
+
+              <Button asChild className="w-full mb-4">
+                <Link href="/login">Login</Link>
+              </Button>
+
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="description">
+                  <AccordionTrigger>Short Description</AccordionTrigger>
+                  <AccordionContent>
+                    <div
+                      dangerouslySetInnerHTML={formatDescription(
+                        product.shortDescription
+                      )}
+                      className="description-content"
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="specs">
+                  <AccordionTrigger>Box Specs</AccordionTrigger>
+                  <AccordionContent>
+                    <p>Box specifications information goes here.</p>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </div>
           </div>
         </CardContent>

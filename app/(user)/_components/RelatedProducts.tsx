@@ -21,7 +21,7 @@ const RelatedProductCard: React.FC<{ product: RelatedProduct }> = ({
     <Link href={`/products/headwear/${product.id}`}>
       <Card className="h-full">
         <CardContent className="p-4 flex flex-col h-full">
-          <div className="relative h-40 mb-2 flex-grow">
+          <div className="relative h-52 mb-2 flex-grow">
             <Image
               src={product.imageUrl}
               alt={product.name}
