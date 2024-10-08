@@ -11,6 +11,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "captivity.co.za",
       },
+      {
+        protocol: "https",
+        hostname: "unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "source.unsplash.com",
+      },
     ],
   },
   serverExternalPackages: ["@node-rs/argon2"],

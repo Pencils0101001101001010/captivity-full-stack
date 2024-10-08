@@ -1,4 +1,4 @@
-import Categories from "./Categories";
+import ProductCollections from "./Categories";
 
 export default async function Layout({
   children,
@@ -7,7 +7,7 @@ export default async function Layout({
 }) {
   return (
     <div className="flex min-h-screen">
-      <Categories />
+      <ProductCollections />
 
       <div className="flex w-full grow">
         <main className="flex-grow">{children}</main>
