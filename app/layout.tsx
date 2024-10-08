@@ -1,7 +1,6 @@
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "react-hot-toast";
-import { CartProvider } from "./CartContext";
 
 export const metadata = {
   title: "Captivity-Headwear And Apparel",
@@ -23,7 +22,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <CartProvider>{children}</CartProvider>
+            {children}
           </ThemeProvider>
           <Toaster />
         </div>
