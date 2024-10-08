@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
 import {
   Card,
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import AddToCart from "./AddToCart";
-import { calculateAvailableStock } from "./actions"; // Ensure this import path is correct
+import { calculateAvailableStock } from "./actions";
 
 interface ProductCardProps {
   product: {
@@ -50,7 +50,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     if (colorSizePairs.length > 0) {
       setSelectedPair(colorSizePairs[0]);
     }
-  }, []);
+  }, [colorSizePairs]);
 
   useEffect(() => {
     const updateStock = async () => {
@@ -122,8 +122,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               <Image
                 src={product.imageUrl}
                 alt={product.name}
-                layout="fill"
-                objectFit="cover"
+                fill
+                style={{ objectFit: "cover" }}
                 className="rounded-lg"
               />
             </div>
