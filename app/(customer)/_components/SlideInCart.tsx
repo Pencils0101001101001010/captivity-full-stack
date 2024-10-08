@@ -47,7 +47,6 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
               />
               <div className="ml-4 flex-grow">
                 <p className="font-semibold">{item.name}</p>
-                <p className="text-sm text-gray-600">{item.attributes}</p>
                 <p className="text-sm">
                   {item.quantity} x R{item.price.toFixed(2)}
                 </p>
@@ -69,7 +68,9 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
           >
             <Link href={"/customer/cart"}>View basket</Link>
           </Button>
-          <Button className="w-full">Checkout</Button>
+          <Button asChild className="w-full">
+            <Link href={"/customer/checkout"}>Checkout</Link>
+          </Button>
         </div>
       </div>
     </div>
