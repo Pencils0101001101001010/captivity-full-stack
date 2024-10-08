@@ -45,6 +45,14 @@ const NewProducts = () => {
     return `$${price.toFixed(2)}`;
   };
 
+  const getFirstValidImageUrl = (imageUrl: string | null) => {
+    if (!imageUrl) return "/placeholder-image.jpg";
+    const urls = imageUrl.split(",").map(url => url.trim());
+    return (
+      urls.find(url => url && !url.endsWith("404")) || "/placeholder-image.jpg"
+    );
+  };
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4">
       <h2 className="text-2xl font-bold mb-6">New Products</h2>
@@ -53,7 +61,7 @@ const NewProducts = () => {
         draggable={false}
         showDots={true}
         responsive={responsive}
-        ssr={true} // means to render carousel on server-side.
+        ssr={true}
         infinite={true}
         autoPlay={false}
         autoPlaySpeed={1000}
@@ -70,7 +78,7 @@ const NewProducts = () => {
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="relative w-full h-48">
                 <Image
-                  src={product.imageUrl || "/placeholder-image.jpg"}
+                  src={getFirstValidImageUrl(product.imageUrl)}
                   alt={product.name}
                   layout="fill"
                   objectFit="cover"
