@@ -244,7 +244,7 @@ export default function ProductDetail() {
 
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="description">
-                  <AccordionTrigger>Short Description</AccordionTrigger>
+                  <AccordionTrigger>Features</AccordionTrigger>
                   <AccordionContent>
                     <div
                       dangerouslySetInnerHTML={formatDescription(
@@ -255,7 +255,7 @@ export default function ProductDetail() {
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="specs">
-                  <AccordionTrigger>Box Specs</AccordionTrigger>
+                  <AccordionTrigger>Box Specification</AccordionTrigger>
                   <AccordionContent>
                     <p>Box specifications information goes here.</p>
                   </AccordionContent>
