@@ -43,10 +43,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const updateCartItemCount = async () => {
     try {
-      console.log("Updating cart item count");
       const count = await getCartItemCount();
       setCartItemCount(count);
-      console.log("Updated cart item count:", count);
     } catch (error) {
       console.error("Failed to update cart count:", error);
     }
@@ -55,15 +53,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   const addItemToCart = async (productId: number, quantity: number) => {
     setIsLoading(true);
     try {
-      console.log(
-        `Adding item to cart: productId=${productId}, quantity=${quantity}`
-      );
       const result = await addToCartAction(productId, quantity);
       if (result.success) {
-        console.log("Item added successfully, fetching updated cart data");
         await fetchCartData();
       } else {
-        console.error("Failed to add item to cart:", result.error);
         throw new Error(result.error);
       }
     } catch (error) {
@@ -77,7 +70,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   const fetchCartData = useCallback(async () => {
     setIsLoading(true);
     try {
-      console.log("Fetching cart data");
       const items = await fetchCartItems();
       setCartItems(items);
       const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -87,7 +79,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         0
       );
       setCartTotal(total);
-      console.log("Fetched cart data:", { items, itemCount, total });
     } catch (error) {
       console.error("Failed to fetch cart data:", error);
     } finally {
@@ -96,12 +87,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   useEffect(() => {
-    console.log("Initial cart data fetch");
     fetchCartData();
 
     // Set up an interval to fetch cart data every 5 minutes
     const intervalId = setInterval(() => {
-      console.log("Periodic cart data fetch");
       fetchCartData();
     }, 300000);
 

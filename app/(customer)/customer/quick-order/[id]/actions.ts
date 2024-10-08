@@ -8,58 +8,38 @@ type FetchProductByIdResult =
   | { success: true; data: Product | null }
   | { success: false; error: string };
 
-export async function fetchProductById(
-  id: number
-): Promise<FetchProductByIdResult> {
+export async function fetchProductById(id: number) {
   try {
     const { user } = await validateRequest();
-    if (!user) {
-      throw new Error("Unauthorized. Please log in.");
+    if (!user || user.role !== "CUSTOMER") {
+      throw new Error("Unauthorized");
     }
 
-    if (user.role !== "CUSTOMER") {
-      throw new Error("Only customers can fetch product details.");
-    }
-
-    const product = await prisma.product.findUnique({
-      where: { id },
-    });
-
+    const product = await prisma.product.findUnique({ where: { id } });
     revalidatePath(`/customer/quick-order/${id}`);
-
     return { success: true, data: product };
   } catch (error) {
-    console.error("Error fetching product by ID:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
+    console.error("Error fetching product:", error);
+    return { success: false, error: "Failed to fetch product" };
   }
 }
-
 export async function addToCart(productId: number, quantity: number) {
   try {
-    console.log(`Adding to cart: productId=${productId}, quantity=${quantity}`);
     const { user } = await validateRequest();
     if (!user) {
-      console.log("User not authenticated");
       throw new Error("You must be logged in to add items to cart");
     }
 
-    console.log("Finding or creating cart");
     let cart = await prisma.cart.findFirst({
       where: { userId: user.id },
     });
 
     if (!cart) {
-      console.log("Creating new cart");
       cart = await prisma.cart.create({
         data: { userId: user.id },
       });
     }
 
-    console.log("Checking for existing cart item");
     const existingCartItem = await prisma.cartItem.findFirst({
       where: {
         cartId: cart.id,
@@ -68,13 +48,11 @@ export async function addToCart(productId: number, quantity: number) {
     });
 
     if (existingCartItem) {
-      console.log("Updating existing cart item");
       await prisma.cartItem.update({
         where: { id: existingCartItem.id },
         data: { quanity: existingCartItem.quanity + quantity },
       });
     } else {
-      console.log("Creating new cart item");
       await prisma.cartItem.create({
         data: {
           cartId: cart.id,
@@ -84,10 +62,8 @@ export async function addToCart(productId: number, quantity: number) {
       });
     }
 
-    console.log("Revalidating paths");
     revalidatePath(`/customer/quick-order`);
     revalidatePath(`/customer/cart`);
-    console.log("Add to cart operation completed successfully");
     return { success: true };
   } catch (error) {
     console.error("Failed to add item to cart:", error);
@@ -118,7 +94,6 @@ export async function getCartItemCount() {
       where: { cartId: cart.id },
     });
 
-    console.log("Cart item count:", count);
     return count;
   } catch (error) {
     console.error("Failed to get cart item count:", error);
@@ -158,7 +133,6 @@ export async function fetchCartItems() {
         `${item.products.attribute1Values || ""}, ${item.products.attribute2Values || ""}`.trim(),
     }));
 
-    console.log("Fetched cart items:", transformedItems);
     return transformedItems;
   } catch (error) {
     console.error("Failed to fetch cart items:", error);
