@@ -50,7 +50,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     if (colorSizePairs.length > 0) {
       setSelectedPair(colorSizePairs[0]);
     }
-  }, [colorSizePairs]);
+  }, []);
 
   useEffect(() => {
     const updateStock = async () => {
