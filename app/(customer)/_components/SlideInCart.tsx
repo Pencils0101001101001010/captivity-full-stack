@@ -15,9 +15,9 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
     >
       <div className="flex justify-between items-center p-4 border-b">
         <h2 className="text-lg font-semibold">Your Cart</h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-          <X size={24} />
-        </button>
+        <Button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <X size={24} color="white" />
+        </Button>
       </div>
       <div className="overflow-y-auto h-[calc(100%-180px)] p-4"></div>
       <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-white">
