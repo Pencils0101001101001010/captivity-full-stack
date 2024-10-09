@@ -3,6 +3,7 @@ import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
 import { Product } from "@prisma/client";
 import Image from "next/image";
+import { formatPrice, getFirstValidImageUrl } from "../utils";
 
 const responsive = {
   desktop: { breakpoint: { max: 3000, min: 1024 }, items: 4, slidesToSlide: 4 },
@@ -10,23 +11,15 @@ const responsive = {
   mobile: { breakpoint: { max: 464, min: 0 }, items: 1, slidesToSlide: 1 },
 };
 
-const formatPrice = (price: number | null) =>
-  price === null ? "Price not available" : `R${price.toFixed(2)}`;
-
-const getFirstValidImageUrl = (imageUrl: string | null) => {
-  if (!imageUrl) return "/placeholder-image.jpg";
-  const urls = imageUrl.split(",").map(url => url.trim());
-  return (
-    urls.find(url => url && !url.endsWith("404")) || "/placeholder-image.jpg"
-  );
-};
-
 interface ProductCarouselProps {
   products: Product[];
   title: string;
 }
 
-const ProductCarousel: React.FC<ProductCarouselProps> = ({ products, title }) => {
+const ProductCarousel: React.FC<ProductCarouselProps> = ({
+  products,
+  title,
+}) => {
   if (products.length === 0) {
     return (
       <div className="mb-12">

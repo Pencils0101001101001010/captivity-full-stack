@@ -81,3 +81,16 @@ export const categorizeProducts = (products: Product[]): ProductCategories => {
 
   return newProductsData;
 };
+
+export const formatPrice = (price: number | null) =>
+  price === null ? "Price not available" : `R${price.toFixed(2)}`;
+
+export const getFirstValidImageUrl = (imageUrl: string | null) => {
+  if (!imageUrl) return "/placeholder-image.jpg";
+  const urls = imageUrl.split(",").map(url => url.trim());
+  return (
+    urls.find(url => url && !url.endsWith("404")) || "/placeholder-image.jpg"
+  );
+};
+
+
