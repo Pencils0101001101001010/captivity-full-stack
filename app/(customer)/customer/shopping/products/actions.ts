@@ -41,9 +41,6 @@ export async function fetchNewCollections(
       },
     });
 
-    // Revalidate the correct customer path
-    revalidatePath("/customer/shopping/products");
-
     return { success: true, data: newProducts };
   } catch (error) {
     console.error("Error fetching new collections:", error);

@@ -4,7 +4,7 @@ import NewProducts from "./_components/NewProducts";
 
 const Page = () => {
   return (
-    <div className="flex flex-col space-y-10">
+    <div className="flex flex-col space-y-6">
       <ProductCollections />
       <NewProducts />
     </div>
