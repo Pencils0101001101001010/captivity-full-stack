@@ -50,10 +50,6 @@ export async function fetchSummerCollections(
       where: baseWhereCondition,
       orderBy: { position: "asc" },
     });
-
-    console.log(
-      `fetchSummerCollections succeeded for ${subcategories?.join(", ")}, found ${summerProducts.length} products`
-    );
     return { success: true, data: summerProducts };
   } catch (error) {
     console.error("Error fetching summer collections:", error);

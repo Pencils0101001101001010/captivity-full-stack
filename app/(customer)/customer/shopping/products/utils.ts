@@ -46,11 +46,15 @@ export const categorizeProducts = (products: Product[]): ProductCategories => {
       name.includes("visor")
     ) {
       newProductsData.Headwear.push(product);
-    } else if (name.includes("unisex")) {
+    } else if (name.includes("unisex") || name.includes("uni-sex")) {
       newProductsData.Unisex.push(product);
-    } else if (isExplicitlyFor("women") || name.includes("ladies")) {
+    } else if (
+      isExplicitlyFor("women") ||
+      name.includes("ladies") ||
+      name.includes("woman")
+    ) {
       newProductsData.Women.push(product);
-    } else if (isExplicitlyFor("men")) {
+    } else if (isExplicitlyFor("men") || name.includes("mens")) {
       newProductsData.Men.push(product);
     } else if (categories.includes("women") && !categories.includes("men")) {
       newProductsData.Women.push(product);
