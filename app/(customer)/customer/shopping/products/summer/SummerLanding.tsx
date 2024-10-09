@@ -5,6 +5,7 @@ import "react-multi-carousel/lib/styles.css";
 import { Product } from "@prisma/client";
 import Image from "next/image";
 import { fetchSummerCollections } from "./actions";
+import SummerProductsSkeleton from "./SummerProductsSkeleton";
 
 const responsive = {
   desktop: { breakpoint: { max: 3000, min: 1024 }, items: 4, slidesToSlide: 4 },
@@ -85,34 +86,6 @@ const ProductCarousel = ({
   );
 };
 
-const fetcher = async () => {
-  const categories: ("Men" | "Women" | "Kids" | "New" | "T- Shirts")[] = [
-    "Men",
-    "Women",
-    "Kids",
-    "New",
-    "T- Shirts",
-  ];
-  const results = await Promise.all(
-    categories.map(category => fetchSummerCollections(undefined, [category]))
-  );
-
-  const productsData: { [key: string]: Product[] } = {};
-  results.forEach((result, index) => {
-    if (result.success) {
-      productsData[categories[index]] = result.data;
-    } else {
-      console.error(
-        `Failed to fetch ${categories[index]} products:`,
-        result.error
-      );
-      productsData[categories[index]] = []; // Initialize with empty array on error
-    }
-  });
-
-  return productsData;
-};
-
 type ProductCategories = {
   Men: Product[];
   Women: Product[];
@@ -129,7 +102,6 @@ const SummerLanding = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    console.log("Fetching data for all categories...");
     setIsLoading(true);
     setError(null);
     try {
@@ -141,7 +113,6 @@ const SummerLanding = () => {
         throw new Error(result.error);
       }
     } catch (error) {
-      console.error("Error fetching summer products:", error);
       setError("Failed to load products. Please try again later.");
     } finally {
       setIsLoading(false);
@@ -169,27 +140,21 @@ const SummerLanding = () => {
         const name = (product.name || "").toLowerCase();
         const type = (product.type || "").toLowerCase();
 
-        console.log(`Categorizing product: ${product.name}`);
-        console.log(`Categories: ${categories}`);
-        console.log(`Name: ${name}`);
-        console.log(`Type: ${type}`);
-
         const isExplicitlyFor = (gender: string) =>
           name.includes(gender) ||
           name.includes(gender === "men" ? "male" : "female") ||
-          (gender === "women" && name.includes("ladies"));
+          (gender === "women" &&
+            (name.includes("ladies") || name.includes("women's")));
 
         if (
           categories.includes("new arrivals") ||
           categories.includes("new in")
         ) {
           newProductsData.New.push(product);
-          console.log("Added to: New");
         }
 
         if (categories.includes("kids")) {
           newProductsData.Kids.push(product);
-          console.log("Added to: Kids");
         } else if (
           categories.includes("headwear") ||
           categories.includes("hats") ||
@@ -198,27 +163,30 @@ const SummerLanding = () => {
           name.includes("visor")
         ) {
           newProductsData.Headwear.push(product);
-          console.log("Added to: Headwear");
         } else if (name.includes("unisex")) {
           newProductsData.Unisex.push(product);
-          console.log("Added to: Unisex (based on name)");
+        } else if (isExplicitlyFor("women") || name.includes("ladies")) {
+          newProductsData.Women.push(product);
+        } else if (isExplicitlyFor("men")) {
+          newProductsData.Men.push(product);
         } else if (
-          isExplicitlyFor("women") ||
-          (categories.includes("women") && !categories.includes("men"))
+          categories.includes("women") &&
+          !categories.includes("men")
         ) {
           newProductsData.Women.push(product);
-          console.log("Added to: Women");
         } else if (
-          isExplicitlyFor("men") ||
-          (categories.includes("men") && categories.includes("women"))
+          categories.includes("men") &&
+          !categories.includes("women")
         ) {
           newProductsData.Men.push(product);
-          console.log("Added to: Men");
         } else if (categories.includes("men") && categories.includes("women")) {
-          newProductsData.Unisex.push(product);
-          console.log("Added to: Unisex (both men and women categories)");
+          if (name.includes("women") || name.includes("ladies")) {
+            newProductsData.Women.push(product);
+          } else {
+            newProductsData.Men.push(product);
+          }
         } else {
-          console.log("Not added to any gender category");
+          newProductsData.Unisex.push(product);
         }
 
         if (
@@ -227,15 +195,7 @@ const SummerLanding = () => {
           name.includes("t-shirt")
         ) {
           newProductsData["T-Shirts"].push(product);
-          console.log("Added to: T-Shirts");
         }
-
-        console.log("---");
-      });
-
-      console.log("Final categorization:");
-      Object.entries(newProductsData).forEach(([category, products]) => {
-        console.log(`${category}: ${products.length} products`);
       });
 
       return newProductsData;
@@ -248,10 +208,8 @@ const SummerLanding = () => {
     [products, categorizeProducts]
   );
 
-  console.log("Rendering SummerLanding");
-
   if (isLoading) {
-    return <div className="text-center">Loading...</div>;
+    return <SummerProductsSkeleton />;
   }
 
   if (error) {
