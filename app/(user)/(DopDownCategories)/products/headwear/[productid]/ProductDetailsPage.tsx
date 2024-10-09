@@ -18,6 +18,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import Link from "next/link";
+import ProductDetailsModal from "@/app/(user)/_components/PopUpModal";
 
 interface Thumbnail {
   id: number;
@@ -45,6 +46,16 @@ interface Product {
   attribute1Default: string | null;
   attribute2Default: string | null;
   sku: string;
+  categoryProducts?: {
+    id: number;
+    name: string;
+    sku: string;
+    stock: number | null;
+    regularPrice: number | null;
+    attribute1Default?: string | null;
+    attribute2Default?: string | null;
+    inStock: boolean;
+  }[];
 }
 
 interface RelatedProduct {
@@ -135,13 +146,13 @@ export default function ProductDetail() {
         <CardContent className="p-6">
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="flex-1">
-              <div className="relative h-[400px] w-full mb-4">
+              <div className="relative h-[500px] w-auto mb-4">
                 <Image
                   src={currentImage || product.mainImage}
                   alt={selectedProduct.name}
                   className="rounded-lg object-cover"
                   fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  sizes="(max-width: 500px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   priority
                 />
               </div>
@@ -165,6 +176,7 @@ export default function ProductDetail() {
                         fill
                         // title={item.name || `Product view ${item.id}`}
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        priority
                       />
                     </div>
                   ))}
@@ -172,7 +184,7 @@ export default function ProductDetail() {
               </div>
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-4">
+              <h1 className="text-3xl text-red-500 font-bold mb-4">
                 {selectedProduct.name}
               </h1>
               {/* {selectedProduct.regularPrice && (
@@ -226,19 +238,28 @@ export default function ProductDetail() {
                 >
                   Quantity
                 </label>
-                <Input
-                  type="number"
-                  id="quantity"
-                  value={quantity}
-                  onChange={e =>
-                    setQuantity(Math.max(1, parseInt(e.target.value) || 1))
-                  }
-                  min="1"
-                  className="mt-1"
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    id="quantity"
+                    value={quantity}
+                    onChange={e =>
+                      setQuantity(Math.max(1, parseInt(e.target.value) || 1))
+                    }
+                    min="1"
+                    className="mt-1"
+                  />
+                  {product.categoryProducts && (
+                    <ProductDetailsModal
+                      categoryProducts={product.categoryProducts}
+                      attribute1Name={product.attribute1Name}
+                      // attribute2Default={product.attribute2Name}
+                    />
+                  )}
+                </div>
               </div>
 
-              <Button asChild className="w-full mb-4">
+              <Button variant="destructive" asChild className="w-full mb-4">
                 <Link href="/login">Login</Link>
               </Button>
 

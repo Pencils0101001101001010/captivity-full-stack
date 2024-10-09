@@ -11,13 +11,14 @@ interface DatabaseProduct {
   regularPrice: number | null;
   stock: number | null;
   imageUrl: string;
-  attribute1Name: string;
-  attribute1Values: string;
-  attribute2Name: string;
-  attribute2Values: string;
-  attribute1Default?: string;
-  attribute2Default?: string;
-  sku?: string;
+  attribute1Name: string | null;
+  attribute1Values: string | null;
+  attribute2Name: string | null;
+  attribute2Values: string | null;
+  attribute1Default?: string | null;
+  attribute2Default?: string | null;
+  sku: string;
+  categories: string; // Add this line
 }
 
 interface Product {
@@ -37,13 +38,24 @@ interface Product {
   stock: number | null;
   inStock: boolean;
   regularPrice: number | null;
-  attribute1Name?: string;
-  attribute1Values?: string;
-  attribute2Name?: string;
-  attribute2Values?: string;
-  attribute1Default?: string;
-  attribute2Default?: string;
-  sku?: string;
+  attribute1Name?: string | null;
+  attribute1Values?: string | null;
+  attribute2Name?: string | null;
+  attribute2Values?: string | null;
+  attribute1Default?: string | null;
+  attribute2Default?: string | null;
+  sku: string;
+  categories: string; // Add this line
+  categoryProducts?: Array<{
+    id: number;
+    name: string;
+    sku: string;
+    stock: number | null;
+    regularPrice: number | null;
+    attribute1Default?: string | null;
+    attribute2Default?: string | null;
+    inStock: boolean;
+  }>;
 }
 
 interface RelatedProduct {
@@ -79,6 +91,24 @@ export async function fetchProductById(id: string) {
         attribute1Default: true,
         attribute2Default: true,
         sku: true,
+        categories: true,
+      },
+    });
+
+    const categoryProducts = await prisma.product.findMany({
+      where: {
+        categories: product?.categories,
+        published: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        stock: true,
+        regularPrice: true,
+        attribute1Default: true,
+        attribute2Default: true,
+        inStock: true,
       },
     });
 
@@ -160,6 +190,7 @@ export async function fetchProductById(id: string) {
         mainImage,
         thumbnails,
         productImages, // Add this to include all product images
+        categoryProducts,
       },
       relatedProducts: relatedProducts.map(rp => {
         const rpImages = rp.imageUrl.split(",").map(url => url.trim());
