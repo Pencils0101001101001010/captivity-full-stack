@@ -9,7 +9,10 @@ const Page = () => {
     <div className="container mx-auto px-4">
       <div className="my-8">
         <Button asChild variant="outline" className="mb-4">
-          <Link href="/" className="flex items-center">
+          <Link
+            href="/customer/shopping/products"
+            className="flex items-center"
+          >
             <ChevronLeft className="mr-2 h-4 w-4" />
             Back to Home
           </Link>
