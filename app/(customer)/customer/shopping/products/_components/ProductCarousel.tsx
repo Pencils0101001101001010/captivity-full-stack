@@ -30,7 +30,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
   }
 
   return (
-    <div className="mb-12">
+    <div className="mb-12 relative" style={{ zIndex: 0 }}>
       <h2 className="text-2xl font-bold mb-6">{title}</h2>
       <Carousel
         swipeable={true}
