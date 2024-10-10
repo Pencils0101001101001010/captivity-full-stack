@@ -5,7 +5,7 @@ import WinterProductsSkeleton from "./WinterProductsSkeleton";
 import { useWinterProducts } from "./hooks";
 
 const WinterLanding: React.FC = () => {
-  const { categorizedProducts, isLoading, error } = useWinterProducts();
+  const { categorizedWinterProducts, isLoading, error } = useWinterProducts();
 
   if (isLoading) {
     return <WinterProductsSkeleton />;
@@ -18,13 +18,16 @@ const WinterLanding: React.FC = () => {
   return (
     <div className="w-full max-w-7xl mx-auto px-4">
       <h1 className="text-4xl font-bold mb-8 text-center">Winter Collection</h1>
-      {Object.entries(categorizedProducts).map(([category, products]) => (
-        <ProductCarousel
-          key={category}
-          products={products}
-          title={`${category} Winter Collection`}
-        />
-      ))}
+      {Object.entries(categorizedWinterProducts).map(
+        ([category, products]) =>
+          products.length > 0 && (
+            <ProductCarousel
+              key={category}
+              products={products}
+              title={`${category} Winter Collection`}
+            />
+          )
+      )}
     </div>
   );
 };

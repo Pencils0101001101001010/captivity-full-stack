@@ -1,24 +1,33 @@
 import { Product } from "@prisma/client";
 
-export type ProductCategories = {
-  Men: Product[];
-  Women: Product[];
-  Unisex: Product[];
-  Kids: Product[];
-  New: Product[];
-  "T-Shirts": Product[];
-  Headwear: Product[];
+export type WinterCategory =
+  | "Men"
+  | "Women"
+  | "Unisex"
+  | "Kids"
+  | "New"
+  | "Hoodies"
+  | "Jackets"
+  | "Hats"
+  | "Bottoms";
+
+export type WinterProductCategories = {
+  [key in WinterCategory]: Product[];
 };
 
-export const categorizeProducts = (products: Product[]): ProductCategories => {
-  const newProductsData: ProductCategories = {
+export const categorizeWinterProducts = (
+  products: Product[]
+): WinterProductCategories => {
+  const winterCategories: WinterProductCategories = {
     Men: [],
     Women: [],
     Unisex: [],
     Kids: [],
     New: [],
-    "T-Shirts": [],
-    Headwear: [],
+    Hoodies: [],
+    Jackets: [],
+    Hats: [],
+    Bottoms: [],
   };
 
   products.forEach(product => {
@@ -27,92 +36,67 @@ export const categorizeProducts = (products: Product[]): ProductCategories => {
     const type = (product.type || "").toLowerCase();
     const shortDescription = (product.shortDescription || "").toLowerCase();
 
-    console.log(`\nProcessing product: ${product.name}`);
-    console.log(`Categories: ${categories}`);
-    console.log(`Name: ${name}`);
-    console.log(`Type: ${type}`);
-    console.log(`Short Description: ${shortDescription}`);
-
-    const isExplicitlyFor = (gender: string) =>
-      name.includes(gender) ||
-      name.includes(gender === "men" ? "male" : "female") ||
-      (gender === "women" &&
-        (name.includes("ladies") || name.includes("women's")));
-
-    if (categories.includes("new arrivals") || categories.includes("new in")) {
-      newProductsData.New.push(product);
-      console.log("Categorized as: New");
+    // Filter for winter products
+    if (!categories.includes("winter collection")) {
+      return;
     }
 
-    if (categories.includes("kids")) {
-      newProductsData.Kids.push(product);
-      console.log("Categorized as: Kids");
-    } else if (
-      categories.includes("headwear") ||
-      categories.includes("hats") ||
-      name.includes("hat") ||
-      name.includes("cap") ||
-      name.includes("visor")
-    ) {
-      newProductsData.Headwear.push(product);
-      console.log("Categorized as: Headwear");
+    // Categorize by gender and age
+    if (categories.includes("kids") || name.includes("kids")) {
+      winterCategories.Kids.push(product);
     } else if (
       name.includes("unisex") ||
-      name.includes("uni-sex") ||
+      categories.includes("unisex") ||
       shortDescription.includes("unisex")
     ) {
-      newProductsData.Unisex.push(product);
-      console.log("Categorized as: Unisex (explicit)");
+      winterCategories.Unisex.push(product);
     } else if (
-      isExplicitlyFor("women") ||
-      name.includes("ladies") ||
-      name.includes("woman") ||
       name.includes("women") ||
-      (categories.includes("women") && !categories.includes("men")) ||
-      shortDescription.includes("women's") ||
-      shortDescription.includes("ladies")
+      name.includes("ladies") ||
+      categories.includes("women")
     ) {
-      newProductsData.Women.push(product);
-      console.log("Categorized as: Women");
-    } else if (
-      isExplicitlyFor("men") ||
-      name.includes("mens") ||
-      categories.includes("men") ||
-      shortDescription.includes("men's")
-    ) {
-      newProductsData.Men.push(product);
-      console.log("Categorized as: Men");
+      winterCategories.Women.push(product);
+    } else if (name.includes("men") || categories.includes("men")) {
+      winterCategories.Men.push(product);
     } else {
-      newProductsData.Unisex.push(product);
-      console.log("Categorized as: Unisex (default)");
+      // If not explicitly categorized, assume it's unisex
+      winterCategories.Unisex.push(product);
     }
 
+    // Categorize by product type
     if (
-      type.includes("t-shirt") ||
-      categories.includes("t-shirts") ||
-      name.includes("t-shirt") ||
-      name.includes("tee")
+      name.includes("hoodie") ||
+      type.includes("hoodie") ||
+      categories.includes("hoodies")
     ) {
-      newProductsData["T-Shirts"].push(product);
-      console.log("Also categorized as: T-Shirts");
+      winterCategories.Hoodies.push(product);
+    } else if (
+      name.includes("jacket") ||
+      type.includes("jacket") ||
+      categories.includes("jackets")
+    ) {
+      winterCategories.Jackets.push(product);
+    } else if (
+      name.includes("hat") ||
+      name.includes("cap") ||
+      type.includes("headwear") ||
+      categories.includes("hats")
+    ) {
+      winterCategories.Hats.push(product);
+    } else if (
+      name.includes("pants") ||
+      name.includes("trousers") ||
+      name.includes("shorts") ||
+      categories.includes("bottoms")
+    ) {
+      winterCategories.Bottoms.push(product);
+    }
+
+    // Categorize new arrivals
+    if (categories.includes("new arrivals") || categories.includes("new in")) {
+      winterCategories.New.push(product);
     }
   });
 
-  console.log("\nFinal category counts:");
-  Object.entries(newProductsData).forEach(([category, products]) => {
-    console.log(`${category}: ${products.length}`);
-  });
-
-  return newProductsData;
-};
-
-export const formatPrice = (price: number | null) =>
-  price === null ? "Price not available" : `R${price.toFixed(2)}`;
-
-export const getFirstValidImageUrl = (imageUrl: string | null) => {
-  if (!imageUrl) return "/placeholder-image.jpg";
-  const urls = imageUrl.split(",").map(url => url.trim());
-  return (
-    urls.find(url => url && !url.endsWith("404")) || "/placeholder-image.jpg"
-  );
+  return winterCategories;
 };
