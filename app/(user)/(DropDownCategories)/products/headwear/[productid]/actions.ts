@@ -66,14 +66,14 @@ interface RelatedProduct {
 }
 
 export async function fetchProductById(id: string) {
-  console.log("Fetching product with ID:", id);
   try {
+    //?    First, the function attempts to convert the id (which is a string) into a number.
+    //? If the id is invalid (i.e., it's not a number), the function logs an error and returns an error message.
     const numericId = parseInt(id, 10);
     if (isNaN(numericId)) {
       console.error("Invalid product ID:", id);
       return { success: false, error: "Invalid product ID" };
     }
-
     const product = await prisma.product.findUnique({
       where: { id: numericId },
       select: {
@@ -94,6 +94,7 @@ export async function fetchProductById(id: string) {
         categories: true,
       },
     });
+    //? This query finds all other products in the same category as the current product and ensures they are published (available).
 
     const categoryProducts = await prisma.product.findMany({
       where: {
@@ -118,7 +119,8 @@ export async function fetchProductById(id: string) {
 
     const baseProductName = getBaseProductName(product.name);
 
-    // Fetch product variants (different colors and sizes)
+    // ?    The function fetches product variants that share the same base name (e.g., different sizes or colors of the same product)    using the startsWith condition.
+    //* The not: product.name ensures that the current product is excluded from the variants.
     const productVariants = await prisma.product.findMany({
       where: {
         name: {
@@ -137,7 +139,8 @@ export async function fetchProductById(id: string) {
       },
     });
 
-    // Fetch related products
+    //?     The product name is split into individual words, and products that contain any of these words in their name are fetched (this is a keyword search).
+    //? OR allows the query to match any of the words, while NOT ensures the current product is excluded.
     const words = product.name.split(" ");
     const relatedProducts = await prisma.product.findMany({
       where: {
@@ -160,7 +163,9 @@ export async function fetchProductById(id: string) {
       take: 5, // Limit to 5 related products
     });
 
-    // Process images
+    //?     The imageUrl field contains a comma-separated list of URLs, so the function splits them into an array.
+    //?     filter removes any image URLs that contain the word "model" (likely to exclude non-product images).
+    //?     mainImage is the first product image or the first available image.
     const allImages = product.imageUrl.split(",").map(url => url.trim());
     const productImages = allImages.filter(
       url => !url.toLowerCase().includes("model")
