@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,18 +7,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 
-interface ProductVariant {
+interface CategoryProduct {
   id: number;
   name: string;
   sku: string;
@@ -30,70 +20,88 @@ interface ProductVariant {
 }
 
 interface ProductDetailsModalProps {
-  categoryProducts: ProductVariant[];
-  attribute1Name?: string | null;
+  categoryProducts: CategoryProduct[];
+  attribute1Name: string | null;
   attribute2Name?: string | null;
 }
 
-export default function ProductDetailsModal({
+const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   categoryProducts,
-  attribute1Name = "Color",
-  attribute2Name = "Size",
-}: ProductDetailsModalProps) {
+  attribute1Name,
+  attribute2Name,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="ml-2">
-          View All Variants
-        </Button>
+        <Button variant="outline">View Details</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Product Variants</DialogTitle>
+          <DialogTitle>Product Details</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="h-[500px] w-full rounded-md border p-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>SKU</TableHead>
-                {attribute1Name && <TableHead>{attribute1Name}</TableHead>}
-                {attribute2Name && <TableHead>{attribute2Name}</TableHead>}
-                <TableHead>Stock</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  SKU
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Stock
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Price
+                </th>
+                {attribute1Name && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {attribute1Name}
+                  </th>
+                )}
+                {attribute2Name && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {attribute2Name}
+                  </th>
+                )}
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
               {categoryProducts.map(product => (
-                <TableRow key={product.id}>
-                  <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.sku}</TableCell>
-                  {attribute1Name && (
-                    <TableCell>{product.attribute1Default || "-"}</TableCell>
-                  )}
-                  {attribute2Name && (
-                    <TableCell>{product.attribute2Default || "-"}</TableCell>
-                  )}
-                  <TableCell>
+                <tr key={product.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {product.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">{product.sku}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     {product.stock !== null ? product.stock : "N/A"}
-                  </TableCell>
-                  <TableCell>
-                    {product.regularPrice
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {product.regularPrice !== null
                       ? `R${product.regularPrice.toFixed(2)}`
                       : "N/A"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={product.inStock ? "default" : "secondary"}>
-                      {product.inStock ? "In Stock" : "Out of Stock"}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
+                  </td>
+                  {attribute1Name && (
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {product.attribute1Default || "N/A"}
+                    </td>
+                  )}
+                  {attribute2Name && (
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {product.attribute2Default || "N/A"}
+                    </td>
+                  )}
+                </tr>
               ))}
-            </TableBody>
-          </Table>
-        </ScrollArea>
+            </tbody>
+          </table>
+        </div>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default ProductDetailsModal;

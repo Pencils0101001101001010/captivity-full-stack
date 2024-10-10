@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { fetchHeroImage, fetchPreCurvedPeaks } from "./actions";
+import { fetchHeroImage, fetchTruckerCaps } from "./actions";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +32,7 @@ export default function ProductList() {
     async function loadData() {
       setLoading(true);
       const [productsResult, heroImageResult] = await Promise.all([
-        fetchPreCurvedPeaks(undefined, searchQuery, currentPage, 9),
+        fetchTruckerCaps(undefined, searchQuery, currentPage, 9),
         fetchHeroImage(),
       ]);
 
@@ -141,7 +141,7 @@ function ProductCard({ product }: { product: Product }) {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="relative h-48">
+        <div className="relative h-48 w-auto">
           <Image
             src={imageUrls[0]}
             alt={product.name}
