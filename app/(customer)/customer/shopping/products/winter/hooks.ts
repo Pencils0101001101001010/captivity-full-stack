@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { Product } from "@prisma/client";
-import { fetchSummerCollections } from "./summer/actions";
+import { fetchWinterCollections } from "./actions";
 import { categorizeProducts, ProductCategories } from "./utils";
 
-export const useSummerProducts = () => {
+export const useWinterProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -12,7 +12,7 @@ export const useSummerProducts = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await fetchSummerCollections();
+      const result = await fetchWinterCollections();
 
       if (result.success) {
         setProducts(result.data);

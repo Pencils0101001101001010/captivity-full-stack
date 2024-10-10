@@ -3,7 +3,7 @@ import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
 import { Product } from "@prisma/client";
 import Image from "next/image";
-import { formatPrice, getFirstValidImageUrl } from "../utils";
+import { formatPrice, getFirstValidImageUrl } from "../summer/utils";
 
 const responsive = {
   desktop: { breakpoint: { max: 3000, min: 1024 }, items: 4, slidesToSlide: 4 },

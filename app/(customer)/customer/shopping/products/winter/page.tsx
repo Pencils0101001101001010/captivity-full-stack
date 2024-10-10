@@ -1,7 +1,12 @@
 import React from "react";
+import WinterLanding from "./WinterLanding";
 
 const Page = () => {
-  return <div></div>;
+  return (
+    <div>
+      <WinterLanding />
+    </div>
+  );
 };
 
 export default Page;

@@ -1,14 +1,14 @@
 "use client";
 import React from "react";
-import SummerProductsSkeleton from "./SummerProductsSkeleton";
-import { useSummerProducts } from "./hooks";
 import ProductCarousel from "../_components/ProductCarousel";
+import WinterProductsSkeleton from "./WinterProductsSkeleton";
+import { useWinterProducts } from "./hooks";
 
-const SummerLanding: React.FC = () => {
-  const { categorizedProducts, isLoading, error } = useSummerProducts();
+const WinterLanding: React.FC = () => {
+  const { categorizedProducts, isLoading, error } = useWinterProducts();
 
   if (isLoading) {
-    return <SummerProductsSkeleton />;
+    return <WinterProductsSkeleton />;
   }
 
   if (error) {
@@ -17,16 +17,16 @@ const SummerLanding: React.FC = () => {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4">
-      <h1 className="text-4xl font-bold mb-8 text-center">Summer Collection</h1>
+      <h1 className="text-4xl font-bold mb-8 text-center">Winter Collection</h1>
       {Object.entries(categorizedProducts).map(([category, products]) => (
         <ProductCarousel
           key={category}
           products={products}
-          title={`${category} Summer Collection`}
+          title={`${category} Winter Collection`}
         />
       ))}
     </div>
   );
 };
 
-export default SummerLanding;
+export default WinterLanding;
