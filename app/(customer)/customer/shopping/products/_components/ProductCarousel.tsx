@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
 import { Product } from "@prisma/client";
@@ -32,6 +32,80 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
   products,
   title,
 }) => {
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+
+    let startX: number;
+    let startY: number;
+    let startTime: number;
+    let isSwiping = false;
+    const threshold = 10;
+    const restraint = 100;
+    const allowedTime = 300;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      startTime = new Date().getTime();
+      isSwiping = false;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!startX || !startY) return;
+
+      const touch = e.touches[0];
+      const distX = touch.clientX - startX;
+      const distY = touch.clientY - startY;
+      const elapsedTime = new Date().getTime() - startTime;
+
+      if (elapsedTime <= allowedTime) {
+        if (Math.abs(distX) >= threshold && Math.abs(distY) <= restraint) {
+          e.preventDefault();
+          isSwiping = true;
+        }
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (isSwiping) {
+        e.preventDefault();
+      }
+      isSwiping = false;
+    };
+
+    carousel.addEventListener("touchstart", handleTouchStart, {
+      passive: false,
+    });
+    carousel.addEventListener("touchmove", handleTouchMove, { passive: false });
+    carousel.addEventListener("touchend", handleTouchEnd, { passive: false });
+
+    return () => {
+      carousel.removeEventListener("touchstart", handleTouchStart);
+      carousel.removeEventListener("touchmove", handleTouchMove);
+      carousel.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, []);
+
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      .react-multi-carousel-list {
+        overflow: hidden !important;
+      }
+      .react-multi-carousel-track {
+        touch-action: pan-y;
+      }
+    `;
+    document.head.append(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   if (products.length === 0) {
     return (
       <div className="mb-12">
@@ -42,24 +116,25 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
   }
 
   return (
-    <div className="mb-12 relative" style={{ zIndex: 0 }}>
+    <div className="mb-12 relative overflow-hidden" ref={carouselRef}>
       <h2 className="text-2xl font-bold mb-6">{title}</h2>
       <Carousel
         swipeable={true}
-        draggable={true}
+        draggable={false}
         showDots={true}
         responsive={responsive}
         ssr={true}
-        infinite={true}
+        infinite={false}
         autoPlay={false}
         keyBoardControl={true}
-        customTransition="all .5s"
-        transitionDuration={500}
+        customTransition="transform 300ms ease-in-out"
+        transitionDuration={300}
         containerClass="carousel-container"
         removeArrowOnDeviceType={["tablet", "mobile"]}
         dotListClass="custom-dot-list-style"
         itemClass="carousel-item-padding-40-px"
         className="pb-12"
+        partialVisible={false}
       >
         {products.map(product => (
           <div key={product.id} className="px-2 pb-4">
