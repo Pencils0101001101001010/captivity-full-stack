@@ -25,6 +25,13 @@ export const categorizeProducts = (products: Product[]): ProductCategories => {
     const categories = (product.categories || "").toLowerCase();
     const name = (product.name || "").toLowerCase();
     const type = (product.type || "").toLowerCase();
+    const shortDescription = (product.shortDescription || "").toLowerCase();
+
+    console.log(`\nProcessing product: ${product.name}`);
+    console.log(`Categories: ${categories}`);
+    console.log(`Name: ${name}`);
+    console.log(`Type: ${type}`);
+    console.log(`Short Description: ${shortDescription}`);
 
     const isExplicitlyFor = (gender: string) =>
       name.includes(gender) ||
@@ -34,10 +41,12 @@ export const categorizeProducts = (products: Product[]): ProductCategories => {
 
     if (categories.includes("new arrivals") || categories.includes("new in")) {
       newProductsData.New.push(product);
+      console.log("Categorized as: New");
     }
 
     if (categories.includes("kids")) {
       newProductsData.Kids.push(product);
+      console.log("Categorized as: Kids");
     } else if (
       categories.includes("headwear") ||
       categories.includes("hats") ||
@@ -46,37 +55,52 @@ export const categorizeProducts = (products: Product[]): ProductCategories => {
       name.includes("visor")
     ) {
       newProductsData.Headwear.push(product);
-    } else if (name.includes("unisex") || name.includes("uni-sex")) {
+      console.log("Categorized as: Headwear");
+    } else if (
+      name.includes("unisex") ||
+      name.includes("uni-sex") ||
+      shortDescription.includes("unisex")
+    ) {
       newProductsData.Unisex.push(product);
+      console.log("Categorized as: Unisex (explicit)");
     } else if (
       isExplicitlyFor("women") ||
       name.includes("ladies") ||
-      name.includes("woman")
+      name.includes("woman") ||
+      name.includes("women") ||
+      (categories.includes("women") && !categories.includes("men")) ||
+      shortDescription.includes("women's") ||
+      shortDescription.includes("ladies")
     ) {
       newProductsData.Women.push(product);
-    } else if (isExplicitlyFor("men") || name.includes("mens")) {
+      console.log("Categorized as: Women");
+    } else if (
+      isExplicitlyFor("men") ||
+      name.includes("mens") ||
+      categories.includes("men") ||
+      shortDescription.includes("men's")
+    ) {
       newProductsData.Men.push(product);
-    } else if (categories.includes("women") && !categories.includes("men")) {
-      newProductsData.Women.push(product);
-    } else if (categories.includes("men") && !categories.includes("women")) {
-      newProductsData.Men.push(product);
-    } else if (categories.includes("men") && categories.includes("women")) {
-      if (name.includes("women") || name.includes("ladies")) {
-        newProductsData.Women.push(product);
-      } else {
-        newProductsData.Men.push(product);
-      }
+      console.log("Categorized as: Men");
     } else {
       newProductsData.Unisex.push(product);
+      console.log("Categorized as: Unisex (default)");
     }
 
     if (
       type.includes("t-shirt") ||
       categories.includes("t-shirts") ||
-      name.includes("t-shirt")
+      name.includes("t-shirt") ||
+      name.includes("tee")
     ) {
       newProductsData["T-Shirts"].push(product);
+      console.log("Also categorized as: T-Shirts");
     }
+  });
+
+  console.log("\nFinal category counts:");
+  Object.entries(newProductsData).forEach(([category, products]) => {
+    console.log(`${category}: ${products.length}`);
   });
 
   return newProductsData;
@@ -92,5 +116,3 @@ export const getFirstValidImageUrl = (imageUrl: string | null) => {
     urls.find(url => url && !url.endsWith("404")) || "/placeholder-image.jpg"
   );
 };
-
-
