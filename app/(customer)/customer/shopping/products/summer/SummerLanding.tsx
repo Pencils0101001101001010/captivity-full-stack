@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import SummerProductsSkeleton from "./SummerProductsSkeleton";
-import { useSummerProducts } from "../hooks";
+import { useSummerProducts } from "./hooks";
 import ProductCarousel from "../_components/ProductCarousel";
 
 const SummerLanding: React.FC = () => {
@@ -17,7 +17,6 @@ const SummerLanding: React.FC = () => {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4">
-      <h1 className="text-4xl font-bold mb-8 text-center">Summer Collection</h1>
       {Object.entries(categorizedProducts).map(([category, products]) => (
         <ProductCarousel
           key={category}
