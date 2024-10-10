@@ -6,9 +6,21 @@ import Image from "next/image";
 import { formatPrice, getFirstValidImageUrl } from "../summer/utils";
 
 const responsive = {
-  desktop: { breakpoint: { max: 3000, min: 1024 }, items: 4, slidesToSlide: 4 },
-  tablet: { breakpoint: { max: 1024, min: 464 }, items: 2, slidesToSlide: 2 },
-  mobile: { breakpoint: { max: 464, min: 0 }, items: 1, slidesToSlide: 1 },
+  desktop: {
+    breakpoint: { max: 3000, min: 1024 },
+    items: 4,
+    slidesToSlide: 4,
+  },
+  tablet: {
+    breakpoint: { max: 1024, min: 464 },
+    items: 2,
+    slidesToSlide: 2,
+  },
+  mobile: {
+    breakpoint: { max: 464, min: 0 },
+    items: 1,
+    slidesToSlide: 1,
+  },
 };
 
 interface ProductCarouselProps {
@@ -34,7 +46,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
       <h2 className="text-2xl font-bold mb-6">{title}</h2>
       <Carousel
         swipeable={true}
-        draggable={false}
+        draggable={true}
         showDots={true}
         responsive={responsive}
         ssr={true}
@@ -47,10 +59,11 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
         removeArrowOnDeviceType={["tablet", "mobile"]}
         dotListClass="custom-dot-list-style"
         itemClass="carousel-item-padding-40-px"
+        className="pb-12"
       >
         {products.map(product => (
-          <div key={product.id} className="px-2">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div key={product.id} className="px-2 pb-4">
+            <div className="bg-white rounded-lg shadow-md overflow-hidden h-full">
               <div className="relative w-full h-48">
                 <Image
                   src={getFirstValidImageUrl(product.imageUrl)}
@@ -62,7 +75,12 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
                 />
               </div>
               <div className="p-4">
-                <h3 className="text-lg font-semibold mb-2">{product.name}</h3>
+                <h3
+                  className="text-lg font-semibold mb-2 truncate"
+                  title={product.name}
+                >
+                  {product.name}
+                </h3>
                 <p className="text-gray-600">
                   {formatPrice(product.regularPrice)}
                 </p>
