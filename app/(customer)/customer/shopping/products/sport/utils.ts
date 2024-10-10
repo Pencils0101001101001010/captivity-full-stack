@@ -20,8 +20,6 @@ export type SportProductCategories = {
 export const categorizeSportProducts = (
   products: Product[]
 ): SportProductCategories => {
-  console.log(`Total products received: ${products.length}`);
-
   const sportCategories: SportProductCategories = {
     Men: [],
     Women: [],
@@ -38,24 +36,15 @@ export const categorizeSportProducts = (
 
   const womenSpecificProducts = ["sunvisor", "liberty cap", "putter cap"];
 
-  products.forEach((product, index) => {
+  products.forEach(product => {
     const categories = (product.categories || "").toLowerCase();
     const name = (product.name || "").toLowerCase();
     const type = (product.type || "").toLowerCase();
     const shortDescription = (product.shortDescription || "").toLowerCase();
 
-    console.log(`Processing product ${index + 1}:`);
-    console.log(`  Name: ${product.name}`);
-    console.log(`  Categories: ${categories}`);
-    console.log(`  Type: ${type}`);
-    console.log(`  Short Description: ${shortDescription}`);
-
     if (!categories.includes("sport collection")) {
-      console.log("  Not a sport product, skipping.");
       return;
     }
-
-    console.log("  Is a sport product, categorizing...");
 
     // Gender categorization
     if (
@@ -65,24 +54,20 @@ export const categorizeSportProducts = (
       shortDescription.includes("women")
     ) {
       sportCategories.Women.push(product);
-      console.log("  Categorized as: Women");
     } else if (
       categories.includes("men") ||
       name.includes("men") ||
       shortDescription.includes("men")
     ) {
       sportCategories.Men.push(product);
-      console.log("  Categorized as: Men");
     } else if (
       categories.includes("kids") ||
       name.includes("kids") ||
       shortDescription.includes("kids")
     ) {
       sportCategories.Kids.push(product);
-      console.log("  Categorized as: Kids");
     } else {
       sportCategories.Unisex.push(product);
-      console.log("  Categorized as: Unisex");
     }
 
     if (
@@ -91,7 +76,6 @@ export const categorizeSportProducts = (
       shortDescription.includes("new")
     ) {
       sportCategories.New.push(product);
-      console.log("  Categorized as: New");
     }
     if (
       categories.includes("hoodie") ||
@@ -99,7 +83,6 @@ export const categorizeSportProducts = (
       shortDescription.includes("hoodie")
     ) {
       sportCategories.Hoodies.push(product);
-      console.log("  Categorized as: Hoodies");
     }
     if (
       categories.includes("jacket") ||
@@ -107,7 +90,6 @@ export const categorizeSportProducts = (
       shortDescription.includes("jacket")
     ) {
       sportCategories.Jackets.push(product);
-      console.log("  Categorized as: Jackets");
     }
     if (
       categories.includes("hat") ||
@@ -119,7 +101,6 @@ export const categorizeSportProducts = (
       shortDescription.includes("visor")
     ) {
       sportCategories.Hats.push(product);
-      console.log("  Categorized as: Hats");
     }
     if (
       categories.includes("bottoms") ||
@@ -129,7 +110,6 @@ export const categorizeSportProducts = (
       shortDescription.includes("shorts")
     ) {
       sportCategories.Bottoms.push(product);
-      console.log("  Categorized as: Bottoms");
     }
     if (
       categories.includes("summer") ||
@@ -137,7 +117,6 @@ export const categorizeSportProducts = (
       shortDescription.includes("summer")
     ) {
       sportCategories.Summer.push(product);
-      console.log("  Categorized as: Summer");
     }
     if (
       categories.includes("multifunctional") ||
@@ -145,13 +124,7 @@ export const categorizeSportProducts = (
       shortDescription.includes("multifunctional")
     ) {
       sportCategories.Multifunctional.push(product);
-      console.log("  Categorized as: Multifunctional");
     }
-  });
-
-  console.log("Category counts:");
-  Object.entries(sportCategories).forEach(([category, products]) => {
-    console.log(`  ${category}: ${products.length}`);
   });
 
   return sportCategories;
