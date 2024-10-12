@@ -1,6 +1,5 @@
-// ProductDetails.tsx
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Product } from "@prisma/client";
 import { ChevronDown } from "lucide-react";
 import { formatDescription } from "@/lib/utils";
@@ -13,49 +12,55 @@ interface ProductDetailsProps {
 }
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
-  console.log("ProductDetails rendering, product:", product);
-
-  const [selectedColor, setSelectedColor] = useState("");
-  const [selectedSize, setSelectedSize] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [mainImage, setMainImage] = useState("");
-  const [availableQuantity, setAvailableQuantity] = useState(
-    product.stock || 0
-  );
+  const [selectedColor, setSelectedColor] = useState<string>("");
+  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [quantity, setQuantity] = useState<number>(1);
+  const [mainImage, setMainImage] = useState<string>("");
+  const [availableQuantity, setAvailableQuantity] = useState<number>(0);
 
   const colors = [
     ...new Set(
       product.attribute1Values ? product.attribute1Values.split(", ") : []
     ),
   ];
-  const sizes = product.attribute2Values
-    ? product.attribute2Values.split(", ")
-    : [];
+  const sizes = [
+    ...new Set(
+      product.attribute2Values ? product.attribute2Values.split(", ") : []
+    ),
+  ];
   const images = product.imageUrl.split(", ");
 
-  console.log("Colors:", colors);
-  console.log("Sizes:", sizes);
-  console.log("Images:", images);
+  const renderCount = useRef(0);
+  const isInitialized = useRef(false);
 
   useEffect(() => {
-    console.log("useEffect running");
-    const initialColor = product.attribute1Default || colors[0] || "";
-    console.log("Setting initial color:", initialColor);
-    setSelectedColor(initialColor);
-    updateMainImage(initialColor);
+    console.log("ProductDetails useEffect running");
+    if (!isInitialized.current) {
+      const initialColor = product.attribute1Default || colors[0] || "";
+      console.log("Setting initial color:", initialColor);
+      setSelectedColor(initialColor);
 
-    if (sizes.length > 0) {
-      const initialSize = product.attribute2Default || sizes[0];
-      console.log("Setting initial size:", initialSize);
-      setSelectedSize(initialSize);
+      const initialImage =
+        images.find(img =>
+          img.toLowerCase().includes(initialColor.toLowerCase())
+        ) || images[0];
+      console.log("Setting initial image:", initialImage);
+      setMainImage(initialImage);
+
+      if (sizes.length > 0) {
+        const initialSize = product.attribute2Default || sizes[0];
+        console.log("Setting initial size:", initialSize);
+        setSelectedSize(initialSize);
+      }
+
+      setAvailableQuantity(product.stock || 0);
+      isInitialized.current = true;
     }
-
-    setAvailableQuantity(product.stock || 0);
-  }, [product, colors, sizes]);
+  }, [product, colors, sizes, images]);
 
   const updateMainImage = useCallback(
     (color: string) => {
-      console.log("Updating main image for color:", color);
+      console.log("updateMainImage called with color:", color);
       const newImage =
         images.find(img => img.toLowerCase().includes(color.toLowerCase())) ||
         images[0];
@@ -68,10 +73,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const handleColorChange = useCallback(
     (color: string) => {
       console.log("handleColorChange called with color:", color);
-      setSelectedColor(prevColor => {
-        console.log("Updating color from", prevColor, "to", color);
-        return color;
-      });
+      setSelectedColor(color);
       updateMainImage(color);
     },
     [updateMainImage]
@@ -87,25 +89,32 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     setQuantity(newQuantity);
   }, []);
 
+  renderCount.current += 1;
+  console.log(`ProductDetails rendering (count: ${renderCount.current})`);
   console.log(
     "Current state - Color:",
     selectedColor,
     "Size:",
     selectedSize,
     "Quantity:",
-    quantity
+    quantity,
+    "Main Image:",
+    mainImage
   );
+  console.log("Available sizes:", sizes);
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 w-full max-w-6xl bg-white p-6 rounded-lg shadow-lg">
       <div className="lg:w-1/2 space-y-4">
-        <Image
-          src={mainImage || "/api/placeholder/400/400"}
-          alt={product.name}
-          width={400}
-          height={400}
-          className="w-full h-auto object-cover rounded-lg shadow-md"
-        />
+        {mainImage && (
+          <Image
+            src={mainImage}
+            alt={product.name}
+            width={400}
+            height={400}
+            className="w-full h-auto object-cover rounded-lg shadow-md"
+          />
+        )}
         <div className="flex gap-2 overflow-x-auto">
           {images.map((img, index) => (
             <Image
@@ -137,7 +146,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           )}
 
           {sizes.length > 0 && (
-            <div>
+            <div className="w-full max-w-xs">
               <label className="block text-sm font-medium text-gray-700">
                 Size
               </label>
@@ -145,7 +154,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                 <select
                   value={selectedSize}
                   onChange={e => handleSizeChange(e.target.value)}
-                  className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  className="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                 >
                   {sizes.map(size => (
                     <option key={size} value={size}>
