@@ -20,11 +20,13 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [mainImage, setMainImage] = useState<string>("");
   const [availableQuantity, setAvailableQuantity] = useState<number>(0);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const colors = [
     ...new Set(
       product.attribute1Values ? product.attribute1Values.split(", ") : []
     ),
   ];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const sizes = [
     ...new Set(
       product.attribute2Values ? product.attribute2Values.split(", ") : []
