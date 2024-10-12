@@ -123,19 +123,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
   return (
     <>
-      {/* Back to Express Shop Button at the Top */}
-      <div className="ml-[-20px] mr-4 mb-8">
-        <Button asChild variant="default" className="mb-4 ">
-          <Link
-            href="/customer/shopping/products"
-            className="flex items-center"
-          >
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back to Express Shop
-          </Link>
-        </Button>
-      </div>
-
       {/* Product Details Section */}
       <div className="flex flex-col lg:flex-row gap-8 w-full max-w-6xl bg-white p-6 rounded-lg shadow-2xl shadow-black">
         <div className="lg:w-1/2 space-y-4">
