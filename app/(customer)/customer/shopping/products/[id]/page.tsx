@@ -22,8 +22,8 @@ export default async function Page({ params }: { params: { id: string } }) {
   return (
     <div className="container mx-auto p-4">
       {/* Back to Express Shop Button at the Top */}
-      <div className="ml-[-20px] mr-4 mb-8">
-        <Button asChild variant="default" className="mb-4 ">
+      <div className="ml-[-20px] mr-4 mb-2">
+        <Button asChild variant="default" className="mb-1">
           <Link
             href="/customer/shopping/products"
             className="flex items-center"
@@ -33,8 +33,8 @@ export default async function Page({ params }: { params: { id: string } }) {
           </Link>
         </Button>
       </div>
-      <h1 className="text-2xl font-bold mb-4 text-center">Product Details</h1>
-      <div className="flex justify-center">
+      <h1 className="text-5xl font-bold mb-4 text-center">Product Details</h1>
+      <div className="flex justify-center mb-10">
         <ProductDetails product={product} />
       </div>
     </div>
