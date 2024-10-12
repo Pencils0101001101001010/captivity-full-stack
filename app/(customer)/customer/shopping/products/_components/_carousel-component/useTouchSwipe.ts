@@ -1,5 +1,3 @@
-// useTouchSwipe.ts
-
 import { useEffect, RefObject } from "react";
 
 export const useTouchSwipe = (ref: RefObject<HTMLDivElement>) => {
