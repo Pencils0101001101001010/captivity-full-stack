@@ -58,25 +58,39 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     }
   }, [product, colors, sizes, images]);
 
-  const updateMainImage = useCallback(
-    (color: string) => {
-      console.log("updateMainImage called with color:", color);
-      const newImage =
-        images.find(img => img.toLowerCase().includes(color.toLowerCase())) ||
-        images[0];
-      console.log("New main image:", newImage);
+  const updateMainImageAndColor = useCallback(
+    (newImage: string) => {
+      console.log("updateMainImageAndColor called with image:", newImage);
       setMainImage(newImage);
+
+      // Find the color that matches the new image
+      const matchingColor = colors.find(color =>
+        newImage.toLowerCase().includes(color.toLowerCase())
+      );
+
+      if (matchingColor) {
+        console.log("Matching color found:", matchingColor);
+        setSelectedColor(matchingColor);
+      } else {
+        console.log("No matching color found for image:", newImage);
+      }
     },
-    [images]
+    [colors]
   );
 
   const handleColorChange = useCallback(
     (color: string) => {
       console.log("handleColorChange called with color:", color);
       setSelectedColor(color);
-      updateMainImage(color);
+
+      // Find the image that matches the new color
+      const matchingImage =
+        images.find(img => img.toLowerCase().includes(color.toLowerCase())) ||
+        images[0];
+
+      setMainImage(matchingImage);
     },
-    [updateMainImage]
+    [images]
   );
 
   const handleSizeChange = useCallback((size: string) => {
@@ -124,7 +138,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
               width={80}
               height={80}
               className="w-20 h-20 object-cover rounded cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
-              onClick={() => setMainImage(img)}
+              onClick={() => updateMainImageAndColor(img)}
             />
           ))}
         </div>
