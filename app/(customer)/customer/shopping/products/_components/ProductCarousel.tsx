@@ -3,6 +3,7 @@ import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
 import { Product } from "@prisma/client";
 import Image from "next/image";
+import Link from "next/link";
 import { formatPrice, getFirstValidImageUrl } from "../summer/utils";
 
 const responsive = {
@@ -137,8 +138,12 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
         partialVisible={false}
       >
         {products.map(product => (
-          <div key={product.id} className="px-2 pb-4">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden h-full">
+          <Link
+            href={`/customer/shopping/products/${product.id}`}
+            key={product.id}
+            className="block px-2 pb-4"
+          >
+            <div className="bg-white rounded-lg shadow-md overflow-hidden h-full transition-transform duration-300 hover:scale-105">
               <div className="relative w-full h-48">
                 <Image
                   src={getFirstValidImageUrl(product.imageUrl)}
@@ -161,7 +166,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
                 </p>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </Carousel>
     </div>
