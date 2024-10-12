@@ -146,6 +146,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
               width={400}
               height={400}
               className="w-full h-auto object-cover rounded-lg shadow-md"
+              priority
             />
           )}
           <div className="flex gap-2 overflow-x-auto">
@@ -158,6 +159,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                 height={80}
                 className="w-20 h-20 object-cover rounded cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
                 onClick={() => updateMainImageAndColor(img)}
+                priority
               />
             ))}
           </div>
