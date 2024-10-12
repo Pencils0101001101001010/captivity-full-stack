@@ -11,7 +11,10 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => (
-  <Link href={`/product/${product.id}`} className="block px-2 pb-4">
+  <Link
+    href={`/customer/shopping/products/${product.id}`}
+    className="block px-2 pb-4"
+  >
     <div className="bg-white rounded-lg shadow-md overflow-hidden h-full transition-transform duration-300 hover:scale-105">
       <div className="relative w-full h-48">
         <Image
