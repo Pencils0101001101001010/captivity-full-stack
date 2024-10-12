@@ -148,7 +148,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
       >
         {products.map(product => (
           <Link
-            href={`/product/${product.id}`}
+            href={`/customer/shopping/products/${product.id}`}
             key={product.id}
             className="block px-2 pb-4"
           >
