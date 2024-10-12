@@ -105,7 +105,7 @@ const NewProducts = () => {
         >
           {products.map(product => (
             <Link
-              href={`/product/${product.id}`}
+              href={`/customer/shopping/products/${product.id}`}
               key={product.id}
               className="block px-2 pb-4"
             >
