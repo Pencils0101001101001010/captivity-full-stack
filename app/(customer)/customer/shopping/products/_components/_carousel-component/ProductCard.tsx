@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@prisma/client";
-import { formatPrice, getFirstValidImageUrl } from "../summer/utils";
+import { formatPrice, getFirstValidImageUrl } from "../../summer/utils";
 
 interface ProductCardProps {
   product: Product;

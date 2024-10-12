@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import ProductCarousel from "../_components/ProductCarousel";
+import ProductCarousel from "../_components/_carousel-component/ProductCarousel";
 import WinterProductsSkeleton from "./WinterProductsSkeleton";
 import { useWinterProducts } from "./hooks";
 
