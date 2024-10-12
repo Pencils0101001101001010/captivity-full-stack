@@ -1,5 +1,5 @@
 import React from "react";
-import ProductCollections from "./Categories";
+import ProductCollections from "./ProductCollections";
 import NewProducts from "./_components/NewProducts";
 
 const Page = () => {
