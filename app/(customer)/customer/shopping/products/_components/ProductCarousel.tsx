@@ -100,6 +100,15 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
       .react-multi-carousel-track {
         touch-action: pan-y;
       }
+      .react-multiple-carousel__arrow {
+        z-index: 10 !important;
+      }
+      .react-multiple-carousel__arrow--left {
+        left: 0 !important;
+      }
+      .react-multiple-carousel__arrow--right {
+        right: 0 !important;
+      }
     `;
     document.head.append(style);
     return () => {
@@ -139,7 +148,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
       >
         {products.map(product => (
           <Link
-            href={`/customer/shopping/products/${product.id}`}
+            href={`/product/${product.id}`}
             key={product.id}
             className="block px-2 pb-4"
           >
