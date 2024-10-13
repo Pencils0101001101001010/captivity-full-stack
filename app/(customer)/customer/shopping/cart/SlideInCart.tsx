@@ -2,7 +2,7 @@ import React from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { CartData } from "../types"; // Adjust the path as necessary
+import { CartData } from "../../../types"; // Adjust the path as necessary
 
 interface SlideInCartProps {
   isOpen: boolean;

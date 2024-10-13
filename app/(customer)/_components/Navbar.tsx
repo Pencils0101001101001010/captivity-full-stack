@@ -12,7 +12,7 @@ import React from "react";
 import { ShoppingCart } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
-import SlideInCart from "./SlideInCart";
+import SlideInCart from "../customer/shopping/cart/SlideInCart";
 import { fetchCart } from "../customer/shopping/cart/actions";
 import { CartData } from "../types";
 
