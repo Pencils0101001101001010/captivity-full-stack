@@ -1,4 +1,3 @@
-// ColorSelector.tsx
 import React from "react";
 
 interface ColorSelectorProps {
@@ -12,26 +11,28 @@ const ColorSelector: React.FC<ColorSelectorProps> = ({
   selectedColor,
   onColorChange,
 }) => {
-  console.log("ColorSelector rendering - Selected color:", selectedColor);
+  console.log("ColorSelector rendering - Selected option:", selectedColor);
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700">Color</label>
+      <label className="block text-sm font-medium text-gray-700">
+        Color & Size
+      </label>
       <div className="mt-1 flex flex-wrap gap-2">
-        {colors.map(color => (
+        {colors.map(option => (
           <button
-            key={color}
+            key={option}
             onClick={() => {
-              console.log("Color button clicked:", color);
-              onColorChange(color);
+              console.log("Option button clicked:", option);
+              onColorChange(option);
             }}
             className={`px-3 py-1 rounded-full ${
-              selectedColor === color
+              selectedColor === option
                 ? "bg-blue-500 text-white"
                 : "bg-gray-200 text-gray-800"
             }`}
           >
-            {color}
+            {option}
           </button>
         ))}
       </div>

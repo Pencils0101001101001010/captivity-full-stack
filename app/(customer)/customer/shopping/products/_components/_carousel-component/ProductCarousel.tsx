@@ -1,6 +1,4 @@
-// ProductCarousel.tsx
-
-import React, { useRef } from "react";
+import React, { useRef, useMemo } from "react";
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
 import { Product } from "@prisma/client";
@@ -23,7 +21,30 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
   useTouchSwipe(carouselRef);
   useCarouselStyles();
 
-  if (products.length === 0) {
+  const groupedProducts = useMemo(() => {
+    const grouped = products.reduce(
+      (acc, product) => {
+        // Extract the base name (everything before the first comma or dash)
+        const baseName = product.name.split(/[,-]/)[0].trim();
+
+        if (!acc[baseName]) {
+          acc[baseName] = {
+            ...product,
+            variants: [product],
+          };
+        } else {
+          acc[baseName].variants.push(product);
+        }
+
+        return acc;
+      },
+      {} as Record<string, Product & { variants: Product[] }>
+    );
+
+    return Object.values(grouped);
+  }, [products]);
+
+  if (groupedProducts.length === 0) {
     return (
       <div className="mb-12">
         <h2 className="text-2xl font-bold mb-6">{title}</h2>
@@ -53,7 +74,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
         className="pb-12"
         partialVisible={false}
       >
-        {products.map(product => (
+        {groupedProducts.map(product => (
           <ProductCard key={product.id} product={product} />
         ))}
       </Carousel>
