@@ -18,12 +18,7 @@ const SlideInCart: React.FC<SlideInCartProps> = ({
 }) => {
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    console.log("Cart Data:", cartData);
-  }, [cartData]);
-
   const handleImageError = (imageUrl: string) => {
-    console.error(`Failed to load image: ${imageUrl}`);
     setFailedImages(prev => new Set(prev).add(imageUrl));
   };
 
@@ -52,9 +47,6 @@ const SlideInCart: React.FC<SlideInCartProps> = ({
           <p className="text-center">Your cart is empty.</p>
         ) : (
           cartData.CartItem.map((item, index) => {
-            console.log(`Cart Item ${index}:`, item);
-            console.log(`Product ${index}:`, item.products);
-
             const price = item.products.regularPrice ?? 0;
             const quantity = item.quanity || 0;
             const total = (quantity * price).toFixed(2);
@@ -62,11 +54,7 @@ const SlideInCart: React.FC<SlideInCartProps> = ({
             const color = getAttributeValue(item.products, "1");
             const size = getAttributeValue(item.products, "2");
 
-            console.log(`Image URL ${index}:`, imageUrl);
-
             const firstImageUrl = imageUrl?.split(",")?.[0]?.trim();
-
-            console.log(`First Image URL ${index}:`, firstImageUrl);
 
             return (
               <div
