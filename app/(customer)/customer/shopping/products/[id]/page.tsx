@@ -20,18 +20,6 @@ export default async function Page({ params }: { params: { id: string } }) {
     return <div>Product not found</div>;
   }
 
-  // Fetch variants
-  const variants = await prisma.product.findMany({
-    where: {
-      sku: {
-        contains: product.sku.split("/")[1], // Assuming the second part of SKU is the product group
-      },
-      id: {
-        not: productId, // Exclude the main product
-      },
-    },
-  });
-
   return (
     <div className="container mx-auto p-4">
       <div className="ml-[-20px] mr-4 mb-2">
@@ -47,7 +35,7 @@ export default async function Page({ params }: { params: { id: string } }) {
       </div>
       <h1 className="text-5xl font-bold mb-4 text-center">Product Details</h1>
       <div className="flex justify-center mb-10">
-        <ProductDetails product={product} variants={variants} />
+        <ProductDetails product={product} />
       </div>
     </div>
   );

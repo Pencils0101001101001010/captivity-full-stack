@@ -1,13 +1,7 @@
 "use client";
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  useMemo,
-} from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Product } from "@prisma/client";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronLeft } from "lucide-react";
 import { formatDescription } from "@/lib/utils";
 import Image from "next/image";
 import ColorSelector from "./ColorSelector";
@@ -16,138 +10,107 @@ import AddToCartButton from "./AddToCart";
 
 interface ProductDetailsProps {
   product: Product;
-  variants?: Product[];
 }
 
-const ProductDetails: React.FC<ProductDetailsProps> = ({
-  product,
-  variants = [],
-}) => {
+const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
   const [mainImage, setMainImage] = useState<string>("");
   const [availableQuantity, setAvailableQuantity] = useState<number>(0);
+  const [hasMatchingImage, setHasMatchingImage] = useState<boolean>(true);
 
-  const allProducts = useMemo(
-    () => [product, ...variants],
-    [product, variants]
-  );
-
-  const colors = useMemo(() => {
-    return [
-      ...new Set(
-        allProducts
-          .map(p => {
-            const parts = p.name.split("-");
-            return parts.length > 1 ? parts[1].trim() : "";
-          })
-          .filter(Boolean)
-      ),
-    ];
-  }, [allProducts]);
-
-  const sizes = useMemo(() => {
-    return [
-      ...new Set(
-        allProducts
-          .map(p => {
-            const parts = p.name.split("-");
-            return parts.length > 2 ? parts[2].trim() : "";
-          })
-          .filter(Boolean)
-      ),
-    ];
-  }, [allProducts]);
-
-  const images = useMemo(() => {
-    return [...new Set(allProducts.flatMap(p => p.imageUrl.split(", ")))];
-  }, [allProducts]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const colors = [
+    ...new Set(
+      product.attribute1Values ? product.attribute1Values.split(", ") : []
+    ),
+  ];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const sizes = [
+    ...new Set(
+      product.attribute2Values ? product.attribute2Values.split(", ") : []
+    ),
+  ];
+  const images = product.imageUrl.split(", ");
 
   const renderCount = useRef(0);
   const isInitialized = useRef(false);
 
+  useEffect(() => {
+    console.log("Available images:", images);
+  }, [images]);
+
   const findImageForColor = useCallback(
-    (color: string): string => {
+    (color: string): string | null => {
       const normalizedColor = color.toLowerCase().replace(/\s+/g, "");
-      console.log(`Searching for image with color: ${normalizedColor}`);
+      console.log(`Normalized color: ${normalizedColor}`);
 
       const matchingImage = images.find(img => {
         const imgName = img.toLowerCase();
-        return (
+        const imgNameParts = imgName.split("-");
+        const lastPart = imgNameParts[imgNameParts.length - 1].split(".")[0];
+
+        console.log(`Checking image: ${imgName}, Last part: ${lastPart}`);
+
+        const match =
           imgName.includes(normalizedColor) ||
-          (normalizedColor === "armybrown" && imgName.includes("brown")) ||
-          (normalizedColor === "armygreen" && imgName.includes("green")) ||
-          (normalizedColor === "camogreen" && imgName.includes("camo"))
-        );
+          normalizedColor.includes(lastPart) ||
+          (color === "Bottle" && imgName.includes("green")) ||
+          (color === "Navy" && imgName.includes("blue"));
+
+        console.log(`Match result: ${match}`);
+        return match;
       });
 
-      console.log(`Image found for ${color}: ${matchingImage || "Not found"}`);
-      return matchingImage || images[0];
+      console.log(
+        `Finding image for color: ${color}, Result: ${matchingImage || "Not found"}`
+      );
+      return matchingImage || null;
     },
     [images]
   );
 
   useEffect(() => {
-    if (!isInitialized.current && colors.length > 0 && images.length > 0) {
-      const initialColor = colors[0];
+    console.log("ProductDetails useEffect running");
+    if (!isInitialized.current) {
+      const initialColor = product.attribute1Default || colors[0] || "";
       console.log("Setting initial color:", initialColor);
       setSelectedColor(initialColor);
 
       const initialImage = findImageForColor(initialColor);
       console.log("Setting initial image:", initialImage);
-      setMainImage(initialImage);
+      setMainImage(initialImage || images[0]);
+      setHasMatchingImage(!!initialImage);
 
       if (sizes.length > 0) {
-        const initialSize = sizes[0];
+        const initialSize = product.attribute2Default || sizes[0];
         console.log("Setting initial size:", initialSize);
         setSelectedSize(initialSize);
       }
 
-      const initialVariant = allProducts.find(
-        p =>
-          p.name.includes(initialColor) &&
-          (sizes.length === 0 || p.name.includes(sizes[0]))
-      );
-      setAvailableQuantity(initialVariant?.stock || product.stock || 0);
+      setAvailableQuantity(product.stock || 0);
       isInitialized.current = true;
     }
-  }, [product, colors, sizes, images, findImageForColor, allProducts]);
+  }, [product, colors, sizes, images, findImageForColor]);
 
   const handleColorChange = useCallback(
     (color: string) => {
-      console.log("Color changed to:", color);
+      console.log("handleColorChange called with color:", color);
       setSelectedColor(color);
 
       const matchingImage = findImageForColor(color);
       console.log("Setting main image to:", matchingImage);
-      setMainImage(matchingImage);
-
-      const matchingVariant = allProducts.find(
-        v =>
-          v.name.toLowerCase().includes(color.toLowerCase()) &&
-          (selectedSize === "" ||
-            v.name.toLowerCase().includes(selectedSize.toLowerCase()))
-      );
-      setAvailableQuantity(matchingVariant?.stock || 0);
+      setMainImage(matchingImage || images[0]);
+      setHasMatchingImage(!!matchingImage);
     },
-    [findImageForColor, selectedSize, allProducts]
+    [findImageForColor, images]
   );
 
-  const handleSizeChange = useCallback(
-    (size: string) => {
-      console.log("Size changed to:", size);
-      setSelectedSize(size);
-
-      const matchingVariant = allProducts.find(
-        v =>
-          v.name.toLowerCase().includes(selectedColor.toLowerCase()) &&
-          v.name.toLowerCase().includes(size.toLowerCase())
-      );
-      setAvailableQuantity(matchingVariant?.stock || 0);
-    },
-    [selectedColor, allProducts]
-  );
+  const handleSizeChange = useCallback((size: string) => {
+    console.log("Size changed to:", size);
+    setSelectedSize(size);
+  }, []);
 
   const handleQuantityChange = useCallback((newQuantity: number) => {
     console.log("Quantity changed to:", newQuantity);
@@ -165,12 +128,14 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
     quantity,
     "Main Image:",
     mainImage,
-    "Available Quantity:",
-    availableQuantity
+    "Has Matching Image:",
+    hasMatchingImage
   );
+  console.log("Available sizes:", sizes);
 
   return (
     <>
+      {/* Product Details Section */}
       <div className="flex flex-col lg:flex-row gap-8 w-full max-w-6xl bg-white p-6 rounded-lg shadow-2xl shadow-black">
         <div className="lg:w-1/2 space-y-4">
           <div className="relative">
@@ -180,9 +145,18 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
                 alt={product.name}
                 width={400}
                 height={400}
-                className="w-full h-auto object-cover rounded-lg shadow-md"
+                className={`w-full h-auto object-cover rounded-lg shadow-md ${
+                  !hasMatchingImage ? "filter blur-sm" : ""
+                }`}
                 priority
               />
+            )}
+            {!hasMatchingImage && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-2xl font-bold text-white bg-black bg-opacity-50 px-4 py-2 rounded">
+                  No Stock
+                </span>
+              </div>
             )}
           </div>
           <div className="flex gap-2 overflow-x-auto">
@@ -196,6 +170,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
                 className="w-20 h-20 object-cover rounded cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
                 onClick={() => {
                   setMainImage(img);
+                  setHasMatchingImage(true);
                   const matchingColor = colors.find(color =>
                     img.toLowerCase().includes(color.toLowerCase())
                   );
@@ -256,7 +231,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
 
             <AddToCartButton
               productId={product.id}
-              isDisabled={availableQuantity === 0}
+              isDisabled={!hasMatchingImage || availableQuantity === 0}
               quantity={quantity}
             />
           </div>

@@ -13,10 +13,6 @@ export async function fetchSummerCollections(
   type?: string,
   subcategories?: SummerSubcategory[]
 ): Promise<FetchSummerCollectionsResult> {
-  console.log(
-    `fetchSummerCollections called with type: ${type}, subcategories: ${subcategories?.join(", ")}`
-  );
-
   try {
     const { user } = await validateRequest();
     if (!user || user.role !== "CUSTOMER") {
