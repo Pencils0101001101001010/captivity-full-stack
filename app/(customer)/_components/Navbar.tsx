@@ -13,11 +13,44 @@ import { ShoppingCart } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
 import SlideInCart from "./SlideInCart";
+import { fetchCart } from "../customer/shopping/cart/actions";
 
 const Navbar = () => {
   const session = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCartData = async () => {
+      if (session?.user) {
+        try {
+          setIsLoading(true);
+          const result = await fetchCart();
+          if (result.success) {
+            setCartItemCount(
+              result.data.CartItem.reduce(
+                (total, item) => total + item.quanity,
+                0
+              )
+            );
+          } else {
+            console.error("Error fetching cart:", result.error);
+          }
+        } catch (error) {
+          console.error("Error fetching cart data:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setCartItemCount(0);
+        setIsLoading(false);
+      }
+    };
+
+    loadCartData();
+  }, [session]);
 
   const renderCartIcon = () => (
     <div
@@ -25,10 +58,14 @@ const Navbar = () => {
       onClick={() => setIsCartOpen(true)}
     >
       <ShoppingCart />
-      <span
-        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold"
-        style={{ border: "2px solid white" }}
-      ></span>
+      {!isLoading && cartItemCount > 0 && (
+        <span
+          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold"
+          style={{ border: "2px solid white" }}
+        >
+          {cartItemCount}
+        </span>
+      )}
     </div>
   );
 

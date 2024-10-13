@@ -6,8 +6,7 @@ import { formatDescription } from "@/lib/utils";
 import Image from "next/image";
 import ColorSelector from "./ColorSelector";
 import QuantitySelector from "./QuantitySelector";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import AddToCartButton from "./AddToCart";
 
 interface ProductDetailsProps {
   product: Product;
@@ -19,6 +18,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [quantity, setQuantity] = useState<number>(1);
   const [mainImage, setMainImage] = useState<string>("");
   const [availableQuantity, setAvailableQuantity] = useState<number>(0);
+  const [hasMatchingImage, setHasMatchingImage] = useState<boolean>(true);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const colors = [
@@ -38,18 +38,50 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const isInitialized = useRef(false);
 
   useEffect(() => {
+    console.log("Available images:", images);
+  }, [images]);
+
+  const findImageForColor = useCallback(
+    (color: string): string | null => {
+      const normalizedColor = color.toLowerCase().replace(/\s+/g, "");
+      console.log(`Normalized color: ${normalizedColor}`);
+
+      const matchingImage = images.find(img => {
+        const imgName = img.toLowerCase();
+        const imgNameParts = imgName.split("-");
+        const lastPart = imgNameParts[imgNameParts.length - 1].split(".")[0];
+
+        console.log(`Checking image: ${imgName}, Last part: ${lastPart}`);
+
+        const match =
+          imgName.includes(normalizedColor) ||
+          normalizedColor.includes(lastPart) ||
+          (color === "Bottle" && imgName.includes("green")) ||
+          (color === "Navy" && imgName.includes("blue"));
+
+        console.log(`Match result: ${match}`);
+        return match;
+      });
+
+      console.log(
+        `Finding image for color: ${color}, Result: ${matchingImage || "Not found"}`
+      );
+      return matchingImage || null;
+    },
+    [images]
+  );
+
+  useEffect(() => {
     console.log("ProductDetails useEffect running");
     if (!isInitialized.current) {
       const initialColor = product.attribute1Default || colors[0] || "";
       console.log("Setting initial color:", initialColor);
       setSelectedColor(initialColor);
 
-      const initialImage =
-        images.find(img =>
-          img.toLowerCase().includes(initialColor.toLowerCase())
-        ) || images[0];
+      const initialImage = findImageForColor(initialColor);
       console.log("Setting initial image:", initialImage);
-      setMainImage(initialImage);
+      setMainImage(initialImage || images[0]);
+      setHasMatchingImage(!!initialImage);
 
       if (sizes.length > 0) {
         const initialSize = product.attribute2Default || sizes[0];
@@ -60,41 +92,19 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       setAvailableQuantity(product.stock || 0);
       isInitialized.current = true;
     }
-  }, [product, colors, sizes, images]);
-
-  const updateMainImageAndColor = useCallback(
-    (newImage: string) => {
-      console.log("updateMainImageAndColor called with image:", newImage);
-      setMainImage(newImage);
-
-      // Find the color that matches the new image
-      const matchingColor = colors.find(color =>
-        newImage.toLowerCase().includes(color.toLowerCase())
-      );
-
-      if (matchingColor) {
-        console.log("Matching color found:", matchingColor);
-        setSelectedColor(matchingColor);
-      } else {
-        console.log("No matching color found for image:", newImage);
-      }
-    },
-    [colors]
-  );
+  }, [product, colors, sizes, images, findImageForColor]);
 
   const handleColorChange = useCallback(
     (color: string) => {
       console.log("handleColorChange called with color:", color);
       setSelectedColor(color);
 
-      // Find the image that matches the new color
-      const matchingImage =
-        images.find(img => img.toLowerCase().includes(color.toLowerCase())) ||
-        images[0];
-
-      setMainImage(matchingImage);
+      const matchingImage = findImageForColor(color);
+      console.log("Setting main image to:", matchingImage);
+      setMainImage(matchingImage || images[0]);
+      setHasMatchingImage(!!matchingImage);
     },
-    [images]
+    [findImageForColor, images]
   );
 
   const handleSizeChange = useCallback((size: string) => {
@@ -117,7 +127,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     "Quantity:",
     quantity,
     "Main Image:",
-    mainImage
+    mainImage,
+    "Has Matching Image:",
+    hasMatchingImage
   );
   console.log("Available sizes:", sizes);
 
@@ -126,16 +138,27 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       {/* Product Details Section */}
       <div className="flex flex-col lg:flex-row gap-8 w-full max-w-6xl bg-white p-6 rounded-lg shadow-2xl shadow-black">
         <div className="lg:w-1/2 space-y-4">
-          {mainImage && (
-            <Image
-              src={mainImage}
-              alt={product.name}
-              width={400}
-              height={400}
-              className="w-full h-auto object-cover rounded-lg shadow-md"
-              priority
-            />
-          )}
+          <div className="relative">
+            {mainImage && (
+              <Image
+                src={mainImage}
+                alt={product.name}
+                width={400}
+                height={400}
+                className={`w-full h-auto object-cover rounded-lg shadow-md ${
+                  !hasMatchingImage ? "filter blur-sm" : ""
+                }`}
+                priority
+              />
+            )}
+            {!hasMatchingImage && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-2xl font-bold text-white bg-black bg-opacity-50 px-4 py-2 rounded">
+                  No Stock
+                </span>
+              </div>
+            )}
+          </div>
           <div className="flex gap-2 overflow-x-auto">
             {images.map((img, index) => (
               <Image
@@ -145,7 +168,14 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                 width={80}
                 height={80}
                 className="w-20 h-20 object-cover rounded cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
-                onClick={() => updateMainImageAndColor(img)}
+                onClick={() => {
+                  setMainImage(img);
+                  setHasMatchingImage(true);
+                  const matchingColor = colors.find(color =>
+                    img.toLowerCase().includes(color.toLowerCase())
+                  );
+                  if (matchingColor) setSelectedColor(matchingColor);
+                }}
                 priority
               />
             ))}
@@ -197,6 +227,12 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
               availableQuantity={availableQuantity}
               selectedQuantity={quantity}
               onQuantityChange={handleQuantityChange}
+            />
+
+            <AddToCartButton
+              productId={product.id}
+              isDisabled={!hasMatchingImage || availableQuantity === 0}
+              quantity={quantity}
             />
           </div>
 
