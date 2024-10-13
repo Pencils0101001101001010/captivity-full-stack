@@ -19,6 +19,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [mainImage, setMainImage] = useState<string>("");
   const [availableQuantity, setAvailableQuantity] = useState<number>(0);
   const [hasMatchingImage, setHasMatchingImage] = useState<boolean>(true);
+  const [isOutOfStock, setIsOutOfStock] = useState<boolean>(false);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const colors = [
@@ -89,7 +90,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         setSelectedSize(initialSize);
       }
 
-      setAvailableQuantity(product.stock || 0);
+      const stockQuantity = product.stock || 0;
+      setAvailableQuantity(stockQuantity);
+      setIsOutOfStock(stockQuantity === 0);
       isInitialized.current = true;
     }
   }, [product, colors, sizes, images, findImageForColor]);
@@ -103,8 +106,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       console.log("Setting main image to:", matchingImage);
       setMainImage(matchingImage || images[0]);
       setHasMatchingImage(!!matchingImage);
+      setIsOutOfStock(availableQuantity === 0);
     },
-    [findImageForColor, images]
+    [findImageForColor, images, availableQuantity]
   );
 
   const handleSizeChange = useCallback((size: string) => {
@@ -129,7 +133,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     "Main Image:",
     mainImage,
     "Has Matching Image:",
-    hasMatchingImage
+    hasMatchingImage,
+    "Is Out of Stock:",
+    isOutOfStock
   );
   console.log("Available sizes:", sizes);
 
@@ -146,12 +152,12 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                 width={400}
                 height={400}
                 className={`w-full h-auto object-cover rounded-lg shadow-md ${
-                  !hasMatchingImage ? "filter blur-sm" : ""
+                  isOutOfStock || !hasMatchingImage ? "filter blur-sm" : ""
                 }`}
                 priority
               />
             )}
-            {!hasMatchingImage && (
+            {(isOutOfStock || !hasMatchingImage) && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-2xl font-bold text-white bg-black bg-opacity-50 px-4 py-2 rounded">
                   No Stock
@@ -231,7 +237,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
             <AddToCartButton
               productId={product.id}
-              isDisabled={!hasMatchingImage || availableQuantity === 0}
+              isDisabled={isOutOfStock || !hasMatchingImage}
               quantity={quantity}
             />
           </div>
