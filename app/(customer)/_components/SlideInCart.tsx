@@ -2,15 +2,19 @@ import React from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { LoggedInUserData } from "../types";
+import { CartData } from "../types"; // Adjust the path as necessary
 
 interface SlideInCartProps {
   isOpen: boolean;
   onClose: () => void;
-  cart: LoggedInUserData;
+  cartData: CartData | null; // Accept cartData as a prop
 }
 
-const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose, cart }) => {
+const SlideInCart: React.FC<SlideInCartProps> = ({
+  isOpen,
+  onClose,
+  cartData,
+}) => {
   return (
     <div
       className={`fixed inset-y-0 right-0 w-[450px] bg-white shadow-lg transform ${isOpen ? "translate-x-0" : "translate-x-full"} transition-transform duration-300 ease-in-out z-50`}
@@ -21,7 +25,36 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose, cart }) => {
           <X size={24} color="white" />
         </Button>
       </div>
-      <div className="overflow-y-auto h-[calc(100%-180px)] p-4"></div>
+
+      <div className="overflow-y-auto h-[calc(100%-180px)] p-4">
+        {cartData?.CartItem.length === 0 ? (
+          <p className="text-center">Your cart is empty.</p>
+        ) : (
+          cartData?.CartItem.map(item => {
+            const price = item.products.regularPrice ?? 0; // Default to 0 if regularPrice is null
+            const quantity = item.quanity || 0; // Default to 0 if quantity is null or undefined
+            const total = (quantity * price).toFixed(2); // Calculate total
+
+            return (
+              <div
+                key={item.id}
+                className="flex justify-between items-center mb-4"
+              >
+                <div>
+                  <h3 className="font-semibold">{item.products.name}</h3>
+                  <p>
+                    {quantity} x R{price.toFixed(2)}
+                  </p>
+                </div>
+                <div>
+                  <span className="font-bold">R{total}</span>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
       <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-white">
         <div className="grid grid-cols-2 gap-2">
           <Button asChild className="w-full">

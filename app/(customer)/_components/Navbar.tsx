@@ -14,6 +14,7 @@ import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
 import SlideInCart from "./SlideInCart";
 import { fetchCart } from "../customer/shopping/cart/actions";
+import { CartData } from "../types";
 
 const Navbar = () => {
   const session = useSession();
@@ -21,17 +22,19 @@ const Navbar = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItemCount, setCartItemCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [cartData, setCartData] = useState<CartData | null>(null);
 
   useEffect(() => {
     const loadCartData = async () => {
       if (session?.user) {
         try {
           setIsLoading(true);
-          const result = await fetchCart();
+          const result = await fetchCart(); // Ensure this returns { success: boolean; data: CartData }
           if (result.success) {
+            setCartData(result.data);
             setCartItemCount(
               result.data.CartItem.reduce(
-                (total, item) => total + item.quanity,
+                (total, item) => total + (item.quanity || 0), // Adjust to access the correct quantity property
                 0
               )
             );
@@ -44,6 +47,7 @@ const Navbar = () => {
           setIsLoading(false);
         }
       } else {
+        setCartData(null);
         setCartItemCount(0);
         setIsLoading(false);
       }
@@ -235,7 +239,11 @@ const Navbar = () => {
           </Link>
         </div>
       </div>
-      <SlideInCart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      <SlideInCart
+        cartData={cartData}
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+      />
     </div>
   );
 };
