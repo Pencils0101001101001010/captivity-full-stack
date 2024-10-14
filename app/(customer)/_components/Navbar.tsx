@@ -12,8 +12,6 @@ import React from "react";
 import { ShoppingCart } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
-import SlideInCart from "../customer/shopping/cart/SlideInCart";
-import { fetchCart } from "../customer/shopping/cart/actions";
 import { CartData } from "../types";
 
 const Navbar = () => {
@@ -23,38 +21,6 @@ const Navbar = () => {
   const [cartItemCount, setCartItemCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [cartData, setCartData] = useState<CartData | null>(null);
-
-  useEffect(() => {
-    const loadCartData = async () => {
-      if (session?.user) {
-        try {
-          setIsLoading(true);
-          const result = await fetchCart(); // Ensure this returns { success: boolean; data: CartData }
-          if (result.success) {
-            setCartData(result.data);
-            setCartItemCount(
-              result.data.CartItem.reduce(
-                (total, item) => total + (item.quanity || 0), // Adjust to access the correct quantity property
-                0
-              )
-            );
-          } else {
-            console.error("Error fetching cart:", result.error);
-          }
-        } catch (error) {
-          console.error("Error fetching cart data:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      } else {
-        setCartData(null);
-        setCartItemCount(0);
-        setIsLoading(false);
-      }
-    };
-
-    loadCartData();
-  }, [session]);
 
   const renderCartIcon = () => (
     <div
@@ -239,11 +205,6 @@ const Navbar = () => {
           </Link>
         </div>
       </div>
-      <SlideInCart
-        cartData={cartData}
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-      />
     </div>
   );
 };
