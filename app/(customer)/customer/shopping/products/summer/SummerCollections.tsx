@@ -3,8 +3,8 @@
 import React from "react";
 import useSummerProducts from "./useSummerProducts";
 import CategoryCarousel from "../_components/CategoryCarousel";
-import CategoryCarouselSkeleton from "./SummerCarouselSkeleton";
 import { ProductWithFeaturedImage } from "./summerTypes";
+import SummerCarouselSkeleton from "./SummerCarouselSkeleton";
 
 const SummerCollections: React.FC = () => {
   const { products, loading, error } = useSummerProducts();
@@ -25,7 +25,7 @@ const SummerCollections: React.FC = () => {
           Summer Collection
         </h1>
         {categories.map((category, index) => (
-          <CategoryCarouselSkeleton key={index} />
+          <SummerCarouselSkeleton key={index} />
         ))}
       </div>
     );
