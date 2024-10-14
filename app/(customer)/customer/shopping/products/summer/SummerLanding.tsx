@@ -2,7 +2,7 @@
 import React from "react";
 import SummerProductsSkeleton from "./SummerProductsSkeleton";
 import { useSummerProducts } from "./hooks";
-import ProductCarousel from "../_components/ProductCarousel";
+import ProductCarousel from "../_components/_carousel-component/ProductCarousel";
 
 const SummerLanding: React.FC = () => {
   const { categorizedProducts, isLoading, error } = useSummerProducts();

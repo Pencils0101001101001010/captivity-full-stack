@@ -1,14 +1,14 @@
 "use client";
 import React from "react";
 import ProductCarousel from "../_components/_carousel-component/ProductCarousel";
-import WinterProductsSkeleton from "./WinterProductsSkeleton";
-import { useWinterProducts } from "./hooks";
+import SportProductsSkeleton from "./SportProductsSkeleton";
+import { useSportProducts } from "./hooks";
 
-const WinterLanding: React.FC = () => {
-  const { categorizedWinterProducts, isLoading, error } = useWinterProducts();
+const SportLanding: React.FC = () => {
+  const { categorizedSportProducts, isLoading, error } = useSportProducts();
 
   if (isLoading) {
-    return <WinterProductsSkeleton />;
+    return <SportProductsSkeleton />;
   }
 
   if (error) {
@@ -17,13 +17,13 @@ const WinterLanding: React.FC = () => {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4">
-      {Object.entries(categorizedWinterProducts).map(
+      {Object.entries(categorizedSportProducts).map(
         ([category, products]) =>
           products.length > 0 && (
             <ProductCarousel
               key={category}
               products={products}
-              title={`${category} Winter Collection`}
+              title={`${category} Sport Collection`}
             />
           )
       )}
@@ -31,4 +31,4 @@ const WinterLanding: React.FC = () => {
   );
 };
 
-export default WinterLanding;
+export default SportLanding;

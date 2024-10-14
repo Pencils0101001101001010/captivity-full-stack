@@ -1,230 +1,44 @@
 "use client";
-import React, { useState } from "react";
-import Link from "next/link";
+
+import React, { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, DotIcon } from "lucide-react";
-
-type NavItem = {
-  href: string;
-  icon: React.ElementType;
-  label: string;
-};
-
-type Section = {
-  label: string;
-  items: NavItem[];
-};
-
-const navItems: Section[] = [
-  {
-    label: "Headwear",
-    items: [
-      {
-        href: "/products/headwear/new-in-headwear",
-        icon: DotIcon,
-        label: "New in Headwear",
-      },
-      {
-        href: "/products/headwear/flat-peaks",
-        icon: DotIcon,
-        label: "Flat Peaks",
-      },
-      {
-        href: "/products/headwear/pre-curved-peaks",
-        icon: DotIcon,
-        label: "Pre-Curved Peaks",
-      },
-      {
-        href: "/products/headwear/hats",
-        icon: DotIcon,
-        label: "Hats",
-      },
-      {
-        href: "/products/headwear/multifunctional-headwear",
-        icon: DotIcon,
-        label: "Multifunctional Headwear",
-      },
-      {
-        href: "/products/headwear/beanies",
-        icon: DotIcon,
-        label: "Beanies",
-      },
-      {
-        href: "/products/headwear/trucker-caps",
-        icon: DotIcon,
-        label: "Trucker Caps",
-      },
-      {
-        href: "/products/headwear/bucket-hats",
-        icon: DotIcon,
-        label: "Bucket Hats",
-      },
-    ],
-  },
-  {
-    label: "Apparel",
-    items: [
-      {
-        href: "/products/apparel/new-in-apparel",
-        icon: DotIcon,
-        label: "New in Apparel",
-      },
-      {
-        href: "/products/apparel/men",
-        icon: DotIcon,
-        label: "Men",
-      },
-      {
-        href: "/products/apparel/women",
-        icon: DotIcon,
-        label: "Women",
-      },
-      {
-        href: "/products/apparel/kids",
-        icon: DotIcon,
-        label: "Kids",
-      },
-      {
-        href: "/products/apparel/t-shirts",
-        icon: DotIcon,
-        label: "T-Shirts",
-      },
-      {
-        href: "/products/apparel/golfers",
-        icon: DotIcon,
-        label: "Golfers",
-      },
-      {
-        href: "/products/apparel/hoodies",
-        icon: DotIcon,
-        label: "Hoodies",
-      },
-      {
-        href: "/products/apparel/jackets",
-        icon: DotIcon,
-        label: "Jackets",
-      },
-      {
-        href: "/products/apparel/bottoms",
-        icon: DotIcon,
-        label: "Bottoms",
-      },
-    ],
-  },
-  {
-    label: "All Collections",
-    items: [
-      {
-        href: "/products/all-collections/leisure-collection",
-        icon: DotIcon,
-        label: "Leisure Collection",
-      },
-      {
-        href: "/products/all-collections/industrial-collection",
-        icon: DotIcon,
-        label: "Industrial Collection",
-      },
-      {
-        href: "/products/all-collections/signature-collection",
-        icon: DotIcon,
-        label: "Signature Collection",
-      },
-      {
-        href: "/products/all-collections/baseball-collection",
-        icon: DotIcon,
-        label: "Baseball Collection",
-      },
-      {
-        href: "/products/all-collections/fashion-collection",
-        icon: DotIcon,
-        label: "Fashion Collection",
-      },
-      {
-        href: "/products/all-collections/sport-collection",
-        icon: DotIcon,
-        label: "Sport Collection",
-      },
-      {
-        href: "/products/all-collections/camo-collection",
-        icon: DotIcon,
-        label: "Camo Collection",
-      },
-      {
-        href: "/products/all-collections/winter-collection",
-        icon: DotIcon,
-        label: "Winter Collection",
-      },
-      {
-        href: "/products/all-collections/african-collection",
-        icon: DotIcon,
-        label: "African Collection",
-      },
-    ],
-  },
-  {
-    label: "Catalog",
-    items: [
-      {
-        href: "/products/catalog/spring-2024",
-        icon: DotIcon,
-        label: "Spring 2024",
-      },
-      {
-        href: "/products/catalog/fall-2024",
-        icon: DotIcon,
-        label: "Fall 2024",
-      },
-    ],
-  },
-  {
-    label: "Clearance",
-    items: [
-      {
-        href: "/products/clearance/sale-items",
-        icon: DotIcon,
-        label: "Sale Items",
-      },
-    ],
-  },
-];
+import { ChevronDown } from "lucide-react";
+import { navItems } from "./categoriesData";
+import CategorySubmenu from "./CategorySubmenu";
 
 const CategoriesDropDown = () => {
   const pathname = usePathname();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleMouseEnter = (section: string) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
     setOpenDropdown(section);
   };
 
   const handleMouseLeave = () => {
-    setOpenDropdown(null);
+    timeoutRef.current = setTimeout(() => {
+      setOpenDropdown(null);
+    }, 300); // Delay before closing to allow moving to submenu
   };
 
-  const renderNavItem = (item: NavItem) => {
-    const isActive = pathname ? pathname.startsWith(item.href) : false;
-    return (
-      <Link
-        key={item.href}
-        href={item.href}
-        className={cn(
-          "block px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground",
-          isActive
-            ? "bg-primary text-primary-foreground"
-            : "text-muted-foreground"
-        )}
-      >
-        <item.icon className="inline-block mr-2 h-4 w-4" />
-        {item.label}
-      </Link>
-    );
-  };
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
-    <nav className="relative flex justify-evenly w-full">
+    <nav className="relative flex justify-evenly w-full" ref={dropdownRef}>
       <div className="hidden md:flex space-x-14">
-        {navItems.map((section) => (
+        {navItems.map(section => (
           <div
             key={section.label}
             className="relative"
@@ -242,9 +56,16 @@ const CategoriesDropDown = () => {
             </Button>
 
             {openDropdown === section.label && (
-              <div className="absolute top-full mt-1 w-56 rounded-md bg-background shadow-lg z-10">
-                {section.items.map((subItem) => renderNavItem(subItem))}
-              </div>
+              <CategorySubmenu
+                items={section.items}
+                pathname={pathname}
+                onMouseEnter={() => {
+                  if (timeoutRef.current) {
+                    clearTimeout(timeoutRef.current);
+                  }
+                }}
+                onMouseLeave={handleMouseLeave}
+              />
             )}
           </div>
         ))}

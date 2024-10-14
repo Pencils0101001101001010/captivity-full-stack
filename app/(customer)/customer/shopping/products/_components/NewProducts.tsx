@@ -1,9 +1,11 @@
 "use client";
+
 import React, { useEffect, useState, useRef } from "react";
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
 import { Product } from "@prisma/client";
 import Image from "next/image";
+import Link from "next/link";
 import { fetchNewCollections } from "../actions";
 import NewProductsSkeleton from "./NewProductsSkeleton";
 import {
@@ -11,7 +13,7 @@ import {
   formatPrice,
   getFirstValidImageUrl,
   setupCarouselTouchHandlers,
-  addCarouselStyles
+  addCarouselStyles,
 } from "./newProductsUtils";
 
 const NewProducts = () => {
@@ -51,6 +53,30 @@ const NewProducts = () => {
     return cleanup;
   }, []);
 
+  // New useEffect to add styles for chevron positioning
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      .react-multiple-carousel__arrow {
+        z-index: 10;
+      }
+      .react-multiple-carousel__arrow--left {
+        left: 0;
+      }
+      .react-multiple-carousel__arrow--right {
+        right: 0;
+      }
+      .carousel-container {
+        position: relative;
+        z-index: 1;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   if (isLoading) {
     return <NewProductsSkeleton />;
   }
@@ -78,8 +104,12 @@ const NewProducts = () => {
           partialVisible={false}
         >
           {products.map(product => (
-            <div key={product.id} className="px-2 pb-4">
-              <div className="bg-white rounded-lg shadow-md overflow-hidden h-full">
+            <Link
+              href={`/customer/shopping/products/${product.id}`}
+              key={product.id}
+              className="block px-2 pb-4"
+            >
+              <div className="bg-white rounded-lg shadow-md overflow-hidden h-full transition-transform duration-300 hover:scale-105">
                 <div className="relative w-full h-48">
                   <Image
                     src={getFirstValidImageUrl(product.imageUrl)}
@@ -90,7 +120,10 @@ const NewProducts = () => {
                   />
                 </div>
                 <div className="p-4">
-                  <h3 className="text-lg font-semibold mb-2 truncate" title={product.name}>
+                  <h3
+                    className="text-lg font-semibold mb-2 truncate"
+                    title={product.name}
+                  >
                     {product.name}
                   </h3>
                   <p className="text-gray-600">
@@ -98,7 +131,7 @@ const NewProducts = () => {
                   </p>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </Carousel>
       </div>

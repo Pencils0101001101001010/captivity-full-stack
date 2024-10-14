@@ -3,26 +3,35 @@ import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { Product, Prisma } from "@prisma/client";
 
-type SummerSubcategory = "Men" | "Women" | "Kids" | "New" | "T- Shirts";
+type SportSubcategory =
+  | "Men"
+  | "Women"
+  | "Kids"
+  | "New"
+  | "Hoodies"
+  | "Jackets"
+  | "Hats"
+  | "Bottoms"
+  | "Summer";
 
-type FetchSummerCollectionsResult =
+type FetchSportCollectionsResult =
   | { success: true; data: Product[] }
   | { success: false; error: string };
 
-export async function fetchSummerCollections(
+export async function fetchSportCollections(
   type?: string,
-  subcategories?: SummerSubcategory[]
-): Promise<FetchSummerCollectionsResult> {
+  subcategories?: SportSubcategory[]
+): Promise<FetchSportCollectionsResult> {
   try {
     const { user } = await validateRequest();
     if (!user || user.role !== "CUSTOMER") {
       throw new Error(
-        "Unauthorized. Only customers can fetch summer collections."
+        "Unauthorized. Only customers can fetch sport collections."
       );
     }
 
     const baseWhereCondition: Prisma.ProductWhereInput = {
-      categories: { contains: "Summer Collection" },
+      categories: { contains: "Sport Collection" },
     };
 
     if (type) {
@@ -31,7 +40,7 @@ export async function fetchSummerCollections(
 
     if (subcategories && subcategories.length > 0) {
       baseWhereCondition.AND = [
-        { categories: { contains: "Summer Collection" } },
+        { categories: { contains: "Sport Collection" } },
         {
           OR: subcategories.map(subcat => ({
             categories: {
@@ -42,13 +51,14 @@ export async function fetchSummerCollections(
       ];
     }
 
-    const summerProducts = await prisma.product.findMany({
+    const sportProducts = await prisma.product.findMany({
       where: baseWhereCondition,
       orderBy: { position: "asc" },
     });
-    return { success: true, data: summerProducts };
+
+    return { success: true, data: sportProducts };
   } catch (error) {
-    console.error("Error fetching summer collections:", error);
+    console.error("Error fetching sport collections:", error);
     return {
       success: false,
       error:
