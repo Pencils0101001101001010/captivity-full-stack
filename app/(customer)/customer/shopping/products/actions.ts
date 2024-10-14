@@ -22,7 +22,6 @@ export async function fetchNewProducts(): Promise<FetchNewProductsResult> {
   try {
     // Validate user session
     const { user } = await validateRequest();
-    console.log("User validation result:", user); // Add logging
     if (!user) {
       return { success: false, error: "Unauthorized. Please log in." };
     }
@@ -51,14 +50,11 @@ export async function fetchNewProducts(): Promise<FetchNewProductsResult> {
       },
     });
 
-    console.log("Fetched new products:", newProducts);
-
     return { success: true, data: newProducts as ProductWithFeaturedImage[] };
   } catch (error: any) {
     const errorMessage =
       error instanceof Error ? error.message : "An unexpected error occurred";
 
-    console.error("Full error details:", error); // Log full error details
     console.log(`Error fetching new products: ${errorMessage}`);
 
     return { success: false, error: errorMessage };
