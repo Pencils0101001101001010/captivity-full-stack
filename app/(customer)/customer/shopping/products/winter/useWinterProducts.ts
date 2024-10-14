@@ -1,9 +1,9 @@
 // useSummerProducts.ts
 import { useState, useEffect } from "react";
-import { fetchSummerCollections } from "./actions";
+import { fetchWinterCollections } from "./actions";
 import { ProductWithFeaturedImage } from "../productTypes";
 
-const useSummerProducts = () => {
+const useWinterProducts = () => {
   const [products, setProducts] = useState<ProductWithFeaturedImage[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +13,7 @@ const useSummerProducts = () => {
       setLoading(true);
       setError(null);
       try {
-        const result = await fetchSummerCollections();
+        const result = await fetchWinterCollections();
         if (result.success) {
           setProducts(result.data as ProductWithFeaturedImage[]);
         } else {
@@ -21,7 +21,7 @@ const useSummerProducts = () => {
         }
       } catch (err) {
         setError(
-          "An unexpected error occurred while fetching the summer products."
+          "An unexpected error occurred while fetching the winter products."
         );
       } finally {
         setLoading(false);
@@ -34,4 +34,4 @@ const useSummerProducts = () => {
   return { products, loading, error };
 };
 
-export default useSummerProducts;
+export default useWinterProducts;
