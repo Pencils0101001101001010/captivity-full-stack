@@ -17,50 +17,56 @@ async function main() {
 
   for (const product of products) {
     // Check if the required fields are present
-    if (!product.Name || !product.SKU) {
+    if (!product.id || !product.product_name) {
       console.warn(
-        `Skipping product with ID ${product.ID} due to missing required fields.`
+        `Skipping product with ID ${product.id} due to missing required fields.`
       );
-      continue; // Skip this product if Name or SKU is missing
+      continue;
     }
 
     await prisma.product.create({
       data: {
-        userId: "3slk63yceodcuxxb", // Ensure this is a valid user ID
-        type: product.Type,
-        sku: product.SKU,
-        name: product.Name,
-        published: Boolean(product.Published),
-        isFeatured: Boolean(product["Is featured?"]),
-        visibility: product["Visibility in catalogue"],
-        shortDescription: product["Short description"] || "", // Use an empty string if missing
-        taxStatus: product["Tax status"],
-        inStock: Boolean(product["In stock?"]),
-        backordersAllowed: Boolean(product["Backorders allowed?"]),
-        soldIndividually: Boolean(product["Sold individually?"]),
-        allowReviews: Boolean(product["Allow customer reviews?"]),
-        categories: product.Categories || "", // Use an empty string if missing
-        tags: product.Tags || "", // Use an empty string if missing
-        imageUrl: product.Images || "", // Use an empty string if missing
-        upsells: product.Upsells || null, // Use null if missing
-        position: parseInt(product.Position) || 0, // Default to 0 if missing or invalid
-        attribute1Name: product["Attribute 1 name"] || null,
-        attribute1Values: product["Attribute 1 value(s)"] || null,
-        attribute2Name: product["Attribute 2 name"] || null,
-        attribute2Values: product["Attribute 2 value(s)"] || null,
-        attribute1Default: product["Attribute 1 default"] || null,
-        attribute2Default: product["Attribute 2 default"] || null,
-        regularPrice: product["Regular price"]
-          ? parseFloat(product["Regular price"])
-          : null,
-        stock: product.Stock ? parseInt(product.Stock) : null,
+        id: product.id,
+        userId: "7e57gfautm62645u", // Ensure this is a valid user ID
+        productName: product.product_name,
+        category: product.category,
+        description: product.description,
+        sellingPrice: product.selling_price,
+        dynamicPricing: {
+          create: product.dynamic_pricing.map(pricing => ({
+            from: pricing.from,
+            to: pricing.to,
+            type: pricing.type,
+            amount: pricing.amount,
+          })),
+        },
+        variations: {
+          create: product.variations.map(variation => ({
+            name: variation.name,
+            color: variation.color,
+            size: variation.size,
+            sku: variation.sku,
+            sku2: variation.sku2,
+            variationImageURL: variation.variation_image_URL,
+            quantity: variation.quantity,
+          })),
+        },
+        featuredImage: product.featured_image
+          ? {
+              create: {
+                thumbnail: product.featured_image.thumbnail,
+                medium: product.featured_image.medium,
+                large: product.featured_image.large,
+              },
+            }
+          : undefined,
       },
     });
   }
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error(e);
     process.exit(1);
   })
