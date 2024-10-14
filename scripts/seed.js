@@ -27,11 +27,12 @@ async function main() {
     await prisma.product.create({
       data: {
         id: product.id,
-        userId: "7e57gfautm62645u", // Ensure this is a valid user ID
+        userId: "qnd2xqsywyepl5jt", // Ensure this is a valid user ID
         productName: product.product_name,
         category: product.category,
         description: product.description,
         sellingPrice: product.selling_price,
+        isPublished: true, // Set to false by default
         dynamicPricing: {
           create: product.dynamic_pricing.map(pricing => ({
             from: pricing.from,
@@ -60,6 +61,8 @@ async function main() {
               },
             }
           : undefined,
+        createdAt: new Date(), // Set the creation date
+        updatedAt: new Date(), // Set the update date
       },
     });
   }

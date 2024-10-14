@@ -74,11 +74,14 @@ model Product {
   category       String[]
   description    String
   sellingPrice   Float            @map("selling_price")
+  isPublished    Boolean          @default(true)
   dynamicPricing DynamicPricing[]
   variations     Variation[]
   featuredImage  FeaturedImage?
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   cartItems      CartItem[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
   @@map("products")
 }
