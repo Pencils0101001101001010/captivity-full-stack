@@ -3,26 +3,37 @@
 import React from "react";
 import useSummerProducts from "./useSummerProducts";
 import CategoryCarousel from "../_components/CategoryCarousel";
+import CategoryCarouselSkeleton from "./SummerCarouselSkeleton";
 import { ProductWithFeaturedImage } from "./summerTypes";
+
 const SummerCollections: React.FC = () => {
   const { products, loading, error } = useSummerProducts();
 
+  const categories: string[] = [
+    "t-shirts",
+    "women",
+    "men",
+    "fashion-collection",
+    "headwear-collection",
+    "sport-collection",
+  ];
+
   if (loading) {
-    return <div>Loading summer collections...</div>;
+    return (
+      <div className="space-y-16">
+        <h1 className="text-4xl font-bold text-center my-8">
+          Summer Collection
+        </h1>
+        {categories.map((category, index) => (
+          <CategoryCarouselSkeleton key={index} />
+        ))}
+      </div>
+    );
   }
 
   if (error) {
     return <div>Error: {error}</div>;
   }
-
-  const categories: string[] = [
-    "women",
-    "men",
-    "sport-collection",
-    "t-shirts",
-    "fashion-collection",
-    "headwear-collection",
-  ];
 
   const filterProductsByCategory = (
     category: string
