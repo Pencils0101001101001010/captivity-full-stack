@@ -1,24 +1,21 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import useLatestProducts from "./useLatestProducts";
-import useEmblaCarousel, { UseEmblaCarouselType } from "embla-carousel-react";
-import Autoplay from "embla-carousel-autoplay";
+import useEmblaCarousel from "embla-carousel-react";
 
 const LatestProducts = () => {
   const { products, loading, error } = useLatestProducts();
-  const [emblaRef, emblaApi] = useEmblaCarousel(
-    {
-      loop: true,
-      align: "start",
-      slidesToScroll: 1,
-      containScroll: "trimSnaps",
-    },
-    [Autoplay({ delay: 5000 })]
-  );
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: true,
+    align: "start",
+    slidesToScroll: 1,
+    containScroll: "trimSnaps",
+  });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [scrollSnaps, setScrollSnaps] = useState<number[]>([]);
 
@@ -74,29 +71,30 @@ const LatestProducts = () => {
                 >
                   {group.map(product => (
                     <div key={product.id} className="w-1/4 px-2">
-                      <Card className="overflow-hidden shadow-lg transition-shadow duration-300 hover:shadow-xl">
-                        <CardContent className="p-4">
-                          {product.featuredImage && (
-                            <div className="relative h-48 w-full mb-4 overflow-hidden rounded-lg">
-                              <Image
-                                src={product.featuredImage.thumbnail}
-                                alt={product.productName}
-                                layout="fill"
-                                objectFit="cover"
-                                quality={100}
-                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                                className="transition-transform duration-300 hover:scale-105"
-                              />
-                            </div>
-                          )}
-                          <h3 className="text-lg font-semibold mb-2 truncate">
-                            {product.productName}
-                          </h3>
-                          <p className="text-xl font-bold text-primary">
-                            R{product.sellingPrice.toFixed(2)}
-                          </p>
-                        </CardContent>
-                      </Card>
+                      <Link href={`/product/${product.id}`}>
+                        <Card className="overflow-hidden shadow-lg transition-shadow duration-300 hover:shadow-xl cursor-pointer">
+                          <CardContent className="p-4">
+                            {product.featuredImage && (
+                              <div className="relative h-48 w-full mb-4 overflow-hidden rounded-lg">
+                                <Image
+                                  src={product.featuredImage.thumbnail}
+                                  alt={product.productName}
+                                  fill
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                                  style={{ objectFit: "cover" }}
+                                  className="transition-transform duration-300 hover:scale-105"
+                                />
+                              </div>
+                            )}
+                            <h3 className="text-lg font-semibold mb-2 truncate">
+                              {product.productName}
+                            </h3>
+                            <p className="text-xl font-bold text-primary">
+                              R{product.sellingPrice.toFixed(2)}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </Link>
                     </div>
                   ))}
                 </div>
