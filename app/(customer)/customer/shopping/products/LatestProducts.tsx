@@ -19,9 +19,9 @@ const LatestProducts = () => {
       {products.length === 0 ? (
         <p>No new products available.</p>
       ) : (
-        <ul className="latest-products-list">
+        <ul className="grid grid-cols-3 space-x-4 space-y-4">
           {products.map(product => (
-            <li key={product.id} className="latest-product-item">
+            <li key={product.id} className=" bg-slate-300 p-5 rounded-xl">
               <h2>{product.productName}</h2>
               {product.featuredImage && (
                 <img
@@ -30,7 +30,7 @@ const LatestProducts = () => {
                   width={100}
                 />
               )}
-              <p>{product.description}</p>
+              <div dangerouslySetInnerHTML={{ __html: product.description }} />
               <p>Price: ${product.sellingPrice.toFixed(2)}</p>
             </li>
           ))}

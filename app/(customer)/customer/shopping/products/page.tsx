@@ -6,7 +6,10 @@ const Page = () => {
   return (
     <div className="flex flex-col gap-5">
       <Collections />
-      <LatestProducts />
+      <div>
+        <LatestProducts />
+      </div>
+      
     </div>
   );
 };
