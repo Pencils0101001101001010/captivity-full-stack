@@ -1,7 +1,7 @@
 // useSummerProducts.ts
 import { useState, useEffect } from "react";
 import { fetchSummerCollections } from "./actions";
-import { ProductWithFeaturedImage } from "./types";
+import { ProductWithFeaturedImage } from "./summerTypes";
 
 const useSummerProducts = () => {
   const [products, setProducts] = useState<ProductWithFeaturedImage[]>([]);

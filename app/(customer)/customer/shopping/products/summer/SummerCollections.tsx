@@ -3,7 +3,7 @@
 import React from "react";
 import useSummerProducts from "./useSummerProducts";
 import CategoryCarousel from "../_components/CategoryCarousel";
-import { ProductWithFeaturedImage } from "./types";
+import { ProductWithFeaturedImage } from "./summerTypes";
 
 const SummerCollections: React.FC = () => {
   const { products, loading, error } = useSummerProducts();
