@@ -1,7 +1,5 @@
 import React from "react";
 import SummerCollections from "./SummerCollections";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import LinkButton from "../_components/LinkButton";
 
 const SummerCollectionPage = () => {
