@@ -1,9 +1,12 @@
 import React from "react";
+import WinterCollections from "./WinterCollection";
 
 const WinterCollectionPage = () => {
   return (
     <div>
-      <h1>Winter collection</h1>
+      <h1>
+        <WinterCollections />
+      </h1>
     </div>
   );
 };

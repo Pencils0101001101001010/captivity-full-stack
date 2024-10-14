@@ -6,7 +6,7 @@ import CollectionCarouselSkeleton from "../_components/CollectionCarouselSkeleto
 import { ProductWithFeaturedImage } from "../productTypes";
 import useWinterProducts from "./useWinterProducts";
 
-const SummerCollections: React.FC = () => {
+const WinterCollections: React.FC = () => {
   const { products, loading, error } = useWinterProducts();
 
   const categories: string[] = [
@@ -22,7 +22,7 @@ const SummerCollections: React.FC = () => {
     return (
       <div className="space-y-16">
         <h1 className="text-4xl font-bold text-center my-8">
-          Summer Collection
+          Winter Collection
         </h1>
         {categories.map((category, index) => (
           <CollectionCarouselSkeleton key={index} />
@@ -41,7 +41,7 @@ const SummerCollections: React.FC = () => {
     return products.filter(
       (product: ProductWithFeaturedImage) =>
         product.category.includes(category) &&
-        product.category.includes("summer-collection")
+        product.category.includes("winter-collection")
     );
   };
 
@@ -54,7 +54,7 @@ const SummerCollections: React.FC = () => {
 
   return (
     <div className="space-y-16">
-      <h1 className="text-4xl font-bold text-center my-8">Summer Collection</h1>
+      <h1 className="text-4xl font-bold text-center my-8">Winter Collection</h1>
 
       {categories.map((category: string) => {
         const filteredProducts = filterProductsByCategory(category);
@@ -73,4 +73,4 @@ const SummerCollections: React.FC = () => {
   );
 };
 
-export default SummerCollections;
+export default WinterCollections;
