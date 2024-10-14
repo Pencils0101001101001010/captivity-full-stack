@@ -60,14 +60,16 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
                   <Card className="overflow-hidden shadow-lg transition-shadow duration-300 hover:shadow-xl cursor-pointer">
                     <CardContent className="p-4">
                       {product.featuredImage && (
-                        <div className="relative h-48 w-full mb-4 overflow-hidden rounded-lg">
+                        <div className="relative h-64 w-full mb-4 overflow-hidden rounded-lg">
                           <Image
-                            src={product.featuredImage.thumbnail}
+                            src={product.featuredImage.medium} // Use medium size image instead of thumbnail
                             alt={product.productName}
                             fill
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                            style={{ objectFit: "cover" }}
+                            style={{ objectFit: "contain" }} // Changed to 'contain' to show full image
                             className="transition-transform duration-300 hover:scale-105"
+                            quality={100} // Set to maximum quality
+                            priority // Prioritize loading this image
                           />
                         </div>
                       )}
