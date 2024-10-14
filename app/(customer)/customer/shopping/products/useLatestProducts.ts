@@ -18,10 +18,6 @@ type ProductWithFeaturedImage = {
   featuredImage?: FeaturedImage | null;
 };
 
-type FetchNewProductsResult =
-  | { success: true; data: ProductWithFeaturedImage[] }
-  | { success: false; error: string };
-
 const useLatestProducts = () => {
   const [products, setProducts] = useState<ProductWithFeaturedImage[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
