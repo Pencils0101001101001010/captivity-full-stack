@@ -45,7 +45,7 @@ const ClothingCollections = () => {
             {collections.map((collection, index) => (
               <div key={index} className="flex-[0_0_16.666%] min-w-0 px-2">
                 <Link
-                  href={`/collection/${collection.name.toLowerCase()}`}
+                  href={`/customer/shopping/products/${collection.name.toLowerCase()}`}
                   passHref
                 >
                   <Card className="overflow-hidden shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 cursor-pointer">
