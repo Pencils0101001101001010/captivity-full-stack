@@ -4,7 +4,6 @@ import React from "react";
 import useSummerProducts from "./useSummerProducts";
 import CategoryCarousel from "../_components/CategoryCarousel";
 import { ProductWithFeaturedImage } from "./summerTypes";
-
 const SummerCollections: React.FC = () => {
   const { products, loading, error } = useSummerProducts();
 
@@ -16,15 +15,14 @@ const SummerCollections: React.FC = () => {
     return <div>Error: {error}</div>;
   }
 
-  const productTypes: string[] = [
+  const categories: string[] = [
+    "women",
+    "men",
+    "sport-collection",
+    "t-shirts",
     "fashion-collection",
     "headwear-collection",
-    "sport-collection",
-    "apparel-collection",
-    "t-shirts",
   ];
-
-  const genderCategories: string[] = ["men", "women", "unisex"];
 
   const filterProductsByCategory = (
     category: string
@@ -47,41 +45,19 @@ const SummerCollections: React.FC = () => {
     <div className="space-y-16">
       <h1 className="text-4xl font-bold text-center my-8">Summer Collection</h1>
 
-      {/* Product Type Categories */}
-      {productTypes.map((category: string) => (
-        <CategoryCarousel
-          key={category}
-          categoryName={formatCategoryName(category)}
-          products={filterProductsByCategory(category)}
-        />
-      ))}
-
-      {/* Gender Categories */}
-      {genderCategories.map((gender: string) => (
-        <div key={gender} className="space-y-12">
-          <h2 className="text-3xl font-semibold mt-12 mb-6 capitalize">
-            {gender} Collection
-          </h2>
-          {productTypes.map((category: string) => {
-            const filteredProducts = products.filter(
-              (product: ProductWithFeaturedImage) =>
-                product.category.includes(category) &&
-                product.category.includes("summer-collection") &&
-                product.category.includes(gender)
-            );
-            if (filteredProducts.length > 0) {
-              return (
-                <CategoryCarousel
-                  key={`${gender}-${category}`}
-                  categoryName={`${formatCategoryName(category)} for ${formatCategoryName(gender)}`}
-                  products={filteredProducts}
-                />
-              );
-            }
-            return null;
-          })}
-        </div>
-      ))}
+      {categories.map((category: string) => {
+        const filteredProducts = filterProductsByCategory(category);
+        if (filteredProducts.length > 0) {
+          return (
+            <CategoryCarousel
+              key={category}
+              categoryName={`${formatCategoryName(category)} Collection`}
+              products={filteredProducts}
+            />
+          );
+        }
+        return null;
+      })}
     </div>
   );
 };
