@@ -77,7 +77,7 @@ const LatestProducts = () => {
                             {product.featuredImage && (
                               <div className="relative h-48 w-full mb-4 overflow-hidden rounded-lg">
                                 <Image
-                                  src={product.featuredImage.thumbnail}
+                                  src={product.featuredImage.medium}
                                   alt={product.productName}
                                   fill
                                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
