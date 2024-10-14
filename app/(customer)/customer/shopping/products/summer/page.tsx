@@ -10,7 +10,7 @@ const SummerCollectionPage = () => {
         variant="default"
         className="custom-class"
       >
-        Back to express
+        Back to express shop
       </LinkButton>
       <h1>
         <SummerCollections />
