@@ -9,7 +9,7 @@ const SummerCollectionPage = () => {
     <div>
       <LinkButton
         href="/customer/shopping/products"
-        variant="outline"
+        variant="default"
         className="custom-class"
       >
         Back to express
