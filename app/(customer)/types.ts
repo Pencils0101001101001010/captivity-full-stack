@@ -1,33 +1,97 @@
 import { Prisma } from "@prisma/client";
 
-// Select relevant fields for the User model
-export function getUserDataSelect() {
-  return {
-    id: true,
-    username: true,
-    displayName: true,
-    avatarUrl: true,
-    bio: true,
-    role: true,
-    createdAt: true,
-  } satisfies Prisma.UserSelect;
-}
+// Define the user fields to be included (excluding password)
+const userFields = {
+  id: true,
+  username: true,
+  firstName: true,
+  lastName: true,
+  displayName: true,
+  email: true,
+  phoneNumber: true,
+  streetAddress: true,
+  addressLine2: true,
+  suburb: true,
+  townCity: true,
+  postcode: true,
+  country: true,
+  position: true,
+  natureOfBusiness: true,
+  currentSupplier: true,
+  otherSupplier: true,
+  resellingTo: true,
+  salesRep: true,
+  website: true,
+  companyName: true,
+  ckNumber: true,
+  avatarUrl: true,
+  bio: true,
+  role: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
 
-// Type for User data, selecting the fields specified in getUserDataSelect
-export type UserData = Prisma.UserGetPayload<{
-  select: ReturnType<typeof getUserDataSelect>;
-}>;
-
-// Select relevant fields for the Product model
-export function getProductDataInclude() {
+// Define the include object for user data and related models
+export function getLoggedInUserDataInclude() {
   return {
-    user: {
-      select: getUserDataSelect(),
+    sessions: {
+      include: {
+        user: {
+          select: userFields,
+        },
+      },
     },
-  } satisfies Prisma.ProductInclude;
+    products: {
+      select: {
+        id: true,
+        productName: true,
+        category: true,
+        description: true,
+        sellingPrice: true,
+        isPublished: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    },
+    carts: {
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
+        cartItems: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                productName: true,
+                category: true,
+                description: true,
+                sellingPrice: true,
+                isPublished: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
+            variation: true,
+          },
+        },
+      },
+    },
+  } satisfies Prisma.UserInclude;
 }
 
-// Type for Product data, including the user relation
-export type ProductData = Prisma.ProductGetPayload<{
-  include: ReturnType<typeof getProductDataInclude>;
+// Updated type for logged-in User data
+export type LoggedInUserData = Prisma.UserGetPayload<{
+  include: ReturnType<typeof getLoggedInUserDataInclude>;
 }>;
+
+// Updated function to retrieve logged-in user data
+export async function getLoggedInUserData(
+  userId: string,
+  prisma: Prisma.TransactionClient
+) {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    include: getLoggedInUserDataInclude(),
+  });
+}
