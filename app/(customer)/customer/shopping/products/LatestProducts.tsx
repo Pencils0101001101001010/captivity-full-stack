@@ -71,7 +71,7 @@ const LatestProducts = () => {
                 >
                   {group.map(product => (
                     <div key={product.id} className="w-1/4 px-2">
-                      <Link href={`/product/${product.id}`}>
+                      <Link href={`customer/shopping/products/${product.id}`}>
                         <Card className="overflow-hidden shadow-lg transition-shadow duration-300 hover:shadow-xl cursor-pointer">
                           <CardContent className="p-4">
                             {product.featuredImage && (
