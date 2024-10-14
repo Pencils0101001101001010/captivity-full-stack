@@ -5,6 +5,7 @@ import CategoryCarousel from "../_components/CategoryCarousel";
 import CollectionCarouselSkeleton from "../_components/CollectionCarouselSkeleton";
 import { ProductWithFeaturedImage } from "../productTypes";
 import useWinterProducts from "./useWinterProducts";
+import { formatCategoryName } from "./winterUtils";
 
 const WinterCollections: React.FC = () => {
   const { products, loading, error } = useWinterProducts();
@@ -49,13 +50,6 @@ const WinterCollections: React.FC = () => {
         product.category.includes(category) &&
         product.category.includes("winter-collection")
     );
-  };
-
-  const formatCategoryName = (category: string): string => {
-    return category
-      .split("-")
-      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
   };
 
   return (
