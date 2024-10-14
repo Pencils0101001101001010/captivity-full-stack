@@ -2,21 +2,27 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { fetchNewInHeadwear, fetchHeroImage } from "./actions";
+import { fetchProducts } from "./actions";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import SearchField from "@/app/(user)/_components/SearchField";
 import SideMenu from "@/app/(user)/_components/SideMenu";
 import { Button } from "@/components/ui/button";
- 
-interface Product {
+
+type Product = {
   id: number;
-  name: string;
-  imageUrl: string;
-  inStock: Boolean;
-  shortDescription?: string;
-}
+  productName: string;
+  category: string[];
+  description: string;
+  sellingPrice: number;
+  featuredImage?: {
+    id: number;
+    thumbnail: string;
+    medium: string;
+    large: string;
+  } | null;
+};
 
 function HeroSection({ imageUrl }: { imageUrl: string }) {
   return (
@@ -30,7 +36,7 @@ function HeroSection({ imageUrl }: { imageUrl: string }) {
         fill
       />
       <div className="absolute bg-black bg-opacity-50 flex items-center inset-0 bg-gradient-to-r from-gray-500 via-transparent to-cyan-500 opacity-60">
-        <h1 className=" sm:text-8xl text-4xl pl-10 font-bold text-white">
+        <h1 className="sm:text-8xl text-4xl pl-10 font-bold text-white">
           NEW IN HEADWEAR
         </h1>
       </div>
@@ -50,21 +56,21 @@ export default function ProductList() {
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      const [productsResult, heroImageResult] = await Promise.all([
-        fetchNewInHeadwear(undefined, searchQuery, currentPage, 9),
-        fetchHeroImage(),
-      ]);
+      // const [productsResult, heroImageResult] = await Promise.all([
+      //   fetchProducts("Headwear Collection", searchQuery, currentPage, 9),
+      //   // fetchHeroImage(),
+      // ]);
 
-      if (productsResult?.success) {
-        setProducts(productsResult.data || []);
-        setTotalPages(Math.ceil(productsResult.totalCount / 9));
-      } else {
-        setError(productsResult?.error || "Failed to load products");
-      }
+      // if (productsResult.success) {
+      //   setProducts(productsResult.data);
+      //   setTotalPages(Math.ceil(productsResult.totalCount / 9));
+      // } else {
+      //   setError(productsResult.error || "Failed to load products");
+      // }
 
-      if (heroImageResult.success) {
-        setHeroImageUrl(heroImageResult.imageUrl);
-      }
+      // if (heroImageResult.success) {
+      //   setHeroImageUrl(heroImageResult.imageUrl);
+      // }
 
       setLoading(false);
     }
@@ -142,7 +148,6 @@ export default function ProductList() {
 }
 
 function ProductCard({ product }: { product: Product }) {
-  const imageUrls = product.imageUrl.split(",").map(url => url.trim());
   const [isHovered, setIsHovered] = useState(false);
 
   const handleMouseEnter = () => {
@@ -162,41 +167,17 @@ function ProductCard({ product }: { product: Product }) {
       >
         <div className="relative h-48 w-auto">
           <Image
-            src={imageUrls[0]}
-            alt={product.name}
+            src={product.featuredImage?.medium || "/placeholder.jpg"}
+            alt={product.productName}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             style={{ objectFit: "cover" }}
             priority
           />
-          {imageUrls.length > 1 && (
-            <Image
-              src={imageUrls[1]}
-              alt={`${product.name} - Image 2`}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              style={{
-                objectFit: "cover",
-                opacity: isHovered ? 1 : 0,
-                transition: "opacity 500ms ease-in-out",
-              }}
-              priority
-            />
-          )}
         </div>
         <CardContent className="p-4">
-          <h4 className="font-semibold text-sm mb-2">{product.name}</h4>
-          <Badge
-            variant={
-              product.inStock && product.inStock === true
-                ? "secondary"
-                : "destructive"
-            }
-          >
-            {product.inStock && product.inStock === true
-              ? "In Stock"
-              : "Out of Stock"}
-          </Badge>
+          <h4 className="font-semibold text-sm mb-2">{product.productName}</h4>
+          <Badge variant="secondary">{product.sellingPrice.toFixed(2)}</Badge>
         </CardContent>
         <CardFooter className="p-4 pt-0">
           <p className="text-sm text-muted-foreground">Click to view details</p>
