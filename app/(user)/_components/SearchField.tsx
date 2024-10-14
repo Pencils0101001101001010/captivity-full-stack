@@ -14,6 +14,11 @@ export default function SearchField({ onSearch }: SearchFieldProps) {
     const q = (form.q as HTMLInputElement).value.trim();
     if (!q) return;
     onSearch(q);
+    if (!q) {
+      <div className="flex items-center justify-center h-full text-red-400">
+        <p>Product not found</p>
+      </div>;
+    }
   }
 
   return (

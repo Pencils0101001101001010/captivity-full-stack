@@ -1,52 +1,109 @@
 "use client";
-import { useState } from "react";
-import Link from "next/link";
 
+import React, { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { GoHomeFill } from "react-icons/go";
 import { TbCategoryFilled } from "react-icons/tb";
 import { FaHeart } from "react-icons/fa";
 import { MdAccountCircle } from "react-icons/md";
 import { RxDividerVertical } from "react-icons/rx";
-import Image from "next/image";
 
-const Navbar = () => {
+const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+
+  const MobileMenuItem: React.FC<{
+    href: string;
+    children: React.ReactNode;
+  }> = ({ href, children }) => (
+    <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
+      <Link href={href}>{children}</Link>
+    </li>
+  );
+
+  const DesktopMenuItem: React.FC<{
+    href: string;
+    children: React.ReactNode;
+  }> = ({ href, children }) => (
+    <Link href={href} className="hover:text-gray-300">
+      <span>{children}</span>
+    </Link>
+  );
+
+  const MobileNavItem: React.FC<{
+    href: string;
+    icon: React.ReactElement;
+    label: string;
+  }> = ({ href, icon, label }) => (
+    <Link
+      href={href}
+      className="flex flex-col items-center py-2 hover:text-red-500"
+    >
+      {icon}
+      <div className="text-xs mt-2">{label}</div>
+    </Link>
+  );
 
   return (
     <div>
-      <nav className="bg-black text-white ">
+      <nav className="bg-black text-white">
         <div className="flex items-center justify-center text-xs mx-auto z-10 md:flex w-full py-6 px-8 m-auto">
-          <div className="md:hidden absolute top-6 left-7">
-            <button onClick={() => setIsOpen(!isOpen)}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-7 w-7 "
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden absolute top-6 left-7"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16m-7 6h7"
-                />
-              </svg>
-            </button>
-          </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-7 w-7"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16m-7 6h7"
+                  />
+                </svg>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+              <nav className="flex flex-col gap-4">
+                <MobileMenuItem href="/headwear/category">
+                  Headwear Collection
+                </MobileMenuItem>
+                <MobileMenuItem href="/apparel/category">
+                  Apparel Collection
+                </MobileMenuItem>
+                <MobileMenuItem href="/collections/category">
+                  All Collections
+                </MobileMenuItem>
+                <MobileMenuItem href="/catalogue">Catalogue</MobileMenuItem>
+                <MobileMenuItem href="/clearance">CLEARANCE</MobileMenuItem>
+                <MobileMenuItem href="/Help">Help</MobileMenuItem>
+                <MobileMenuItem href="/signup">Register</MobileMenuItem>
+              </nav>
+            </SheetContent>
+          </Sheet>
+
           <Link href="/" className="w-[170px] h-[10px] mb-5">
-            <span>
-              <Image
-                src="/captivity-logo-white.png"
-                alt="captivityLogo"
-                width={331}
-                height={54}
-                className="flex items-center justify-between md:min-w-40 h-auto "
-                priority
-              />
-            </span>
+            <Image
+              src="/captivity-logo-white.png"
+              alt="captivityLogo"
+              width={331}
+              height={54}
+              className="flex items-center justify-between md:min-w-40 h-auto"
+              priority
+            />
           </Link>
-          {/* Mobile Phone login */}
+
           <Link
             href="/login"
             className="font-bold md:hidden absolute top-6 right-7 text-lg lg:hidden hover:text-gray-300"
@@ -54,106 +111,58 @@ const Navbar = () => {
             Login
           </Link>
 
-          <div className="hidden md:flex items-center space-x-20 ">
-            <Link href="/help" className="hover:text-gray-300">
-              <span className="ml-5">Help</span>
-            </Link>
-            <div className="md:flex  md:flex-nowrap">
-              <input
+          <div className="hidden md:flex items-center space-x-20">
+            <DesktopMenuItem href="/Help">Help</DesktopMenuItem>
+            <div className="md:flex md:flex-nowrap">
+              <Input
                 type="text"
                 placeholder="Search for product"
-                className="px-2 w-[150px] py-2 rounded-l-sm bg-white text-black"
+                className="w-[150px] rounded-r-none"
               />
-              <button className="bg-red-600 text-sm rounded-r-sm mr-16 text-white px-2 py-2 hover:bg-red-500">
+              <Button className="rounded-l-none bg-red-600 hover:bg-red-500">
                 SEARCH
-              </button>
+              </Button>
             </div>
-            <Link href="/login">
-              <span className="hover:text-gray-300">Login</span>
-            </Link>
+            <DesktopMenuItem href="/login">Login</DesktopMenuItem>
             <div>
               <RxDividerVertical className="-mr-5" />
             </div>
-            <Link href="/signup">
-              <span className="hover:text-gray-300 -ml-16">Register</span>
-            </Link>
+            <DesktopMenuItem href="/signup">Register</DesktopMenuItem>
           </div>
         </div>
       </nav>
 
-      {/* Mobile Menu */}
-      {isOpen && (
-        <div className="md:hidden bg-white text-black shadow-xl z-10">
-          <ul>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/headwear/category">Headwear Collection</Link>
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/apparel/category">Apparel Collection</Link>
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/collections/category">All Collections</Link>
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/catalogue">Catalogue</Link>
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/clearance">CLEARANCE</Link>
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/Help">Help</Link>
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/signup">Register</Link>
-            </li>
-          </ul>
-        </div>
-      )}
-      {/* Mobile search bar */}
-      <div className=" md:hidden lg:hidden m-2">
+      <div className="md:hidden m-2">
         <div className="flex items-center justify-center border-b-2 p-2">
-          <input
+          <Input
             type="text"
             placeholder="Search for product"
-            className="px-2 w-[150px] py-2 bg-white rounded-l-sm text-black border-2"
+            className="w-[150px] rounded-r-none"
           />
-          <button className="bg-red-600 hover:bg-red-500 rounded-r-sm text-white px-2 py-2">
+          <Button className="rounded-l-none bg-red-600 hover:bg-red-500">
             SEARCH
-          </button>
+          </Button>
         </div>
       </div>
-      {/* Mobile bottom Nav */}
-      {/* just a test */}
+
       <div className="md:hidden fixed inset-x-0 bottom-0 bg-white shadow-xl shadow-gray-400 border-t-2 border-t-gray-400 border-2 ml-5 mr-5 z-10">
         <div className="flex justify-around text-gray-500 m-auto">
-          <Link
-            href="/"
-            className="flex flex-col items-center py-2 hover:text-red-500"
-          >
-            <GoHomeFill />
-            <div className="text-xs mt-2">Home</div>
-          </Link>
-          <Link
+          <MobileNavItem href="/" icon={<GoHomeFill />} label="Home" />
+          <MobileNavItem
             href="/mobileCategories"
-            className="flex flex-col items-center py-2 hover:text-red-500"
-          >
-            <TbCategoryFilled />
-            <div className="text-xs mt-2">Categories</div>
-          </Link>
-          <Link
+            icon={<TbCategoryFilled />}
+            label="Categories"
+          />
+          <MobileNavItem
             href="/Favourites"
-            className="flex text-gray-600 flex-col items-center py-2  hover:text-red-500"
-          >
-            <FaHeart />
-            <div className="text-xs mt-2">Favourites</div>
-          </Link>
-          <Link
+            icon={<FaHeart />}
+            label="Favourites"
+          />
+          <MobileNavItem
             href="/Login"
-            className="flex flex-col items-center py-2 s hover:text-red-500"
-          >
-            <MdAccountCircle />
-            <div className="text-xs mt-2">Account</div>
-          </Link>
+            icon={<MdAccountCircle />}
+            label="Account"
+          />
         </div>
       </div>
     </div>
