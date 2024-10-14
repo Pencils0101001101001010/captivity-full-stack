@@ -30,15 +30,15 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
             {/* Example cart items */}
             <div className="flex justify-between items-center mb-2">
               <span>Product 1</span>
-              <span>$19.99</span>
+              <span>R19.99</span>
             </div>
             <div className="flex justify-between items-center mb-2">
               <span>Product 2</span>
-              <span>$29.99</span>
+              <span>R29.99</span>
             </div>
             <div className="flex justify-between items-center mb-2">
               <span>Product 3</span>
-              <span>$39.99</span>
+              <span>R39.99</span>
             </div>
             {/* Add more items as needed */}
           </div>
@@ -47,7 +47,7 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
       <div className="p-4 border-t border-gray-200">
         <div className="flex justify-between items-center mb-4">
           <span className="font-bold">Total:</span>
-          <span className="font-bold">$89.97</span>
+          <span className="font-bold">R89.97</span>
         </div>
         <button
           className="w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-500 transition duration-300"
