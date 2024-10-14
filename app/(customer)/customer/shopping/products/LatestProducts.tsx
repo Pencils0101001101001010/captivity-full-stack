@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import useLatestProducts from "./useLatestProducts";
+import Image from "next/image";
 
 const LatestProducts = () => {
   const { products, loading, error } = useLatestProducts();
@@ -24,10 +25,11 @@ const LatestProducts = () => {
             <li key={product.id} className=" bg-slate-300 p-5 rounded-xl">
               <h2>{product.productName}</h2>
               {product.featuredImage && (
-                <img
+                <Image
                   src={product.featuredImage.thumbnail}
                   alt={product.productName}
-                  width={100}
+                  width={100} // You already set width
+                  height={100} // Set height too
                 />
               )}
               <div dangerouslySetInnerHTML={{ __html: product.description }} />
