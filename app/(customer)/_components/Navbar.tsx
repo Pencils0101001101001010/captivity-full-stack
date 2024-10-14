@@ -12,7 +12,7 @@ import React from "react";
 import { ShoppingCart } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
-import { CartData } from "../types";
+import SlideInCart from "../customer/shopping/cart/SlideInCart";
 
 const Navbar = () => {
   const session = useSession();
@@ -20,7 +20,6 @@ const Navbar = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItemCount, setCartItemCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [cartData, setCartData] = useState<CartData | null>(null);
 
   const renderCartIcon = () => (
     <div
@@ -205,6 +204,7 @@ const Navbar = () => {
           </Link>
         </div>
       </div>
+      <SlideInCart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
 };
