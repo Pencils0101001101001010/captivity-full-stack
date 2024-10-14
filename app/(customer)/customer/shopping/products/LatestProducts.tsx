@@ -28,12 +28,12 @@ const LatestProducts = () => {
                 <Image
                   src={product.featuredImage.thumbnail}
                   alt={product.productName}
-                  width={100} // You already set width
-                  height={100} // Set height too
+                  width={100}
+                  height={100}
                 />
               )}
               <div dangerouslySetInnerHTML={{ __html: product.description }} />
-              <p>Price: ${product.sellingPrice.toFixed(2)}</p>
+              <p>Price: R{product.sellingPrice.toFixed(2)}</p>
             </li>
           ))}
         </ul>
