@@ -1,13 +1,13 @@
 // SummerCollections.tsx
 "use client";
 import React from "react";
-import useSummerProducts from "./useSummerProducts";
 import CategoryCarousel from "../_components/CategoryCarousel";
 import CollectionCarouselSkeleton from "../_components/CollectionCarouselSkeleton";
 import { ProductWithFeaturedImage } from "../productTypes";
+import useWinterProducts from "./useWinterProducts";
 
 const SummerCollections: React.FC = () => {
-  const { products, loading, error } = useSummerProducts();
+  const { products, loading, error } = useWinterProducts();
 
   const categories: string[] = [
     "t-shirts",

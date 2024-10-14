@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 
-const SummerCarouselSkeleton: React.FC = () => {
+const CollectionCarouselSkeleton: React.FC = () => {
   return (
     <div className="w-full max-w-screen-xl mx-auto px-4 py-8 animate-pulse">
       <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
@@ -37,4 +37,4 @@ const SummerCarouselSkeleton: React.FC = () => {
   );
 };
 
-export default SummerCarouselSkeleton;
+export default CollectionCarouselSkeleton;
