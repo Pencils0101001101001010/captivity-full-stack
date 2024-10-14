@@ -16,6 +16,12 @@ const WinterCollections: React.FC = () => {
     "fashion-collection",
     "headwear-collection",
     "sport-collection",
+    "golfers",
+    "new-in-apparel",
+    "jackets",
+    "beanies",
+    "new-products",
+    "hoodies",
   ];
 
   if (loading) {
