@@ -42,34 +42,21 @@ export function getLoggedInUserDataInclude() {
       },
     },
     products: {
-      select: {
-        id: true,
-        productName: true,
-        category: true,
-        description: true,
-        sellingPrice: true,
-        isPublished: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        dynamicPricing: true,
+        variations: true,
+        featuredImage: true,
       },
     },
     carts: {
-      select: {
-        id: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
         cartItems: {
           include: {
             product: {
-              select: {
-                id: true,
-                productName: true,
-                category: true,
-                description: true,
-                sellingPrice: true,
-                isPublished: true,
-                createdAt: true,
-                updatedAt: true,
+              include: {
+                dynamicPricing: true,
+                variations: true,
+                featuredImage: true,
               },
             },
             variation: true,
@@ -85,13 +72,95 @@ export type LoggedInUserData = Prisma.UserGetPayload<{
   include: ReturnType<typeof getLoggedInUserDataInclude>;
 }>;
 
+// Types for individual models
+export type UserData = Prisma.UserGetPayload<{
+  select: typeof userFields;
+}>;
+
+export type ProductData = Prisma.ProductGetPayload<{
+  include: {
+    dynamicPricing: true;
+    variations: true;
+    featuredImage: true;
+  };
+}>;
+
+export type CartData = Prisma.CartGetPayload<{
+  include: {
+    cartItems: {
+      include: {
+        product: {
+          include: {
+            dynamicPricing: true;
+            variations: true;
+            featuredImage: true;
+          };
+        };
+        variation: true;
+      };
+    };
+  };
+}>;
+
+export type CartItemData = Prisma.CartItemGetPayload<{
+  include: {
+    product: {
+      include: {
+        dynamicPricing: true;
+        variations: true;
+        featuredImage: true;
+      };
+    };
+    variation: true;
+  };
+}>;
+
 // Updated function to retrieve logged-in user data
 export async function getLoggedInUserData(
   userId: string,
   prisma: Prisma.TransactionClient
-) {
+): Promise<LoggedInUserData | null> {
   return prisma.user.findUnique({
     where: { id: userId },
     include: getLoggedInUserDataInclude(),
+  });
+}
+
+// Helper function to get cart data for a user
+export async function getUserCartData(
+  userId: string,
+  prisma: Prisma.TransactionClient
+): Promise<CartData | null> {
+  return prisma.cart.findFirst({
+    where: { userId },
+    include: {
+      cartItems: {
+        include: {
+          product: {
+            include: {
+              dynamicPricing: true,
+              variations: true,
+              featuredImage: true,
+            },
+          },
+          variation: true,
+        },
+      },
+    },
+  });
+}
+
+// Helper function to get product data
+export async function getProductData(
+  productId: number,
+  prisma: Prisma.TransactionClient
+): Promise<ProductData | null> {
+  return prisma.product.findUnique({
+    where: { id: productId },
+    include: {
+      dynamicPricing: true,
+      variations: true,
+      featuredImage: true,
+    },
   });
 }
