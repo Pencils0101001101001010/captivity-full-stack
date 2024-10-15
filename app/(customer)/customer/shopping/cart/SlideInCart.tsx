@@ -1,13 +1,32 @@
-// File: components/SlideInCart.tsx
 import React from "react";
 import { X } from "lucide-react";
+import Image from "next/image";
+import { ExtendedCartItem } from "./actions";
+
+interface CartItem {
+  productId: number;
+  variationId: number | null;
+  quantity: number;
+  productName: string;
+  price: number;
+  variationName: string;
+  image: string;
+}
 
 interface SlideInCartProps {
   isOpen: boolean;
   onClose: () => void;
+  cartItems: ExtendedCartItem[];
 }
 
-const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
+const SlideInCart: React.FC<SlideInCartProps> = ({
+  isOpen,
+  onClose,
+  cartItems = [],
+}) => {
+  const total =
+    cartItems?.reduce((sum, item) => sum + item.price * item.quantity, 0) || 0;
+
   return (
     <div
       className={`fixed inset-y-0 right-0 w-[450px] bg-white shadow-lg transform ${
@@ -25,36 +44,47 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
               <X size={24} />
             </button>
           </div>
-          {/* Add your cart items here */}
           <div className="mb-4">
-            {/* Example cart items */}
-            <div className="flex justify-between items-center mb-2">
-              <span>Product 1</span>
-              <span>R19.99</span>
-            </div>
-            <div className="flex justify-between items-center mb-2">
-              <span>Product 2</span>
-              <span>R29.99</span>
-            </div>
-            <div className="flex justify-between items-center mb-2">
-              <span>Product 3</span>
-              <span>R39.99</span>
-            </div>
-            {/* Add more items as needed */}
+            {cartItems && cartItems.length > 0 ? (
+              cartItems.map(item => (
+                <div
+                  key={`${item.productId}-${item.variationId}`}
+                  className="flex items-center mb-4"
+                >
+                  <Image
+                    src={item.image}
+                    alt={item.productName}
+                    width={50}
+                    height={50}
+                    className="mr-4"
+                  />
+                  <div className="flex-grow">
+                    <h3 className="font-semibold">{item.productName}</h3>
+                    <p className="text-sm text-gray-600">
+                      {item.variationName}
+                    </p>
+                    <p className="text-sm">Quantity: {item.quantity}</p>
+                  </div>
+                  <span className="font-bold">R{item.price.toFixed(2)}</span>
+                </div>
+              ))
+            ) : (
+              <p>Your cart is empty</p>
+            )}
           </div>
         </div>
       </div>
       <div className="p-4 border-t border-gray-200">
         <div className="flex justify-between items-center mb-4">
           <span className="font-bold">Total:</span>
-          <span className="font-bold">R89.97</span>
+          <span className="font-bold">R{total.toFixed(2)}</span>
         </div>
         <button
           className="w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-500 transition duration-300"
           onClick={() => {
-            // Add checkout logic here
             console.log("Proceeding to checkout");
           }}
+          disabled={!cartItems || cartItems.length === 0}
         >
           Checkout
         </button>

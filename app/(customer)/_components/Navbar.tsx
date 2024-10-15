@@ -1,38 +1,66 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-
 import { GoHomeFill } from "react-icons/go";
 import { TbCategoryFilled } from "react-icons/tb";
 import { FaHeart } from "react-icons/fa";
 import { MdAccountCircle } from "react-icons/md";
 import { RxDividerVertical } from "react-icons/rx";
-import React from "react";
 import { ShoppingCart } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
 import SlideInCart from "../customer/shopping/cart/SlideInCart";
+import { useCart } from "../customer/shopping/cart/useCartHooks";
 
 const Navbar = () => {
   const session = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [cartItemCount, setCartItemCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const [cookieItemCount, setCookieItemCount] = useState(0);
+
+  const { cart, loading, error, refreshCart } = useCart();
+
+  useEffect(() => {
+    // Read the cart data from the cookie on initial load
+    const cookieCart = document.cookie
+      .split("; ")
+      .find(row => row.startsWith("cartData="))
+      ?.split("=")[1];
+
+    if (cookieCart) {
+      try {
+        const parsedCart = JSON.parse(decodeURIComponent(cookieCart));
+        setCookieItemCount(parsedCart.items.length || 0);
+      } catch (e) {
+        console.error("Error parsing cart cookie:", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Update cookieItemCount whenever cart changes
+    if (cart?.items) {
+      setCookieItemCount(cart.items.length);
+    }
+  }, [cart]);
+
+  const handleCartClick = useCallback(() => {
+    console.log("Opening cart, current items:", cookieItemCount);
+    setIsCartOpen(true);
+    refreshCart(); // Refresh cart data when opening
+  }, [cookieItemCount, refreshCart]);
 
   const renderCartIcon = () => (
-    <div
-      className="relative cursor-pointer"
-      onClick={() => setIsCartOpen(true)}
-    >
+    <div className="relative cursor-pointer" onClick={handleCartClick}>
       <ShoppingCart />
-      {!isLoading && cartItemCount > 0 && (
+      {cookieItemCount > 0 && (
         <span
           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold"
           style={{ border: "2px solid white" }}
         >
-          {cartItemCount}
+          {cookieItemCount}
         </span>
       )}
     </div>
@@ -204,7 +232,14 @@ const Navbar = () => {
           </Link>
         </div>
       </div>
-      <SlideInCart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
+      <SlideInCart
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        cartItems={cart?.extendedItems || []}
+      />
+
+      {error && <div className="text-red-500">Error: {error}</div>}
     </div>
   );
 };

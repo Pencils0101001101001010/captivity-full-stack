@@ -5,18 +5,26 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
-type CartItem = {
+export type CartItem = {
   productId: number;
   variationId: number;
   quantity: number;
 };
 
-type CartData = {
-  id: number;
-  items: CartItem[];
+export type ExtendedCartItem = CartItem & {
+  productName: string;
+  price: number;
+  variationName: string;
+  image: string;
 };
 
-type CartActionResult<T = void> =
+export type CartData = {
+  id: number;
+  items: CartItem[];
+  extendedItems: ExtendedCartItem[];
+};
+
+export type CartActionResult<T = void> =
   | { success: true; message: string; data?: T }
   | { success: false; error: string };
 
@@ -24,7 +32,11 @@ type CartActionResult<T = void> =
 const setCartCookie = (cartData: CartData) => {
   cookies().set({
     name: "cartData",
-    value: JSON.stringify(cartData),
+    value: JSON.stringify({
+      id: cartData.id,
+      items: cartData.items,
+      // We don't store extendedItems in the cookie to keep it light
+    }),
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
@@ -37,13 +49,35 @@ const setCartCookie = (cartData: CartData) => {
 const getCartData = async (userId: string): Promise<CartData> => {
   let cart = await prisma.cart.findFirst({
     where: { userId },
-    include: { cartItems: true },
+    include: {
+      cartItems: {
+        include: {
+          product: {
+            include: {
+              featuredImage: true,
+            },
+          },
+          variation: true,
+        },
+      },
+    },
   });
 
   if (!cart) {
     cart = await prisma.cart.create({
       data: { userId },
-      include: { cartItems: true },
+      include: {
+        cartItems: {
+          include: {
+            product: {
+              include: {
+                featuredImage: true,
+              },
+            },
+            variation: true,
+          },
+        },
+      },
     });
   }
 
@@ -54,10 +88,23 @@ const getCartData = async (userId: string): Promise<CartData> => {
       variationId: item.variationId!,
       quantity: item.quantity,
     })),
+    extendedItems: cart.cartItems.map(item => ({
+      productId: item.productId,
+      variationId: item.variationId!,
+      quantity: item.quantity,
+      productName: item.product.productName,
+      price: item.product.sellingPrice,
+      variationName: item.variation
+        ? `${item.variation.color} - ${item.variation.size}`
+        : "Default",
+      image:
+        item.variation?.variationImageURL ||
+        item.product.featuredImage?.medium ||
+        "/placeholder-image.jpg",
+    })),
   };
 };
 
-//////////////////////////////addToCart/////////////////////////////////////
 export async function addToCart(
   productId: number,
   variationId: number,
@@ -118,47 +165,21 @@ export async function addToCart(
       });
     }
 
-    const updatedCart = await prisma.cart.findUnique({
-      where: { id: cart.id },
-      include: { cartItems: true },
-    });
+    const updatedCartData = await getCartData(user.id);
 
-    if (!updatedCart) {
-      return { success: false, error: "Failed to retrieve updated cart" };
-    }
-
-    const cartData: CartData = {
-      id: updatedCart.id,
-      items: updatedCart.cartItems.map(item => ({
-        productId: item.productId,
-        variationId: item.variationId!,
-        quantity: item.quantity,
-      })),
-    };
-
-    cookies().set({
-      name: "cartData",
-      value: JSON.stringify(cartData),
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-      path: "/",
-    });
-
+    setCartCookie(updatedCartData);
     revalidatePath(`/products/${productId}`);
 
     return {
       success: true,
       message: "Product added to cart successfully",
-      data: cartData,
+      data: updatedCartData,
     };
   } catch (error: any) {
     console.error("Error adding product to cart:", error);
     return { success: false, error: "An unexpected error occurred" };
   }
 }
-//////////////////////////////removeFromCart/////////////////////////////////////
 
 export async function removeFromCart(
   productId: number,
@@ -180,7 +201,6 @@ export async function removeFromCart(
     }
 
     const removedQuantity = cartData.items[itemIndex].quantity;
-    cartData.items.splice(itemIndex, 1);
 
     await prisma.cartItem.delete({
       where: {
@@ -197,20 +217,22 @@ export async function removeFromCart(
       data: { quantity: { increment: removedQuantity } },
     });
 
-    setCartCookie(cartData);
+    const updatedCartData = await getCartData(user.id);
+
+    setCartCookie(updatedCartData);
     revalidatePath(`/customer/shopping/cart`);
 
     return {
       success: true,
       message: "Product removed from cart successfully",
-      data: cartData,
+      data: updatedCartData,
     };
   } catch (error: any) {
     console.error("Error removing product from cart:", error);
     return { success: false, error: "An unexpected error occurred" };
   }
 }
-///////////////////////////updateCartItemQuantity///////////////////////////////
+
 export async function updateCartItemQuantity(
   productId: number,
   variationId: number,
@@ -253,8 +275,6 @@ export async function updateCartItemQuantity(
       return removeFromCart(productId, variationId);
     }
 
-    cartData.items[itemIndex].quantity = newQuantity;
-
     await prisma.cartItem.update({
       where: {
         cartId_productId_variationId: {
@@ -271,20 +291,22 @@ export async function updateCartItemQuantity(
       data: { quantity: { decrement: quantityDifference } },
     });
 
-    setCartCookie(cartData);
+    const updatedCartData = await getCartData(user.id);
+
+    setCartCookie(updatedCartData);
     revalidatePath(`/customer/shopping/cart`);
 
     return {
       success: true,
       message: "Cart item quantity updated successfully",
-      data: cartData,
+      data: updatedCartData,
     };
   } catch (error: any) {
     console.error("Error updating cart item quantity:", error);
     return { success: false, error: "An unexpected error occurred" };
   }
 }
-/////////////////////////////////getCart////////////////////////////////////////
+
 export async function getCart(): Promise<CartActionResult<CartData>> {
   try {
     const { user } = await validateRequest();
@@ -293,6 +315,15 @@ export async function getCart(): Promise<CartActionResult<CartData>> {
     }
 
     const cartData = await getCartData(user.id);
+
+    if (!cartData || cartData.items.length === 0) {
+      return {
+        success: true,
+        message: "Cart is empty",
+        data: { id: 0, items: [], extendedItems: [] },
+      };
+    }
+
     return {
       success: true,
       message: "Cart retrieved successfully",
@@ -303,8 +334,8 @@ export async function getCart(): Promise<CartActionResult<CartData>> {
     return { success: false, error: "An unexpected error occurred" };
   }
 }
-///////////////////////////////clearCart////////////////////////////////////////
-export async function clearCart(): Promise<CartActionResult> {
+
+export async function clearCart(): Promise<CartActionResult<CartData>> {
   try {
     const { user } = await validateRequest();
     if (!user) {
@@ -331,10 +362,19 @@ export async function clearCart(): Promise<CartActionResult> {
       });
     }
 
-    setCartCookie({ id: cart?.id || 0, items: [] });
+    const emptyCartData: CartData = {
+      id: cart?.id || 0,
+      items: [],
+      extendedItems: [],
+    };
+    setCartCookie(emptyCartData);
     revalidatePath(`/customer/shopping/cart`);
 
-    return { success: true, message: "Cart cleared successfully" };
+    return {
+      success: true,
+      message: "Cart cleared successfully",
+      data: emptyCartData,
+    };
   } catch (error: any) {
     console.error("Error clearing cart:", error);
     return { success: false, error: "An unexpected error occurred" };
