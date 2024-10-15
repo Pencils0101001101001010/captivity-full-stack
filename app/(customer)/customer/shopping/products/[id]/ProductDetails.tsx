@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,6 +26,12 @@ interface ProductDetailsProps {
 }
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
+  useEffect(() => {
+    console.log(
+      "Full product data structure:",
+      JSON.stringify(product, null, 2)
+    );
+  }, [product]);
   const [selectedVariation, setSelectedVariation] = useState<Variation | null>(
     null
   );
