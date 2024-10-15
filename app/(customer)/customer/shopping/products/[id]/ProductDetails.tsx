@@ -49,7 +49,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     }
     setSelectedVariation(variation || null);
     setMaxQuantity(variation ? variation.quantity : 0);
-    setQuantity(1); // Reset quantity when variation changes
+    setQuantity(variation && variation.quantity > 0 ? 1 : 0);
   }, [selectedColor, selectedSize, product.variations]);
 
   const handleColorChange = (color: string) => {
@@ -64,6 +64,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const handleAddToCart = () => {
     if (!selectedVariation) {
       alert("Please select a color and size");
+      return;
+    }
+    if (quantity === 0) {
+      alert("This item is out of stock");
       return;
     }
     console.log("Added to cart:", {
@@ -172,24 +176,29 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
             <div className="mb-4">
               <Label htmlFor="quantity">Quantity</Label>
-              <Select
-                onValueChange={value => setQuantity(Number(value))}
-                value={quantity.toString()}
-                disabled={maxQuantity === 0}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: maxQuantity }, (_, i) => i + 1).map(
-                    num => (
-                      <SelectItem key={num} value={num.toString()}>
-                        {num}
-                      </SelectItem>
-                    )
-                  )}
-                </SelectContent>
-              </Select>
+              {maxQuantity > 0 ? (
+                <Select
+                  onValueChange={value => setQuantity(Number(value))}
+                  value={quantity.toString()}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: maxQuantity }, (_, i) => i + 1).map(
+                      num => (
+                        <SelectItem key={num} value={num.toString()}>
+                          {num}
+                        </SelectItem>
+                      )
+                    )}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-sm text-red-500 mt-1">
+                  {selectedSize ? "No stock in this size" : "Select a size"}
+                </p>
+              )}
               {maxQuantity > 0 && (
                 <p className="text-sm text-gray-500 mt-1">
                   {maxQuantity} in stock
@@ -205,7 +214,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           className="w-full"
           disabled={!selectedVariation || maxQuantity === 0}
         >
-          Add to Cart
+          {maxQuantity === 0 ? "Out of Stock" : "Add to Cart"}
         </Button>
       </CardFooter>
     </Card>
