@@ -31,25 +31,35 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     null
   );
   const [quantity, setQuantity] = useState<number>(1);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string>("");
 
-  // Get unique colors and sizes
   const colors = Array.from(new Set(product.variations.map(v => v.color)));
   const sizes = Array.from(new Set(product.variations.map(v => v.size)));
 
-  // Update selected variation when color or size changes
+  useEffect(() => {
+    if (product.variations.length > 0) {
+      setCurrentImageUrl(product.variations[0].variationImageURL);
+    }
+  }, [product]);
+
   useEffect(() => {
     if (selectedColor && selectedSize) {
       const variation = product.variations.find(
         v => v.color === selectedColor && v.size === selectedSize
       );
       setSelectedVariation(variation || null);
-      setQuantity(1); // Reset quantity when variation changes
+    } else {
+      setSelectedVariation(null);
     }
   }, [selectedColor, selectedSize, product.variations]);
 
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
     setSelectedSize(null);
+    const variation = product.variations.find(v => v.color === color);
+    if (variation) {
+      setCurrentImageUrl(variation.variationImageURL);
+    }
   };
 
   const handleSizeChange = (size: string) => {
@@ -66,16 +76,12 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       variation: selectedVariation,
       quantity,
     });
-    // Here you would typically dispatch an action to add the item to the cart
   };
 
-  // Helper function to get image URL
-  const getImageUrl = (): string => {
-    if (selectedVariation?.variationImageURL) {
-      return selectedVariation.variationImageURL;
-    }
-    return product.variations[0]?.variationImageURL || "/placeholder-image.jpg";
-  };
+  // Calculate the maximum available quantity
+  const maxQuantity = selectedVariation
+    ? Math.min(selectedVariation.quantity, 10)
+    : 10; // Default to 10 if no variation is selected
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -86,7 +92,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Image
-              src={getImageUrl()}
+              src={currentImageUrl || "/placeholder-image.jpg"}
               alt={product.productName}
               width={400}
               height={400}
@@ -165,29 +171,26 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
               </Select>
             </div>
 
-            {selectedVariation && (
-              <div className="mb-4">
-                <Label htmlFor="quantity">Quantity</Label>
-                <Select
-                  value={quantity.toString()}
-                  onValueChange={value => setQuantity(parseInt(value))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[200px] overflow-y-auto">
-                    {Array.from(
-                      { length: Math.min(selectedVariation.quantity, 10) },
-                      (_, i) => i + 1
-                    ).map(num => (
+            <div className="mb-4">
+              <Label htmlFor="quantity">Quantity</Label>
+              <Select
+                value={quantity.toString()}
+                onValueChange={value => setQuantity(parseInt(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: maxQuantity }, (_, i) => i + 1).map(
+                    num => (
                       <SelectItem key={num} value={num.toString()}>
                         {num}
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+                    )
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </CardContent>
