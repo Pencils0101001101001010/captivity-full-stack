@@ -59,7 +59,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
               title={color}
             >
               <Image
-                src={variation?.variationImageURL || "/placeholder-image.jpg"}
+                src={variation?.variationImageURL || "Product Image"}
                 alt={`${product.productName} - ${color}`}
                 width={60}
                 height={60}
