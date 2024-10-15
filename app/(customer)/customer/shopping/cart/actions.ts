@@ -1,32 +1,15 @@
 "use server";
 
+import {
+  CartActionResult,
+  CartData,
+  createUserCart,
+  getUserCartData,
+} from "@/app/(customer)/types";
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-
-export type CartItem = {
-  productId: number;
-  variationId: number;
-  quantity: number;
-};
-
-export type ExtendedCartItem = CartItem & {
-  productName: string;
-  price: number;
-  variationName: string;
-  image: string;
-};
-
-export type CartData = {
-  id: number;
-  items: CartItem[];
-  extendedItems: ExtendedCartItem[];
-};
-
-export type CartActionResult<T = void> =
-  | { success: true; message: string; data?: T }
-  | { success: false; error: string };
 
 // Helper function to set cart cookie
 const setCartCookie = (cartData: CartData) => {
@@ -35,7 +18,6 @@ const setCartCookie = (cartData: CartData) => {
     value: JSON.stringify({
       id: cartData.id,
       items: cartData.items,
-      // We don't store extendedItems in the cookie to keep it light
     }),
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -47,62 +29,11 @@ const setCartCookie = (cartData: CartData) => {
 
 // Helper function to get cart data
 const getCartData = async (userId: string): Promise<CartData> => {
-  let cart = await prisma.cart.findFirst({
-    where: { userId },
-    include: {
-      cartItems: {
-        include: {
-          product: {
-            include: {
-              featuredImage: true,
-            },
-          },
-          variation: true,
-        },
-      },
-    },
-  });
-
+  let cart = await getUserCartData(userId, prisma);
   if (!cart) {
-    cart = await prisma.cart.create({
-      data: { userId },
-      include: {
-        cartItems: {
-          include: {
-            product: {
-              include: {
-                featuredImage: true,
-              },
-            },
-            variation: true,
-          },
-        },
-      },
-    });
+    cart = await createUserCart(userId, prisma);
   }
-
-  return {
-    id: cart.id,
-    items: cart.cartItems.map(item => ({
-      productId: item.productId,
-      variationId: item.variationId!,
-      quantity: item.quantity,
-    })),
-    extendedItems: cart.cartItems.map(item => ({
-      productId: item.productId,
-      variationId: item.variationId!,
-      quantity: item.quantity,
-      productName: item.product.productName,
-      price: item.product.sellingPrice,
-      variationName: item.variation
-        ? `${item.variation.color} - ${item.variation.size}`
-        : "Default",
-      image:
-        item.variation?.variationImageURL ||
-        item.product.featuredImage?.medium ||
-        "/placeholder-image.jpg",
-    })),
-  };
+  return cart;
 };
 
 export async function addToCart(

@@ -1,7 +1,31 @@
 import { Prisma } from "@prisma/client";
 
-// Define the user fields to be included (excluding password)
-const userFields = {
+// Cart Types
+export type CartItem = {
+  productId: number;
+  variationId: number;
+  quantity: number;
+};
+
+export type ExtendedCartItem = CartItem & {
+  productName: string;
+  price: number;
+  variationName: string;
+  image: string;
+};
+
+export type CartData = {
+  id: number;
+  items: CartItem[];
+  extendedItems: ExtendedCartItem[];
+};
+
+export type CartActionResult<T = void> =
+  | { success: true; message: string; data?: T }
+  | { success: false; error: string };
+
+// User Types
+export const userFields = {
   id: true,
   username: true,
   firstName: true,
@@ -31,7 +55,20 @@ const userFields = {
   updatedAt: true,
 } as const;
 
-// Define the include object for user data and related models
+export type UserData = Prisma.UserGetPayload<{
+  select: typeof userFields;
+}>;
+
+// Product Types
+export type ProductData = Prisma.ProductGetPayload<{
+  include: {
+    dynamicPricing: true;
+    variations: true;
+    featuredImage: true;
+  };
+}>;
+
+// Helper Functions
 export function getLoggedInUserDataInclude() {
   return {
     sessions: {
@@ -67,55 +104,10 @@ export function getLoggedInUserDataInclude() {
   } satisfies Prisma.UserInclude;
 }
 
-// Updated type for logged-in User data
 export type LoggedInUserData = Prisma.UserGetPayload<{
   include: ReturnType<typeof getLoggedInUserDataInclude>;
 }>;
 
-// Types for individual models
-export type UserData = Prisma.UserGetPayload<{
-  select: typeof userFields;
-}>;
-
-export type ProductData = Prisma.ProductGetPayload<{
-  include: {
-    dynamicPricing: true;
-    variations: true;
-    featuredImage: true;
-  };
-}>;
-
-export type CartData = Prisma.CartGetPayload<{
-  include: {
-    cartItems: {
-      include: {
-        product: {
-          include: {
-            dynamicPricing: true;
-            variations: true;
-            featuredImage: true;
-          };
-        };
-        variation: true;
-      };
-    };
-  };
-}>;
-
-export type CartItemData = Prisma.CartItemGetPayload<{
-  include: {
-    product: {
-      include: {
-        dynamicPricing: true;
-        variations: true;
-        featuredImage: true;
-      };
-    };
-    variation: true;
-  };
-}>;
-
-// Updated function to retrieve logged-in user data
 export async function getLoggedInUserData(
   userId: string,
   prisma: Prisma.TransactionClient
@@ -126,20 +118,17 @@ export async function getLoggedInUserData(
   });
 }
 
-// Helper function to get cart data for a user
 export async function getUserCartData(
   userId: string,
   prisma: Prisma.TransactionClient
 ): Promise<CartData | null> {
-  return prisma.cart.findFirst({
+  const cart = await prisma.cart.findFirst({
     where: { userId },
     include: {
       cartItems: {
         include: {
           product: {
             include: {
-              dynamicPricing: true,
-              variations: true,
               featuredImage: true,
             },
           },
@@ -148,9 +137,49 @@ export async function getUserCartData(
       },
     },
   });
+
+  if (!cart) return null;
+
+  return {
+    id: cart.id,
+    items: cart.cartItems.map(item => ({
+      productId: item.productId,
+      variationId: item.variationId!,
+      quantity: item.quantity,
+    })),
+    extendedItems: cart.cartItems.map(item => ({
+      productId: item.productId,
+      variationId: item.variationId!,
+      quantity: item.quantity,
+      productName: item.product.productName,
+      price: item.product.sellingPrice,
+      variationName: item.variation
+        ? `${item.variation.color} - ${item.variation.size}`
+        : "Default",
+      image:
+        item.variation?.variationImageURL ||
+        item.product.featuredImage?.medium ||
+        "/placeholder-image.jpg",
+    })),
+  };
 }
 
-// Helper function to get product data
+export async function createUserCart(
+  userId: string,
+  prisma: Prisma.TransactionClient
+): Promise<CartData> {
+  const newCart = await prisma.cart.create({
+    data: { userId },
+    include: { cartItems: true },
+  });
+
+  return {
+    id: newCart.id,
+    items: [],
+    extendedItems: [],
+  };
+}
+
 export async function getProductData(
   productId: number,
   prisma: Prisma.TransactionClient
