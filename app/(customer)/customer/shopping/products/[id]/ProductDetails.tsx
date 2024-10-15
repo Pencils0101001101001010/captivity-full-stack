@@ -1,3 +1,4 @@
+// components/ProductDetails.tsx
 "use client";
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -8,17 +9,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { ProductWithRelations } from "./useProductById";
 import { Variation } from "@prisma/client";
-import Image from "next/image";
+import ImageGallery from './ImageGallery';
+import ProductInfo from './ProductInfo';
 
 interface ProductDetailsProps {
   product: ProductWithRelations;
@@ -27,17 +21,10 @@ interface ProductDetailsProps {
 const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedVariation, setSelectedVariation] = useState<Variation | null>(
-    null
-  );
+  const [selectedVariation, setSelectedVariation] = useState<Variation | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
   const [maxQuantity, setMaxQuantity] = useState<number>(0);
 
-  // Get unique colors and sizes
-  const colors = Array.from(new Set(product.variations.map(v => v.color)));
-  const sizes = Array.from(new Set(product.variations.map(v => v.size)));
-
-  // Update selected variation and max quantity when color or size changes
   useEffect(() => {
     let variation: Variation | undefined;
     if (selectedColor && selectedSize) {
@@ -61,6 +48,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     setSelectedSize(size);
   };
 
+  const handleQuantityChange = (newQuantity: number) => {
+    setQuantity(newQuantity);
+  };
+
   const handleAddToCart = () => {
     if (!selectedVariation) {
       alert("Please select a color and size");
@@ -78,14 +69,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     // Here you would typically dispatch an action to add the item to the cart
   };
 
-  // Helper function to get image URL
-  const getImageUrl = (): string => {
-    if (selectedVariation?.variationImageURL) {
-      return selectedVariation.variationImageURL;
-    }
-    return product.featuredImage?.large || "/placeholder-image.jpg";
-  };
-
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
@@ -93,119 +76,28 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Image
-              src={getImageUrl()}
-              alt={product.productName}
-              width={400}
-              height={400}
-              className="w-full h-auto object-cover rounded-lg mb-4"
-              priority
-            />
-            <div className="flex flex-wrap gap-2">
-              {colors.map(color => {
-                const variation = product.variations.find(
-                  v => v.color === color
-                );
-                return (
-                  <div
-                    key={color}
-                    className={`cursor-pointer w-15 h-15 rounded-md overflow-hidden ${
-                      selectedColor === color ? "ring-2 ring-blue-500" : ""
-                    }`}
-                    onClick={() => handleColorChange(color)}
-                    title={color}
-                  >
-                    <Image
-                      src={
-                        variation?.variationImageURL || "/placeholder-image.jpg"
-                      }
-                      alt={`${product.productName} - ${color}`}
-                      width={60}
-                      height={60}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          <div>
-            <div
-              className="text-gray-600 mb-4"
-              dangerouslySetInnerHTML={{ __html: product.description }}
-            />
-            <p className="text-xl font-semibold mb-4">
-              ${product.sellingPrice.toFixed(2)}
-            </p>
-
-            <div className="mb-4">
-              <Label>Color</Label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {colors.map(color => (
-                  <Button
-                    key={color}
-                    onClick={() => handleColorChange(color)}
-                    variant={selectedColor === color ? "default" : "outline"}
-                    className="w-auto h-auto px-3 py-2 rounded-md"
-                  >
-                    {color}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <Label htmlFor="size">Size</Label>
-              <Select
-                onValueChange={handleSizeChange}
-                value={selectedSize || undefined}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a size" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sizes.map(size => (
-                    <SelectItem key={size} value={size}>
-                      {size}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="mb-4">
-              <Label htmlFor="quantity">Quantity</Label>
-              {maxQuantity > 0 ? (
-                <Select
-                  onValueChange={value => setQuantity(Number(value))}
-                  value={quantity.toString()}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: maxQuantity }, (_, i) => i + 1).map(
-                      num => (
-                        <SelectItem key={num} value={num.toString()}>
-                          {num}
-                        </SelectItem>
-                      )
-                    )}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <p className="text-sm text-red-500 mt-1">
-                  {selectedSize ? "No stock in this size" : "Select a size"}
-                </p>
-              )}
-              {maxQuantity > 0 && (
-                <p className="text-sm text-gray-500 mt-1">
-                  {maxQuantity} in stock
-                </p>
-              )}
-            </div>
-          </div>
+          <ImageGallery
+            product={{
+              productName: product.productName,
+              featuredImage: product.featuredImage
+            }}
+            variations={product.variations}
+            selectedColor={selectedColor}
+            selectedVariation={selectedVariation}
+            onColorChange={handleColorChange}
+          />
+          <ProductInfo
+            product={product}
+            variations={product.variations}
+            selectedColor={selectedColor}
+            selectedSize={selectedSize}
+            selectedVariation={selectedVariation}
+            quantity={quantity}
+            maxQuantity={maxQuantity}
+            onColorChange={handleColorChange}
+            onSizeChange={handleSizeChange}
+            onQuantityChange={handleQuantityChange}
+          />
         </div>
       </CardContent>
       <CardFooter>
