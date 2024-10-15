@@ -50,7 +50,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
         dangerouslySetInnerHTML={{ __html: product.description }}
       />
       <p className="text-xl font-semibold mb-4">
-        ${product.sellingPrice.toFixed(2)}
+        R{product.sellingPrice.toFixed(2)}
       </p>
 
       <div className="mb-4">
