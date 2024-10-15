@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   addToCart,
   removeFromCart,
@@ -18,7 +18,7 @@ export type CartData = {
   items: CartItem[];
 };
 
-type CartActionResult<T = void> =
+export type CartActionResult<T = void> =
   | { success: true; message: string; data?: T }
   | { success: false; error: string };
 
@@ -27,47 +27,101 @@ export function useCart() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCart = useCallback(async () => {
+  const pendingRequest = useRef<Promise<CartActionResult<CartData>> | null>(
+    null
+  );
+
+  const updateCartIfChanged = useCallback((newCart: CartData) => {
+    setCart(prevCart => {
+      if (
+        !prevCart ||
+        prevCart.id !== newCart.id ||
+        JSON.stringify(prevCart.items) !== JSON.stringify(newCart.items)
+      ) {
+        return newCart;
+      }
+      return prevCart;
+    });
+  }, []);
+
+  const fetchCart = useCallback(async (): Promise<
+    CartActionResult<CartData>
+  > => {
+    if (pendingRequest.current) {
+      return pendingRequest.current;
+    }
+
     setLoading(true);
     setError(null);
-    try {
-      const result = await getCart();
-      if (result.success && result.data) {
-        setCart(result.data);
-      } else if (!result.success) {
-        setError(result.error);
-      }
-    } catch (err) {
-      setError("Failed to fetch cart");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+
+    const request = getCart()
+      .then(result => {
+        if (result.success && result.data) {
+          updateCartIfChanged(result.data);
+        } else if (!result.success) {
+          setError(result.error);
+        }
+        return result;
+      })
+      .catch(err => {
+        setError("Failed to fetch cart");
+        return {
+          success: false,
+          error: "Failed to fetch cart",
+        } as CartActionResult<CartData>;
+      })
+      .finally(() => {
+        setLoading(false);
+        pendingRequest.current = null;
+      });
+
+    pendingRequest.current = request;
+    return request;
+  }, [updateCartIfChanged]);
 
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
 
   const addItem = useCallback(
-    async (productId: number, variationId: number, quantity: number) => {
+    async (
+      productId: number,
+      variationId: number,
+      quantity: number
+    ): Promise<CartActionResult<CartData>> => {
+      if (pendingRequest.current) {
+        return pendingRequest.current;
+      }
+
       setLoading(true);
       setError(null);
-      try {
-        const result = await addToCart(productId, variationId, quantity);
-        if (result.success && result.data) {
-          setCart(result.data);
-        } else if (!result.success) {
-          setError(result.error);
-        }
-      } catch (err) {
-        setError("Failed to add item to cart");
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
 
+      const request = addToCart(productId, variationId, quantity)
+        .then(result => {
+          if (result.success && result.data) {
+            updateCartIfChanged(result.data);
+          } else if (!result.success) {
+            setError(result.error);
+          }
+          return result;
+        })
+        .catch(err => {
+          setError("Failed to add item to cart");
+          return {
+            success: false,
+            error: "Failed to add item to cart",
+          } as CartActionResult<CartData>;
+        })
+        .finally(() => {
+          setLoading(false);
+          pendingRequest.current = null;
+        });
+
+      pendingRequest.current = request;
+      return request;
+    },
+    [updateCartIfChanged]
+  );
   const removeItem = useCallback(
     async (productId: number, variationId: number) => {
       setLoading(true);

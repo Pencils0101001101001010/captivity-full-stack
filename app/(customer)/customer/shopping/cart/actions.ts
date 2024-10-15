@@ -86,40 +86,66 @@ export async function addToCart(
       return { success: false, error: "Not enough stock available" };
     }
 
-    const cartData = await getCartData(user.id);
-    const existingItemIndex = cartData.items.findIndex(
+    let cart = await prisma.cart.findFirst({
+      where: { userId: user.id },
+      include: { cartItems: true },
+    });
+
+    if (!cart) {
+      cart = await prisma.cart.create({
+        data: { userId: user.id },
+        include: { cartItems: true },
+      });
+    }
+
+    const existingCartItem = cart.cartItems.find(
       item => item.productId === productId && item.variationId === variationId
     );
 
-    if (existingItemIndex > -1) {
-      cartData.items[existingItemIndex].quantity += quantity;
+    if (existingCartItem) {
+      await prisma.cartItem.update({
+        where: { id: existingCartItem.id },
+        data: { quantity: existingCartItem.quantity + quantity },
+      });
     } else {
-      cartData.items.push({ productId, variationId, quantity });
-    }
-
-    await prisma.cartItem.upsert({
-      where: {
-        cartId_productId_variationId: {
-          cartId: cartData.id,
+      await prisma.cartItem.create({
+        data: {
+          cartId: cart.id,
           productId,
           variationId,
+          quantity,
         },
-      },
-      update: { quantity: { increment: quantity } },
-      create: {
-        cartId: cartData.id,
-        productId,
-        variationId,
-        quantity,
-      },
+      });
+    }
+
+    const updatedCart = await prisma.cart.findUnique({
+      where: { id: cart.id },
+      include: { cartItems: true },
     });
 
-    await prisma.variation.update({
-      where: { id: variationId },
-      data: { quantity: { decrement: quantity } },
+    if (!updatedCart) {
+      return { success: false, error: "Failed to retrieve updated cart" };
+    }
+
+    const cartData: CartData = {
+      id: updatedCart.id,
+      items: updatedCart.cartItems.map(item => ({
+        productId: item.productId,
+        variationId: item.variationId!,
+        quantity: item.quantity,
+      })),
+    };
+
+    cookies().set({
+      name: "cartData",
+      value: JSON.stringify(cartData),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      path: "/",
     });
 
-    setCartCookie(cartData);
     revalidatePath(`/products/${productId}`);
 
     return {

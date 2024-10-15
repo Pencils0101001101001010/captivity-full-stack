@@ -1,7 +1,6 @@
 // components/ProductDetails.tsx
 "use client";
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,8 +10,9 @@ import {
 } from "@/components/ui/card";
 import { ProductWithRelations } from "./useProductById";
 import { Variation } from "@prisma/client";
-import ImageGallery from './ImageGallery';
-import ProductInfo from './ProductInfo';
+import ImageGallery from "./ImageGallery";
+import ProductInfo from "./ProductInfo";
+import AddToCartButton from "../../cart/AddToCartButton";
 
 interface ProductDetailsProps {
   product: ProductWithRelations;
@@ -21,7 +21,9 @@ interface ProductDetailsProps {
 const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedVariation, setSelectedVariation] = useState<Variation | null>(null);
+  const [selectedVariation, setSelectedVariation] = useState<Variation | null>(
+    null
+  );
   const [quantity, setQuantity] = useState<number>(1);
   const [maxQuantity, setMaxQuantity] = useState<number>(0);
 
@@ -52,23 +54,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     setQuantity(newQuantity);
   };
 
-  const handleAddToCart = () => {
-    if (!selectedVariation) {
-      alert("Please select a color and size");
-      return;
-    }
-    if (quantity === 0) {
-      alert("This item is out of stock");
-      return;
-    }
-    console.log("Added to cart:", {
-      product: product.productName,
-      variation: selectedVariation,
-      quantity,
-    });
-    // Here you would typically dispatch an action to add the item to the cart
-  };
-
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
@@ -79,7 +64,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           <ImageGallery
             product={{
               productName: product.productName,
-              featuredImage: product.featuredImage
+              featuredImage: product.featuredImage,
             }}
             variations={product.variations}
             selectedColor={selectedColor}
@@ -101,13 +86,12 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         </div>
       </CardContent>
       <CardFooter>
-        <Button
-          onClick={handleAddToCart}
-          className="w-full"
-          disabled={!selectedVariation || maxQuantity === 0}
-        >
-          {maxQuantity === 0 ? "Out of Stock" : "Add to Cart"}
-        </Button>
+        <AddToCartButton
+          productId={product.id}
+          selectedVariation={selectedVariation}
+          quantity={quantity}
+          maxQuantity={selectedVariation ? selectedVariation.quantity : 0}
+        />
       </CardFooter>
     </Card>
   );
