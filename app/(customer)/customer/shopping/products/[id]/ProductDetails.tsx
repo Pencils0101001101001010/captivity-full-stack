@@ -31,35 +31,30 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     null
   );
   const [quantity, setQuantity] = useState<number>(1);
-  const [currentImageUrl, setCurrentImageUrl] = useState<string>("");
+  const [maxQuantity, setMaxQuantity] = useState<number>(0);
 
+  // Get unique colors and sizes
   const colors = Array.from(new Set(product.variations.map(v => v.color)));
   const sizes = Array.from(new Set(product.variations.map(v => v.size)));
 
+  // Update selected variation and max quantity when color or size changes
   useEffect(() => {
-    if (product.variations.length > 0) {
-      setCurrentImageUrl(product.variations[0].variationImageURL);
-    }
-  }, [product]);
-
-  useEffect(() => {
+    let variation: Variation | undefined;
     if (selectedColor && selectedSize) {
-      const variation = product.variations.find(
+      variation = product.variations.find(
         v => v.color === selectedColor && v.size === selectedSize
       );
-      setSelectedVariation(variation || null);
-    } else {
-      setSelectedVariation(null);
+    } else if (selectedColor) {
+      variation = product.variations.find(v => v.color === selectedColor);
     }
+    setSelectedVariation(variation || null);
+    setMaxQuantity(variation ? variation.quantity : 0);
+    setQuantity(1); // Reset quantity when variation changes
   }, [selectedColor, selectedSize, product.variations]);
 
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
     setSelectedSize(null);
-    const variation = product.variations.find(v => v.color === color);
-    if (variation) {
-      setCurrentImageUrl(variation.variationImageURL);
-    }
   };
 
   const handleSizeChange = (size: string) => {
@@ -76,12 +71,16 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       variation: selectedVariation,
       quantity,
     });
+    // Here you would typically dispatch an action to add the item to the cart
   };
 
-  // Calculate the maximum available quantity
-  const maxQuantity = selectedVariation
-    ? Math.min(selectedVariation.quantity, 10)
-    : 10; // Default to 10 if no variation is selected
+  // Helper function to get image URL
+  const getImageUrl = (): string => {
+    if (selectedVariation?.variationImageURL) {
+      return selectedVariation.variationImageURL;
+    }
+    return product.featuredImage?.large || "/placeholder-image.jpg";
+  };
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -92,7 +91,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Image
-              src={currentImageUrl || "/placeholder-image.jpg"}
+              src={getImageUrl()}
               alt={product.productName}
               width={400}
               height={400}
@@ -174,8 +173,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             <div className="mb-4">
               <Label htmlFor="quantity">Quantity</Label>
               <Select
+                onValueChange={value => setQuantity(Number(value))}
                 value={quantity.toString()}
-                onValueChange={value => setQuantity(parseInt(value))}
+                disabled={maxQuantity === 0}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -190,6 +190,11 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                   )}
                 </SelectContent>
               </Select>
+              {maxQuantity > 0 && (
+                <p className="text-sm text-gray-500 mt-1">
+                  {maxQuantity} in stock
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -198,7 +203,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         <Button
           onClick={handleAddToCart}
           className="w-full"
-          disabled={!selectedVariation}
+          disabled={!selectedVariation || maxQuantity === 0}
         >
           Add to Cart
         </Button>
