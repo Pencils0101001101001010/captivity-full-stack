@@ -64,6 +64,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
                 width={60}
                 height={60}
                 className="w-full h-full object-cover"
+                priority
               />
             </div>
           );
