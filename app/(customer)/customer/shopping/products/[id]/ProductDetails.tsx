@@ -55,7 +55,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-2xl mx-auto shadow-2xl shadow-black">
       <CardHeader>
         <CardTitle>{product.productName}</CardTitle>
       </CardHeader>
