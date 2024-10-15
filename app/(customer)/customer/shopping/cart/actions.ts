@@ -198,7 +198,7 @@ export async function removeFromCart(
     });
 
     setCartCookie(cartData);
-    revalidatePath(`/cart`);
+    revalidatePath(`/customer/shopping/cart`);
 
     return {
       success: true,
@@ -272,7 +272,7 @@ export async function updateCartItemQuantity(
     });
 
     setCartCookie(cartData);
-    revalidatePath(`/cart`);
+    revalidatePath(`/customer/shopping/cart`);
 
     return {
       success: true,
@@ -332,7 +332,7 @@ export async function clearCart(): Promise<CartActionResult> {
     }
 
     setCartCookie({ id: cart?.id || 0, items: [] });
-    revalidatePath(`/cart`);
+    revalidatePath(`/customer/shopping/cart`);
 
     return { success: true, message: "Cart cleared successfully" };
   } catch (error: any) {
