@@ -10,9 +10,7 @@ import {
   MapPin,
   FileText,
   Image,
-  LogOut,
 } from "lucide-react";
-import Link from "next/link";
 import LinkButton from "./PagesLinkButton";
 
 const CustomerLandingPage = () => {
