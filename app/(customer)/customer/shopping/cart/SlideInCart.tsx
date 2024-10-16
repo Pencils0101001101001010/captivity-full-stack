@@ -1,17 +1,7 @@
 import React from "react";
 import { X } from "lucide-react";
 import Image from "next/image";
-import { ExtendedCartItem } from "./actions";
-
-interface CartItem {
-  productId: number;
-  variationId: number | null;
-  quantity: number;
-  productName: string;
-  price: number;
-  variationName: string;
-  image: string;
-}
+import { ExtendedCartItem } from "@/app/(customer)/types";
 
 interface SlideInCartProps {
   isOpen: boolean;
