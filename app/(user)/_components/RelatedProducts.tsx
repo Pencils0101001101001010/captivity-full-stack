@@ -1,57 +1,37 @@
 import React from "react";
-import Link from "next/link";
 import Image from "next/image";
-import { Card, CardContent } from "@/components/ui/card";
-
-interface RelatedProduct {
-  id: number;
-  name: string;
-  imageUrl: string;
-  regularPrice: number | null;
-}
+import Link from "next/link";
+import { ProductWithFeaturedImage } from "../(DropDownCategories)/products/headwear/types";
 
 interface RelatedProductsProps {
-  products: RelatedProduct[];
+  products: ProductWithFeaturedImage[];
 }
 
-const RelatedProductCard: React.FC<{ product: RelatedProduct }> = ({
-  product,
-}) => {
-  return (
-    <Link href={`/products/headwear/${product.id}`}>
-      <Card className="h-full">
-        <CardContent className="p-4 flex flex-col h-full">
-          <div className="relative h-52 mb-2 flex-grow">
-            <Image
-              src={product.imageUrl}
-              alt={product.name}
-              className="rounded-lg object-cover"
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-          </div>
-          <h3 className="text-sm font-semibold mb-1 line-clamp-2">
-            {product.name}
-          </h3>
-          {/* Uncomment if you want to display the price */}
-          {/* {product.regularPrice && (
-            <p className="text-sm">${product.regularPrice.toFixed(2)}</p>
-          )} */}
-        </CardContent>
-      </Card>
-    </Link>
-  );
-};
-
 const RelatedProducts: React.FC<RelatedProductsProps> = ({ products }) => {
-  if (products.length === 0) return null;
-
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-4">You might also like...</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+    <div className="mt-12">
+      <h2 className="text-2xl font-bold mb-4">Related Products</h2>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {products.map(product => (
-          <RelatedProductCard key={product.id} product={product} />
+          <Link href={`/product/${product.id}`} key={product.id}>
+            <div className="border rounded-lg p-4 hover:shadow-lg transition-shadow">
+              <div className="relative h-48 mb-2">
+                <Image
+                  src={
+                    product.featuredImage?.medium || "/placeholder-image.jpg"
+                  }
+                  alt={product.productName}
+                  fill
+                  style={{ objectFit: "cover" }}
+                  className="rounded-md"
+                />
+              </div>
+              <h3 className="text-lg font-semibold">{product.productName}</h3>
+              <p className="text-gray-600">
+                R{product.sellingPrice.toFixed(2)}
+              </p>
+            </div>
+          </Link>
         ))}
       </div>
     </div>

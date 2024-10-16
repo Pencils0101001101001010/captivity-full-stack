@@ -1,84 +1,48 @@
 "use client";
+
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import Image from "next/image";
-import { fetchProducts } from "./actions";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import SearchField from "@/app/(user)/_components/SearchField";
-import SideMenu from "@/app/(user)/_components/SideMenu";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
-type Product = {
-  id: number;
-  productName: string;
-  category: string[];
-  description: string;
-  sellingPrice: number;
-  featuredImage?: {
-    id: number;
-    thumbnail: string;
-    medium: string;
-    large: string;
-  } | null;
-};
+import useNewHeadwear from "./useNewInHeadwear";
+import { ProductWithFeaturedImage } from "./actions";
+import SideMenu from "@/app/(user)/_components/SideMenu";
+import HeroSection from "@/app/(user)/_components/HeroSection";
 
-function HeroSection({ imageUrl }: { imageUrl: string }) {
-  return (
-    <div className="relative w-full h-[350px] mb-8">
-      <Image
-        src={imageUrl}
-        alt="Headwear Hero"
-        className="fill"
-        style={{ objectFit: "cover", objectPosition: "center 20%" }}
-        priority
-        fill
-      />
-      <div className="absolute bg-black bg-opacity-50 flex items-center inset-0 bg-gradient-to-r from-gray-500 via-transparent to-cyan-500 opacity-60">
-        <h1 className="sm:text-8xl text-4xl pl-10 font-bold text-white">
-          NEW IN HEADWEAR
-        </h1>
-      </div>
-    </div>
+const NewHeadwearProductList: React.FC = () => {
+  const { products, loading, error } = useNewHeadwear();
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [categoryImage, setCategoryImage] = useState<string>(
+    "/placeholder-image.jpg"
   );
-}
-
-export default function ProductList() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [heroImageUrl, setHeroImageUrl] = useState("/hero-image.jpg");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const productsPerPage = 9;
 
   useEffect(() => {
-    async function loadData() {
-      setLoading(true);
-      // const [productsResult, heroImageResult] = await Promise.all([
-      //   fetchProducts("Headwear Collection", searchQuery, currentPage, 9),
-      //   // fetchHeroImage(),
-      // ]);
-
-      // if (productsResult.success) {
-      //   setProducts(productsResult.data);
-      //   setTotalPages(Math.ceil(productsResult.totalCount / 9));
-      // } else {
-      //   setError(productsResult.error || "Failed to load products");
-      // }
-
-      // if (heroImageResult.success) {
-      //   setHeroImageUrl(heroImageResult.imageUrl);
-      // }
-
-      setLoading(false);
+    if (products.length > 0 && products[1].featuredImage?.large) {
+      setCategoryImage(products[1].featuredImage.large);
     }
-    loadData();
-  }, [searchQuery, currentPage]);
+  }, [products]);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
+  const filteredProducts = products.filter(product =>
+    product.productName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentProducts = filteredProducts.slice(
+    indexOfFirstProduct,
+    indexOfLastProduct
+  );
+
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
     setCurrentPage(1);
   };
 
@@ -95,106 +59,102 @@ export default function ProductList() {
   }
 
   return (
-    <section>
-      <HeroSection imageUrl={heroImageUrl} />
-      <div className="container mx-auto my-8">
-        <div className="flex">
+    <section className="container mx-auto my-8">
+      <HeroSection
+        categoryImage={categoryImage}
+        categoryName="New in Headwear"
+      />
+
+      <div className="flex flex-col md:flex-row gap-6">
+        <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
           <SideMenu />
-          <div className="flex-1">
-            <div className="mb-6 flex justify-between ">
-              <h1 className="text-3xl font-bold mb-6">
-                Discover new headwear...
-              </h1>{" "}
-              <SearchField onSearch={handleSearch} />
-            </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
-              {loading
-                ? Array(9)
-                    .fill(0)
-                    .map((_, index) => <ProductCardSkeleton key={index} />)
-                : products.map(product => (
-                    <Link
-                      href={`/products/headwear/${product.id}`}
-                      key={product.id}
-                    >
-                      <ProductCard product={product} />
-                    </Link>
-                  ))}
-            </div>
-            <div className="mt-8 flex justify-center">
-              <Button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="mr-2"
-              >
-                Previous
-              </Button>
-              <span className="mx-4 self-center">
-                Page {currentPage} of {totalPages}
-              </span>
-              <Button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="ml-2"
-              >
-                Next
-              </Button>
+        </aside>
+        <main className="w-full md:w-3/4 lg:w-4/5">
+          <div className="flex items-center justify-between w-full mb-4">
+            <h4>New in Headwear...</h4>
+            <div className="w-[200px] max-w-sm">
+              <Input
+                type="text"
+                placeholder="Search headwear..."
+                value={searchQuery}
+                onChange={handleSearch}
+              />
             </div>
           </div>
-        </div>
+          <hr className="w-full bg-gray-100 mt-0 mb-5" />
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(9)].map((_, index) => (
+                <Card key={index} className="animate-pulse">
+                  <div className="h-48 bg-gray-200 rounded-t-lg"></div>
+                  <CardContent className="p-4">
+                    <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {currentProducts.map((product: ProductWithFeaturedImage) => (
+                <Link
+                  href={`/products/headwear/${product.id}`}
+                  key={product.id}
+                >
+                  <Card className="hover:shadow-lg transition-shadow duration-300">
+                    <div className="relative h-48 w-full">
+                      <Image
+                        src={
+                          product.featuredImage?.medium ||
+                          "/placeholder-image.jpg"
+                        }
+                        alt={product.productName}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        style={{ objectFit: "cover" }}
+                        className="rounded-t-lg"
+                      />
+                    </div>
+                    <CardContent className="p-4">
+                      <h2 className="text-lg font-semibold mb-2 truncate">
+                        {product.productName}
+                      </h2>
+                      {/* <Badge 
+  variant="secondary"
+  className={product.variations?.some(v => v.quantity > 0) ? "bg-green-500 hover:bg-green-600" : ""}
+>
+  {product.variations?.some(v => v.quantity > 0) ? "In Stock" : "Out of Stock"}
+</Badge> */}
+                    </CardContent>
+                    <CardFooter>
+                      <p>click to view</p>
+                    </CardFooter>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
+          <div className="mt-8 flex justify-center items-center space-x-2">
+            <Button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </main>
       </div>
     </section>
   );
-}
+};
 
-function ProductCard({ product }: { product: Product }) {
-  const [isHovered, setIsHovered] = useState(false);
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
-
-  return (
-    <div>
-      <Card
-        className="overflow-hidden hover:shadow-lg transition-shadow"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        <div className="relative h-48 w-auto">
-          <Image
-            src={product.featuredImage?.medium || "/placeholder.jpg"}
-            alt={product.productName}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            style={{ objectFit: "cover" }}
-            priority
-          />
-        </div>
-        <CardContent className="p-4">
-          <h4 className="font-semibold text-sm mb-2">{product.productName}</h4>
-          <Badge variant="secondary">{product.sellingPrice.toFixed(2)}</Badge>
-        </CardContent>
-        <CardFooter className="p-4 pt-0">
-          <p className="text-sm text-muted-foreground">Click to view details</p>
-        </CardFooter>
-      </Card>
-    </div>
-  );
-}
-
-function ProductCardSkeleton() {
-  return (
-    <Card className="overflow-hidden">
-      <Skeleton className="h-48 w-full" />
-      <CardContent className="p-4">
-        <Skeleton className="h-6 w-3/4 mb-2" />
-        <Skeleton className="h-4 w-1/4" />
-      </CardContent>
-    </Card>
-  );
-}
+export default NewHeadwearProductList;
