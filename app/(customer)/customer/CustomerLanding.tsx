@@ -13,6 +13,7 @@ import {
   LogOut,
 } from "lucide-react";
 import Link from "next/link";
+import LinkButton from "./PagesLinkButton";
 
 const CustomerLandingPage = () => {
   const session = useSession();
@@ -66,12 +67,13 @@ const CustomerLandingPage = () => {
               <p className="mb-4 text-sm sm:text-base">
                 Unlock the Speed of Our Quick Order Page Today!
               </p>
-              <Button
-                asChild
+              <LinkButton
+                href="/customer/shopping/products"
+                variant="outline"
                 className="bg-white text-blue-600 hover:bg-blue-100 text-sm sm:text-base"
               >
-                <Link href={"/customer/shopping/products"}>Quick Order</Link>
-              </Button>
+                Quick Order
+              </LinkButton>
             </CardContent>
           </Card>
         </section>
@@ -79,16 +81,17 @@ const CustomerLandingPage = () => {
         <section className="mb-6 sm:mb-8">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
             {quickLinks.map((link, index) => (
-              <Button
+              <LinkButton
                 key={index}
+                href={link.href}
+                icon={link.icon}
                 variant="outline"
                 className="flex flex-col items-center justify-center h-20 sm:h-24 text-gray-700 hover:bg-blue-50 hover:border-blue-300 transition-all"
               >
-                <link.icon className="w-5 h-5 sm:w-6 sm:h-6 mb-1 sm:mb-2" />
                 <span className="text-xs sm:text-sm text-center">
                   {link.title}
                 </span>
-              </Button>
+              </LinkButton>
             ))}
           </div>
         </section>
