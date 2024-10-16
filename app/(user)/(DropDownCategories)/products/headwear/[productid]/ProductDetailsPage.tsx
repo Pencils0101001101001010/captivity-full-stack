@@ -125,10 +125,12 @@ const ProductDetail: React.FC = () => {
               fill
               style={{ objectFit: "contain" }}
               className="rounded-lg"
+              priority
+              sizes="50"
             />
           </div>
           <div className="overflow-x-auto hide-scrollbar">
-            <div className="flex space-x-2 w-max">
+            <div className="flex space-x-2 w-max items-center">
               {uniqueThumbnails.map((imageUrl, index) => (
                 <button
                   key={index}
@@ -141,6 +143,8 @@ const ProductDetail: React.FC = () => {
                     fill
                     style={{ objectFit: "contain" }}
                     className="rounded-md"
+                    priority
+                    sizes="50"
                   />
                 </button>
               ))}
