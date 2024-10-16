@@ -2,22 +2,24 @@ import React from "react";
 import Image from "next/image";
 
 interface HeroSectionProps {
-  categoryImage: string;
+  featuredImage: {
+    large: string;
+  };
   categoryName: string;
 }
 
 const HeroSection: React.FC<HeroSectionProps> = ({
-  categoryImage,
+  featuredImage,
   categoryName,
 }) => {
   return (
     <div className="relative w-full h-[300px] mb-8">
       <Image
-        src={categoryImage}
+        src={featuredImage.large}
         alt={`${categoryName} category`}
         fill
         style={{ objectFit: "cover" }}
-        sizes="10vw"
+        sizes="100vw"
         priority
       />
       <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">

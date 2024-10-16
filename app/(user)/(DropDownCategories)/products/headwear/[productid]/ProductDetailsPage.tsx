@@ -115,27 +115,28 @@ const ProductDetail: React.FC = () => {
   );
 
   return (
-    <div className="container mx-auto my-8">
+    <div className="container mx-auto my-8 gap-5">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <div className="relative h-96 w-full mb-4">
+        <div className="space-y-4">
+          <div className="relative h-[500px] w-full">
             <Image
-              src={mainImage || "/placeholder-image.jpg"}
+              loading="eager"
+              priority
+              src={mainImage || "/captivityIcon.png"}
               alt={product.productName}
               fill
               style={{ objectFit: "contain" }}
               className="rounded-lg"
-              priority
-              sizes="50"
+              sizes="(max-width: 768px) 100vw, 50vw"
             />
           </div>
-          <div className="overflow-x-auto hide-scrollbar">
-            <div className="flex space-x-2 w-max items-center">
+          <div className="flex justify-center items-center">
+            <div className="flex space-x-2 overflow-x-auto hide-scrollbar">
               {uniqueThumbnails.map((imageUrl, index) => (
                 <button
                   key={index}
                   onClick={() => handleThumbnailClick(imageUrl)}
-                  className="relative h-24 w-24 flex-shrink-0"
+                  className="relative h-16 w-16 flex-shrink-0"
                 >
                   <Image
                     src={imageUrl}
@@ -143,8 +144,8 @@ const ProductDetail: React.FC = () => {
                     fill
                     style={{ objectFit: "contain" }}
                     className="rounded-md"
+                    sizes="(max-width: 768px) 25vw, 12.5vw"
                     priority
-                    sizes="50"
                   />
                 </button>
               ))}
@@ -152,10 +153,12 @@ const ProductDetail: React.FC = () => {
           </div>
         </div>
         <div>
-          <h1 className="text-3xl font-bold mb-4">{product.productName}</h1>
-          <p className="text-2xl font-semibold mb-4">
+          <h1 className="text-3xl font-bold mb-4 text-red-500">
+            {product.productName}
+          </h1>
+          {/* <p className="text-2xl font-semibold mb-4">
             R{product.sellingPrice.toFixed(2)}
-          </p>
+          </p> */}
 
           <div className="mb-4">
             <label className="block mb-2">Color:</label>
