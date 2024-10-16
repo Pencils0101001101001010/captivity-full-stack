@@ -2,16 +2,22 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { ProductWithFeaturedImage } from "./ProductTypes";
 import { Variation } from "@prisma/client";
-import { fetchProductById } from "./actions"; // Make sure this path is correct
+import { fetchProductById } from "./actions";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import RelatedProducts from "@/app/(user)/_components/RelatedProducts";
+import Link from "next/link";
 
 const ProductDetail: React.FC = () => {
   const params = useParams();
@@ -23,6 +29,10 @@ const ProductDetail: React.FC = () => {
   const [mainImage, setMainImage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedVariation, setSelectedVariation] = useState<Variation | null>(
+    null
+  );
+  const [quantity, setQuantity] = useState<number>(1);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -52,10 +62,23 @@ const ProductDetail: React.FC = () => {
     loadProduct();
   }, [id]);
 
+  useEffect(() => {
+    if (product && selectedColor && selectedSize) {
+      const variation = product.variations.find(
+        v => v.color === selectedColor && v.size === selectedSize
+      );
+      setSelectedVariation(variation || null);
+      if (variation) {
+        setMainImage(variation.variationImageURL);
+      }
+    }
+  }, [product, selectedColor, selectedSize]);
+
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
     const variation = product?.variations.find(v => v.color === color);
     if (variation) {
+      setSelectedSize(variation.size);
       setMainImage(variation.variationImageURL);
     }
   };
@@ -66,6 +89,13 @@ const ProductDetail: React.FC = () => {
 
   const handleThumbnailClick = (imageUrl: string) => {
     setMainImage(imageUrl);
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newQuantity = parseInt(e.target.value);
+    if (!isNaN(newQuantity) && newQuantity > 0) {
+      setQuantity(Math.min(newQuantity, selectedVariation?.quantity || 1));
+    }
   };
 
   if (loading) return <div>Loading...</div>;
@@ -79,8 +109,9 @@ const ProductDetail: React.FC = () => {
     new Set(product.variations.map(v => v.size))
   );
 
-  const selectedVariation = product.variations.find(
-    v => v.color === selectedColor && v.size === selectedSize
+  // Create an array of unique thumbnail images
+  const uniqueThumbnails = Array.from(
+    new Set(product.variations.map(v => v.variationImageURL))
   );
 
   return (
@@ -92,25 +123,23 @@ const ProductDetail: React.FC = () => {
               src={mainImage || "/placeholder-image.jpg"}
               alt={product.productName}
               fill
-              style={{ objectFit: "cover" }}
+              style={{ objectFit: "contain" }}
               className="rounded-lg"
             />
           </div>
           <div className="overflow-x-auto hide-scrollbar">
             <div className="flex space-x-2 w-max">
-              {product.variations.map((variation: Variation) => (
+              {uniqueThumbnails.map((imageUrl, index) => (
                 <button
-                  key={variation.id}
-                  onClick={() =>
-                    handleThumbnailClick(variation.variationImageURL)
-                  }
+                  key={index}
+                  onClick={() => handleThumbnailClick(imageUrl)}
                   className="relative h-24 w-24 flex-shrink-0"
                 >
                   <Image
-                    src={variation.variationImageURL}
-                    alt={`${product.productName} - ${variation.color}`}
+                    src={imageUrl}
+                    alt={`${product.productName} - Variation ${index + 1}`}
                     fill
-                    style={{ objectFit: "cover" }}
+                    style={{ objectFit: "contain" }}
                     className="rounded-md"
                   />
                 </button>
@@ -126,37 +155,82 @@ const ProductDetail: React.FC = () => {
 
           <div className="mb-4">
             <label className="block mb-2">Color:</label>
-            <div className="flex space-x-2">
-              {availableColors.map(color => (
-                <button
-                  key={color}
-                  onClick={() => handleColorChange(color)}
-                  className={`w-8 h-8 rounded-full ${
-                    selectedColor === color
-                      ? "ring-2 ring-offset-2 ring-black"
-                      : ""
-                  }`}
-                  style={{ backgroundColor: color.toLowerCase() }}
-                />
-              ))}
-            </div>
+            <Select
+              value={selectedColor || ""}
+              onValueChange={handleColorChange}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a color" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableColors.map(color => (
+                  <SelectItem key={color} value={color}>
+                    {color}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="mb-4">
             <label className="block mb-2">Size:</label>
             <Select value={selectedSize || ""} onValueChange={handleSizeChange}>
-              {availableSizes.map(size => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a size" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableSizes.map(size => {
+                  const variation = product.variations.find(
+                    v => v.size === size && v.color === selectedColor
+                  );
+                  return (
+                    <SelectItem key={size} value={size}>
+                      {size} -{" "}
+                      {variation
+                        ? `In stock: ${variation.quantity}`
+                        : "Out of stock"}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
             </Select>
           </div>
 
-          <Button className="w-full mb-4">
-            <Link href="/login">Login</Link>
-          </Button>
+          <div className="mb-4">
+            <label className="block mb-2">Quantity:</label>
+            <Input
+              type="number"
+              min="1"
+              max={selectedVariation?.quantity || 1}
+              value={quantity}
+              onChange={handleQuantityChange}
+              className="w-full"
+            />
+          </div>
 
+          {selectedVariation && (
+            <div className="mb-4">
+              <p>
+                {selectedVariation.quantity > 0
+                  ? `In stock: ${selectedVariation.quantity}`
+                  : "Out of stock"}
+              </p>
+            </div>
+          )}
+          <Link href="/login">
+            <Button
+              className="w-full mb-4"
+              disabled={
+                !selectedVariation ||
+                selectedVariation.quantity === 0 ||
+                quantity > selectedVariation.quantity
+              }
+            >
+              {selectedVariation && selectedVariation.quantity > 0
+                ? "Login"
+                : "Out of Stock"}
+            </Button>
+          </Link>
           <Tabs defaultValue="description">
             <TabsList>
               <TabsTrigger value="description">Description</TabsTrigger>
