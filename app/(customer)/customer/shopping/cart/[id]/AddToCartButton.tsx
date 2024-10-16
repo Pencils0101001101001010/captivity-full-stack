@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Variation } from "@prisma/client";
-import { useCart } from "./useCartHooks";
+import { useCart } from "../useCartHooks";
 
 interface AddToCartButtonProps {
   productId: number;

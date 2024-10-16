@@ -1,5 +1,5 @@
 import React from "react";
-import CartDetails from "./CartDetails";
+import CartDetails from "./[id]/CartDetails";
 
 const CartDetailsPage: React.FC = () => {
   return (
