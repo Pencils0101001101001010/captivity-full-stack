@@ -1,313 +1,257 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { fetchProductById } from "./actions";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { formatDescription } from "@/lib/utils";
-import RelatedProducts from "@/app/(user)/_components/RelatedProducts";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { ProductWithFeaturedImage } from "./ProductTypes";
+import { Variation } from "@prisma/client";
+import { fetchProductById } from "./actions";
+import { useParams } from "next/navigation";
+import RelatedProducts from "@/app/(user)/_components/RelatedProducts";
 import Link from "next/link";
-import ProductDetailsModal from "@/app/(user)/_components/PopUpModal";
 
-interface Thumbnail {
-  id: number;
-  name: string;
-  imageUrl: string;
-  stock: number | null;
-  regularPrice: number | null;
-  attribute1Default?: string;
-  attribute2Default?: string;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  shortDescription: string;
-  mainImage: string;
-  thumbnails: Thumbnail[];
-  stock: number | null;
-  inStock: boolean;
-  regularPrice: number | null;
-  attribute1Name: string | null;
-  attribute1Values: string | null;
-  attribute2Name: string | null;
-  attribute2Values: string | null;
-  attribute1Default: string | null;
-  attribute2Default: string | null;
-  sku: string;
-  categoryProducts?: {
-    id: number;
-    name: string;
-    sku: string;
-    stock: number | null;
-    regularPrice: number | null;
-    attribute1Default?: string | null;
-    attribute2Default?: string | null;
-    inStock: boolean;
-  }[];
-}
-
-interface RelatedProduct {
-  id: number;
-  name: string;
-  imageUrl: string;
-  regularPrice: number | null;
-}
-
-export default function ProductDetail() {
+const ProductDetail: React.FC = () => {
   const params = useParams();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+  const id = params?.productid as string;
+
+  const [product, setProduct] = useState<ProductWithFeaturedImage | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [mainImage, setMainImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentImage, setCurrentImage] = useState<string | null>(null);
-  const [selectedThumbnail, setSelectedThumbnail] = useState<number | null>(
+  const [selectedVariation, setSelectedVariation] = useState<Variation | null>(
     null
   );
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState<number>(1);
 
   useEffect(() => {
-    async function loadProductDetails() {
-      if (params && typeof params === "object" && "productid" in params) {
-        const id = params.productid;
-
-        if (id && typeof id === "string") {
-          try {
-            setLoading(true);
-            const result = await fetchProductById(id);
-            if (result.success && result.data) {
-              setProduct(result.data as Product);
-              setCurrentImage(result.data.mainImage);
-              setSelectedThumbnail(result.data.id);
-              setRelatedProducts(result.relatedProducts || []);
-            } else {
-              setError(result.error || "Product not found");
+    const loadProduct = async () => {
+      if (id) {
+        setLoading(true);
+        setError(null);
+        try {
+          const result = await fetchProductById(Number(id));
+          if (result.success && result.data) {
+            setProduct(result.data);
+            setMainImage(result.data.featuredImage?.large || "");
+            if (result.data.variations.length > 0) {
+              setSelectedColor(result.data.variations[0].color);
+              setSelectedSize(result.data.variations[0].size);
             }
-          } catch (err) {
-            console.error("Error fetching product:", err);
-            setError("Failed to load product details.");
-          } finally {
-            setLoading(false);
+          } else {
+            setError(result.error || "Failed to fetch product");
           }
-        } else {
-          setError("Invalid product ID");
+        } catch (err) {
+          setError("An unexpected error occurred while fetching the product.");
+        } finally {
           setLoading(false);
         }
       }
+    };
+
+    loadProduct();
+  }, [id]);
+
+  useEffect(() => {
+    if (product && selectedColor && selectedSize) {
+      const variation = product.variations.find(
+        v => v.color === selectedColor && v.size === selectedSize
+      );
+      setSelectedVariation(variation || null);
+      if (variation) {
+        setMainImage(variation.variationImageURL);
+      }
     }
+  }, [product, selectedColor, selectedSize]);
 
-    loadProductDetails();
-  }, [params]);
-
-  const handleThumbnailClick = (image: string, id: number) => {
-    setCurrentImage(image);
-    setSelectedThumbnail(id);
+  const handleColorChange = (color: string) => {
+    setSelectedColor(color);
+    const variation = product?.variations.find(v => v.color === color);
+    if (variation) {
+      setSelectedSize(variation.size);
+      setMainImage(variation.variationImageURL);
+    }
   };
 
-  if (loading) {
-    return <ProductDetailSkeleton />;
-  }
+  const handleSizeChange = (size: string) => {
+    setSelectedSize(size);
+  };
 
-  if (error) {
-    return (
-      <div className="container mx-auto p-8 text-center">
-        <p className="text-red-500">Error: {error}</p>
-      </div>
-    );
-  }
+  const handleThumbnailClick = (imageUrl: string) => {
+    setMainImage(imageUrl);
+  };
 
-  if (!product) {
-    return (
-      <div className="container mx-auto p-8 text-center">
-        <p>Product not found.</p>
-      </div>
-    );
-  }
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newQuantity = parseInt(e.target.value);
+    if (!isNaN(newQuantity) && newQuantity > 0) {
+      setQuantity(Math.min(newQuantity, selectedVariation?.quantity || 1));
+    }
+  };
 
-  const selectedProduct =
-    selectedThumbnail === product.id
-      ? product
-      : product.thumbnails.find(t => t.id === selectedThumbnail) || product;
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!product) return <div>Product not found</div>;
+
+  const availableColors = Array.from(
+    new Set(product.variations.map(v => v.color))
+  );
+  const availableSizes = Array.from(
+    new Set(product.variations.map(v => v.size))
+  );
+
+  // Create an array of unique thumbnail images
+  const uniqueThumbnails = Array.from(
+    new Set(product.variations.map(v => v.variationImageURL))
+  );
 
   return (
-    <div className="container mx-auto p-8">
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col lg:flex-row gap-8">
-            <div className="flex-1">
-              <div className="relative h-[500px] w-auto mb-4">
-                <Image
-                  src={currentImage || product.mainImage}
-                  alt={selectedProduct.name}
-                  className="rounded-lg object-cover"
-                  fill
-                  sizes="(max-width: 500px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  priority
-                />
-              </div>
-              <div className="max-w-[700px] overflow-x-auto">
-                <div className="flex gap-2 pb-2 min-w-0 items-center">
-                  {[
-                    { id: product.id, imageUrl: product.mainImage },
-                    ...product.thumbnails,
-                  ].map(item => (
-                    <div
-                      key={item.id}
-                      className={`relative h-20 w-20 cursor-pointer transition-all duration-200 flex-shrink-0`}
-                      onClick={() =>
-                        handleThumbnailClick(item.imageUrl, item.id)
-                      }
-                    >
-                      <Image
-                        src={item.imageUrl}
-                        alt={`Product view ${item.id}`}
-                        className="rounded object-cover"
-                        fill
-                        // title={item.name || `Product view ${item.id}`}
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        priority
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="flex-1">
-              <h1 className="text-3xl text-red-500 font-bold mb-4">
-                {selectedProduct.name}
-              </h1>
-              {/* {selectedProduct.regularPrice && (
-                <p className="text-xl font-semibold mb-4">
-                  Price: R{selectedProduct.regularPrice.toFixed(2)}
-                </p>
-              )} */}
-              <div className="mb-4">
-                <Badge
-                  variant={
-                    selectedProduct.stock && selectedProduct.stock > 0
-                      ? "default"
-                      : "secondary"
-                  }
+    <div className="container mx-auto my-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <div className="relative h-96 w-full mb-4">
+            <Image
+              src={mainImage || "/placeholder-image.jpg"}
+              alt={product.productName}
+              fill
+              style={{ objectFit: "contain" }}
+              className="rounded-lg"
+            />
+          </div>
+          <div className="overflow-x-auto hide-scrollbar">
+            <div className="flex space-x-2 w-max">
+              {uniqueThumbnails.map((imageUrl, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleThumbnailClick(imageUrl)}
+                  className="relative h-24 w-24 flex-shrink-0"
                 >
-                  {selectedProduct.stock && selectedProduct.stock > 0
-                    ? "In Stock"
-                    : "Out of Stock"}
-                </Badge>
-                {selectedProduct.stock !== null && (
-                  <span className="ml-2 text-sm text-gray-600">
-                    {selectedProduct.stock} available
-                  </span>
-                )}
-              </div>
-              <div className="mb-4">
-                {product.attribute1Name &&
-                  selectedProduct.attribute1Default && (
-                    <div>
-                      <span className="font-semibold">
-                        {product.attribute1Name}:{" "}
-                      </span>
-                      <span>{selectedProduct.attribute1Default}</span>
-                    </div>
-                  )}
-                {product.attribute2Name &&
-                  selectedProduct.attribute2Default && (
-                    <div>
-                      <span className="font-semibold">
-                        {product.attribute2Name}:{" "}
-                      </span>
-                      <span>{selectedProduct.attribute2Default}</span>
-                    </div>
-                  )}
-              </div>
-
-              <div className="mb-4">
-                <label
-                  htmlFor="quantity"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Quantity
-                </label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    id="quantity"
-                    value={quantity}
-                    onChange={e =>
-                      setQuantity(Math.max(1, parseInt(e.target.value) || 1))
-                    }
-                    min="1"
-                    className="mt-1"
+                  <Image
+                    src={imageUrl}
+                    alt={`${product.productName} - Variation ${index + 1}`}
+                    fill
+                    style={{ objectFit: "contain" }}
+                    className="rounded-md"
                   />
-                  {product.categoryProducts && (
-                    <ProductDetailsModal
-                      categoryProducts={product.categoryProducts}
-                      attribute1Name={product.attribute1Name}
-                      // attribute2Default={product.attribute2Name}
-                    />
-                  )}
-                </div>
-              </div>
-
-              <Button variant="destructive" asChild className="w-full mb-4">
-                <Link href="/login">Login</Link>
-              </Button>
-
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="description">
-                  <AccordionTrigger>Features</AccordionTrigger>
-                  <AccordionContent>
-                    <div
-                      dangerouslySetInnerHTML={formatDescription(
-                        product.shortDescription
-                      )}
-                      className="description-content"
-                    />
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="specs">
-                  <AccordionTrigger>Box Specification</AccordionTrigger>
-                  <AccordionContent>
-                    <p>Box specifications information goes here.</p>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+                </button>
+              ))}
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold mb-4">{product.productName}</h1>
+          <p className="text-2xl font-semibold mb-4">
+            R{product.sellingPrice.toFixed(2)}
+          </p>
 
-      {/* Use the new RelatedProducts component */}
-      <RelatedProducts products={relatedProducts} />
-    </div>
-  );
-}
-
-function ProductDetailSkeleton() {
-  return (
-    <div className="container mx-auto p-8">
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col lg:flex-row gap-8">
-            <Skeleton className="flex-1 h-[400px]" />
-            <div className="flex-1">
-              <Skeleton className="h-10 w-3/4 mb-4" />
-              <Skeleton className="h-6 w-1/4 mb-4" />
-              <Skeleton className="h-24 w-full mb-6" />
-            </div>
+          <div className="mb-4">
+            <label className="block mb-2">Color:</label>
+            <Select
+              value={selectedColor || ""}
+              onValueChange={handleColorChange}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a color" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableColors.map(color => (
+                  <SelectItem key={color} value={color}>
+                    {color}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        </CardContent>
-      </Card>
+
+          <div className="mb-4">
+            <label className="block mb-2">Size:</label>
+            <Select value={selectedSize || ""} onValueChange={handleSizeChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a size" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableSizes.map(size => {
+                  const variation = product.variations.find(
+                    v => v.size === size && v.color === selectedColor
+                  );
+                  return (
+                    <SelectItem key={size} value={size}>
+                      {size} -{" "}
+                      {variation
+                        ? `In stock: ${variation.quantity}`
+                        : "Out of stock"}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="mb-4">
+            <label className="block mb-2">Quantity:</label>
+            <Input
+              type="number"
+              min="1"
+              max={selectedVariation?.quantity || 1}
+              value={quantity}
+              onChange={handleQuantityChange}
+              className="w-full"
+            />
+          </div>
+
+          {selectedVariation && (
+            <div className="mb-4">
+              <p>
+                {selectedVariation.quantity > 0
+                  ? `In stock: ${selectedVariation.quantity}`
+                  : "Out of stock"}
+              </p>
+            </div>
+          )}
+          <Link href="/login">
+            <Button
+              className="w-full mb-4"
+              disabled={
+                !selectedVariation ||
+                selectedVariation.quantity === 0 ||
+                quantity > selectedVariation.quantity
+              }
+            >
+              {selectedVariation && selectedVariation.quantity > 0
+                ? "Login"
+                : "Out of Stock"}
+            </Button>
+          </Link>
+          <Tabs defaultValue="description">
+            <TabsList>
+              <TabsTrigger value="description">Description</TabsTrigger>
+              <TabsTrigger value="features">Features</TabsTrigger>
+            </TabsList>
+            <TabsContent value="description">
+              <div dangerouslySetInnerHTML={{ __html: product.description }} />
+            </TabsContent>
+            <TabsContent value="features">
+              <ul className="list-disc pl-5">
+                <li>6 Panel Unstructured</li>
+                <li>Embroidered Eyelets</li>
+                <li>Pre-Curved Peak</li>
+                <li>Low Profile</li>
+              </ul>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default ProductDetail;
