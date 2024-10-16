@@ -1,17 +1,8 @@
 import React from "react";
-import { X } from "lucide-react";
+import { ShoppingCart, X } from "lucide-react";
 import Image from "next/image";
-import { ExtendedCartItem } from "./actions";
-
-interface CartItem {
-  productId: number;
-  variationId: number | null;
-  quantity: number;
-  productName: string;
-  price: number;
-  variationName: string;
-  image: string;
-}
+import { ExtendedCartItem } from "@/app/(customer)/types";
+import LinkButton from "../../PagesLinkButton";
 
 interface SlideInCartProps {
   isOpen: boolean;
@@ -88,6 +79,16 @@ const SlideInCart: React.FC<SlideInCartProps> = ({
         >
           Checkout
         </button>
+        <div className="mt-6">
+          <LinkButton
+            href="/customer/shopping/cart"
+            icon={ShoppingCart}
+            variant="default"
+            className="w-full"
+          >
+            Go to Cart
+          </LinkButton>
+        </div>
       </div>
     </div>
   );

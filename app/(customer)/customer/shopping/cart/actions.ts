@@ -99,7 +99,7 @@ export async function addToCart(
     const updatedCartData = await getCartData(user.id);
 
     setCartCookie(updatedCartData);
-    revalidatePath(`/products/${productId}`);
+    revalidatePath(`/cutomer/shopping/products/${productId}`);
 
     return {
       success: true,

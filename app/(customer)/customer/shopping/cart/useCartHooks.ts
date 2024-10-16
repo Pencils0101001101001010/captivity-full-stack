@@ -5,11 +5,13 @@ import {
   updateCartItemQuantity,
   getCart,
   clearCart,
+} from "./actions";
+import {
+  CartActionResult,
+  CartData,
   CartItem,
   ExtendedCartItem,
-  CartData,
-  CartActionResult,
-} from "./actions";
+} from "@/app/(customer)/types";
 
 export function useCart() {
   const [cart, setCart] = useState<CartData | null>(null);

@@ -1,4 +1,3 @@
-// components/ProductInfo.tsx
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +9,8 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Variation } from "@prisma/client";
+import { ShoppingCart } from "lucide-react";
+import LinkButton from "../../../PagesLinkButton";
 
 interface ProductInfoProps {
   product: {
@@ -111,6 +112,17 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
         {maxQuantity > 0 && (
           <p className="text-sm text-gray-500 mt-1">{maxQuantity} in stock</p>
         )}
+      </div>
+
+      <div className="mt-6">
+        <LinkButton
+          href="/customer/shopping/cart"
+          icon={ShoppingCart}
+          variant="default"
+          className="w-full"
+        >
+          Go to Cart
+        </LinkButton>
       </div>
     </div>
   );

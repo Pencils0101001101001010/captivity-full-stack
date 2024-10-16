@@ -12,7 +12,7 @@ import { ProductWithRelations } from "./useProductById";
 import { Variation } from "@prisma/client";
 import ImageGallery from "./ImageGallery";
 import ProductInfo from "./ProductInfo";
-import AddToCartButton from "../../cart/AddToCartButton";
+import AddToCartButton from "../../cart/[id]/AddToCartButton";
 
 interface ProductDetailsProps {
   product: ProductWithRelations;
