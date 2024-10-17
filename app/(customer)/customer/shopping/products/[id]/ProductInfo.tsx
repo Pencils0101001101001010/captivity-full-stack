@@ -124,6 +124,16 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
           Go to Cart
         </LinkButton>
       </div>
+      <div className="mt-6">
+        <LinkButton
+          href="/customer/shopping/checkout"
+          icon={ShoppingCart}
+          variant="destructive"
+          className="w-full"
+        >
+          Go to Checkout
+        </LinkButton>
+      </div>
     </div>
   );
 };
