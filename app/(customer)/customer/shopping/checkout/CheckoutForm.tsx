@@ -75,8 +75,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
         onSubmit={form.handleSubmit(onSubmit)}
         className="max-w-7xl mx-auto p-6"
       >
-        <h2 className="text-3xl font-bold mb-8 text-center">Checkout</h2>
-
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Column: Billing Details, Additional Information, Terms */}
           <div className="w-full lg:w-2/3 space-y-8">
