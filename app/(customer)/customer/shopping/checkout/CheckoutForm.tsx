@@ -79,7 +79,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
           {/* Left Column: Billing Details, Additional Information, Terms */}
           <div className="w-full lg:w-2/3 space-y-8">
             {/* Billing Details Section */}
-            <div className="bg-white shadow-md rounded-lg p-6">
+            <div className="bg-white shadow-2xl shadow-black rounded-lg p-6">
               <h3 className="text-xl font-semibold mb-6">Billing Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
@@ -388,7 +388,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
             </div>
 
             {/* Additional Information Section */}
-            <div className="bg-white shadow-md rounded-lg p-6">
+            <div className="bg-white shadow-2xl shadow-black rounded-lg p-6">
               <h3 className="text-xl font-semibold mb-6">
                 Additional Information
               </h3>
@@ -412,7 +412,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
             </div>
 
             {/* Terms and Conditions Section */}
-            <div className="bg-white shadow-md rounded-lg p-6">
+            <div className="bg-white shadow-2xl shadow-black rounded-lg p-6">
               <p className="mb-4 text-sm">Pay upon Proforma Invoice receipt</p>
               <p className="mb-6 text-sm">
                 Your personal data will be used to process your order, support
@@ -465,7 +465,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
 
           {/* Right Column: Order Summary */}
           <div className="w-full lg:w-1/3">
-            <div className="bg-white shadow-md rounded-lg p-6 sticky top-6">
+            <div className="bg-white shadow-2xl shadow-blackshadow-md rounded-lg p-6 sticky top-6">
               <h3 className="text-xl font-semibold mb-6">Order Summary</h3>
               <div className="space-y-4">
                 {cartData.extendedItems.map(item => (
