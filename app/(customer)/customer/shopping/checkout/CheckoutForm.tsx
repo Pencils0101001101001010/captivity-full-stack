@@ -54,9 +54,25 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    console.log(data);
-    // Handle form submission here
+  const onSubmit = async (data: FormValues) => {
+    try {
+      // Combine form data with cart data
+      const submissionData = {
+        formData: data,
+        cartData: cartData,
+      };
+
+      console.log("Submission Data:", submissionData);
+
+      // Here you would typically send this data to your server
+      // await submitOrder(submissionData);
+
+      // Handle successful submission
+      console.log("Order submitted successfully");
+    } catch (error) {
+      console.error("Error submitting order:", error);
+      // Handle error (e.g., show error message to user)
+    }
   };
 
   const calculateSubtotal = (price: number, quantity: number) => {
