@@ -2,6 +2,7 @@ import React from "react";
 import CheckoutForm from "./CheckoutForm";
 import { CartData, CartActionResult } from "@/app/(customer)/types";
 import { getCart } from "../cart/actions";
+import LinkButton from "../products/_components/LinkButton";
 
 async function CheckoutPage() {
   const cartResult: CartActionResult<CartData> = await getCart();
@@ -28,7 +29,16 @@ async function CheckoutPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-center">Checkout</h1>
+      <LinkButton
+        href="/customer/shopping/products"
+        variant="default"
+        className="custom-class"
+      >
+        Back to express shop
+      </LinkButton>
+      <h1 className="text-3xl font-extrabold mb-8 text-center">
+        CHECKOUT PAGE
+      </h1>
       <CheckoutForm cartData={cartData} />
     </div>
   );
