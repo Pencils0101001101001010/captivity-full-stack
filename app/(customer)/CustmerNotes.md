@@ -1,0 +1,3 @@
+1. See that the customer gets redirected when the submit order is being create.
+
+2. Allow the customer to roam around the customer panel more freely without having to stuggle to find a link button to certain locations. Give the customer more options on going to certain parts of the customer route on every page.
