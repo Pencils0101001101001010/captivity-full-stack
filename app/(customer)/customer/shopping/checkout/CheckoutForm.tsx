@@ -465,7 +465,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
 
           {/* Right Column: Order Summary */}
           <div className="w-full lg:w-1/3">
-            <div className="bg-white shadow-2xl shadow-blackshadow-md rounded-lg p-6 sticky top-6">
+            <div className="bg-white rounded-lg p-6 sticky top-6 shadow-2xl shadow-black">
               <h3 className="text-xl font-semibold mb-6">Order Summary</h3>
               <div className="space-y-4">
                 {cartData.extendedItems.map(item => (
