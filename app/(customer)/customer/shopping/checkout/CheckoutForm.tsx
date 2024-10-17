@@ -58,6 +58,16 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
     // Handle form submission here
   };
 
+  const calculateSubtotal = (price: number, quantity: number) => {
+    return (price * quantity).toFixed(2);
+  };
+
+  const calculateTotal = () => {
+    return cartData.extendedItems
+      .reduce((total, item) => total + item.price * item.quantity, 0)
+      .toFixed(2);
+  };
+
   return (
     <Form {...form}>
       <form
@@ -67,6 +77,45 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
         <h2 className="text-3xl font-bold mb-8 text-center">Checkout</h2>
 
         <div className="space-y-8">
+          {/* Order Summary Section */}
+          <div className="bg-white shadow-md rounded-lg p-6">
+            <h3 className="text-xl font-semibold mb-6">Order Summary</h3>
+            <div className="space-y-4">
+              {cartData.extendedItems.map(item => (
+                <div
+                  key={`${item.productId}-${item.variationId}`}
+                  className="flex items-center space-x-4 pb-4 border-b"
+                >
+                  <img
+                    src={item.image}
+                    alt={item.productName}
+                    className="w-20 h-20 object-cover rounded"
+                  />
+                  <div className="flex-grow">
+                    <h4 className="font-semibold">{item.productName}</h4>
+                    <p className="text-sm text-gray-600">
+                      {item.variationName}
+                    </p>
+                    <p className="text-sm">Quantity: {item.quantity}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">
+                      R{item.price.toFixed(2)} each
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Subtotal: R{calculateSubtotal(item.price, item.quantity)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              <div className="flex justify-between items-center pt-4 font-semibold">
+                <span>Total:</span>
+                <span>${calculateTotal()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Billing Details Section */}
           <div className="bg-white shadow-md rounded-lg p-6">
             <h3 className="text-xl font-semibold mb-6">Billing Details</h3>
 
@@ -376,6 +425,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
             </div>
           </div>
 
+          {/* Additional Information Section */}
           <div className="bg-white shadow-md rounded-lg p-6">
             <h3 className="text-xl font-semibold mb-6">
               Additional Information
@@ -400,6 +450,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
             />
           </div>
 
+          {/* Terms and Conditions Section */}
           <div className="bg-white shadow-md rounded-lg p-6">
             <p className="mb-4">Pay upon Proforma Invoice receipt</p>
             <p className="mb-6">
