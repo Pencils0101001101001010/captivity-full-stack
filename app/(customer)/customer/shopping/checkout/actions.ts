@@ -48,10 +48,6 @@ export async function submitOrder(
       status: "PENDING",
     };
 
-    console.log("User ID:", user.id);
-    console.log("Cart ID:", cartData.id);
-    console.log("Order Data:", JSON.stringify(orderData, null, 2));
-
     // Create the order within a transaction
     const result = await prisma.$transaction(
       async transactionPrisma => {
@@ -67,9 +63,6 @@ export async function submitOrder(
           if (!existingCart) {
             throw new Error("Cart not found");
           }
-
-          console.log("Existing cart:", JSON.stringify(existingCart, null, 2));
-
           // Step 2: Create or update order
           if (existingCart.order) {
             order = await transactionPrisma.order.update({
@@ -89,10 +82,6 @@ export async function submitOrder(
                 },
               },
             });
-            console.log(
-              "Updated existing order:",
-              JSON.stringify(order, null, 2)
-            );
           } else {
             order = await transactionPrisma.order.create({
               data: {
@@ -114,23 +103,17 @@ export async function submitOrder(
                 },
               },
             });
-            console.log("Created new order:", JSON.stringify(order, null, 2));
           }
 
           // Step 3: Clear the cart items
           await transactionPrisma.cartItem.deleteMany({
             where: { cartId: cartData.id },
           });
-          console.log("Cleared cart items");
 
           // Step 4: Create a new empty cart for the user
           newCart = await transactionPrisma.cart.create({
             data: { userId: user.id },
           });
-          console.log(
-            "Created new empty cart:",
-            JSON.stringify(newCart, null, 2)
-          );
 
           return { order, newCartId: newCart.id };
         } catch (error) {
