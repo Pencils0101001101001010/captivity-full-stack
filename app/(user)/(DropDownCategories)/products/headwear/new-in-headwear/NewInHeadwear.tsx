@@ -17,14 +17,14 @@ const NewHeadwearProductList: React.FC = () => {
   const { products, loading, error } = useNewHeadwear();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [categoryImage, setCategoryImage] = useState<string>(
-    "/placeholder-image.jpg"
-  );
+  const [featuredImage, setFeaturedImage] = useState<{ large: string }>({
+    large: "/Industrial-collection-Btn.jpg", //!change this placeholder
+  });
   const productsPerPage = 9;
 
   useEffect(() => {
-    if (products.length > 0 && products[1].featuredImage?.large) {
-      setCategoryImage(products[1].featuredImage.large);
+    if (products.length > 0 && products[0].featuredImage?.large) {
+      setFeaturedImage({ large: products[0].featuredImage.large });
     }
   }, [products]);
 
@@ -61,7 +61,7 @@ const NewHeadwearProductList: React.FC = () => {
   return (
     <section className="container mx-auto my-8">
       <HeroSection
-        categoryImage={categoryImage}
+        featuredImage={featuredImage}
         categoryName="New in Headwear"
       />
 
@@ -106,13 +106,14 @@ const NewHeadwearProductList: React.FC = () => {
                       <Image
                         src={
                           product.featuredImage?.medium ||
-                          "/placeholder-image.jpg"
+                          "/Industrial-collection-Btn.jpg"
                         }
                         alt={product.productName}
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         style={{ objectFit: "cover" }}
                         className="rounded-t-lg"
+                        priority
                       />
                     </div>
                     <CardContent className="p-4">
