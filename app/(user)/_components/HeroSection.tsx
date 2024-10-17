@@ -13,7 +13,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   categoryName,
 }) => {
   return (
-    <div className="relative w-full h-[300px] mb-8">
+    <div className="relative w-full rounded-lg h-[300px] mb-8">
       <Image
         src={featuredImage.large}
         alt={`${categoryName} category`}
@@ -22,7 +22,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         sizes="100vw"
         priority
       />
-      <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+      <div className="absolute rounded-lg inset-0 bg-black bg-opacity-40 flex items-center justify-center">
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white">
           {categoryName}
         </h1>
