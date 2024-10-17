@@ -14,7 +14,7 @@ export async function submitOrder(
 ): Promise<CartActionResult<OrderData>> {
   try {
     const { user } = await validateRequest();
-    if (!user) {
+    if (!user || user.role !== "CUSTOMER") {
       return { success: false, error: "Unauthorized. Please log in." };
     }
 
