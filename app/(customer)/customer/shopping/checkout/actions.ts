@@ -15,14 +15,10 @@ export async function submitOrder(
     if (!user) {
       return { success: false, error: "Unauthorized. Please log in." };
     }
-
-    console.log("Calculating total amount");
     const totalAmount = cartData.extendedItems.reduce(
       (total, item) => total + item.price * item.quantity,
       0
     );
-
-    console.log("Creating order");
     const createdOrder = await prisma.order.create({
       data: {
         user: { connect: { id: user.id } },
@@ -62,10 +58,6 @@ export async function submitOrder(
         },
       },
     });
-
-    console.log("Order created successfully");
-
-    console.log("Updating cart items");
     for (const item of cartData.items) {
       await prisma.cartItem.update({
         where: {
@@ -81,13 +73,8 @@ export async function submitOrder(
       });
     }
 
-    console.log("Cart items updated successfully");
-
-    console.log("Revalidating paths");
     revalidatePath("/customer/shopping/cart");
     revalidatePath("/customer/orders");
-
-    console.log("Paths revalidated");
 
     return {
       success: true,
@@ -96,11 +83,6 @@ export async function submitOrder(
     };
   } catch (error: any) {
     console.error("Error submitting order:", error);
-    console.error("Error name:", error.name);
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
-    if (error.code) console.error("Error code:", error.code);
-    if (error.meta) console.error("Error meta:", error.meta);
     return { success: false, error: "An unexpected error occurred" };
   }
 }
