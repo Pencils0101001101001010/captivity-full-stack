@@ -68,6 +68,23 @@ export type ProductData = Prisma.ProductGetPayload<{
   };
 }>;
 
+// Order Types
+export type OrderData = Prisma.OrderGetPayload<{
+  include: {
+    user: true;
+    cart: {
+      include: {
+        cartItems: {
+          include: {
+            product: true;
+            variation: true;
+          };
+        };
+      };
+    };
+  };
+}>;
+
 // Helper Functions
 export function getLoggedInUserDataInclude() {
   return {
@@ -97,6 +114,20 @@ export function getLoggedInUserDataInclude() {
               },
             },
             variation: true,
+          },
+        },
+      },
+    },
+    orders: {
+      include: {
+        cart: {
+          include: {
+            cartItems: {
+              include: {
+                product: true,
+                variation: true,
+              },
+            },
           },
         },
       },
@@ -190,6 +221,56 @@ export async function getProductData(
       dynamicPricing: true,
       variations: true,
       featuredImage: true,
+    },
+  });
+}
+
+export async function getOrderData(
+  orderId: string,
+  prisma: Prisma.TransactionClient
+): Promise<OrderData | null> {
+  return prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      user: true,
+      cart: {
+        include: {
+          cartItems: {
+            include: {
+              product: true,
+              variation: true,
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+export async function createOrder(
+  userId: string,
+  cartId: number,
+  orderData: Omit<Prisma.OrderCreateInput, "user" | "cart" | "id">,
+  prisma: Prisma.TransactionClient
+): Promise<OrderData> {
+  return prisma.order.create({
+    data: {
+      ...orderData,
+      user: { connect: { id: userId } },
+      cart: { connect: { id: cartId } },
+    },
+    include: {
+      user: true,
+      cart: {
+        include: {
+          cartItems: {
+            include: {
+              product: true,
+              variation: true,
+            },
+          },
+        },
+      },
     },
   });
 }

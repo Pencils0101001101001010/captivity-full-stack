@@ -20,6 +20,13 @@ enum UserRole {
   ADMIN
 }
 
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
 model User {
   id               String    @id
   username         String    @unique
@@ -52,6 +59,7 @@ model User {
   sessions         Session[]
   products         Product[]
   carts            Cart[]
+  orders           Order[]
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -130,6 +138,7 @@ model Cart {
   userId    String
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   cartItems CartItem[]
+  order     Order?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -148,4 +157,36 @@ model CartItem {
 
   @@unique([cartId, productId, variationId])
   @@map("cart_items")
+}
+
+model Order {
+  id                  String      @id @default(cuid())
+  userId              String
+  user                User        @relation(fields: [userId], references: [id])
+  cartId              Int         @unique
+  cart                Cart        @relation(fields: [cartId], references: [id])
+  captivityBranch     String
+  methodOfCollection  String
+  salesRep            String?
+  referenceNumber     String?
+  firstName           String
+  lastName            String
+  companyName         String
+  countryRegion       String
+  streetAddress       String
+  apartmentSuite      String?
+  townCity            String
+  province            String
+  postcode            String
+  phone               String
+  email               String
+  orderNotes          String?
+  agreeTerms          Boolean
+  receiveEmailReviews Boolean
+  totalAmount         Float
+  status              OrderStatus @default(PENDING)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  @@map("orders")
 }
