@@ -70,15 +70,14 @@ const SlideInCart: React.FC<SlideInCartProps> = ({
           <span className="font-bold">Total:</span>
           <span className="font-bold">R{total.toFixed(2)}</span>
         </div>
-        <button
-          className="w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-500 transition duration-300"
-          onClick={() => {
-            console.log("Proceeding to checkout");
-          }}
-          disabled={!cartItems || cartItems.length === 0}
+        <LinkButton
+          href="/customer/shopping/checkout"
+          icon={ShoppingCart}
+          variant="destructive"
+          className="w-full"
         >
           Checkout
-        </button>
+        </LinkButton>
         <div className="mt-6">
           <LinkButton
             href="/customer/shopping/cart"
