@@ -22,8 +22,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { formSchema, FormValues } from "./validations";
+import { CartData } from "@/app/(customer)/types";
 
-const CheckoutForm = () => {
+interface CheckoutFormProps {
+  cartData: CartData;
+}
+
+const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
