@@ -4,7 +4,7 @@ import SessionProvider from "./SessionProvider";
 import Navbar from "./_components/Navbar";
 import CategoriesDropDown from "./_components/CategoriesDropDown";
 
-export default async function Layout({
+export default async function CustomerLayout({
   children,
 }: {
   children: React.ReactNode;
