@@ -10,7 +10,6 @@ export async function submitOrder(
   cartData: CartData
 ): Promise<CartActionResult<OrderData>> {
   try {
-    console.log("Starting submitOrder function");
     const { user } = await validateRequest();
     if (!user) {
       return { success: false, error: "Unauthorized. Please log in." };
@@ -58,18 +57,16 @@ export async function submitOrder(
         },
       },
     });
+
+    // Update cart items to mark them as processed
     for (const item of cartData.items) {
-      await prisma.cartItem.update({
+      await prisma.cartItem.updateMany({
         where: {
-          cartId_productId_variationId: {
-            cartId: cartData.id,
-            productId: item.productId,
-            variationId: item.variationId,
-          },
+          cartId: cartData.id,
+          productId: item.productId,
+          variationId: item.variationId,
         },
-        data: {
-          isActive: false,
-        },
+        data: {}, // You can add any update data here if needed
       });
     }
 

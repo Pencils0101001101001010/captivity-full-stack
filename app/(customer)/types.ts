@@ -2,37 +2,22 @@ import { Prisma } from "@prisma/client";
 
 // Cart Types
 export type CartItem = {
-  isActive: boolean;
   productId: number;
-  variationId: number;
+  variationId: number | null;
   quantity: number;
 };
 
 export type ExtendedCartItem = CartItem & {
   productName: string;
   price: number;
-  variationName: string;
+  variationName: string | null;
   image: string;
 };
 
 export type CartData = {
   id: number;
-  items: {
-    productId: number;
-    variationId: number;
-    quantity: number;
-    isActive: boolean;
-  }[];
-  extendedItems: {
-    productId: number;
-    variationId: number;
-    quantity: number;
-    isActive: boolean;
-    productName: string;
-    price: number;
-    variationName?: string;
-    image?: string;
-  }[];
+  items: CartItem[];
+  extendedItems: ExtendedCartItem[];
 };
 
 export type CartActionResult<T = void> =
@@ -189,21 +174,19 @@ export async function getUserCartData(
   return {
     id: cart.id,
     items: cart.cartItems.map(item => ({
-      isActive: item.isActive,
       productId: item.productId,
-      variationId: item.variationId!,
+      variationId: item.variationId,
       quantity: item.quantity,
     })),
     extendedItems: cart.cartItems.map(item => ({
-      isActive: item.isActive,
       productId: item.productId,
-      variationId: item.variationId!,
+      variationId: item.variationId,
       quantity: item.quantity,
       productName: item.product.productName,
       price: item.product.sellingPrice,
       variationName: item.variation
         ? `${item.variation.color} - ${item.variation.size}`
-        : "Default",
+        : null,
       image:
         item.variation?.variationImageURL ||
         item.product.featuredImage?.medium ||
