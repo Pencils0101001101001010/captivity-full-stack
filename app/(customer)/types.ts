@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { OrderStatus, Prisma } from "@prisma/client";
 
 // Cart Types
 export type CartItem = {
@@ -106,8 +106,11 @@ export async function getUserCartData(
   userId: string,
   prisma: Prisma.TransactionClient
 ): Promise<CartData | null> {
-  const cart = await prisma.cart.findFirst({
-    where: { userId },
+  const activeCart = await prisma.cart.findFirst({
+    where: {
+      userId,
+      isActive: true,
+    },
     include: {
       cartItems: {
         include: {
@@ -118,43 +121,71 @@ export async function getUserCartData(
           },
           variation: true,
         },
-        where: {
-          NOT: {
-            cart: {
-              order: {
-                isNot: null,
-              },
-            },
-          },
-        },
       },
     },
   });
 
-  if (!cart) return null;
+  if (!activeCart) return null;
+
+  const items: CartItem[] = activeCart.cartItems.map(item => ({
+    productId: item.productId,
+    variationId: item.variationId!,
+    quantity: item.quantity,
+  }));
+
+  const extendedItems: ExtendedCartItem[] = activeCart.cartItems.map(item => ({
+    productId: item.productId,
+    variationId: item.variationId!,
+    quantity: item.quantity,
+    productName: item.product.productName,
+    price: item.product.sellingPrice,
+    variationName: item.variation
+      ? `${item.variation.color} - ${item.variation.size}`
+      : "Default",
+    image:
+      item.variation?.variationImageURL ||
+      item.product.featuredImage?.medium ||
+      "/placeholder-image.jpg",
+  }));
 
   return {
-    id: cart.id,
-    items: cart.cartItems.map(item => ({
-      productId: item.productId,
-      variationId: item.variationId!,
-      quantity: item.quantity,
-    })),
-    extendedItems: cart.cartItems.map(item => ({
-      productId: item.productId,
-      variationId: item.variationId!,
-      quantity: item.quantity,
-      productName: item.product.productName,
-      price: item.product.sellingPrice,
-      variationName: item.variation
-        ? `${item.variation.color} - ${item.variation.size}`
-        : "Default",
-      image:
-        item.variation?.variationImageURL ||
-        item.product.featuredImage?.medium ||
-        "/placeholder-image.jpg",
-    })),
+    id: activeCart.id,
+    items,
+    extendedItems,
   };
+}
+
+export async function submitOrder(
+  userId: string,
+  cartId: number,
+  orderData: Omit<Prisma.OrderCreateInput, "user" | "cart" | "id">,
+  prisma: Prisma.TransactionClient
+): Promise<Prisma.OrderGetPayload<{ include: { cart: true } }>> {
+  // Create the order with the current cart
+  const order = await prisma.order.create({
+    data: {
+      ...orderData,
+      user: { connect: { id: userId } },
+      cart: { connect: { id: cartId } },
+    },
+    include: { cart: true },
+  });
+
+  // Mark the current cart as inactive
+  await prisma.cart.update({
+    where: { id: cartId },
+    data: { isActive: false },
+  });
+
+  // Create a new active cart for the user
+  await prisma.cart.create({
+    data: {
+      userId,
+      isActive: true,
+    },
+  });
+
+  return order;
 }
 
 export async function createUserCart(

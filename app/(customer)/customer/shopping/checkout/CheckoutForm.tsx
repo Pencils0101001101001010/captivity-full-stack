@@ -27,14 +27,12 @@ import { CartData } from "@/app/(customer)/types";
 import { useToast } from "@/hooks/use-toast";
 import { useSubmitOrder } from "./useSubmitOrder";
 import { useCart } from "../cart/useCartHooks";
-import { useRouter } from "next/navigation";
 
 interface CheckoutFormProps {
   cartData: CartData;
 }
 
 const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
-  const router = useRouter();
   const { toast } = useToast();
   const {
     loading: submitLoading,
@@ -102,7 +100,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
           description: `Your order #${submitData.id} has been placed.`,
           duration: 5000,
         });
-        router.push("/customer");
       }
     } catch (error) {
       console.error("Error submitting order:", error);

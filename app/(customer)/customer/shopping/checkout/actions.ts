@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { CartActionResult, CartData, OrderData } from "@/app/(customer)/types";
@@ -54,61 +53,50 @@ export async function submitOrder(
         let existingCart, order, newCart;
 
         try {
-          // Step 1: Verify cart existence and check if it's already associated with an order
+          // Step 1: Verify cart existence and check if it's active
           existingCart = await transactionPrisma.cart.findUnique({
             where: { id: cartData.id },
             include: { order: true, cartItems: true },
           });
 
-          if (!existingCart) {
-            throw new Error("Cart not found");
+          if (!existingCart || !existingCart.isActive) {
+            throw new Error("Active cart not found");
           }
 
-          // Step 2: Create or update order
-          if (existingCart.order) {
-            order = await transactionPrisma.order.update({
-              where: { id: existingCart.order.id },
-              data: orderData,
-              include: {
-                user: true,
-                cart: {
-                  include: {
-                    cartItems: {
-                      include: {
-                        product: true,
-                        variation: true,
-                      },
+          // Step 2: Create order
+          order = await transactionPrisma.order.create({
+            data: {
+              ...orderData,
+              user: { connect: { id: user.id } },
+              cart: { connect: { id: cartData.id } },
+            },
+            include: {
+              user: true,
+              cart: {
+                include: {
+                  cartItems: {
+                    include: {
+                      product: true,
+                      variation: true,
                     },
                   },
                 },
               },
-            });
-          } else {
-            order = await transactionPrisma.order.create({
-              data: {
-                ...orderData,
-                user: { connect: { id: user.id } },
-                cart: { connect: { id: cartData.id } },
-              },
-              include: {
-                user: true,
-                cart: {
-                  include: {
-                    cartItems: {
-                      include: {
-                        product: true,
-                        variation: true,
-                      },
-                    },
-                  },
-                },
-              },
-            });
-          }
+            },
+          });
 
-          // Step 3: Create a new empty cart for the user
+          // Step 3: Mark the current cart as inactive
+          await transactionPrisma.cart.update({
+            where: { id: cartData.id },
+            data: { isActive: false },
+          });
+
+          // Step 4: Create a new empty active cart for the user
           newCart = await transactionPrisma.cart.create({
-            data: { userId: user.id },
+            data: {
+              userId: user.id,
+              isActive: true,
+            },
           });
 
           return { order, newCartId: newCart.id };
@@ -122,17 +110,6 @@ export async function submitOrder(
         timeout: 10000, // 10 seconds
       }
     );
-
-    // Clear the cart cookie and set new cart ID
-    cookies().set({
-      name: "cartData",
-      value: JSON.stringify({ id: result.newCartId, items: [] }),
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-      path: "/",
-    });
 
     // Revalidate relevant paths
     revalidatePath("/customer/shopping/cart");
