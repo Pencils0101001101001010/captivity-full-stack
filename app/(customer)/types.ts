@@ -1,4 +1,4 @@
-import { OrderStatus, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 // Cart Types
 export type CartItem = {
@@ -85,12 +85,59 @@ export type OrderData = Prisma.OrderGetPayload<{
   };
 }>;
 
-// LoggedIn Customer Types
+// Helper Functions
+export function getLoggedInUserDataInclude() {
+  return {
+    sessions: {
+      include: {
+        user: {
+          select: userFields,
+        },
+      },
+    },
+    products: {
+      include: {
+        dynamicPricing: true,
+        variations: true,
+        featuredImage: true,
+      },
+    },
+    carts: {
+      include: {
+        cartItems: {
+          include: {
+            product: {
+              include: {
+                dynamicPricing: true,
+                variations: true,
+                featuredImage: true,
+              },
+            },
+            variation: true,
+          },
+        },
+      },
+    },
+    orders: {
+      include: {
+        cart: {
+          include: {
+            cartItems: {
+              include: {
+                product: true,
+                variation: true,
+              },
+            },
+          },
+        },
+      },
+    },
+  } satisfies Prisma.UserInclude;
+}
+
 export type LoggedInUserData = Prisma.UserGetPayload<{
   include: ReturnType<typeof getLoggedInUserDataInclude>;
 }>;
-
-// Helper Functions
 
 export async function getLoggedInUserData(
   userId: string,
@@ -106,11 +153,8 @@ export async function getUserCartData(
   userId: string,
   prisma: Prisma.TransactionClient
 ): Promise<CartData | null> {
-  const activeCart = await prisma.cart.findFirst({
-    where: {
-      userId,
-      isActive: true,
-    },
+  const cart = await prisma.cart.findFirst({
+    where: { userId },
     include: {
       cartItems: {
         include: {
@@ -125,67 +169,30 @@ export async function getUserCartData(
     },
   });
 
-  if (!activeCart) return null;
-
-  const items: CartItem[] = activeCart.cartItems.map(item => ({
-    productId: item.productId,
-    variationId: item.variationId!,
-    quantity: item.quantity,
-  }));
-
-  const extendedItems: ExtendedCartItem[] = activeCart.cartItems.map(item => ({
-    productId: item.productId,
-    variationId: item.variationId!,
-    quantity: item.quantity,
-    productName: item.product.productName,
-    price: item.product.sellingPrice,
-    variationName: item.variation
-      ? `${item.variation.color} - ${item.variation.size}`
-      : "Default",
-    image:
-      item.variation?.variationImageURL ||
-      item.product.featuredImage?.medium ||
-      "/placeholder-image.jpg",
-  }));
+  if (!cart) return null;
 
   return {
-    id: activeCart.id,
-    items,
-    extendedItems,
+    id: cart.id,
+    items: cart.cartItems.map(item => ({
+      productId: item.productId,
+      variationId: item.variationId!,
+      quantity: item.quantity,
+    })),
+    extendedItems: cart.cartItems.map(item => ({
+      productId: item.productId,
+      variationId: item.variationId!,
+      quantity: item.quantity,
+      productName: item.product.productName,
+      price: item.product.sellingPrice,
+      variationName: item.variation
+        ? `${item.variation.color} - ${item.variation.size}`
+        : "Default",
+      image:
+        item.variation?.variationImageURL ||
+        item.product.featuredImage?.medium ||
+        "/placeholder-image.jpg",
+    })),
   };
-}
-
-export async function submitOrder(
-  userId: string,
-  cartId: number,
-  orderData: Omit<Prisma.OrderCreateInput, "user" | "cart" | "id">,
-  prisma: Prisma.TransactionClient
-): Promise<Prisma.OrderGetPayload<{ include: { cart: true } }>> {
-  // Create the order with the current cart
-  const order = await prisma.order.create({
-    data: {
-      ...orderData,
-      user: { connect: { id: userId } },
-      cart: { connect: { id: cartId } },
-    },
-    include: { cart: true },
-  });
-
-  // Mark the current cart as inactive
-  await prisma.cart.update({
-    where: { id: cartId },
-    data: { isActive: false },
-  });
-
-  // Create a new active cart for the user
-  await prisma.cart.create({
-    data: {
-      userId,
-      isActive: true,
-    },
-  });
-
-  return order;
 }
 
 export async function createUserCart(
@@ -266,54 +273,4 @@ export async function createOrder(
       },
     },
   });
-}
-
-// Complete Customer Session Storage based on model relations
-export function getLoggedInUserDataInclude() {
-  return {
-    sessions: {
-      include: {
-        user: {
-          select: userFields,
-        },
-      },
-    },
-    products: {
-      include: {
-        dynamicPricing: true,
-        variations: true,
-        featuredImage: true,
-      },
-    },
-    carts: {
-      include: {
-        cartItems: {
-          include: {
-            product: {
-              include: {
-                dynamicPricing: true,
-                variations: true,
-                featuredImage: true,
-              },
-            },
-            variation: true,
-          },
-        },
-      },
-    },
-    orders: {
-      include: {
-        cart: {
-          include: {
-            cartItems: {
-              include: {
-                product: true,
-                variation: true,
-              },
-            },
-          },
-        },
-      },
-    },
-  } satisfies Prisma.UserInclude;
 }

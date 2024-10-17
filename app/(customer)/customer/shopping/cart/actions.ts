@@ -9,6 +9,23 @@ import {
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+
+// Helper function to set cart cookie
+const setCartCookie = (cartData: CartData) => {
+  cookies().set({
+    name: "cartData",
+    value: JSON.stringify({
+      id: cartData.id,
+      items: cartData.items,
+    }),
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 60 * 60 * 24 * 7, // 1 week
+    path: "/",
+  });
+};
 
 // Helper function to get cart data
 const getCartData = async (userId: string): Promise<CartData> => {
@@ -81,7 +98,8 @@ export async function addToCart(
 
     const updatedCartData = await getCartData(user.id);
 
-    revalidatePath(`/customer/shopping/products/${productId}`);
+    setCartCookie(updatedCartData);
+    revalidatePath(`/cutomer/shopping/products/${productId}`);
 
     return {
       success: true,
@@ -132,6 +150,7 @@ export async function removeFromCart(
 
     const updatedCartData = await getCartData(user.id);
 
+    setCartCookie(updatedCartData);
     revalidatePath(`/customer/shopping/cart`);
 
     return {
@@ -205,6 +224,7 @@ export async function updateCartItemQuantity(
 
     const updatedCartData = await getCartData(user.id);
 
+    setCartCookie(updatedCartData);
     revalidatePath(`/customer/shopping/cart`);
 
     return {
@@ -278,7 +298,7 @@ export async function clearCart(): Promise<CartActionResult<CartData>> {
       items: [],
       extendedItems: [],
     };
-
+    setCartCookie(emptyCartData);
     revalidatePath(`/customer/shopping/cart`);
 
     return {
