@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -24,12 +24,32 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { formSchema, FormValues } from "./validations";
 import { CartData } from "@/app/(customer)/types";
+import { useToast } from "@/hooks/use-toast";
+import { useSubmitOrder } from "./useSubmitOrder";
+import { useCart } from "../cart/useCartHooks";
+import { useRouter } from "next/navigation";
 
 interface CheckoutFormProps {
   cartData: CartData;
 }
 
 const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
+  const router = useRouter();
+  const { toast } = useToast();
+  const {
+    loading: submitLoading,
+    error: submitError,
+    data: submitData,
+    submit,
+  } = useSubmitOrder();
+  const {
+    cart,
+    loading: cartLoading,
+    error: cartError,
+    refreshCart,
+  } = useCart();
+  const [retryCount, setRetryCount] = useState(0);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -54,26 +74,70 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
     },
   });
 
-  const onSubmit = async (data: FormValues) => {
+  useEffect(() => {
+    if (cartError && retryCount < 3) {
+      const timer = setTimeout(() => {
+        refreshCart();
+        setRetryCount(prev => prev + 1);
+      }, 2000); // Retry after 2 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [cartError, retryCount, refreshCart]);
+
+  const onSubmit = async (formData: FormValues) => {
+    if (!cart) {
+      toast({
+        title: "Error",
+        description: "Unable to submit order. Cart data is not available.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // Combine form data with cart data
-      const submissionData = {
-        formData: data,
-        cartData: cartData,
-      };
-
-      console.log("Submission Data:", submissionData);
-
-      // Here you would typically send this data to your server
-      // await submitOrder(submissionData);
-
-      // Handle successful submission
-      console.log("Order submitted successfully");
+      await submit(formData, cart);
+      if (submitData) {
+        toast({
+          title: "Order Submitted Successfully",
+          description: `Your order #${submitData.id} has been placed.`,
+          duration: 5000,
+        });
+        router.push("/customer");
+      }
     } catch (error) {
       console.error("Error submitting order:", error);
-      // Handle error (e.g., show error message to user)
+      toast({
+        title: "Error",
+        description:
+          "There was a problem submitting your order. Please try again.",
+        variant: "destructive",
+      });
     }
   };
+
+  if (cartLoading) {
+    return <div>Loading cart data...</div>;
+  }
+
+  if (cartError) {
+    return (
+      <div>
+        <p>Error loading cart data. Please try again later.</p>
+        <Button
+          onClick={() => {
+            setRetryCount(0);
+            refreshCart();
+          }}
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  if (!cart) {
+    return <div>No items in cart. Please add items before checking out.</div>;
+  }
 
   const calculateSubtotal = (price: number, quantity: number) => {
     return (price * quantity).toFixed(2);
@@ -528,9 +592,14 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
         <Button
           type="submit"
           className="w-full mt-8 py-3 text-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-300"
+          disabled={submitLoading}
         >
-          Place Order
+          {submitLoading ? "Submitting Order..." : "Place Order"}
         </Button>
+
+        {submitError && (
+          <p className="mt-4 text-red-600 text-center">{submitError}</p>
+        )}
       </form>
     </Form>
   );
