@@ -3,7 +3,7 @@ import ProductDetail from "./ProductDetailsPage";
 
 const Page = () => {
   return (
-    <div>
+    <div className="m-5">
       <ProductDetail />
     </div>
   );

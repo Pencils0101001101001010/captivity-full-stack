@@ -18,6 +18,7 @@ import { fetchProductById } from "./actions";
 import { useParams } from "next/navigation";
 import RelatedProducts from "@/app/(user)/_components/RelatedProducts";
 import Link from "next/link";
+import ZoomImage from "@/app/(user)/_components/ZoomImage";
 
 const ProductDetail: React.FC = () => {
   const params = useParams();
@@ -118,16 +119,11 @@ const ProductDetail: React.FC = () => {
     <div className="container mx-auto my-8 gap-5">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-4">
-          <div className="relative h-[500px] w-full">
-            <Image
-              loading="eager"
-              priority
+          <div className="relative w-full aspect-square sm:aspect-[4/3] md:aspect-square lg:aspect-[4/3] xl:aspect-square max-w-[500px] mx-auto">
+            <ZoomImage
               src={mainImage || "/captivityIcon.png"}
               alt={product.productName}
-              fill
-              style={{ objectFit: "contain" }}
-              className="rounded-lg"
-              sizes="(max-width: 768px) 100vw, 50vw"
+              className="w-full h-full"
             />
           </div>
           <div className="flex justify-center items-center">
@@ -153,7 +149,7 @@ const ProductDetail: React.FC = () => {
           </div>
         </div>
         <div>
-          <h1 className="text-3xl font-bold mb-4 text-red-500">
+          <h1 className="flex w-auto mr-10 text-3xl font-bold mb-4 text-red-500">
             {product.productName}
           </h1>
           {/* <p className="text-2xl font-semibold mb-4">
@@ -212,6 +208,7 @@ const ProductDetail: React.FC = () => {
               value={quantity}
               onChange={handleQuantityChange}
               className="w-full"
+              placeholder="0"
             />
           </div>
 
@@ -248,10 +245,10 @@ const ProductDetail: React.FC = () => {
             </TabsContent>
             <TabsContent value="features">
               <ul className="list-disc pl-5">
-                <li>6 Panel Unstructured</li>
-                <li>Embroidered Eyelets</li>
-                <li>Pre-Curved Peak</li>
-                <li>Low Profile</li>
+                <li>Carton box size</li>
+                <li>Carton box size</li>
+                <li>Carton box size</li>
+                <li>Carton box size</li>
               </ul>
             </TabsContent>
           </Tabs>
