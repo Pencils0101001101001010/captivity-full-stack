@@ -57,12 +57,13 @@ export async function submitOrder(
           // Step 1: Verify cart existence and check if it's already associated with an order
           existingCart = await transactionPrisma.cart.findUnique({
             where: { id: cartData.id },
-            include: { order: true },
+            include: { order: true, cartItems: true },
           });
 
           if (!existingCart) {
             throw new Error("Cart not found");
           }
+
           // Step 2: Create or update order
           if (existingCart.order) {
             order = await transactionPrisma.order.update({
@@ -105,12 +106,7 @@ export async function submitOrder(
             });
           }
 
-          // Step 3: Clear the cart items
-          await transactionPrisma.cartItem.deleteMany({
-            where: { cartId: cartData.id },
-          });
-
-          // Step 4: Create a new empty cart for the user
+          // Step 3: Create a new empty cart for the user
           newCart = await transactionPrisma.cart.create({
             data: { userId: user.id },
           });

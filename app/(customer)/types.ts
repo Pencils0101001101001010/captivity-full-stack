@@ -118,6 +118,15 @@ export async function getUserCartData(
           },
           variation: true,
         },
+        where: {
+          NOT: {
+            cart: {
+              order: {
+                isNot: null,
+              },
+            },
+          },
+        },
       },
     },
   });
