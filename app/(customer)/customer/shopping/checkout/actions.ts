@@ -4,12 +4,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import {
-  CartActionResult,
-  CartData,
-  OrderData,
-  createOrder,
-} from "@/app/(customer)/types";
+import { CartActionResult, CartData, OrderData } from "@/app/(customer)/types";
 import { FormValues } from "./validations";
 import { Prisma } from "@prisma/client";
 
