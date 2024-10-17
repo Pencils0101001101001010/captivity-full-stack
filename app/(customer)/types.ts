@@ -85,59 +85,12 @@ export type OrderData = Prisma.OrderGetPayload<{
   };
 }>;
 
-// Helper Functions
-export function getLoggedInUserDataInclude() {
-  return {
-    sessions: {
-      include: {
-        user: {
-          select: userFields,
-        },
-      },
-    },
-    products: {
-      include: {
-        dynamicPricing: true,
-        variations: true,
-        featuredImage: true,
-      },
-    },
-    carts: {
-      include: {
-        cartItems: {
-          include: {
-            product: {
-              include: {
-                dynamicPricing: true,
-                variations: true,
-                featuredImage: true,
-              },
-            },
-            variation: true,
-          },
-        },
-      },
-    },
-    orders: {
-      include: {
-        cart: {
-          include: {
-            cartItems: {
-              include: {
-                product: true,
-                variation: true,
-              },
-            },
-          },
-        },
-      },
-    },
-  } satisfies Prisma.UserInclude;
-}
-
+// LoggedIn Customer Types
 export type LoggedInUserData = Prisma.UserGetPayload<{
   include: ReturnType<typeof getLoggedInUserDataInclude>;
 }>;
+
+// Helper Functions
 
 export async function getLoggedInUserData(
   userId: string,
@@ -273,4 +226,54 @@ export async function createOrder(
       },
     },
   });
+}
+
+// Complete Customer Session Storage based on model relations
+export function getLoggedInUserDataInclude() {
+  return {
+    sessions: {
+      include: {
+        user: {
+          select: userFields,
+        },
+      },
+    },
+    products: {
+      include: {
+        dynamicPricing: true,
+        variations: true,
+        featuredImage: true,
+      },
+    },
+    carts: {
+      include: {
+        cartItems: {
+          include: {
+            product: {
+              include: {
+                dynamicPricing: true,
+                variations: true,
+                featuredImage: true,
+              },
+            },
+            variation: true,
+          },
+        },
+      },
+    },
+    orders: {
+      include: {
+        cart: {
+          include: {
+            cartItems: {
+              include: {
+                product: true,
+                variation: true,
+              },
+            },
+          },
+        },
+      },
+    },
+  } satisfies Prisma.UserInclude;
 }
