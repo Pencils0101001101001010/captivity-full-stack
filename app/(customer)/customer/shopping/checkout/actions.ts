@@ -1,82 +1,93 @@
 "use server";
-
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import {
-  CartActionResult,
-  CartData,
-  OrderData,
-  createOrder,
-} from "@/app/(customer)/types";
+import { CartActionResult, CartData, OrderData } from "@/app/(customer)/types";
 import { FormValues } from "./validations";
-import { Prisma } from "@prisma/client";
 
 export async function submitOrder(
   formData: FormValues,
   cartData: CartData
 ): Promise<CartActionResult<OrderData>> {
   try {
+    console.log("Starting submitOrder function");
     const { user } = await validateRequest();
     if (!user) {
       return { success: false, error: "Unauthorized. Please log in." };
     }
 
-    // Calculate total amount
+    console.log("Calculating total amount");
     const totalAmount = cartData.extendedItems.reduce(
       (total, item) => total + item.price * item.quantity,
       0
     );
 
-    // Prepare order data
-    const orderData: Omit<Prisma.OrderCreateInput, "user" | "cart" | "id"> = {
-      captivityBranch: formData.captivityBranch,
-      methodOfCollection: formData.methodOfCollection,
-      salesRep: formData.salesRep || null,
-      referenceNumber: formData.referenceNumber || null,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      companyName: formData.companyName,
-      countryRegion: formData.countryRegion,
-      streetAddress: formData.streetAddress,
-      apartmentSuite: formData.apartmentSuite || null,
-      townCity: formData.townCity,
-      province: formData.province,
-      postcode: formData.postcode,
-      phone: formData.phone,
-      email: formData.email,
-      orderNotes: formData.orderNotes || null,
-      agreeTerms: formData.agreeTerms,
-      receiveEmailReviews: formData.receiveEmailReviews || false,
-      totalAmount: totalAmount,
-      status: "PENDING",
-    };
-
-    // Create the order
-    const createdOrder = await createOrder(
-      user.id,
-      cartData.id,
-      orderData,
-      prisma
-    );
-
-    // Clear the user's cart after successful order creation
-    await prisma.cartItem.deleteMany({
-      where: { cartId: cartData.id },
+    console.log("Creating order");
+    const createdOrder = await prisma.order.create({
+      data: {
+        user: { connect: { id: user.id } },
+        cart: { connect: { id: cartData.id } },
+        captivityBranch: formData.captivityBranch,
+        methodOfCollection: formData.methodOfCollection,
+        salesRep: formData.salesRep || null,
+        referenceNumber: formData.referenceNumber || null,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        companyName: formData.companyName,
+        countryRegion: formData.countryRegion,
+        streetAddress: formData.streetAddress,
+        apartmentSuite: formData.apartmentSuite || null,
+        townCity: formData.townCity,
+        province: formData.province,
+        postcode: formData.postcode,
+        phone: formData.phone,
+        email: formData.email,
+        orderNotes: formData.orderNotes || null,
+        agreeTerms: formData.agreeTerms,
+        receiveEmailReviews: formData.receiveEmailReviews || false,
+        totalAmount: totalAmount,
+        status: "PENDING",
+      },
+      include: {
+        user: true,
+        cart: {
+          include: {
+            cartItems: {
+              include: {
+                product: true,
+                variation: true,
+              },
+            },
+          },
+        },
+      },
     });
 
-    // Clear the cart cookie
-    cookies().set({
-      name: "cartData",
-      value: "",
-      expires: new Date(0),
-      path: "/",
-    });
+    console.log("Order created successfully");
 
-    // Revalidate relevant paths
+    console.log("Updating cart items");
+    for (const item of cartData.items) {
+      await prisma.cartItem.update({
+        where: {
+          cartId_productId_variationId: {
+            cartId: cartData.id,
+            productId: item.productId,
+            variationId: item.variationId,
+          },
+        },
+        data: {
+          isActive: false,
+        },
+      });
+    }
+
+    console.log("Cart items updated successfully");
+
+    console.log("Revalidating paths");
     revalidatePath("/customer/shopping/cart");
     revalidatePath("/customer/orders");
+
+    console.log("Paths revalidated");
 
     return {
       success: true,
@@ -85,6 +96,11 @@ export async function submitOrder(
     };
   } catch (error: any) {
     console.error("Error submitting order:", error);
+    console.error("Error name:", error.name);
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    if (error.code) console.error("Error code:", error.code);
+    if (error.meta) console.error("Error meta:", error.meta);
     return { success: false, error: "An unexpected error occurred" };
   }
 }

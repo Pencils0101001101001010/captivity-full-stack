@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 
 // Cart Types
 export type CartItem = {
+  isActive: boolean;
   productId: number;
   variationId: number;
   quantity: number;
@@ -16,8 +17,22 @@ export type ExtendedCartItem = CartItem & {
 
 export type CartData = {
   id: number;
-  items: CartItem[];
-  extendedItems: ExtendedCartItem[];
+  items: {
+    productId: number;
+    variationId: number;
+    quantity: number;
+    isActive: boolean;
+  }[];
+  extendedItems: {
+    productId: number;
+    variationId: number;
+    quantity: number;
+    isActive: boolean;
+    productName: string;
+    price: number;
+    variationName?: string;
+    image?: string;
+  }[];
 };
 
 export type CartActionResult<T = void> =
@@ -174,11 +189,13 @@ export async function getUserCartData(
   return {
     id: cart.id,
     items: cart.cartItems.map(item => ({
+      isActive: item.isActive,
       productId: item.productId,
       variationId: item.variationId!,
       quantity: item.quantity,
     })),
     extendedItems: cart.cartItems.map(item => ({
+      isActive: item.isActive,
       productId: item.productId,
       variationId: item.variationId!,
       quantity: item.quantity,
@@ -251,9 +268,9 @@ export async function createOrder(
   userId: string,
   cartId: number,
   orderData: Omit<Prisma.OrderCreateInput, "user" | "cart" | "id">,
-  prisma: Prisma.TransactionClient
+  prismaClient: Prisma.TransactionClient
 ): Promise<OrderData> {
-  return prisma.order.create({
+  return prismaClient.order.create({
     data: {
       ...orderData,
       user: { connect: { id: userId } },

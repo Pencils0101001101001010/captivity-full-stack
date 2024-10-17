@@ -136,7 +136,6 @@ model FeaturedImage {
 model Cart {
   id        Int        @id @default(autoincrement())
   userId    String
-  isActive  Boolean    @default(true)
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   cartItems CartItem[]
   order     Order?
@@ -152,6 +151,7 @@ model CartItem {
   variationId Int?
   quantity    Int
   cartId      Int
+  isActive    Boolean    @default(true)
   product     Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
   variation   Variation? @relation(fields: [variationId], references: [id])
   cart        Cart       @relation(fields: [cartId], references: [id], onDelete: Cascade)
