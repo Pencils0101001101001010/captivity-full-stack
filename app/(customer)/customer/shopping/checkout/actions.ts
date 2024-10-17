@@ -1,9 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import { CartActionResult, CartData, OrderData } from "@/app/(customer)/types";
+import {
+  CartActionResult,
+  CartData,
+  OrderData,
+  createOrder,
+} from "@/app/(customer)/types";
 import { FormValues } from "./validations";
 import { Prisma } from "@prisma/client";
 
@@ -13,7 +19,7 @@ export async function submitOrder(
 ): Promise<CartActionResult<OrderData>> {
   try {
     const { user } = await validateRequest();
-    if (!user || user.role !== "CUSTOMER") {
+    if (!user) {
       return { success: false, error: "Unauthorized. Please log in." };
     }
 
@@ -47,69 +53,26 @@ export async function submitOrder(
       status: "PENDING",
     };
 
-    // Create the order within a transaction
-    const result = await prisma.$transaction(
-      async transactionPrisma => {
-        let existingCart, order, newCart;
-
-        try {
-          // Step 1: Verify cart existence and check if it's active
-          existingCart = await transactionPrisma.cart.findUnique({
-            where: { id: cartData.id },
-            include: { order: true, cartItems: true },
-          });
-
-          if (!existingCart || !existingCart.isActive) {
-            throw new Error("Active cart not found");
-          }
-
-          // Step 2: Create order
-          order = await transactionPrisma.order.create({
-            data: {
-              ...orderData,
-              user: { connect: { id: user.id } },
-              cart: { connect: { id: cartData.id } },
-            },
-            include: {
-              user: true,
-              cart: {
-                include: {
-                  cartItems: {
-                    include: {
-                      product: true,
-                      variation: true,
-                    },
-                  },
-                },
-              },
-            },
-          });
-
-          // Step 3: Mark the current cart as inactive
-          await transactionPrisma.cart.update({
-            where: { id: cartData.id },
-            data: { isActive: false },
-          });
-
-          // Step 4: Create a new empty active cart for the user
-          newCart = await transactionPrisma.cart.create({
-            data: {
-              userId: user.id,
-              isActive: true,
-            },
-          });
-
-          return { order, newCartId: newCart.id };
-        } catch (error) {
-          console.error("Error in transaction:", error);
-          throw error; // Re-throw the error to roll back the transaction
-        }
-      },
-      {
-        maxWait: 5000, // 5 seconds
-        timeout: 10000, // 10 seconds
-      }
+    // Create the order
+    const createdOrder = await createOrder(
+      user.id,
+      cartData.id,
+      orderData,
+      prisma
     );
+
+    // Clear the user's cart after successful order creation
+    await prisma.cartItem.deleteMany({
+      where: { cartId: cartData.id },
+    });
+
+    // Clear the cart cookie
+    cookies().set({
+      name: "cartData",
+      value: "",
+      expires: new Date(0),
+      path: "/",
+    });
 
     // Revalidate relevant paths
     revalidatePath("/customer/shopping/cart");
@@ -118,20 +81,10 @@ export async function submitOrder(
     return {
       success: true,
       message: "Order submitted successfully",
-      data: result.order,
+      data: createdOrder,
     };
   } catch (error: any) {
     console.error("Error submitting order:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      console.error("Prisma Error Code:", error.code);
-      console.error("Prisma Error Message:", error.message);
-      if (error.meta) {
-        console.error("Error Meta:", JSON.stringify(error.meta, null, 2));
-      }
-    }
-    return {
-      success: false,
-      error: error.message || "An unexpected error occurred",
-    };
+    return { success: false, error: "An unexpected error occurred" };
   }
 }
