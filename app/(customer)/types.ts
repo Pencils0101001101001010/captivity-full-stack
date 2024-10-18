@@ -1,23 +1,22 @@
 import { Prisma } from "@prisma/client";
 
 // Cart Types
-export type CartItem = {
+export interface CartItem {
   productId: number;
   variationId: number | null;
   quantity: number;
-};
+}
 
-export type ExtendedCartItem = CartItem & {
+export interface ExtendedCartItem extends CartItem {
   productName: string;
   price: number;
   variationName: string | null;
   image: string;
-};
+}
 
 export type CartData = {
   id: number;
-  items: CartItem[];
-  extendedItems: ExtendedCartItem[];
+  items: ExtendedCartItem[];
 };
 
 export type CartActionResult<T = void> =
