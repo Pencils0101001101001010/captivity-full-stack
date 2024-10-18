@@ -1,6 +1,7 @@
 import React from "react";
 import { X } from "lucide-react";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
 interface SlideInCartProps {
   isOpen: boolean;
@@ -54,12 +55,18 @@ const SlideInCart: React.FC<SlideInCartProps> = ({
         </div>
         <div className="p-4 border-t">
           <p className="font-bold mb-4">Subtotal: R{subtotal.toFixed(2)}</p>
-          <button className="w-full bg-blue-600 text-white py-2 px-4 rounded mb-2 hover:bg-blue-700">
+          <Button
+            variant={"destructive"}
+            className="w-full text-white py-2 px-4 rounded mb-2"
+          >
             View Basket
-          </button>
-          <button className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
+          </Button>
+          <Button
+            variant={"default"}
+            className="w-full text-white py-2 px-4 rounded"
+          >
             Checkout
-          </button>
+          </Button>
         </div>
       </div>
     </div>

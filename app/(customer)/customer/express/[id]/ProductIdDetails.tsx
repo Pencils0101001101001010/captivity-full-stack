@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { Product, Variation } from "../types";
+import { Button } from "@/components/ui/button";
 
 interface ProductIdDetailsProps {
   product: Product;
@@ -196,12 +197,18 @@ const ProductIdDetails: React.FC<ProductIdDetailsProps> = ({ product }) => {
 
           <p className="mb-4">{stock} in stock</p>
 
-          <button className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 mb-2">
+          <Button
+            variant={"default"}
+            className="w-full text-white py-2 px-4 rounded hover:bg-blue-300 mb-2"
+          >
             Add to Cart
-          </button>
-          <button className="w-full bg-gray-200 text-blue-600 py-2 px-4 rounded hover:bg-gray-300">
+          </Button>
+          <Button
+            variant={"destructive"}
+            className="w-full text-white py-2 px-4 rounded hover:bg-red-300"
+          >
             Go to Cart
-          </button>
+          </Button>
         </div>
       </div>
     </div>
