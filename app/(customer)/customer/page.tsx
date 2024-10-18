@@ -1,8 +1,12 @@
 import React from "react";
-import LandingPage from "./CustomerLanding";
+import CustomerLanding from "./CustomerLanding";
 
-const Page = () => {
-  return <div><LandingPage/></div>;
+const CustomerOPage = () => {
+  return (
+    <div>
+      <CustomerLanding />
+    </div>
+  );
 };
 
-export default Page;
+export default CustomerOPage;

@@ -35,7 +35,7 @@ const LandingPage = () => {
           asChild
           className="mt-2 bg-green-500 hover:bg-green-600 text-white"
         >
-          <Link href={"/customer/express/summer"}>Quick Order</Link>
+          <Link href={"/customer/shopping/summer"}>Quick Order</Link>
         </Button>
       </header>
 
