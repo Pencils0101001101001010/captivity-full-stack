@@ -1,6 +1,7 @@
 "use client";
 // app/(customer)/customer/express/[id]/ProductIdDetails.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import { Product, Variation } from "../types";
 
 interface ProductIdDetailsProps {
@@ -13,31 +14,42 @@ const ProductIdDetails: React.FC<ProductIdDetailsProps> = ({ product }) => {
   const [quantity, setQuantity] = useState(1);
   const [stock, setStock] = useState(0);
 
-  // Get unique variations based on color
-  const uniqueVariations = product.variations.reduce((acc, current) => {
-    const x = acc.find(item => item.color === current.color);
-    if (!x) {
-      return acc.concat([current]);
-    } else {
-      return acc;
-    }
-  }, [] as Variation[]);
-
-  const uniqueColors = Array.from(
-    new Set(product.variations.map(v => v.color))
+  // Memoize unique variations to prevent unnecessary recalculations
+  const uniqueVariations = useMemo(
+    () =>
+      product.variations.reduce((acc, current) => {
+        const x = acc.find(item => item.color === current.color);
+        if (!x) {
+          return acc.concat([current]);
+        } else {
+          return acc;
+        }
+      }, [] as Variation[]),
+    [product.variations]
   );
 
-  const sizes = Array.from(
-    new Set(
-      product.variations.filter(v => v.color === selectedColor).map(v => v.size)
-    )
+  const uniqueColors = useMemo(
+    () => Array.from(new Set(product.variations.map(v => v.color))),
+    [product.variations]
+  );
+
+  const sizes = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          product.variations
+            .filter(v => v.color === selectedColor)
+            .map(v => v.size)
+        )
+      ),
+    [product.variations, selectedColor]
   );
 
   useEffect(() => {
     if (uniqueColors.length > 0) {
       setSelectedColor(uniqueColors[0]);
     }
-  }, []);
+  }, [uniqueColors]);
 
   useEffect(() => {
     if (sizes.length > 0) {
@@ -45,14 +57,14 @@ const ProductIdDetails: React.FC<ProductIdDetailsProps> = ({ product }) => {
     } else {
       setSelectedSize("");
     }
-  }, [selectedColor]);
+  }, [sizes]);
 
   useEffect(() => {
     const currentVariation = product.variations.find(
       v => v.color === selectedColor && v.size === selectedSize
     );
     setStock(currentVariation ? currentVariation.quantity : 0);
-  }, [selectedColor, selectedSize]);
+  }, [selectedColor, selectedSize, product.variations]);
 
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
@@ -82,27 +94,34 @@ const ProductIdDetails: React.FC<ProductIdDetailsProps> = ({ product }) => {
       <h2 className="text-xl mb-4">{product.productName}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
-          <img
-            src={
-              currentVariation?.variationImageURL ||
-              product.featuredImage?.large
-            }
-            alt={product.productName}
-            className="w-full h-auto mb-4"
-          />
+          <div className="relative w-full h-[400px] mb-4">
+            <Image
+              src={
+                currentVariation?.variationImageURL ||
+                product.featuredImage?.large ||
+                ""
+              }
+              alt={product.productName}
+              layout="fill"
+              objectFit="contain"
+            />
+          </div>
           <div className="grid grid-cols-3 gap-2">
             {uniqueVariations.map(variation => (
-              <img
-                key={variation.id}
-                src={variation.variationImageURL}
-                alt={`${product.productName} - ${variation.color}`}
-                className={`w-full h-auto cursor-pointer border-2 ${
-                  selectedColor === variation.color
-                    ? "border-blue-500"
-                    : "border-gray-200"
-                }`}
-                onClick={() => handleColorChange(variation.color)}
-              />
+              <div key={variation.id} className="relative w-full h-[100px]">
+                <Image
+                  src={variation.variationImageURL}
+                  alt={`${product.productName} - ${variation.color}`}
+                  layout="fill"
+                  objectFit="cover"
+                  className={`cursor-pointer border-2 ${
+                    selectedColor === variation.color
+                      ? "border-blue-500"
+                      : "border-gray-200"
+                  }`}
+                  onClick={() => handleColorChange(variation.color)}
+                />
+              </div>
             ))}
           </div>
         </div>
