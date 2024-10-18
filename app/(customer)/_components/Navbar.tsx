@@ -10,8 +10,6 @@ import { RxDividerVertical } from "react-icons/rx";
 import { ShoppingCart } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
-import SlideInCart from "../customer/shopping/cart/SlideInCart";
-import { useCart } from "../customer/shopping/cart/useCartHooks";
 
 const Navbar = () => {
   const session = useSession();
@@ -19,8 +17,6 @@ const Navbar = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const [cookieItemCount, setCookieItemCount] = useState(0);
-
-  const { cart, loading, error, refreshCart } = useCart();
 
   useEffect(() => {
     // Read the cart data from the cookie on initial load
@@ -39,21 +35,8 @@ const Navbar = () => {
     }
   }, []);
 
-  useEffect(() => {
-    // Update cookieItemCount whenever cart changes
-    if (cart?.items) {
-      setCookieItemCount(cart.items.length);
-    }
-  }, [cart]);
-
-  const handleCartClick = useCallback(() => {
-    console.log("Opening cart, current items:", cookieItemCount);
-    setIsCartOpen(true);
-    refreshCart(); // Refresh cart data when opening
-  }, [cookieItemCount, refreshCart]);
-
   const renderCartIcon = () => (
-    <div className="relative cursor-pointer" onClick={handleCartClick}>
+    <div className="relative cursor-pointer">
       <ShoppingCart />
       {cookieItemCount > 0 && (
         <span
@@ -232,14 +215,6 @@ const Navbar = () => {
           </Link>
         </div>
       </div>
-
-      <SlideInCart
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        cartItems={cart?.extendedItems || []}
-      />
-
-      {error && <div className="text-red-500">Error: {error}</div>}
     </div>
   );
 };
