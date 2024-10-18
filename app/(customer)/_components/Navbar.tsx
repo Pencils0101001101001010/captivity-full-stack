@@ -10,13 +10,15 @@ import { RxDividerVertical } from "react-icons/rx";
 import { ShoppingCart } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
+import SlideInCart from "../customer/express/cart/SlideInCart";
 
 const Navbar = () => {
   const session = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-
   const [cookieItemCount, setCookieItemCount] = useState(0);
+  const [cartItems, setCartItems] = useState<any[]>([]); // Replace 'any' with your actual cart item type
+  const [subtotal, setSubtotal] = useState(0);
 
   useEffect(() => {
     // Read the cart data from the cookie on initial load
@@ -29,14 +31,20 @@ const Navbar = () => {
       try {
         const parsedCart = JSON.parse(decodeURIComponent(cookieCart));
         setCookieItemCount(parsedCart.items.length || 0);
+        setCartItems(parsedCart.items);
+        setSubtotal(parsedCart.subtotal || 0);
       } catch (e) {
         console.error("Error parsing cart cookie:", e);
       }
     }
   }, []);
 
+  const toggleCart = () => {
+    setIsCartOpen(!isCartOpen);
+  };
+
   const renderCartIcon = () => (
-    <div className="relative cursor-pointer">
+    <div className="relative cursor-pointer" onClick={toggleCart}>
       <ShoppingCart />
       {cookieItemCount > 0 && (
         <span
@@ -215,6 +223,13 @@ const Navbar = () => {
           </Link>
         </div>
       </div>
+      {/* Slide-in Cart */}
+      <SlideInCart
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        cartItems={cartItems}
+        subtotal={subtotal}
+      />
     </div>
   );
 };
