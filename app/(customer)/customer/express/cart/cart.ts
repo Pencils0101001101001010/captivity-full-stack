@@ -28,7 +28,7 @@ export async function getCart(): Promise<ShoppingCart | null> {
   }
 
   const cart = await prisma.cart.findFirst({
-    where: { userId: user.id },
+    where: { userId: user.id, status: "ACTIVE" },
     include: {
       cartItems: {
         include: {
@@ -61,7 +61,7 @@ export async function createCart(): Promise<ShoppingCart> {
   }
 
   const newCart = await prisma.cart.create({
-    data: { userId: user.id },
+    data: { userId: user.id, status: "ACTIVE" },
     include: {
       cartItems: {
         include: {
