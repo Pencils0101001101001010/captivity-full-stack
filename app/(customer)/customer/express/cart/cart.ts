@@ -1,5 +1,4 @@
-// app/lib/cart.ts
-
+"use server";
 import { validateRequest } from "@/auth";
 import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
@@ -56,7 +55,7 @@ export async function getCart(): Promise<ShoppingCart | null> {
 export async function createCart(): Promise<ShoppingCart> {
   const { user } = await validateRequest();
 
-  if (!user) {
+  if (!user || user.role !== "CUSTOMER") {
     throw new Error("User must be authenticated to create a cart");
   }
 
