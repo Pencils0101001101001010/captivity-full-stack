@@ -21,6 +21,7 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
+import Link from "next/link";
 
 const LandingPage = () => {
   return (
@@ -30,15 +31,18 @@ const LandingPage = () => {
         <p className="text-xl mb-4">
           Unlock the Speed of Our Quick Order Page Today!
         </p>
-        <Button className="mt-2 bg-green-500 hover:bg-green-600 text-white">
-          <ShoppingCart className="mr-2 h-4 w-4" /> Quick Order
+        <Button
+          asChild
+          className="mt-2 bg-green-500 hover:bg-green-600 text-white"
+        >
+          <Link href={"/customer/express"}>Quick Order</Link>
         </Button>
       </header>
 
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <div>
-            <h2 className="text-2xl font-semibold">Welcome, Stanton!</h2>
+            <h2 className="text-2xl font-semibold">Welcome, Jaco!</h2>
             <p className="text-gray-600">Last login: Today at 10:30 AM</p>
           </div>
         </div>
