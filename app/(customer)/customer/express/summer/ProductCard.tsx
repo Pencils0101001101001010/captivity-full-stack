@@ -1,6 +1,7 @@
 // components/ProductCard.tsx
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Product } from "./types";
 
 interface ProductCardProps {
@@ -9,17 +10,26 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
-    <div className="border rounded-lg p-4 shadow-md">
-      <Image
-        src={product.featuredImage?.medium || "/placeholder.jpg"}
-        alt={product.productName}
-        width={200}
-        height={200}
-        className="w-full h-48 object-cover mb-4 rounded"
-      />
-      <h3 className="text-lg font-semibold mb-2">{product.productName}</h3>
-      <p className="text-xl font-bold">R{product.sellingPrice.toFixed(2)}</p>
-    </div>
+    <Link href={`/product/${product.id}`} passHref>
+      <div className="bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+        <div className="relative h-48 w-full">
+          <Image
+            src={product.featuredImage?.medium || "/placeholder.jpg"}
+            alt={product.productName}
+            layout="fill"
+            objectFit="cover"
+          />
+        </div>
+        <div className="p-4">
+          <h3 className="text-lg font-semibold mb-2 truncate">
+            {product.productName}
+          </h3>
+          <p className="text-xl font-bold text-blue-600">
+            ${product.sellingPrice.toFixed(2)}
+          </p>
+        </div>
+      </div>
+    </Link>
   );
 };
 
