@@ -2,7 +2,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Product } from "./types";
+import { Product } from "../types";
 
 interface ProductCardProps {
   product: Product;
@@ -10,7 +10,7 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
-    <Link href={`/product/${product.id}`} passHref>
+    <Link href={`/customer/express/${product.id}`} passHref>
       <div className="bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
         <div className="relative h-48 w-full">
           <Image

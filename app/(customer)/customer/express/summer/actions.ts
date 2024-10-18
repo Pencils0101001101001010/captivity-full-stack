@@ -3,7 +3,7 @@
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { UserRole } from "@prisma/client";
-import { FetchSummerCollectionResult, ValidatedUser } from "./types";
+import { FetchSummerCollectionResult, ValidatedUser } from "../types";
 
 export async function fetchSummerCollection(): Promise<FetchSummerCollectionResult> {
   try {

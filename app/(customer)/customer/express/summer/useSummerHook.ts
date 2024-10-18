@@ -1,7 +1,7 @@
 // hooks/useSummerCollection.ts
 
 import { useState, useEffect } from "react";
-import { FetchSummerCollectionResult, FilteredCollection } from "./types";
+import { FetchSummerCollectionResult, FilteredCollection } from "../types";
 import { fetchSummerCollection } from "./actions";
 
 export const useSummerCollection = () => {
