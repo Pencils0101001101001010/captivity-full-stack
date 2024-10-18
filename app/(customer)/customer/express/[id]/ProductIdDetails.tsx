@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { Product, Variation } from "../types";
 import { Button } from "@/components/ui/button";
+import AddToCartButton from "../cart/AddToCartButton";
 
 interface ProductIdDetailsProps {
   product: Product;
@@ -197,18 +198,26 @@ const ProductIdDetails: React.FC<ProductIdDetailsProps> = ({ product }) => {
 
           <p className="mb-4">{stock} in stock</p>
 
-          <Button
-            variant={"default"}
-            className="w-full text-white py-2 px-4 rounded hover:bg-blue-300 mb-2"
-          >
-            Add to Cart
-          </Button>
-          <Button
-            variant={"destructive"}
-            className="w-full text-white py-2 px-4 rounded hover:bg-red-300"
-          >
-            Go to Cart
-          </Button>
+          <div className="space-y-2">
+            <AddToCartButton
+              productId={product.id}
+              productName={product.productName}
+              selectedColor={selectedColor}
+              selectedSize={selectedSize}
+              quantity={quantity}
+              price={product.sellingPrice}
+            />
+            <Button
+              variant="destructive"
+              className="w-full text-white py-2 px-4 rounded hover:bg-red-700"
+              onClick={() => {
+                // Implement your go to cart logic here
+                console.log("Navigating to cart");
+              }}
+            >
+              Go to Cart
+            </Button>
+          </div>
         </div>
       </div>
     </div>
