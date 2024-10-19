@@ -38,7 +38,7 @@ model User {
   email            String    @unique
   passwordHash     String
   vatNumber        String?
-  phoneNumber      String
+  phoneNumber      Int
   streetAddress    String
   addressLine2     String?
   suburb           String?

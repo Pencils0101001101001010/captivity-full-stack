@@ -27,7 +27,7 @@ async function main() {
     await prisma.product.create({
       data: {
         id: product.id,
-        userId: "qnd2xqsywyepl5jt", // Ensure this is a valid user ID
+        userId: "vzuv2efsetm4sfxp", // Ensure this is a valid user ID
         productName: product.product_name,
         category: product.category,
         description: product.description,
