@@ -18,7 +18,7 @@ type Product = {
 };
 
 const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
-  <Link href={`/products/${product.id}`} passHref>
+  <Link href={`/customer/shopping/${product.id}`} passHref>
     <Card className="overflow-hidden shadow-lg transition-shadow duration-300 hover:shadow-xl cursor-pointer">
       <CardContent className="p-4">
         {product.featuredImage && (
