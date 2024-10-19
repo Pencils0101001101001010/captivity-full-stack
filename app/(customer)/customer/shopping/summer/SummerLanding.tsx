@@ -1,9 +1,11 @@
+"use client";
 import React from "react";
+import ProductCarousel from "./ProductCarousel";
 
 const SummerLanding = () => {
   return (
     <div>
-      <h1>Summer Landing</h1>
+      <ProductCarousel />
     </div>
   );
 };
