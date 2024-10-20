@@ -4,6 +4,9 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { cache } from "react";
 
+//CART CRUD
+
+//////////////////////////////////CREATE///////////////////////////////////////
 export type AddToCartResult =
   | { success: true; message: string }
   | { success: false; error: string };
@@ -72,7 +75,7 @@ export async function addToCart(
     };
   }
 }
-////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////READ/////////////////////////////////////////
 
 export type Variation = {
   id: number;
@@ -173,58 +176,7 @@ export const fetchCart = cache(async (): Promise<FetchCartResult> => {
   }
 });
 
-////////////////////////////////////////////////////////////////////////////////
-export type DeleteCartItemResult =
-  | { success: true; message: string }
-  | { success: false; error: string };
-
-export async function deleteCartItem(
-  cartItemId: number
-): Promise<DeleteCartItemResult> {
-  try {
-    // Validate user session
-    const { user } = await validateRequest();
-    if (!user || user.role !== "CUSTOMER") {
-      throw new Error("Unauthorized. Please log in as a customer.");
-    }
-
-    // Find the cart item and ensure it belongs to the current user
-    const cartItem = await prisma.cartItem.findUnique({
-      where: { id: cartItemId },
-      include: { cart: true },
-    });
-
-    if (!cartItem) {
-      throw new Error("Cart item not found");
-    }
-
-    if (cartItem.cart.userId !== user.id) {
-      throw new Error("Unauthorized. This cart item doesn't belong to you.");
-    }
-
-    // Delete the cart item
-    await prisma.cartItem.delete({
-      where: { id: cartItemId },
-    });
-
-    // Revalidate the cart page to reflect the changes
-    revalidatePath("/customer/shopping/cart");
-
-    return {
-      success: true,
-      message: "Item removed from cart successfully",
-    };
-  } catch (error) {
-    console.error("Error removing item from cart:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
-  }
-}
-
-/////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////UPDATE/////////////////////////////////////
 export type UpdateCartItemQuantityResult =
   | {
       success: true;
@@ -323,6 +275,57 @@ export async function updateCartItemQuantity(
     };
   } catch (error) {
     console.error("Error updating cart item quantity:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
+  }
+}
+
+////////////////////////////////DELETE//////////////////////////////////////
+export type DeleteCartItemResult =
+  | { success: true; message: string }
+  | { success: false; error: string };
+
+export async function deleteCartItem(
+  cartItemId: number
+): Promise<DeleteCartItemResult> {
+  try {
+    // Validate user session
+    const { user } = await validateRequest();
+    if (!user || user.role !== "CUSTOMER") {
+      throw new Error("Unauthorized. Please log in as a customer.");
+    }
+
+    // Find the cart item and ensure it belongs to the current user
+    const cartItem = await prisma.cartItem.findUnique({
+      where: { id: cartItemId },
+      include: { cart: true },
+    });
+
+    if (!cartItem) {
+      throw new Error("Cart item not found");
+    }
+
+    if (cartItem.cart.userId !== user.id) {
+      throw new Error("Unauthorized. This cart item doesn't belong to you.");
+    }
+
+    // Delete the cart item
+    await prisma.cartItem.delete({
+      where: { id: cartItemId },
+    });
+
+    // Revalidate the cart page to reflect the changes
+    revalidatePath("/customer/shopping/cart");
+
+    return {
+      success: true,
+      message: "Item removed from cart successfully",
+    };
+  } catch (error) {
+    console.error("Error removing item from cart:", error);
     return {
       success: false,
       error:
