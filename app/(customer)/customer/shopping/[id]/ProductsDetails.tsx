@@ -122,7 +122,7 @@ const ProductsDetails: React.FC<ProductsDetailsProps> = ({ product }) => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="max-w-4xl mx-auto p-4 mb-16">
       <Toaster />
       <h1 className="text-2xl font-bold mb-4">Product Details</h1>
       <h2 className="text-xl mb-4">{product.productName}</h2>
@@ -136,6 +136,7 @@ const ProductsDetails: React.FC<ProductsDetailsProps> = ({ product }) => {
               width={400}
               height={400}
               className="mb-4 rounded-lg object-cover"
+              priority
             />
           )}
           <div className="grid grid-cols-5 gap-2 mb-4">
