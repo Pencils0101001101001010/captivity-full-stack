@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import toast, { Toaster } from "react-hot-toast";
 import { addToCart } from "../cart/actions";
-import { Button } from "@/components/ui/button";
 
 type Variation = {
   id: number;
@@ -13,7 +13,36 @@ type Variation = {
   sku2: string;
   variationImageURL: string;
   quantity: number;
-  productId: number; // Added this line
+  productId: number;
+};
+
+type FeaturedImage = {
+  id: number;
+  thumbnail: string;
+  medium: string;
+  large: string;
+  productId: number;
+};
+
+type DynamicPricing = {
+  id: number;
+  from: string;
+  to: string;
+  type: string;
+  amount: string;
+  productId: number;
+};
+
+type Product = {
+  id: number;
+  productName: string;
+  category: string[];
+  description: string;
+  sellingPrice: number;
+  isPublished: boolean;
+  dynamicPricing: DynamicPricing[];
+  variations: Variation[];
+  featuredImage: FeaturedImage | null;
 };
 
 type ProductsDetailsProps = {
@@ -29,6 +58,7 @@ const ProductsDetails: React.FC<ProductsDetailsProps> = ({ product }) => {
   const [activeVariation, setActiveVariation] = useState<Variation | null>(
     null
   );
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (product.featuredImage) {
@@ -74,19 +104,26 @@ const ProductsDetails: React.FC<ProductsDetailsProps> = ({ product }) => {
       return;
     }
 
+    setIsLoading(true);
     const result = await addToCart(activeVariation.id, quantity);
+    setIsLoading(false);
+
     if (result.success) {
-      console.log(result);
-      console.log(result.message);
-      // You might want to show a success message to the user here
+      toast.success(result.message, {
+        duration: 3000,
+        position: "bottom-center",
+      });
     } else {
-      console.error(result.error);
-      // You might want to show an error message to the user here
+      toast.error(result.error, {
+        duration: 3000,
+        position: "bottom-center",
+      });
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4 mb-10">
+    <div className="max-w-4xl mx-auto p-4">
+      <Toaster />
       <h1 className="text-2xl font-bold mb-4">Product Details</h1>
       <h2 className="text-xl mb-4">{product.productName}</h2>
 
@@ -189,13 +226,43 @@ const ProductsDetails: React.FC<ProductsDetailsProps> = ({ product }) => {
 
           <p className="mb-4">{availableStock} in stock</p>
 
-          <Button
-            className="w-full bg-blue-600 text-white py-2 rounded-md mb-2 hover:bg-blue-700 transition-colors"
+          <button
+            className={`w-full py-2 rounded-md mb-2 transition-colors ${
+              isLoading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 text-white"
+            }`}
             onClick={handleAddToCart}
-            disabled={!activeVariation || quantity === 0}
+            disabled={!activeVariation || quantity === 0 || isLoading}
           >
-            Add to Cart
-          </Button>
+            {isLoading ? (
+              <span className="flex items-center justify-center">
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Adding to Cart...
+              </span>
+            ) : (
+              "Add to Cart"
+            )}
+          </button>
         </div>
       </div>
     </div>
