@@ -11,11 +11,24 @@ import { ShoppingCart } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
 import CartSidebar from "../customer/shopping/cart/SlideInCart";
+import { useCart } from "../customer/shopping/cart/useCart";
 
 const Navbar = () => {
   const session = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const { cartItemCount, isLoading } = useCart(); // Use the custom hook
+
+  const CartIcon = () => (
+    <button onClick={() => setIsCartOpen(true)} className="relative">
+      <ShoppingCart className="w-6 h-6" />
+      {!isLoading && cartItemCount > 0 && (
+        <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+          {cartItemCount}
+        </span>
+      )}
+    </button>
+  );
 
   return (
     <div>
@@ -57,15 +70,7 @@ const Navbar = () => {
             {session?.user ? (
               <div className="flex gap-4 items-center">
                 <UserButton className="text-lg" />
-                <button
-                  onClick={() => setIsCartOpen(true)}
-                  className="relative"
-                >
-                  <ShoppingCart className="w-6 h-6" />
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                    3
-                  </span>
-                </button>
+                <CartIcon />
               </div>
             ) : (
               <>
@@ -75,15 +80,7 @@ const Navbar = () => {
                 >
                   Login
                 </Link>
-                <button
-                  onClick={() => setIsCartOpen(true)}
-                  className="relative ml-4"
-                >
-                  <ShoppingCart className="w-6 h-6" />
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                    3
-                  </span>
-                </button>
+                <CartIcon />
               </>
             )}
           </div>
@@ -105,15 +102,7 @@ const Navbar = () => {
             {session?.user ? (
               <div className="flex space-x-10 items-center">
                 <UserButton className="text-lg" />
-                <button
-                  onClick={() => setIsCartOpen(true)}
-                  className="relative"
-                >
-                  <ShoppingCart className="w-6 h-6" />
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                    3
-                  </span>
-                </button>
+                <CartIcon />
               </div>
             ) : (
               <>
@@ -126,15 +115,7 @@ const Navbar = () => {
                 <Link href="/signup">
                   <span className="hover:text-gray-300 -ml-16">Register</span>
                 </Link>
-                <button
-                  onClick={() => setIsCartOpen(true)}
-                  className="relative"
-                >
-                  <ShoppingCart className="w-6 h-6" />
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                    3
-                  </span>
-                </button>
+                <CartIcon />
               </>
             )}
           </div>
