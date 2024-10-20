@@ -29,9 +29,6 @@ export async function fetchProductById(
       throw new Error("Product not found");
     }
 
-    // Revalidate the product detail page
-    revalidatePath(`/products/${productId}`);
-
     return {
       success: true,
       data: {
