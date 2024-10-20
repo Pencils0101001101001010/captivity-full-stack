@@ -3,7 +3,13 @@
 import React, { useEffect, useState, useCallback, useTransition } from "react";
 import { X } from "lucide-react";
 import Image from "next/image";
-import { fetchCart, CartItem, deleteCartItem } from "./actions";
+import {
+  fetchCart,
+  CartItem,
+  deleteCartItem,
+  updateCartItemQuantity,
+} from "./actions";
+
 import toast from "react-hot-toast";
 
 interface CartSidebarProps {
@@ -17,6 +23,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
     totalCost: number;
   } | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [updatingItemId, setUpdatingItemId] = useState<number | null>(null);
 
   const loadCartData = useCallback(() => {
     startTransition(async () => {
@@ -61,6 +68,61 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
     });
   };
 
+  const handleQuantityChange = async (
+    cartItemId: number,
+    newQuantity: number
+  ) => {
+    setUpdatingItemId(cartItemId);
+    // Optimistic update
+    if (cartData) {
+      const updatedItems = cartData.cartItems.map(item =>
+        item.id === cartItemId ? { ...item, quantity: newQuantity } : item
+      );
+      const updatedTotalCost = updatedItems.reduce(
+        (sum, item) =>
+          sum + item.variation.product.sellingPrice * item.quantity,
+        0
+      );
+      setCartData({ cartItems: updatedItems, totalCost: updatedTotalCost });
+    }
+
+    startTransition(async () => {
+      const result = await updateCartItemQuantity(cartItemId, newQuantity);
+      if (result.success) {
+        toast.success(result.message);
+        // Update the cart data with the new quantity and total cost from the server
+        if (cartData) {
+          const updatedItems = cartData.cartItems.map(item =>
+            item.id === cartItemId
+              ? { ...item, quantity: result.newQuantity }
+              : item
+          );
+          setCartData({
+            cartItems: updatedItems,
+            totalCost: result.newTotalCost,
+          });
+        }
+      } else {
+        toast.error(result.error);
+        // Revert the optimistic update if the operation failed
+        loadCartData();
+      }
+      setUpdatingItemId(null);
+    });
+  };
+
+  const renderQuantityOptions = (maxQuantity: number) => {
+    const options = [];
+    for (let i = 1; i <= maxQuantity; i++) {
+      options.push(
+        <option key={i} value={i}>
+          {i}
+        </option>
+      );
+    }
+    return options;
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -102,6 +164,23 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
                     ${item.variation.product.sellingPrice.toFixed(2)} x{" "}
                     {item.quantity}
                   </p>
+                  <div className="flex items-center mt-2">
+                    <select
+                      value={item.quantity}
+                      onChange={e =>
+                        handleQuantityChange(item.id, parseInt(e.target.value))
+                      }
+                      className="border rounded px-2 py-1 text-sm"
+                      disabled={updatingItemId === item.id}
+                    >
+                      {renderQuantityOptions(item.variation.quantity)}
+                    </select>
+                    {updatingItemId === item.id && (
+                      <span className="ml-2 text-sm text-gray-500">
+                        Updating...
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <button
                   className="text-red-500 hover:text-red-700"
