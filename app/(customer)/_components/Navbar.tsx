@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { GoHomeFill } from "react-icons/go";
@@ -10,6 +10,7 @@ import { RxDividerVertical } from "react-icons/rx";
 import { ShoppingCart } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
+import CartSidebar from "../customer/shopping/cart/SlideInCart";
 
 const Navbar = () => {
   const session = useSession();
@@ -56,14 +57,34 @@ const Navbar = () => {
             {session?.user ? (
               <div className="flex gap-4 items-center">
                 <UserButton className="text-lg" />
+                <button
+                  onClick={() => setIsCartOpen(true)}
+                  className="relative"
+                >
+                  <ShoppingCart className="w-6 h-6" />
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                    3
+                  </span>
+                </button>
               </div>
             ) : (
-              <Link
-                href="/login"
-                className="font-bold text-lg hover:text-gray-300"
-              >
-                Login
-              </Link>
+              <>
+                <Link
+                  href="/login"
+                  className="font-bold text-lg hover:text-gray-300"
+                >
+                  Login
+                </Link>
+                <button
+                  onClick={() => setIsCartOpen(true)}
+                  className="relative ml-4"
+                >
+                  <ShoppingCart className="w-6 h-6" />
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                    3
+                  </span>
+                </button>
+              </>
             )}
           </div>
 
@@ -84,6 +105,15 @@ const Navbar = () => {
             {session?.user ? (
               <div className="flex space-x-10 items-center">
                 <UserButton className="text-lg" />
+                <button
+                  onClick={() => setIsCartOpen(true)}
+                  className="relative"
+                >
+                  <ShoppingCart className="w-6 h-6" />
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                    3
+                  </span>
+                </button>
               </div>
             ) : (
               <>
@@ -96,6 +126,15 @@ const Navbar = () => {
                 <Link href="/signup">
                   <span className="hover:text-gray-300 -ml-16">Register</span>
                 </Link>
+                <button
+                  onClick={() => setIsCartOpen(true)}
+                  className="relative"
+                >
+                  <ShoppingCart className="w-6 h-6" />
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                    3
+                  </span>
+                </button>
               </>
             )}
           </div>
@@ -180,6 +219,9 @@ const Navbar = () => {
           </Link>
         </div>
       </div>
+
+      {/* Cart Sidebar */}
+      <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
 };
