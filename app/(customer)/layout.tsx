@@ -1,10 +1,9 @@
-// CustomerLayout.tsx
 import { validateRequest } from "@/auth";
 import { redirect } from "next/navigation";
 import SessionProvider from "./SessionProvider";
 import Navbar from "./_components/Navbar";
 import CategoriesDropDown from "./_components/CategoriesDropDown";
-import ReduxProvider from "./ReduxProvider";
+
 export default async function CustomerLayout({
   children,
 }: {
@@ -16,17 +15,15 @@ export default async function CustomerLayout({
 
   return (
     <SessionProvider value={session}>
-      <ReduxProvider>
-        <div className="flex min-h-screen flex-col">
-          <Navbar />
-          <div className="bg-slate-300">
-            <CategoriesDropDown />
-          </div>
-          <div className="flex w-full grow">
-            <main className="flex-grow">{children}</main>
-          </div>
+      <div className="flex min-h-screen flex-col">
+        <Navbar />
+        <div className="bg-slate-300">
+          <CategoriesDropDown />
         </div>
-      </ReduxProvider>
+        <div className="flex w-full grow">
+          <main className="flex-grow">{children}</main>
+        </div>
+      </div>
     </SessionProvider>
   );
 }
