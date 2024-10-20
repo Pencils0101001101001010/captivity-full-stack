@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { addToCart } from "../cart/actions";
+import { Button } from "@/components/ui/button";
 
 type Variation = {
   id: number;
@@ -66,17 +68,25 @@ const ProductsDetails: React.FC<ProductsDetailsProps> = ({ product }) => {
     setActiveVariation(variation);
   };
 
-  const handleAddToCart = () => {
-    console.log("Added to cart:", {
-      product,
-      selectedColor,
-      selectedSize,
-      quantity,
-    });
+  const handleAddToCart = async () => {
+    if (!activeVariation) {
+      console.error("No variation selected");
+      return;
+    }
+
+    const result = await addToCart(activeVariation.id, quantity);
+    if (result.success) {
+      console.log(result);
+      console.log(result.message);
+      // You might want to show a success message to the user here
+    } else {
+      console.error(result.error);
+      // You might want to show an error message to the user here
+    }
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="max-w-4xl mx-auto p-4 mb-10">
       <h1 className="text-2xl font-bold mb-4">Product Details</h1>
       <h2 className="text-xl mb-4">{product.productName}</h2>
 
@@ -179,13 +189,13 @@ const ProductsDetails: React.FC<ProductsDetailsProps> = ({ product }) => {
 
           <p className="mb-4">{availableStock} in stock</p>
 
-          <button
+          <Button
             className="w-full bg-blue-600 text-white py-2 rounded-md mb-2 hover:bg-blue-700 transition-colors"
             onClick={handleAddToCart}
-            disabled={!selectedColor || !selectedSize || availableStock === 0}
+            disabled={!activeVariation || quantity === 0}
           >
             Add to Cart
-          </button>
+          </Button>
         </div>
       </div>
     </div>
