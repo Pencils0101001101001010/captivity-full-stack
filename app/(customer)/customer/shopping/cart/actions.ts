@@ -125,7 +125,6 @@ export async function addToCart(
     }
 
     revalidatePath("/customer/shopping/cart");
-    revalidatePath("/");
 
     return {
       success: true,
