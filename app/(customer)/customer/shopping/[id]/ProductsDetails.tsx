@@ -2,19 +2,8 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
-import { addToCart } from "../cart/actions";
-
-type Variation = {
-  id: number;
-  name: string;
-  color: string;
-  size: string;
-  sku: string;
-  sku2: string;
-  variationImageURL: string;
-  quantity: number;
-  productId: number;
-};
+import { Variation } from "./types";
+import { useCartStore } from "../../_store/cartStore";
 
 type FeaturedImage = {
   id: number;
@@ -24,29 +13,13 @@ type FeaturedImage = {
   productId: number;
 };
 
-type DynamicPricing = {
-  id: number;
-  from: string;
-  to: string;
-  type: string;
-  amount: string;
-  productId: number;
-};
-
-type Product = {
-  id: number;
-  productName: string;
-  category: string[];
-  description: string;
-  sellingPrice: number;
-  isPublished: boolean;
-  dynamicPricing: DynamicPricing[];
-  variations: Variation[];
+type ProductWithVariations = Product & {
+  variations: Omit<Variation, "product">[];
   featuredImage: FeaturedImage | null;
 };
 
 type ProductsDetailsProps = {
-  product: Product;
+  product: ProductWithVariations;
 };
 
 const ProductsDetails: React.FC<ProductsDetailsProps> = ({ product }) => {
@@ -60,12 +33,14 @@ const ProductsDetails: React.FC<ProductsDetailsProps> = ({ product }) => {
   );
   const [isLoading, setIsLoading] = useState(false);
 
+  const { addToCartAndUpdate } = useCartStore();
+
   useEffect(() => {
     if (product.featuredImage) {
       setCurrentImage(product.featuredImage.medium);
     }
     if (product.variations.length > 0) {
-      setActiveVariation(product.variations[0]);
+      setActiveVariation({ ...product.variations[0], product });
     }
   }, [product]);
 
@@ -81,21 +56,21 @@ const ProductsDetails: React.FC<ProductsDetailsProps> = ({ product }) => {
 
   const uniqueVariations = availableColors
     .map(color => product.variations.find(v => v.color === color))
-    .filter((v): v is Variation => v !== undefined);
+    .filter((v): v is Omit<Variation, "product"> => v !== undefined);
 
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
     const variation = product.variations.find(v => v.color === color);
     if (variation) {
       setCurrentImage(variation.variationImageURL);
-      setActiveVariation(variation);
+      setActiveVariation({ ...variation, product });
     }
   };
 
-  const handleThumbnailClick = (variation: Variation) => {
+  const handleThumbnailClick = (variation: Omit<Variation, "product">) => {
     setCurrentImage(variation.variationImageURL);
     setSelectedColor(variation.color);
-    setActiveVariation(variation);
+    setActiveVariation({ ...variation, product });
   };
 
   const handleAddToCart = async () => {
@@ -105,7 +80,7 @@ const ProductsDetails: React.FC<ProductsDetailsProps> = ({ product }) => {
     }
 
     setIsLoading(true);
-    const result = await addToCart(activeVariation.id, quantity);
+    const result = await addToCartAndUpdate(activeVariation, quantity);
     setIsLoading(false);
 
     if (result.success) {
@@ -178,7 +153,9 @@ const ProductsDetails: React.FC<ProductsDetailsProps> = ({ product }) => {
               {availableColors.map(color => (
                 <button
                   key={color}
-                  className={`px-3 py-1 border rounded-md ${selectedColor === color ? "bg-blue-500 text-white" : ""}`}
+                  className={`px-3 py-1 border rounded-md ${
+                    selectedColor === color ? "bg-blue-500 text-white" : ""
+                  }`}
                   onClick={() => handleColorChange(color)}
                 >
                   {color}
@@ -229,7 +206,7 @@ const ProductsDetails: React.FC<ProductsDetailsProps> = ({ product }) => {
 
           <button
             className={`w-full py-2 rounded-md mb-2 transition-colors ${
-              isLoading
+              isLoading || !activeVariation
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700 text-white"
             }`}

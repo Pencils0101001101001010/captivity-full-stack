@@ -1,4 +1,11 @@
-// types.ts
+// app/(customer)/customer/shopping/cart/types.ts
+
+export type Product = {
+  id: number;
+  productName: string;
+  sellingPrice: number;
+  // Add other product properties as needed
+};
 
 export type Variation = {
   id: number;
@@ -10,40 +17,7 @@ export type Variation = {
   variationImageURL: string;
   quantity: number;
   productId: number;
-  product: {
-    id: number;
-    productName: string;
-    sellingPrice: number;
-  };
-};
-
-export type FeaturedImage = {
-  id: number;
-  thumbnail: string;
-  medium: string;
-  large: string;
-  productId: number;
-};
-
-export type DynamicPricing = {
-  id: number;
-  from: string;
-  to: string;
-  type: string;
-  amount: string;
-  productId: number;
-};
-
-export type Product = {
-  id: number;
-  productName: string;
-  category: string[];
-  description: string;
-  sellingPrice: number;
-  isPublished: boolean;
-  dynamicPricing: DynamicPricing[];
-  variations: Variation[];
-  featuredImage: FeaturedImage | null;
+  product: Product;
 };
 
 export type CartItem = {
@@ -53,12 +27,27 @@ export type CartItem = {
 };
 
 export type AddToCartResult =
-  | { success: true; message: string }
-  | { success: false; error: string };
+  | {
+      success: true;
+      message: string;
+    }
+  | {
+      success: false;
+      error: string;
+    };
 
 export type FetchCartResult =
-  | { success: true; data: { cartItems: CartItem[]; totalCost: number } }
-  | { success: false; error: string };
+  | {
+      success: true;
+      data: {
+        cartItems: CartItem[];
+        totalCost: number;
+      };
+    }
+  | {
+      success: false;
+      error: string;
+    };
 
 export type UpdateCartItemQuantityResult =
   | {
@@ -67,8 +56,17 @@ export type UpdateCartItemQuantityResult =
       newQuantity: number;
       newTotalCost: number;
     }
-  | { success: false; error: string };
+  | {
+      success: false;
+      error: string;
+    };
 
 export type DeleteCartItemResult =
-  | { success: true; message: string }
-  | { success: false; error: string };
+  | {
+      success: true;
+      message: string;
+    }
+  | {
+      success: false;
+      error: string;
+    };

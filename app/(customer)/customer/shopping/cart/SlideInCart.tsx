@@ -58,10 +58,12 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
     return options;
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed top-0 right-0 h-full w-[450px] bg-white shadow-lg z-50 flex flex-col">
+    <div
+      className={`fixed top-0 right-0 h-full w-[450px] bg-white shadow-lg z-50 flex flex-col transform transition-transform duration-300 ease-in-out ${
+        isOpen ? "translate-x-0" : "translate-x-full"
+      }`}
+    >
       <div className="p-4 flex-grow overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Your Cart</h2>

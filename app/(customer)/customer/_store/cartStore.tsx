@@ -1,6 +1,12 @@
-// store/cartStore.ts
 import { create } from "zustand";
-import { AddToCartResult, CartItem, Variation } from "../shopping/cart/types";
+import {
+  AddToCartResult,
+  CartItem,
+  Variation,
+  FetchCartResult,
+  UpdateCartItemQuantityResult,
+  DeleteCartItemResult,
+} from "../shopping/cart/types";
 import {
   fetchCart as fetchCartAction,
   addToCart as addToCartAction,
@@ -16,6 +22,10 @@ interface CartStore {
   lastFetched: number | null;
   fetchCart: () => Promise<void>;
   addToCart: (
+    variationId: number,
+    quantity: number
+  ) => Promise<AddToCartResult>;
+  addToCartAndUpdate: (
     variation: Variation,
     quantity: number
   ) => Promise<AddToCartResult>;
@@ -59,13 +69,17 @@ export const useCartStore = create<CartStore>((set, get) => ({
     }
   },
 
-  addToCart: async (variation: Variation, quantity: number) => {
+  addToCart: async (variationId: number, quantity: number) => {
     set({ isLoading: true, error: null });
-    const result = await addToCartAction(variation.id, quantity);
+    const result = await addToCartAction(variationId, quantity);
+    set({ isLoading: false });
+    return result;
+  },
+
+  addToCartAndUpdate: async (variation: Variation, quantity: number) => {
+    const result = await get().addToCart(variation.id, quantity);
     if (result.success) {
       await get().fetchCart();
-    } else {
-      set({ error: result.error, isLoading: false });
     }
     return result;
   },
@@ -76,7 +90,9 @@ export const useCartStore = create<CartStore>((set, get) => ({
     if (result.success) {
       set(state => {
         const updatedCartItems = state.cartItems.map(item =>
-          item.id === cartItemId ? { ...item, quantity: newQuantity } : item
+          item.id === cartItemId
+            ? { ...item, quantity: result.newQuantity }
+            : item
         );
         return {
           cartItems: updatedCartItems,
