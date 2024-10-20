@@ -1,115 +1,22 @@
 "use server";
+
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { cache } from "react";
+import {
+  AddToCartResult,
+  DeleteCartItemResult,
+  FetchCartResult,
+  UpdateCartItemQuantityResult,
+} from "./types";
 
-//CART CRUD
-
-//////////////////////////////////CREATE///////////////////////////////////////
-export type AddToCartResult =
-  | { success: true; message: string }
-  | { success: false; error: string };
-
-export async function addToCart(
-  variationId: number,
-  quantity: number
-): Promise<AddToCartResult> {
+export async function fetchCart(): Promise<FetchCartResult> {
   try {
-    // Validate user session
-    const { user } = await validateRequest();
-    if (!user || user.role !== "CUSTOMER") {
-      throw new Error("Unauthorized. Please log in.");
-    }
-
-    // Check if the user already has a cart
-    let cart = await prisma.cart.findUnique({
-      where: { userId: user.id },
-      include: { cartItems: true },
-    });
-
-    // If the user doesn't have a cart, create one
-    if (!cart) {
-      cart = await prisma.cart.create({
-        data: { userId: user.id },
-        include: { cartItems: true },
-      });
-    }
-
-    // Check if the variation already exists in the cart
-    const existingCartItem = cart.cartItems.find(
-      item => item.variationId === variationId
-    );
-
-    if (existingCartItem) {
-      // Update the quantity of the existing cart item
-      await prisma.cartItem.update({
-        where: { id: existingCartItem.id },
-        data: { quantity: existingCartItem.quantity + quantity },
-      });
-    } else {
-      // Add a new cart item
-      await prisma.cartItem.create({
-        data: {
-          cartId: cart.id,
-          variationId: variationId,
-          quantity: quantity,
-        },
-      });
-    }
-
-    // Revalidate the cart page to reflect the changes
-    revalidatePath("/customer/shopping/cart");
-    revalidatePath("/");
-
-    return {
-      success: true,
-      message: "Product added to cart successfully",
-    };
-  } catch (error) {
-    console.error("Error adding product to cart:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
-  }
-}
-//////////////////////////////////READ/////////////////////////////////////////
-
-export type Variation = {
-  id: number;
-  name: string;
-  color: string;
-  size: string;
-  sku: string;
-  variationImageURL: string;
-  quantity: number; // Add this line
-  product: {
-    id: number;
-    productName: string;
-    sellingPrice: number;
-  };
-};
-
-export type CartItem = {
-  id: number;
-  quantity: number;
-  variation: Variation;
-};
-export type FetchCartResult =
-  | { success: true; data: { cartItems: CartItem[]; totalCost: number } }
-  | { success: false; error: string };
-
-export const fetchCart = cache(async (): Promise<FetchCartResult> => {
-  try {
-    // Validate user session
     const { user } = await validateRequest();
     if (!user || user.role !== "CUSTOMER") {
       throw new Error("Unauthorized. Please log in as a customer.");
     }
 
-    // Fetch the user's cart with related data
     const cart = await prisma.cart.findUnique({
       where: { userId: user.id },
       include: {
@@ -145,7 +52,7 @@ export const fetchCart = cache(async (): Promise<FetchCartResult> => {
         size: item.variation.size,
         sku: item.variation.sku,
         variationImageURL: item.variation.variationImageURL,
-        quantity: item.variation.quantity, // Add this line
+        quantity: item.variation.quantity,
         product: {
           id: item.variation.product.id,
           productName: item.variation.product.productName,
@@ -174,30 +81,76 @@ export const fetchCart = cache(async (): Promise<FetchCartResult> => {
         error instanceof Error ? error.message : "An unexpected error occurred",
     };
   }
-});
+}
 
-/////////////////////////////////UPDATE/////////////////////////////////////
-export type UpdateCartItemQuantityResult =
-  | {
-      success: true;
-      message: string;
-      newQuantity: number;
-      newTotalCost: number;
+export async function addToCart(
+  variationId: number,
+  quantity: number
+): Promise<AddToCartResult> {
+  try {
+    const { user } = await validateRequest();
+    if (!user || user.role !== "CUSTOMER") {
+      throw new Error("Unauthorized. Please log in.");
     }
-  | { success: false; error: string };
+
+    let cart = await prisma.cart.findUnique({
+      where: { userId: user.id },
+      include: { cartItems: true },
+    });
+
+    if (!cart) {
+      cart = await prisma.cart.create({
+        data: { userId: user.id },
+        include: { cartItems: true },
+      });
+    }
+
+    const existingCartItem = cart.cartItems.find(
+      item => item.variationId === variationId
+    );
+
+    if (existingCartItem) {
+      await prisma.cartItem.update({
+        where: { id: existingCartItem.id },
+        data: { quantity: existingCartItem.quantity + quantity },
+      });
+    } else {
+      await prisma.cartItem.create({
+        data: {
+          cartId: cart.id,
+          variationId: variationId,
+          quantity: quantity,
+        },
+      });
+    }
+
+    revalidatePath("/customer/shopping/cart");
+    revalidatePath("/");
+
+    return {
+      success: true,
+      message: "Product added to cart successfully",
+    };
+  } catch (error) {
+    console.error("Error adding product to cart:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
+  }
+}
 
 export async function updateCartItemQuantity(
   cartItemId: number,
   newQuantity: number
 ): Promise<UpdateCartItemQuantityResult> {
   try {
-    // Validate user session
     const { user } = await validateRequest();
     if (!user || user.role !== "CUSTOMER") {
       throw new Error("Unauthorized. Please log in as a customer.");
     }
 
-    // Find the cart item and ensure it belongs to the current user
     const cartItem = await prisma.cartItem.findUnique({
       where: { id: cartItemId },
       include: {
@@ -218,19 +171,16 @@ export async function updateCartItemQuantity(
       throw new Error("Unauthorized. This cart item doesn't belong to you.");
     }
 
-    // Check if the new quantity is valid
     if (newQuantity < 1) {
       throw new Error("Quantity must be at least 1");
     }
 
-    // Check if the new quantity is within available stock
     if (newQuantity > cartItem.variation.quantity) {
       throw new Error(
         `Only ${cartItem.variation.quantity} items available in stock`
       );
     }
 
-    // Update the cart item quantity
     const updatedCartItem = await prisma.cartItem.update({
       where: { id: cartItemId },
       data: { quantity: newQuantity },
@@ -243,7 +193,6 @@ export async function updateCartItemQuantity(
       },
     });
 
-    // Calculate new total cost for the entire cart
     const updatedCart = await prisma.cart.findUnique({
       where: { id: cartItem.cartId },
       include: {
@@ -264,7 +213,6 @@ export async function updateCartItemQuantity(
       0
     );
 
-    // Revalidate the cart page to reflect the changes
     revalidatePath("/customer/shopping/cart");
 
     return {
@@ -283,22 +231,15 @@ export async function updateCartItemQuantity(
   }
 }
 
-/////////////////////////////////DELETE//////////////////////////////////////
-export type DeleteCartItemResult =
-  | { success: true; message: string }
-  | { success: false; error: string };
-
 export async function deleteCartItem(
   cartItemId: number
 ): Promise<DeleteCartItemResult> {
   try {
-    // Validate user session
     const { user } = await validateRequest();
     if (!user || user.role !== "CUSTOMER") {
       throw new Error("Unauthorized. Please log in as a customer.");
     }
 
-    // Find the cart item and ensure it belongs to the current user
     const cartItem = await prisma.cartItem.findUnique({
       where: { id: cartItemId },
       include: { cart: true },
@@ -312,12 +253,10 @@ export async function deleteCartItem(
       throw new Error("Unauthorized. This cart item doesn't belong to you.");
     }
 
-    // Delete the cart item
     await prisma.cartItem.delete({
       where: { id: cartItemId },
     });
 
-    // Revalidate the cart page to reflect the changes
     revalidatePath("/customer/shopping/cart");
 
     return {

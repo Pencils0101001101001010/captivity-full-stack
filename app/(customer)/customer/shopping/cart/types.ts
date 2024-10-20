@@ -6,44 +6,13 @@ export type Variation = {
   color: string;
   size: string;
   sku: string;
-  sku2: string;
   variationImageURL: string;
   quantity: number;
-  productId: number;
   product: {
     id: number;
     productName: string;
     sellingPrice: number;
   };
-};
-
-export type FeaturedImage = {
-  id: number;
-  thumbnail: string;
-  medium: string;
-  large: string;
-  productId: number;
-};
-
-export type DynamicPricing = {
-  id: number;
-  from: string;
-  to: string;
-  type: string;
-  amount: string;
-  productId: number;
-};
-
-export type Product = {
-  id: number;
-  productName: string;
-  category: string[];
-  description: string;
-  sellingPrice: number;
-  isPublished: boolean;
-  dynamicPricing: DynamicPricing[];
-  variations: Variation[];
-  featuredImage: FeaturedImage | null;
 };
 
 export type CartItem = {
@@ -52,12 +21,12 @@ export type CartItem = {
   variation: Variation;
 };
 
-export type AddToCartResult =
-  | { success: true; message: string }
-  | { success: false; error: string };
-
 export type FetchCartResult =
   | { success: true; data: { cartItems: CartItem[]; totalCost: number } }
+  | { success: false; error: string };
+
+export type AddToCartResult =
+  | { success: true; message: string }
   | { success: false; error: string };
 
 export type UpdateCartItemQuantityResult =
@@ -72,3 +41,12 @@ export type UpdateCartItemQuantityResult =
 export type DeleteCartItemResult =
   | { success: true; message: string }
   | { success: false; error: string };
+
+export type User = {
+  id: string;
+  role: string;
+};
+
+export type ValidateRequestResult = {
+  user: User | null;
+};
