@@ -4,6 +4,7 @@ import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { Cart, CartItem, Variation, Product } from "@prisma/client";
 
+// Merging the models(Data Modeling)
 type CartWithItems = Cart & {
   cartItems: (CartItem & {
     variation: Variation & {
@@ -16,6 +17,7 @@ type CartActionResult =
   | { success: true; data: CartWithItems }
   | { success: false; error: string };
 
+//Helper function
 async function getOrCreateCart(userId: string): Promise<Cart> {
   let cart = await prisma.cart.findUnique({
     where: { userId },
