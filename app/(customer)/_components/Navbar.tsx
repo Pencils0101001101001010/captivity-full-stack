@@ -10,17 +10,26 @@ import { RxDividerVertical } from "react-icons/rx";
 import { ShoppingCart } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
+import useCartStore from "../customer/_store/useCartStore";
 
 const Navbar = () => {
   const session = useSession();
   const [isOpen, setIsOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const cart = useCartStore(state => state.cart);
+
+  const cartItemCount =
+    cart?.cartItems.reduce((total, item) => total + item.quantity, 0) || 0;
+
+  useEffect(() => {
+    // Fetch cart data when component mounts
+    useCartStore.getState().fetchCart();
+  }, []);
 
   return (
     <div>
       <nav className="bg-black text-white">
-        <div className="flex items-center justify-center text-xs mx-auto z-10 md:flex w-full py-6 px-8 m-auto">
-          <div className="md:hidden absolute top-6 left-7">
+        <div className="flex items-center justify-between text-xs mx-auto z-10 w-full py-6 px-8">
+          <div className="md:hidden">
             <button onClick={() => setIsOpen(!isOpen)}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -38,70 +47,83 @@ const Navbar = () => {
               </svg>
             </button>
           </div>
+
           <Link href="/" className="w-[170px] h-[10px] mb-5">
-            <span>
-              <Image
-                src="/captivity-logo-white.png"
-                alt="captivityLogo"
-                width={331}
-                height={54}
-                className="flex items-center justify-between md:min-w-40 h-auto"
-                priority
-              />
-            </span>
+            <Image
+              src="/captivity-logo-white.png"
+              alt="captivityLogo"
+              width={331}
+              height={54}
+              className="h-auto"
+              priority
+            />
           </Link>
 
-          {/* Mobile Phone login/user button */}
-          <div className="md:hidden absolute top-6 right-7">
-            {session?.user ? (
-              <div className="flex gap-4 items-center">
-                <UserButton className="text-lg" />
-              </div>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="font-bold text-lg hover:text-gray-300"
-                >
-                  Login
-                </Link>
-          
-              </>
-            )}
-          </div>
-
-          <div className="hidden md:flex items-center space-x-20">
+          <div className="hidden md:flex items-center space-x-6">
             <Link href="/help" className="hover:text-gray-300">
-              <span className="ml-5">Help</span>
+              <span>Help</span>
             </Link>
-            <div className="md:flex md:flex-nowrap">
+            <div className="flex">
               <input
                 type="text"
                 placeholder="Search for product"
                 className="px-2 w-[150px] py-2 rounded-l-sm bg-white text-black"
               />
-              <button className="bg-red-600 text-sm rounded-r-sm mr-16 text-white px-2 py-2 hover:bg-red-500">
+              <button className="bg-red-600 text-sm rounded-r-sm text-white px-2 py-2 hover:bg-red-500">
                 SEARCH
               </button>
             </div>
             {session?.user ? (
-              <div className="flex space-x-10 items-center">
+              <div className="flex items-center space-x-4">
                 <UserButton className="text-lg" />
-          
+                <Link href="/cart" className="relative">
+                  <ShoppingCart size={24} />
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </Link>
               </div>
             ) : (
               <>
-                <Link href="/login">
-                  <span className="hover:text-gray-300">Login</span>
+                <Link href="/login" className="hover:text-gray-300">
+                  Login
                 </Link>
-                <div>
-                  <RxDividerVertical className="-mr-5" />
-                </div>
-                <Link href="/signup">
-                  <span className="hover:text-gray-300 -ml-16">Register</span>
+                <RxDividerVertical />
+                <Link href="/signup" className="hover:text-gray-300">
+                  Register
                 </Link>
-          
+                <Link href="/cart" className="relative">
+                  <ShoppingCart size={24} />
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </Link>
               </>
+            )}
+          </div>
+
+          <div className="md:hidden flex items-center">
+            <Link href="/cart" className="relative mr-4">
+              <ShoppingCart size={24} />
+              {cartItemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                  {cartItemCount}
+                </span>
+              )}
+            </Link>
+            {session?.user ? (
+              <UserButton className="text-lg" />
+            ) : (
+              <Link
+                href="/login"
+                className="font-bold text-lg hover:text-gray-300"
+              >
+                Login
+              </Link>
             )}
           </div>
         </div>
@@ -139,7 +161,7 @@ const Navbar = () => {
       )}
 
       {/* Mobile search bar */}
-      <div className="md:hidden lg:hidden m-2">
+      <div className="md:hidden m-2">
         <div className="flex items-center justify-center border-b-2 p-2">
           <input
             type="text"
@@ -168,6 +190,18 @@ const Navbar = () => {
           >
             <TbCategoryFilled />
             <div className="text-xs mt-2">Categories</div>
+          </Link>
+          <Link
+            href="/cart"
+            className="flex flex-col items-center py-2 hover:text-red-500 relative"
+          >
+            <ShoppingCart size={20} />
+            {cartItemCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
+                {cartItemCount}
+              </span>
+            )}
+            <div className="text-xs mt-2">Cart</div>
           </Link>
           <Link
             href="/Favourites"
