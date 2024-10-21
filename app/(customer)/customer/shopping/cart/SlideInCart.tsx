@@ -1,8 +1,8 @@
-"use client";
-
+import React from "react";
 import { X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import useCartStore from "../../_store/useCartStore";
 
 type SlideInCartProps = {
   isOpen: boolean;
@@ -10,39 +10,20 @@ type SlideInCartProps = {
 };
 
 const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
-  // Dummy data for cart items
-  const cartItems = [
-    {
-      id: 1,
-      name: "Black Baseball Cap",
-      price: 299.99,
-      quantity: 2,
-      image: "/api/placeholder/100/100",
-      color: "Black",
-      size: "One Size",
-    },
-    {
-      id: 2,
-      name: "White T-Shirt",
-      price: 399.99,
-      quantity: 1,
-      image: "/api/placeholder/100/100",
-      color: "White",
-      size: "L",
-    },
-    {
-      id: 3,
-      name: "Red Hoodie",
-      price: 599.99,
-      quantity: 1,
-      image: "/api/placeholder/100/100",
-      color: "Red",
-      size: "XL",
-    },
-  ];
+  const { cart, isLoading, error, updateCartItemQuantity, removeFromCart } =
+    useCartStore();
 
+  if (isLoading) {
+    return;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  const cartItems = cart?.cartItems || [];
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + item.variation.product.sellingPrice * item.quantity,
     0
   );
   const shipping = 100.0; // Fixed shipping cost
@@ -75,30 +56,53 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
             >
               <div className="relative w-20 h-20">
                 <Image
-                  src={item.image}
-                  alt={item.name}
+                  src={
+                    item.variation.variationImageURL ||
+                    "/api/placeholder/100/100"
+                  }
+                  alt={item.variation.product.productName}
                   fill
                   className="object-cover rounded"
                 />
               </div>
               <div className="flex-1">
-                <h3 className="font-medium text-gray-800">{item.name}</h3>
+                <h3 className="font-medium text-gray-800">
+                  {item.variation.product.productName}
+                </h3>
                 <p className="text-sm text-gray-600">
-                  {item.color} / {item.size}
+                  {item.variation.color} / {item.variation.size}
                 </p>
                 <div className="flex justify-between items-center mt-2">
                   <div className="flex items-center border rounded">
-                    <button className="px-2 py-1 border-r hover:bg-gray-100">
+                    <button
+                      className="px-2 py-1 border-r hover:bg-gray-100"
+                      onClick={() =>
+                        updateCartItemQuantity(item.id, item.quantity - 1)
+                      }
+                    >
                       -
                     </button>
                     <span className="px-4 py-1">{item.quantity}</span>
-                    <button className="px-2 py-1 border-l hover:bg-gray-100">
+                    <button
+                      className="px-2 py-1 border-l hover:bg-gray-100"
+                      onClick={() =>
+                        updateCartItemQuantity(item.id, item.quantity + 1)
+                      }
+                    >
                       +
                     </button>
                   </div>
-                  <p className="font-medium">R{item.price.toFixed(2)}</p>
+                  <p className="font-medium">
+                    R{item.variation.product.sellingPrice.toFixed(2)}
+                  </p>
                 </div>
               </div>
+              <button
+                className="text-red-500 hover:text-red-700"
+                onClick={() => removeFromCart(item.id)}
+              >
+                Remove
+              </button>
             </div>
           ))}
         </div>
