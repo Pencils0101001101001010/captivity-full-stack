@@ -23,31 +23,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { formSchema, FormValues } from "./validations";
-import { CartData } from "@/app/(customer)/types";
 import { useToast } from "@/hooks/use-toast";
-import { useSubmitOrder } from "./useSubmitOrder";
-import { useCart } from "../cart/useCartHooks";
 
-interface CheckoutFormProps {
-  cartData: CartData;
-}
-
-const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
-  const { toast } = useToast();
-  const {
-    loading: submitLoading,
-    error: submitError,
-    data: submitData,
-    submit,
-  } = useSubmitOrder();
-  const {
-    cart,
-    loading: cartLoading,
-    error: cartError,
-    refreshCart,
-  } = useCart();
-  const [retryCount, setRetryCount] = useState(0);
-
+const CheckoutForm = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -72,78 +50,8 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
     },
   });
 
-  useEffect(() => {
-    if (cartError && retryCount < 3) {
-      const timer = setTimeout(() => {
-        refreshCart();
-        setRetryCount(prev => prev + 1);
-      }, 2000); // Retry after 2 seconds
-      return () => clearTimeout(timer);
-    }
-  }, [cartError, retryCount, refreshCart]);
-
   const onSubmit = async (formData: FormValues) => {
-    if (!cart) {
-      toast({
-        title: "Error",
-        description: "Unable to submit order. Cart data is not available.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      await submit(formData, cart);
-      if (submitData) {
-        toast({
-          title: "Order Submitted Successfully",
-          description: `Your order #${submitData.id} has been placed.`,
-          duration: 5000,
-        });
-      }
-    } catch (error) {
-      console.error("Error submitting order:", error);
-      toast({
-        title: "Error",
-        description:
-          "There was a problem submitting your order. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (cartLoading) {
-    return <div>Loading cart data...</div>;
-  }
-
-  if (cartError) {
-    return (
-      <div>
-        <p>Error loading cart data. Please try again later.</p>
-        <Button
-          onClick={() => {
-            setRetryCount(0);
-            refreshCart();
-          }}
-        >
-          Retry
-        </Button>
-      </div>
-    );
-  }
-
-  if (!cart) {
-    return <div>No items in cart. Please add items before checking out.</div>;
-  }
-
-  const calculateSubtotal = (price: number, quantity: number) => {
-    return (price * quantity).toFixed(2);
-  };
-
-  const calculateTotal = () => {
-    return cartData.extendedItems
-      .reduce((total, item) => total + item.price * item.quantity, 0)
-      .toFixed(2);
+    console.log(form);
   };
 
   return (
@@ -545,58 +453,30 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartData }) => {
             <div className="bg-white rounded-lg p-6 sticky top-6 shadow-2xl shadow-black">
               <h3 className="text-xl font-semibold mb-6">Order Summary</h3>
               <div className="space-y-4">
-                {cartData.extendedItems.map(item => (
-                  <div
-                    key={`${item.productId}-${item.variationId}`}
-                    className="flex items-center space-x-4 pb-4 border-b"
-                  >
-                    <Image
-                      src={item.image}
-                      alt={item.productName}
-                      width={50}
-                      height={50}
-                      className="mr-4 rounded-md"
-                    />
-                    <div className="flex-grow">
-                      <h4 className="font-semibold text-sm">
-                        {item.productName}
-                      </h4>
-                      <p className="text-xs text-gray-600">
-                        {item.variationName}
-                      </p>
-                      <p className="text-xs">Quantity: {item.quantity}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-sm">
-                        R{item.price.toFixed(2)} each
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        Subtotal: R
-                        {calculateSubtotal(item.price, item.quantity)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                <div className="flex justify-between items-center pt-4 font-semibold">
-                  <span>Total:</span>
-                  <span className="text-lg">R{calculateTotal()}</span>
+                <Image
+                  src={""}
+                  alt={"/"}
+                  width={50}
+                  height={50}
+                  className="mr-4 rounded-md"
+                />
+                <div className="flex-grow">
+                  <h4 className="font-semibold text-sm">{"/"}</h4>
+                  <p className="text-xs text-gray-600">{"/"}</p>
+                  <p className="text-xs">Quantity: {"/"}</p>
                 </div>
+                <div className="text-right">
+                  <p className="font-semibold text-sm">R{"/"} each</p>
+                  <p className="text-xs text-gray-600">Subtotal: R</p>
+                </div>
+              </div>
+              <div className="flex justify-between items-center pt-4 font-semibold">
+                <span>Total:</span>
+                <span className="text-lg"></span>
               </div>
             </div>
           </div>
         </div>
-
-        <Button
-          type="submit"
-          className="w-full mt-8 py-3 text-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-300"
-          disabled={submitLoading}
-        >
-          {submitLoading ? "Submitting Order..." : "Place Order"}
-        </Button>
-
-        {submitError && (
-          <p className="mt-4 text-red-600 text-center">{submitError}</p>
-        )}
       </form>
     </Form>
   );
