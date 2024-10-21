@@ -90,10 +90,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const uniqueSizes = Array.from(new Set(product.variations.map(v => v.size)));
 
   return (
-    <div className="max-w-4xl mx-auto p-3 bg-white mb-14 shadow-lg rounded-lg">
-      <div className="flex flex-col md:flex-row mb-6">
-        <div className="w-full md:w-1/2 pr-0 md:pr-6 mb-6 md:mb-0">
-          <div className="relative w-full h-[360px] mb-4">
+    <div className="max-w-4xl mx-auto p-3 bg-white my-8 shadow-2xl shadow-black rounded-lg">
+      <div className="flex flex-col md:flex-row mb-4">
+        <div className="w-full md:w-1/2 pr-0 md:pr-6 mb-4 md:mb-0">
+          <div className="relative w-full h-[340px] mb-4">
             <Image
               src={
                 selectedVariation?.variationImageURL ||
@@ -141,7 +141,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           </h1>
           <div
             dangerouslySetInnerHTML={{ __html: product.description }}
-            className="mb-6 text-gray-600"
+            className="mb-4 text-gray-600"
           />
           <p className="text-2xl font-bold mb-2 text-gray-800">
             R{product.sellingPrice.toFixed(2)}
@@ -167,7 +167,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             </div>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-4">
             <label
               htmlFor="size-select"
               className="font-bold text-gray-700 block mb-2"
@@ -189,7 +189,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             </select>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-4">
             <label className="font-bold text-gray-700 block mb-2">
               Quantity
             </label>
@@ -203,7 +203,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             />
           </div>
 
-          <p className="mb-6 text-gray-600">
+          <p className="mb-4 text-gray-600">
             {selectedVariation?.quantity || 0} in stock
           </p>
 
