@@ -21,7 +21,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       : product.sellingPrice;
 
   return (
-    <Link href={`/product/${product.id}`} passHref>
+    <Link href={`/customer/shopping/${product.id}`} passHref>
       <Card className="w-64 h-80 overflow-hidden cursor-pointer transition-transform hover:scale-105">
         <div className="relative w-full h-52">
           <Image
