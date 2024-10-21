@@ -30,7 +30,7 @@ enum OrderStatus {
 }
 
 model User {
-  id               String    @id
+  id               String    @id @default(uuid())
   username         String    @unique
   firstName        String
   lastName         String
@@ -69,7 +69,7 @@ model User {
 }
 
 model Session {
-  id        String   @id
+  id        String   @id @default(uuid())
   userId    String
   expiresAt DateTime
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -78,7 +78,7 @@ model Session {
 }
 
 model Product {
-  id             Int              @id @default(autoincrement())
+  id             String           @id @default(uuid())
   userId         String
   productName    String           @map("product_name")
   category       String[]
@@ -96,19 +96,19 @@ model Product {
 }
 
 model DynamicPricing {
-  id        Int     @id @default(autoincrement())
+  id        String  @id @default(uuid())
   from      String
   to        String
   type      String
   amount    String
   product   Product @relation(fields: [productId], references: [id])
-  productId Int
+  productId String
 
   @@map("dynamic_pricing")
 }
 
 model Variation {
-  id                Int         @id @default(autoincrement())
+  id                String      @id @default(uuid())
   name              String
   color             String
   size              String
@@ -117,7 +117,7 @@ model Variation {
   variationImageURL String      @map("variation_image_URL")
   quantity          Int
   product           Product     @relation(fields: [productId], references: [id])
-  productId         Int
+  productId         String
   cartItems         CartItem[]
   orderItems        OrderItem[]
 
@@ -125,18 +125,18 @@ model Variation {
 }
 
 model FeaturedImage {
-  id        Int     @id @default(autoincrement())
+  id        String  @id @default(uuid())
   thumbnail String
   medium    String
   large     String
   product   Product @relation(fields: [productId], references: [id])
-  productId Int     @unique
+  productId String  @unique
 
   @@map("featured_images")
 }
 
 model Cart {
-  id        Int        @id @default(autoincrement())
+  id        String     @id @default(uuid())
   userId    String     @unique
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   cartItems CartItem[]
@@ -147,9 +147,9 @@ model Cart {
 }
 
 model CartItem {
-  id          Int       @id @default(autoincrement())
-  cartId      Int
-  variationId Int
+  id          String    @id @default(uuid())
+  cartId      String
+  variationId String
   quantity    Int
   cart        Cart      @relation(fields: [cartId], references: [id], onDelete: Cascade)
   variation   Variation @relation(fields: [variationId], references: [id], onDelete: Cascade)
@@ -158,7 +158,7 @@ model CartItem {
 }
 
 model Order {
-  id          Int         @id @default(autoincrement())
+  id          String      @id @default(uuid())
   userId      String
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderItems  OrderItem[]
@@ -171,9 +171,9 @@ model Order {
 }
 
 model OrderItem {
-  id          Int       @id @default(autoincrement())
-  orderId     Int
-  variationId Int
+  id          String    @id @default(uuid())
+  orderId     String
+  variationId String
   quantity    Int
   price       Float
   order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)

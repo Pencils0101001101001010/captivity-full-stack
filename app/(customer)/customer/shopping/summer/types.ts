@@ -1,20 +1,20 @@
 type Product = {
-  id: number;
+  id: string;
   productName: string;
   category: string[];
   description: string;
   sellingPrice: number;
   isPublished: boolean;
   dynamicPricing: {
-    id: number;
+    id: string;
     from: string;
     to: string;
     type: string;
     amount: string;
-    productId: number;
+    productId: string;
   }[];
   variations: {
-    id: number;
+    id: string;
     name: string;
     color: string;
     size: string;
@@ -22,14 +22,14 @@ type Product = {
     sku2: string;
     variationImageURL: string;
     quantity: number;
-    productId: number;
+    productId: string;
   }[];
   featuredImage: {
-    id: number;
+    id: string;
     thumbnail: string;
     medium: string;
     large: string;
-    productId: number;
+    productId: string;
   } | null;
 };
 

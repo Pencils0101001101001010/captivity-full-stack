@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { fetchSummerCollection } from "./actions";
 
 type Product = {
-  id: number;
+  id: string; // Change this from number to string
   productName: string;
   sellingPrice: number;
   featuredImage: {
