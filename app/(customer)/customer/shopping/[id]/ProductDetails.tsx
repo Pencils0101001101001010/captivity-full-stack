@@ -96,8 +96,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                 "/placeholder-image.jpg"
               }
               alt={product.productName}
-              layout="fill"
-              objectFit="cover"
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              style={{ objectFit: "cover" }}
               className="rounded-lg"
               priority
             />
@@ -118,8 +119,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                     <Image
                       src={variation.variationImageURL}
                       alt={`${product.productName} - ${color}`}
-                      layout="fill"
-                      objectFit="cover"
+                      fill
+                      sizes="(max-width: 768px) 25vw, 12.5vw"
+                      style={{ objectFit: "cover" }}
+                      priority
                     />
                   </div>
                 </div>
