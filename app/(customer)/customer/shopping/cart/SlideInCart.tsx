@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect } from "react";
 import { X } from "lucide-react";
 import Image from "next/image";
@@ -17,7 +15,8 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
   const {
     cartItems,
     totalCost,
-    isLoading,
+    isFetching,
+    isUpdating,
     error,
     fetchCart,
     updateCartItemQuantity,
@@ -76,7 +75,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
             <X className="w-6 h-6" />
           </button>
         </div>
-        {isLoading ? (
+        {isFetching ? (
           <p className="text-gray-500">Loading your cart...</p>
         ) : cartItems.length > 0 ? (
           <div className="space-y-4">
@@ -110,6 +109,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
                         handleQuantityChange(item.id, parseInt(e.target.value))
                       }
                       className="border rounded px-2 py-1 text-sm"
+                      disabled={isUpdating}
                     >
                       {renderQuantityOptions(item.variation.quantity)}
                     </select>
@@ -118,6 +118,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
                 <button
                   className="text-red-500 hover:text-red-700"
                   onClick={() => handleDeleteItem(item.id)}
+                  disabled={isUpdating}
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -138,10 +139,14 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
             <Button
               asChild
               className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
+              disabled={isUpdating}
             >
               <Link href={"/customer/shopping/checkout"}>Checkout</Link>
             </Button>
-            <button className="w-full bg-gray-200 text-gray-800 py-2 rounded-md hover:bg-gray-300 transition-colors">
+            <button
+              className="w-full bg-gray-200 text-gray-800 py-2 rounded-md hover:bg-gray-300 transition-colors"
+              disabled={isUpdating}
+            >
               View Cart
             </button>
           </div>

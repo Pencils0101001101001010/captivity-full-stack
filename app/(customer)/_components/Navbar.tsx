@@ -23,7 +23,10 @@ const Navbar = () => {
     fetchCart();
   }, [fetchCart]);
 
-  const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const cartItemCount = cartItems.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
 
   const CartIcon = () => (
     <button onClick={() => setIsCartOpen(true)} className="relative">
