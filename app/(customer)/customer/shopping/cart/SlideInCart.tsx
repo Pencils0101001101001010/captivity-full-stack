@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import useCartStore from "../../_store/useCartStore";
@@ -114,31 +114,20 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
                     {item.variation.color} / {item.variation.size}
                   </p>
                   <div className="flex justify-between items-center mt-2">
-                    <div className="flex items-center border rounded">
-                      <button
-                        className="px-2 py-1 border-r hover:bg-gray-100 disabled:opacity-50"
-                        onClick={() =>
-                          handleUpdateQuantity(item.id, item.quantity - 1)
-                        }
-                        disabled={
-                          updatingItems.has(item.id) || item.quantity <= 1
-                        }
-                      >
-                        -
-                      </button>
-                      <span className="px-4 py-1">
-                        {updatingItems.has(item.id) ? "..." : item.quantity}
-                      </span>
-                      <button
-                        className="px-2 py-1 border-l hover:bg-gray-100 disabled:opacity-50"
-                        onClick={() =>
-                          handleUpdateQuantity(item.id, item.quantity + 1)
-                        }
-                        disabled={updatingItems.has(item.id)}
-                      >
-                        +
-                      </button>
-                    </div>
+                    <select
+                      value={item.quantity}
+                      onChange={e =>
+                        handleUpdateQuantity(item.id, Number(e.target.value))
+                      }
+                      disabled={updatingItems.has(item.id)}
+                      className="border rounded px-2 py-1"
+                    >
+                      {[...Array(item.variation.quantity)].map((_, i) => (
+                        <option key={i + 1} value={i + 1}>
+                          {i + 1}
+                        </option>
+                      ))}
+                    </select>
                     <p className="font-medium">
                       R{item.variation.product.sellingPrice.toFixed(2)}
                     </p>
@@ -151,7 +140,11 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
                     removingItems.has(item.id) || updatingItems.has(item.id)
                   }
                 >
-                  {removingItems.has(item.id) ? "Removing..." : "Remove"}
+                  {removingItems.has(item.id) ? (
+                    <span className="text-sm">Removing...</span>
+                  ) : (
+                    <Trash2 size={20} />
+                  )}
                 </button>
               </div>
             ))}
