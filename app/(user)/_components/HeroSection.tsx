@@ -18,7 +18,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         src={featuredImage.large}
         alt={`${categoryName} category`}
         fill
-        style={{ objectFit: "cover" }}
+        style={{ objectFit: "cover", objectPosition: "center-25" }}
         sizes="100vw"
         priority
       />

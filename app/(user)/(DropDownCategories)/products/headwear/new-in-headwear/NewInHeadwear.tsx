@@ -18,13 +18,13 @@ const NewHeadwearProductList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [featuredImage, setFeaturedImage] = useState<{ large: string }>({
-    large: "/Industrial-collection-Btn.jpg", //!change this placeholder
+    large: "/Industrial-collection-Btn.jpg",
   });
   const productsPerPage = 9;
 
   useEffect(() => {
-    if (products.length > 0 && products[0].featuredImage?.large) {
-      setFeaturedImage({ large: products[0].featuredImage.large });
+    if (products.length > 0 && products[1].featuredImage?.large) {
+      setFeaturedImage({ large: products[1].featuredImage.large });
     }
   }, [products]);
 
@@ -66,7 +66,7 @@ const NewHeadwearProductList: React.FC = () => {
       />
 
       <div className="flex flex-col md:flex-row gap-6">
-        <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
+        <aside className="md:w-1/4 lg:w-1/4 hidden md:block sticky top-0 h-fit">
           <SideMenu />
         </aside>
         <main className="w-full md:w-3/4 lg:w-4/5">
