@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Product, Variation } from "@prisma/client";
+import useCartStore from "../../_store/useCartStore";
 
 type ProductWithRelations = Product & {
   variations: Variation[];
@@ -11,6 +12,31 @@ type ProductWithRelations = Product & {
 
 type ProductDetailsProps = {
   product: ProductWithRelations;
+};
+
+const AddToCartButton: React.FC<{
+  selectedVariation: Variation | null;
+  quantity: number;
+  disabled: boolean;
+}> = ({ selectedVariation, quantity, disabled }) => {
+  const addToCart = useCartStore(state => state.addToCart);
+  const isLoading = useCartStore(state => state.isLoading);
+
+  const handleAddToCart = async () => {
+    if (selectedVariation) {
+      await addToCart(selectedVariation.id, quantity);
+    }
+  };
+
+  return (
+    <button
+      className="w-full bg-blue-600 text-white py-3 rounded-md font-medium transition-colors hover:bg-blue-700 disabled:bg-gray-400"
+      disabled={disabled || isLoading}
+      onClick={handleAddToCart}
+    >
+      {isLoading ? "Adding to Cart..." : "Add to Cart"}
+    </button>
+  );
 };
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
@@ -55,23 +81,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQuantity = parseInt(e.target.value);
     setQuantity(Math.min(newQuantity, selectedVariation?.quantity || 1));
-  };
-
-  const handleAddToCart = () => {
-    if (selectedVariation) {
-      console.log("Adding to cart:", {
-        productId: product.id,
-        productName: product.productName,
-        variationId: selectedVariation.id,
-        color: selectedVariation.color,
-        size: selectedVariation.size,
-        quantity: quantity,
-        price: product.sellingPrice,
-        totalPrice: product.sellingPrice * quantity,
-      });
-    } else {
-      console.log("No variation selected");
-    }
   };
 
   const uniqueColors = Array.from(
@@ -199,13 +208,11 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             {selectedVariation?.quantity || 0} in stock
           </p>
 
-          <button
-            className="w-full bg-blue-600 text-white py-3 rounded-md font-medium transition-colors hover:bg-blue-700"
+          <AddToCartButton
+            selectedVariation={selectedVariation}
+            quantity={quantity}
             disabled={!selectedVariation || selectedVariation.quantity < 1}
-            onClick={handleAddToCart}
-          >
-            Add to Cart
-          </button>
+          />
         </div>
       </div>
     </div>
