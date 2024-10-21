@@ -11,10 +11,12 @@ import { ShoppingCart } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
 import useCartStore from "../customer/_store/useCartStore";
+import SlideInCart from "../customer/shopping/cart/SlideInCart";
 
 const Navbar = () => {
   const session = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const cart = useCartStore(state => state.cart);
 
   const cartItemCount =
@@ -76,14 +78,17 @@ const Navbar = () => {
             {session?.user ? (
               <div className="flex items-center space-x-4">
                 <UserButton className="text-lg" />
-                <Link href="/cart" className="relative">
+                <button
+                  onClick={() => setIsCartOpen(true)}
+                  className="relative"
+                >
                   <ShoppingCart size={24} />
                   {cartItemCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
                       {cartItemCount}
                     </span>
                   )}
-                </Link>
+                </button>
               </div>
             ) : (
               <>
@@ -94,27 +99,33 @@ const Navbar = () => {
                 <Link href="/signup" className="hover:text-gray-300">
                   Register
                 </Link>
-                <Link href="/cart" className="relative">
+                <button
+                  onClick={() => setIsCartOpen(true)}
+                  className="relative"
+                >
                   <ShoppingCart size={24} />
                   {cartItemCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
                       {cartItemCount}
                     </span>
                   )}
-                </Link>
+                </button>
               </>
             )}
           </div>
 
           <div className="md:hidden flex items-center">
-            <Link href="/cart" className="relative mr-4">
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative mr-4"
+            >
               <ShoppingCart size={24} />
               {cartItemCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
                   {cartItemCount}
                 </span>
               )}
-            </Link>
+            </button>
             {session?.user ? (
               <UserButton className="text-lg" />
             ) : (
@@ -191,8 +202,8 @@ const Navbar = () => {
             <TbCategoryFilled />
             <div className="text-xs mt-2">Categories</div>
           </Link>
-          <Link
-            href="/cart"
+          <button
+            onClick={() => setIsCartOpen(true)}
             className="flex flex-col items-center py-2 hover:text-red-500 relative"
           >
             <ShoppingCart size={20} />
@@ -202,7 +213,7 @@ const Navbar = () => {
               </span>
             )}
             <div className="text-xs mt-2">Cart</div>
-          </Link>
+          </button>
           <Link
             href="/Favourites"
             className="flex text-gray-600 flex-col items-center py-2 hover:text-red-500"
@@ -219,6 +230,9 @@ const Navbar = () => {
           </Link>
         </div>
       </div>
+
+      {/* Slide-in Cart */}
+      <SlideInCart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
 };
