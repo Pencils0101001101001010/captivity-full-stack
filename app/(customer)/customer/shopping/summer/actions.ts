@@ -23,7 +23,8 @@ type Category =
   | "hats"
   | "golfers"
   | "bottoms"
-  | "caps";
+  | "caps"
+  | "uncategorised";
 
 type CategorizedProducts = {
   [key in Category]: ProductWithRelations[];
@@ -65,6 +66,7 @@ export async function fetchSummerCollection(): Promise<FetchSummerCollectionResu
       golfers: [],
       bottoms: [],
       caps: [],
+      uncategorised: [],
     };
 
     products.forEach(product => {

@@ -20,7 +20,8 @@ export type Category =
   | "hats"
   | "golfers"
   | "bottoms"
-  | "caps";
+  | "caps"
+  | "uncategorised";
 
 export type CategorizedProducts = {
   [key in Category]: ProductWithRelations[];
@@ -46,6 +47,7 @@ const useSummerStore = create<SummerStoreState>((set, get) => ({
     golfers: [],
     bottoms: [],
     caps: [],
+    uncategorised: [],
   },
   loading: false,
   error: null,
