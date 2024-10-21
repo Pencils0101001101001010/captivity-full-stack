@@ -57,6 +57,23 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     setQuantity(Math.min(newQuantity, selectedVariation?.quantity || 1));
   };
 
+  const handleAddToCart = () => {
+    if (selectedVariation) {
+      console.log("Adding to cart:", {
+        productId: product.id,
+        productName: product.productName,
+        variationId: selectedVariation.id,
+        color: selectedVariation.color,
+        size: selectedVariation.size,
+        quantity: quantity,
+        price: product.sellingPrice,
+        totalPrice: product.sellingPrice * quantity,
+      });
+    } else {
+      console.log("No variation selected");
+    }
+  };
+
   const uniqueColors = Array.from(
     new Set(product.variations.map(v => v.color))
   );
@@ -182,6 +199,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           <button
             className="w-full bg-blue-600 text-white py-3 rounded-md font-medium transition-colors hover:bg-blue-700"
             disabled={!selectedVariation || selectedVariation.quantity < 1}
+            onClick={handleAddToCart}
           >
             Add to Cart
           </button>
