@@ -20,21 +20,23 @@ const AddToCartButton: React.FC<{
   disabled: boolean;
 }> = ({ selectedVariation, quantity, disabled }) => {
   const addToCart = useCartStore(state => state.addToCart);
-  const isLoading = useCartStore(state => state.isLoading);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const handleAddToCart = async () => {
     if (selectedVariation) {
+      setIsAddingToCart(true);
       await addToCart(selectedVariation.id, quantity);
+      setIsAddingToCart(false);
     }
   };
 
   return (
     <button
       className="w-full bg-blue-600 text-white py-3 rounded-md font-medium transition-colors hover:bg-blue-700 disabled:bg-gray-400"
-      disabled={disabled || isLoading}
+      disabled={disabled || isAddingToCart}
       onClick={handleAddToCart}
     >
-      {isLoading ? "Adding to Cart..." : "Add to Cart"}
+      {isAddingToCart ? "Adding to Cart..." : "Add to Cart"}
     </button>
   );
 };
@@ -208,10 +210,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           </p>
 
           <AddToCartButton
-            selectedVariation={selectedVariation}
-            quantity={quantity}
-            disabled={!selectedVariation || selectedVariation.quantity < 1}
-          />
+        selectedVariation={selectedVariation}
+        quantity={quantity}
+        disabled={!selectedVariation || selectedVariation.quantity < 1}
+      />
         </div>
       </div>
     </div>

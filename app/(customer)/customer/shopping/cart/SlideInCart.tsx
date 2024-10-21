@@ -23,7 +23,7 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
     (sum, item) => sum + item.variation.product.sellingPrice * item.quantity,
     0
   );
-  const shipping = 100.0; // Fixed shipping cost
+  const shipping = 0; // Fixed shipping cost
   const total = subtotal + shipping;
 
   const handleUpdateQuantity = async (
