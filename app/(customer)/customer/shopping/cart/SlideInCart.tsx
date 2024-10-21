@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,24 +10,44 @@ type SlideInCartProps = {
 };
 
 const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
-  const { cart, isLoading, error, updateCartItemQuantity, removeFromCart } =
-    useCartStore();
+  const { cart, updateCartItemQuantity, removeFromCart } = useCartStore();
+  const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+  const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
 
-  if (isLoading) {
-    return;
+  if (!cart) {
+    return null;
   }
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  const cartItems = cart?.cartItems || [];
+  const cartItems = cart.cartItems || [];
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.variation.product.sellingPrice * item.quantity,
     0
   );
   const shipping = 100.0; // Fixed shipping cost
   const total = subtotal + shipping;
+
+  const handleUpdateQuantity = async (
+    cartItemId: string,
+    newQuantity: number
+  ) => {
+    setUpdatingItems(prev => new Set(prev).add(cartItemId));
+    await updateCartItemQuantity(cartItemId, newQuantity);
+    setUpdatingItems(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(cartItemId);
+      return newSet;
+    });
+  };
+
+  const handleRemoveItem = async (cartItemId: string) => {
+    setRemovingItems(prev => new Set(prev).add(cartItemId));
+    await removeFromCart(cartItemId);
+    setRemovingItems(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(cartItemId);
+      return newSet;
+    });
+  };
 
   return (
     <div
@@ -75,19 +95,25 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
                 <div className="flex justify-between items-center mt-2">
                   <div className="flex items-center border rounded">
                     <button
-                      className="px-2 py-1 border-r hover:bg-gray-100"
+                      className="px-2 py-1 border-r hover:bg-gray-100 disabled:opacity-50"
                       onClick={() =>
-                        updateCartItemQuantity(item.id, item.quantity - 1)
+                        handleUpdateQuantity(item.id, item.quantity - 1)
+                      }
+                      disabled={
+                        updatingItems.has(item.id) || item.quantity <= 1
                       }
                     >
                       -
                     </button>
-                    <span className="px-4 py-1">{item.quantity}</span>
+                    <span className="px-4 py-1">
+                      {updatingItems.has(item.id) ? "..." : item.quantity}
+                    </span>
                     <button
-                      className="px-2 py-1 border-l hover:bg-gray-100"
+                      className="px-2 py-1 border-l hover:bg-gray-100 disabled:opacity-50"
                       onClick={() =>
-                        updateCartItemQuantity(item.id, item.quantity + 1)
+                        handleUpdateQuantity(item.id, item.quantity + 1)
                       }
+                      disabled={updatingItems.has(item.id)}
                     >
                       +
                     </button>
@@ -98,10 +124,13 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
                 </div>
               </div>
               <button
-                className="text-red-500 hover:text-red-700"
-                onClick={() => removeFromCart(item.id)}
+                className="text-red-500 hover:text-red-700 disabled:opacity-50"
+                onClick={() => handleRemoveItem(item.id)}
+                disabled={
+                  removingItems.has(item.id) || updatingItems.has(item.id)
+                }
               >
-                Remove
+                {removingItems.has(item.id) ? "Removing..." : "Remove"}
               </button>
             </div>
           ))}
