@@ -210,10 +210,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           </p>
 
           <AddToCartButton
-        selectedVariation={selectedVariation}
-        quantity={quantity}
-        disabled={!selectedVariation || selectedVariation.quantity < 1}
-      />
+            selectedVariation={selectedVariation}
+            quantity={quantity}
+            disabled={!selectedVariation || selectedVariation.quantity < 1}
+          />
         </div>
       </div>
     </div>
