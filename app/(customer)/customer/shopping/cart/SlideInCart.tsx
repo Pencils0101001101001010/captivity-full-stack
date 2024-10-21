@@ -109,7 +109,6 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
                         handleQuantityChange(item.id, parseInt(e.target.value))
                       }
                       className="border rounded px-2 py-1 text-sm"
-                      disabled={isUpdating}
                     >
                       {renderQuantityOptions(item.variation.quantity)}
                     </select>
@@ -118,7 +117,6 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
                 <button
                   className="text-red-500 hover:text-red-700"
                   onClick={() => handleDeleteItem(item.id)}
-                  disabled={isUpdating}
                 >
                   <X className="w-5 h-5" />
                 </button>

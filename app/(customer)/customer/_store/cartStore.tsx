@@ -1,12 +1,5 @@
 import { create } from "zustand";
-import {
-  AddToCartResult,
-  CartItem,
-  Variation,
-  FetchCartResult,
-  UpdateCartItemQuantityResult,
-  DeleteCartItemResult,
-} from "../shopping/cart/types";
+import { AddToCartResult, CartItem, Variation } from "../shopping/cart/types";
 import {
   fetchCart as fetchCartAction,
   addToCart as addToCartAction,
@@ -115,41 +108,61 @@ export const useCartStore = create<CartStore>((set, get) => ({
   },
 
   updateCartItemQuantity: async (cartItemId: number, newQuantity: number) => {
-    set({ isUpdating: true, error: null });
+    // Optimistic update
+    set(state => {
+      const updatedItems = state.cartItems.map(item =>
+        item.id === cartItemId ? { ...item, quantity: newQuantity } : item
+      );
+      const newTotalCost = updatedItems.reduce(
+        (sum, item) =>
+          sum + item.variation.product.sellingPrice * item.quantity,
+        0
+      );
+      return {
+        cartItems: updatedItems,
+        totalCost: newTotalCost,
+        isUpdating: true,
+        error: null,
+      };
+    });
+
     const result = await updateCartItemQuantityAction(cartItemId, newQuantity);
+
     if (result.success) {
-      set(state => ({
-        ...state,
-        isUpdating: false,
-        cartItems: state.cartItems.map(item =>
-          item.id === cartItemId
-            ? { ...item, quantity: result.newQuantity }
-            : item
-        ),
-        totalCost: result.newTotalCost,
-        lastFetched: Date.now(),
-      }));
+      set({ isUpdating: false, lastFetched: Date.now() });
     } else {
+      // Revert the optimistic update on failure
+      await get().fetchCart();
       set({ error: result.error, isUpdating: false });
     }
   },
 
   deleteCartItem: async (cartItemId: number) => {
-    set({ isUpdating: true, error: null });
+    // Optimistic update
+    set(state => {
+      const updatedItems = state.cartItems.filter(
+        item => item.id !== cartItemId
+      );
+      const newTotalCost = updatedItems.reduce(
+        (sum, item) =>
+          sum + item.variation.product.sellingPrice * item.quantity,
+        0
+      );
+      return {
+        cartItems: updatedItems,
+        totalCost: newTotalCost,
+        isUpdating: true,
+        error: null,
+      };
+    });
+
     const result = await deleteCartItemAction(cartItemId);
+
     if (result.success) {
-      set(state => ({
-        ...state,
-        isUpdating: false,
-        cartItems: state.cartItems.filter(item => item.id !== cartItemId),
-        totalCost: state.cartItems.reduce(
-          (sum, item) =>
-            sum + item.variation.product.sellingPrice * item.quantity,
-          0
-        ),
-        lastFetched: Date.now(),
-      }));
+      set({ isUpdating: false, lastFetched: Date.now() });
     } else {
+      // Revert the optimistic update on failure
+      await get().fetchCart();
       set({ error: result.error, isUpdating: false });
     }
   },
