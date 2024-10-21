@@ -58,7 +58,7 @@ const CheckoutForm = () => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="max-w-7xl mx-auto p-6"
+        className="max-w-7xl mx-auto p-6 mb-16"
       >
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Column: Billing Details, Additional Information, Terms */}

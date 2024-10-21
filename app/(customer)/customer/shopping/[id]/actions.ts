@@ -2,8 +2,23 @@
 
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
-import { FetchProductByIdResult } from "./types";
+
+// Define the FetchProductByIdResult type
+type FetchProductByIdResult = {
+  success: boolean;
+  data?: {
+    id: number;
+    productName: string;
+    category: string[]; // Changed from string to string[]
+    description: string;
+    sellingPrice: number;
+    isPublished: boolean;
+    dynamicPricing: any; // Replace 'any' with the actual type if available
+    variations: any[]; // Replace 'any[]' with the actual type if available
+    featuredImage: any; // Replace 'any' with the actual type if available
+  };
+  error?: string;
+};
 
 export async function fetchProductById(
   productId: number

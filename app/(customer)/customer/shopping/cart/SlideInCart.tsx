@@ -5,6 +5,8 @@ import { X } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { useCartStore } from "../../_store/cartStore";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface CartSidebarProps {
   isOpen: boolean;
@@ -133,9 +135,12 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
             <span className="text-xl font-bold">${totalCost.toFixed(2)}</span>
           </div>
           <div className="space-y-2">
-            <button className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors">
-              Checkout
-            </button>
+            <Button
+              asChild
+              className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
+            >
+              <Link href={"/customer/shopping/checkout"}>Checkout</Link>
+            </Button>
             <button className="w-full bg-gray-200 text-gray-800 py-2 rounded-md hover:bg-gray-300 transition-colors">
               View Cart
             </button>
