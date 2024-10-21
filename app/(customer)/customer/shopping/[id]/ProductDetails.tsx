@@ -90,14 +90,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const uniqueSizes = Array.from(new Set(product.variations.map(v => v.size)));
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">
-        {product.productName}
-      </h1>
-
+    <div className="max-w-4xl mx-auto p-3 bg-white shadow-lg rounded-lg">
       <div className="flex flex-col md:flex-row mb-6">
         <div className="w-full md:w-1/2 pr-0 md:pr-6 mb-6 md:mb-0">
-          <div className="relative w-full h-[400px] mb-4">
+          <div className="relative w-full h-[360px] mb-4">
             <Image
               src={
                 selectedVariation?.variationImageURL ||
@@ -106,7 +102,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
               }
               alt={product.productName}
               fill
-              sizes="(max-width: 768px) 100vw, 50vw"
+              sizes="(max-width: 768px) 90vw, 40vw"
               style={{ objectFit: "cover" }}
               className="rounded-lg"
               priority
@@ -129,7 +125,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                       src={variation.variationImageURL}
                       alt={`${product.productName} - ${color}`}
                       fill
-                      sizes="(max-width: 768px) 25vw, 12.5vw"
+                      sizes="(max-width: 768px) 25vw, 8.5vw"
                       style={{ objectFit: "cover" }}
                       priority
                     />
@@ -140,15 +136,18 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           </div>
         </div>
         <div className="w-full md:w-1/2">
+          <h1 className="text-2xl font-bold mb-1 text-gray-800">
+            {product.productName}
+          </h1>
           <div
             dangerouslySetInnerHTML={{ __html: product.description }}
             className="mb-6 text-gray-600"
           />
-          <p className="text-2xl font-bold mb-6 text-gray-800">
+          <p className="text-2xl font-bold mb-2 text-gray-800">
             R{product.sellingPrice.toFixed(2)}
           </p>
 
-          <div className="mb-6">
+          <div className="mb-2">
             <p className="font-bold text-gray-700 mb-2">Color</p>
             <div className="flex flex-wrap -mx-1">
               {uniqueColors.map(color => (
