@@ -10,34 +10,11 @@ import { RxDividerVertical } from "react-icons/rx";
 import { ShoppingCart } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
-import CartSidebar from "../customer/shopping/cart/SlideInCart";
-import { useCartStore } from "../customer/_store/cartStore";
 
 const Navbar = () => {
   const session = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const { cartItems, fetchCart } = useCartStore();
-
-  useEffect(() => {
-    fetchCart();
-  }, [fetchCart]);
-
-  const cartItemCount = cartItems.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
-
-  const CartIcon = () => (
-    <button onClick={() => setIsCartOpen(true)} className="relative">
-      <ShoppingCart className="w-6 h-6" />
-      {cartItemCount > 0 && (
-        <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-          {cartItemCount}
-        </span>
-      )}
-    </button>
-  );
 
   return (
     <div>
@@ -79,7 +56,6 @@ const Navbar = () => {
             {session?.user ? (
               <div className="flex gap-4 items-center">
                 <UserButton className="text-lg" />
-                <CartIcon />
               </div>
             ) : (
               <>
@@ -89,7 +65,7 @@ const Navbar = () => {
                 >
                   Login
                 </Link>
-                <CartIcon />
+          
               </>
             )}
           </div>
@@ -111,7 +87,7 @@ const Navbar = () => {
             {session?.user ? (
               <div className="flex space-x-10 items-center">
                 <UserButton className="text-lg" />
-                <CartIcon />
+          
               </div>
             ) : (
               <>
@@ -124,7 +100,7 @@ const Navbar = () => {
                 <Link href="/signup">
                   <span className="hover:text-gray-300 -ml-16">Register</span>
                 </Link>
-                <CartIcon />
+          
               </>
             )}
           </div>
@@ -209,9 +185,6 @@ const Navbar = () => {
           </Link>
         </div>
       </div>
-
-      {/* Cart Sidebar */}
-      <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
 };
