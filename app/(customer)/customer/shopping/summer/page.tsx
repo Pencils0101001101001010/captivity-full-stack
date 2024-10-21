@@ -1,10 +1,10 @@
 import React from "react";
-import SummerCarousel from "./SummerCarousel";
+import SummerCollectionPage from "./SummerLanding";
 
 const SummerPage = () => {
   return (
     <div>
-      <SummerCarousel />
+      <SummerCollectionPage />
     </div>
   );
 };

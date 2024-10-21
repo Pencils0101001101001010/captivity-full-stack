@@ -1,4 +1,3 @@
-// app/actions/products.ts
 "use server";
 
 import { validateRequest } from "@/auth";
@@ -17,8 +16,21 @@ type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
+type Category =
+  | "men"
+  | "women"
+  | "kids"
+  | "hats"
+  | "golfers"
+  | "bottoms"
+  | "caps";
+
+type CategorizedProducts = {
+  [key in Category]: ProductWithRelations[];
+};
+
 type FetchSummerCollectionResult =
-  | { success: true; data: ProductWithRelations[] }
+  | { success: true; data: CategorizedProducts }
   | { success: false; error: string };
 
 export async function fetchSummerCollection(): Promise<FetchSummerCollectionResult> {
@@ -44,10 +56,30 @@ export async function fetchSummerCollection(): Promise<FetchSummerCollectionResu
       },
     });
 
+    // Categorize products
+    const categorizedProducts: CategorizedProducts = {
+      men: [],
+      women: [],
+      kids: [],
+      hats: [],
+      golfers: [],
+      bottoms: [],
+      caps: [],
+    };
+
+    products.forEach(product => {
+      const categories = product.category as string[];
+      categories.forEach(category => {
+        if (category in categorizedProducts) {
+          categorizedProducts[category as Category].push(product);
+        }
+      });
+    });
+
     // Revalidate the products page
     revalidatePath("/customer/shopping/summer");
 
-    return { success: true, data: products };
+    return { success: true, data: categorizedProducts };
   } catch (error) {
     console.error("Error fetching summer collection:", error);
     return {

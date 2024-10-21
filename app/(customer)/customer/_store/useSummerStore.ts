@@ -1,4 +1,3 @@
-// store/useProductsStore.ts
 import { create } from "zustand";
 import {
   Product,
@@ -8,58 +7,68 @@ import {
 } from "@prisma/client";
 import { fetchSummerCollection } from "../shopping/summer/actions";
 
-type ProductWithRelations = Product & {
+export type ProductWithRelations = Product & {
   dynamicPricing: DynamicPricing[];
   variations: Variation[];
   featuredImage: FeaturedImage | null;
 };
 
-interface ProductsState {
-  // State
-  summerProducts: ProductWithRelations[];
+export type Category =
+  | "men"
+  | "women"
+  | "kids"
+  | "hats"
+  | "golfers"
+  | "bottoms"
+  | "caps";
+
+export type CategorizedProducts = {
+  [key in Category]: ProductWithRelations[];
+};
+
+interface SummerStoreState {
+  summerProducts: CategorizedProducts;
   loading: boolean;
   error: string | null;
 
-  // Actions
-  setSummerProducts: (products: ProductWithRelations[]) => void;
+  setSummerProducts: (products: CategorizedProducts) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   fetchSummerCollection: () => Promise<void>;
 }
 
-const useProductsStore = create<ProductsState>()(set => ({
-  // Initial state
-  summerProducts: [],
+const useSummerStore = create<SummerStoreState>((set, get) => ({
+  summerProducts: {
+    men: [],
+    women: [],
+    kids: [],
+    hats: [],
+    golfers: [],
+    bottoms: [],
+    caps: [],
+  },
   loading: false,
   error: null,
 
-  // Actions
   setSummerProducts: products => set({ summerProducts: products }),
-
   setLoading: loading => set({ loading }),
-
   setError: error => set({ error }),
-
   fetchSummerCollection: async () => {
+    const { loading } = get();
+    if (loading) return; // Prevent multiple simultaneous fetches
+
     set({ loading: true, error: null });
     try {
       const result = await fetchSummerCollection();
       if (result.success) {
-        set({ summerProducts: result.data });
+        set({ summerProducts: result.data, loading: false });
       } else {
-        set({ error: result.error });
+        throw new Error(result.error);
       }
     } catch (error) {
-      set({
-        error:
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred",
-      });
-    } finally {
-      set({ loading: false });
+      set({ error: (error as Error).message, loading: false });
     }
   },
 }));
 
-export default useProductsStore;
+export default useSummerStore;
