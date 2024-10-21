@@ -90,7 +90,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const uniqueSizes = Array.from(new Set(product.variations.map(v => v.size)));
 
   return (
-    <div className="max-w-4xl mx-auto p-3 bg-white shadow-lg rounded-lg">
+    <div className="max-w-4xl mx-auto p-3 bg-white mb-14 shadow-lg rounded-lg">
       <div className="flex flex-col md:flex-row mb-6">
         <div className="w-full md:w-1/2 pr-0 md:pr-6 mb-6 md:mb-0">
           <div className="relative w-full h-[360px] mb-4">
