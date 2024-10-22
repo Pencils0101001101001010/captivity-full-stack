@@ -65,9 +65,12 @@ const PreCurvedPeaksProductList: React.FC = () => {
         categoryName="Pre-curved Peaks"
       />
 
-      <div className="flex flex-col md:flex-row gap-6">
-        <aside className="md:w-1/4 lg:w-1/4 hidden md:block sticky top-0 h-fit">
-          <SideMenu />
+      <div className="flex flex-col md:flex-row gap-6 relative">
+        {/* Updated sidebar with hidden scrollbar */}
+        <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
+          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto overflow-x-hidden no-scrollbar">
+            <SideMenu />
+          </div>
         </aside>
         <main className="w-full md:w-3/4 lg:w-4/5">
           <div className="flex items-center justify-between w-full mb-4">
