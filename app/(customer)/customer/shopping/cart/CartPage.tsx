@@ -5,11 +5,29 @@ import { Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import useCartStore from "../../_store/useCartStore";
+import { useSession } from "@/app/(customer)/SessionProvider";
 
 const ViewCart = () => {
   const { cart, updateCartItemQuantity, removeFromCart } = useCartStore();
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
+  const { user } = useSession();
+
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <h1 className="text-3xl font-semibold mb-4">
+          Please login to view your cart
+        </h1>
+        <Link
+          href="/auth/login"
+          className="inline-block bg-red-600 text-white px-6 py-3 rounded-md font-medium hover:bg-red-700"
+        >
+          Login
+        </Link>
+      </div>
+    );
+  }
 
   if (!cart) {
     return (
@@ -58,7 +76,9 @@ const ViewCart = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-semibold mb-8">Shopping Cart</h1>
+      <h1 className="text-3xl font-semibold mb-8">
+        {user?.username ? `${user.username}'s Shopping Cart` : "Shopping Cart"}
+      </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items Section */}
