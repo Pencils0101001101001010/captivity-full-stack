@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, memo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ProductWithRelations } from "../../_store/useSummerStore";
@@ -9,71 +9,116 @@ interface CarouselProps {
   category: string;
 }
 
-const EmblaProductCarousel: React.FC<CarouselProps> = ({
-  products,
-  category,
-}) => {
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    slidesToScroll: 4,
-    align: "start",
-    loop: true, // Enable looping
-  });
+// Memoized carousel controls
+const CarouselButton = memo(
+  ({
+    direction,
+    onClick,
+    enabled,
+  }: {
+    direction: "left" | "right";
+    onClick: () => void;
+    enabled: boolean;
+  }) => (
+    <button
+      className="absolute top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-md z-10 disabled:opacity-50 disabled:cursor-not-allowed"
+      style={{ [direction]: 0 }}
+      onClick={onClick}
+      disabled={!enabled}
+    >
+      {direction === "left" ? (
+        <ChevronLeft className="w-6 h-6" />
+      ) : (
+        <ChevronRight className="w-6 h-6" />
+      )}
+    </button>
+  )
+);
 
-  const [prevBtnEnabled, setPrevBtnEnabled] = useState(false);
-  const [nextBtnEnabled, setNextBtnEnabled] = useState(false);
+CarouselButton.displayName = "CarouselButton";
 
-  const scrollPrev = useCallback(
-    () => emblaApi && emblaApi.scrollPrev(),
-    [emblaApi]
-  );
-  const scrollNext = useCallback(
-    () => emblaApi && emblaApi.scrollNext(),
-    [emblaApi]
-  );
+// Memoized product card wrapper
+const MemoizedProductCard = memo(ProductCard);
 
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return;
-    setPrevBtnEnabled(emblaApi.canScrollPrev());
-    setNextBtnEnabled(emblaApi.canScrollNext());
-  }, [emblaApi]);
+const EmblaProductCarousel: React.FC<CarouselProps> = memo(
+  ({ products, category }) => {
+    const [emblaRef, emblaApi] = useEmblaCarousel({
+      slidesToScroll: 4,
+      align: "start",
+      loop: true,
+      skipSnaps: false,
+      dragFree: false,
+    });
 
-  useEffect(() => {
-    if (!emblaApi) return;
-    onSelect();
-    emblaApi.on("select", onSelect);
-    emblaApi.on("reInit", onSelect);
-  }, [emblaApi, onSelect]);
+    const [controlsEnabled, setControlsEnabled] = useState({
+      prev: false,
+      next: false,
+    });
 
-  return (
-    <div className="mb-8">
-      <h2 className="text-2xl font-bold mb-4 capitalize">{category}</h2>
-      <div className="relative">
-        <div className="overflow-hidden" ref={emblaRef}>
-          <div className="flex">
-            {products.map(product => (
-              <div key={product.id} className="flex-[0_0_25%] min-w-0 px-2">
-                <ProductCard product={product} />
-              </div>
-            ))}
+    const scrollPrev = useCallback(() => {
+      emblaApi?.scrollPrev();
+    }, [emblaApi]);
+
+    const scrollNext = useCallback(() => {
+      emblaApi?.scrollNext();
+    }, [emblaApi]);
+
+    const onSelect = useCallback(() => {
+      if (!emblaApi) return;
+
+      setControlsEnabled({
+        prev: emblaApi.canScrollPrev(),
+        next: emblaApi.canScrollNext(),
+      });
+    }, [emblaApi]);
+
+    useEffect(() => {
+      if (!emblaApi) return;
+
+      onSelect();
+      emblaApi.on("select", onSelect);
+      emblaApi.on("reInit", onSelect);
+
+      return () => {
+        emblaApi.off("select", onSelect);
+        emblaApi.off("reInit", onSelect);
+      };
+    }, [emblaApi, onSelect]);
+
+    // Memoize the products list rendering
+    const productsList = React.useMemo(
+      () =>
+        products.map(product => (
+          <div key={product.id} className="flex-[0_0_25%] min-w-0 px-2">
+            <MemoizedProductCard product={product} />
           </div>
+        )),
+      [products]
+    );
+
+    return (
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-4 capitalize">{category}</h2>
+        <div className="relative">
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex">{productsList}</div>
+          </div>
+          <CarouselButton
+            direction="left"
+            onClick={scrollPrev}
+            enabled={controlsEnabled.prev}
+          />
+          <CarouselButton
+            direction="right"
+            onClick={scrollNext}
+            enabled={controlsEnabled.next}
+          />
         </div>
-        <button
-          className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-md z-10 disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={scrollPrev}
-          disabled={!prevBtnEnabled}
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-        <button
-          className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-md z-10 disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={scrollNext}
-          disabled={!nextBtnEnabled}
-        >
-          <ChevronRight className="w-6 h-6" />
-        </button>
       </div>
-    </div>
-  );
-};
+    );
+  }
+);
+
+EmblaProductCarousel.displayName = "EmblaProductCarousel";
 
 export default EmblaProductCarousel;

@@ -1,22 +1,45 @@
 "use client";
 
-import React, { useEffect, useCallback } from "react";
-import useSummerStore from "../../_store/useSummerStore";
+import React, { useEffect, useCallback, useMemo } from "react";
+import {
+  useSummerProducts,
+  useSummerLoading,
+  useSummerError,
+  useSummerActions,
+} from "../../_store/useSummerStore";
 import SummerCarousel from "./SummerCarousel";
+import type {
+  Category,
+  ProductWithRelations,
+} from "../../_store/useSummerStore";
 
 const SummerCollectionPage: React.FC = () => {
-  const { summerProducts, loading, error, fetchSummerCollection } =
-    useSummerStore();
+  // Use individual selectors instead of the whole store
+  const summerProducts = useSummerProducts();
+  const loading = useSummerLoading();
+  const error = useSummerError();
+  const { fetchSummerCollection } = useSummerActions();
+
+  // Memoize the check for empty products
+  const isProductsEmpty = useMemo(
+    () => Object.values(summerProducts).every(arr => arr.length === 0),
+    [summerProducts]
+  );
+
+  // Memoize non-empty categories
+  const nonEmptyCategories = useMemo(
+    () =>
+      Object.entries(summerProducts).filter(
+        ([_, products]) => products.length > 0
+      ) as [Category, ProductWithRelations[]][],
+    [summerProducts]
+  );
 
   const fetchData = useCallback(async () => {
-    if (
-      Object.values(summerProducts).every(arr => arr.length === 0) &&
-      !loading &&
-      !error
-    ) {
+    if (isProductsEmpty && !loading && !error) {
       await fetchSummerCollection();
     }
-  }, [summerProducts, loading, error, fetchSummerCollection]);
+  }, [isProductsEmpty, loading, error, fetchSummerCollection]);
 
   useEffect(() => {
     fetchData();
@@ -24,11 +47,6 @@ const SummerCollectionPage: React.FC = () => {
 
   if (loading) return <div>Loading summer collection...</div>;
   if (error) return <div>Error: {error}</div>;
-
-  // Filter out categories with no products
-  const nonEmptyCategories = Object.entries(summerProducts).filter(
-    ([_, products]) => products.length > 0
-  );
 
   return (
     <div className="container mx-auto px-4">
@@ -51,4 +69,5 @@ const SummerCollectionPage: React.FC = () => {
   );
 };
 
-export default SummerCollectionPage;
+// Memoize the entire component
+export default React.memo(SummerCollectionPage);
