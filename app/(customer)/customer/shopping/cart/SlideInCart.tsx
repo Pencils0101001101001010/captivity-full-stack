@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Trash2 } from "lucide-react";
+import { X, Trash2, Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import useCartStore from "../../_store/useCartStore";
@@ -13,6 +13,7 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
   const { cart, updateCartItemQuantity, removeFromCart } = useCartStore();
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
+  const [updateSuccess, setUpdateSuccess] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (isOpen) {
@@ -48,6 +49,18 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
       newSet.delete(cartItemId);
       return newSet;
     });
+
+    // Show success message
+    setUpdateSuccess(prev => new Set(prev).add(cartItemId));
+
+    // Clear success message after 2 seconds
+    setTimeout(() => {
+      setUpdateSuccess(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(cartItemId);
+        return newSet;
+      });
+    }, 2000);
   };
 
   const handleRemoveItem = async (cartItemId: string) => {
@@ -113,7 +126,7 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
                   <p className="text-sm text-gray-600">
                     {item.variation.color} / {item.variation.size}
                   </p>
-                  <div className="flex justify-between items-center mt-2">
+                  <div className="flex items-center mt-2 gap-2">
                     <select
                       value={item.quantity}
                       onChange={e =>
@@ -128,7 +141,22 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
                         </option>
                       ))}
                     </select>
-                    <p className="font-medium">
+
+                    {/* Loading and Success States */}
+                    {updatingItems.has(item.id) && (
+                      <span className="text-sm text-blue-500 animate-pulse">
+                        Updating...
+                      </span>
+                    )}
+                    {updateSuccess.has(item.id) &&
+                      !updatingItems.has(item.id) && (
+                        <span className="text-sm text-green-500 flex items-center gap-1">
+                          <Check size={16} />
+                          Updated
+                        </span>
+                      )}
+
+                    <p className="font-medium ml-auto">
                       R{item.variation.product.sellingPrice.toFixed(2)}
                     </p>
                   </div>
