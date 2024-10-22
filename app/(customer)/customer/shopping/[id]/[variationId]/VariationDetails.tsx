@@ -51,17 +51,19 @@ const VariationDetails: React.FC<Props> = ({ data }) => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-8">
-      <HeaderSection data={data} />
-      <FiltersSection
-        data={data}
-        selectedColors={selectedColors}
-        selectedSizes={selectedSizes}
-        onColorSelect={toggleColorFilter}
-        onSizeSelect={toggleSizeFilter}
-      />
-      <TableSection data={data} filteredVariations={filteredVariations} />
-      <PricingSection data={data} />
+    <div className="w-full h-full max-w-7xl mx-auto px-3 md:px-6 py-3 md:py-8">
+      <div className="space-y-3 md:space-y-8">
+        <HeaderSection data={data} />
+        <FiltersSection
+          data={data}
+          selectedColors={selectedColors}
+          selectedSizes={selectedSizes}
+          onColorSelect={toggleColorFilter}
+          onSizeSelect={toggleSizeFilter}
+        />
+        <TableSection data={data} filteredVariations={filteredVariations} />
+        <PricingSection data={data} />
+      </div>
     </div>
   );
 };

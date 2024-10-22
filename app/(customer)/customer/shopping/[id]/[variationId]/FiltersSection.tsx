@@ -15,9 +15,9 @@ export const FiltersSection = ({
   );
 
   return (
-    <div className="bg-card rounded-lg p-6 shadow-lg space-y-6">
+    <div className="bg-card rounded-lg p-4 md:p-6 shadow-lg space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-card-foreground mb-4">
+        <h2 className="text-base md:text-lg font-semibold text-card-foreground mb-4">
           FILTER BY COLOUR
         </h2>
         <div className="flex flex-wrap gap-2">
@@ -29,7 +29,7 @@ export const FiltersSection = ({
               <button
                 key={color}
                 onClick={() => onColorSelect(color)}
-                className={`px-4 py-2 rounded-md border transition-colors ${
+                className={`px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base rounded-md border transition-colors ${
                   selectedColors.has(color)
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-card text-card-foreground border-input hover:bg-accent hover:text-accent-foreground"
@@ -43,7 +43,7 @@ export const FiltersSection = ({
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold text-card-foreground mb-4">
+        <h2 className="text-base md:text-lg font-semibold text-card-foreground mb-4">
           FILTER BY SIZES
         </h2>
         <div className="flex flex-wrap gap-2">
@@ -51,7 +51,7 @@ export const FiltersSection = ({
             <button
               key={size}
               onClick={() => onSizeSelect(size)}
-              className={`px-4 py-2 rounded-md border transition-colors ${
+              className={`px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base rounded-md border transition-colors ${
                 selectedSizes.has(size)
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-card text-card-foreground border-input hover:bg-accent hover:text-accent-foreground"

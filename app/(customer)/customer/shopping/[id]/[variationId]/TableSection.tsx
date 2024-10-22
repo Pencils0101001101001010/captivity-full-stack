@@ -4,7 +4,8 @@ import { TableProps } from "./variations";
 export const TableSection = ({ data, filteredVariations }: TableProps) => {
   return (
     <div className="bg-card rounded-lg shadow-lg overflow-hidden">
-      <div className="overflow-x-auto">
+      {/* Desktop Table - Hidden on mobile */}
+      <div className="hidden md:block">
         <table className="w-full">
           <thead className="bg-muted">
             <tr>
@@ -60,6 +61,7 @@ export const TableSection = ({ data, filteredVariations }: TableProps) => {
                       alt={`${variation.color} ${variation.size}`}
                       fill
                       className="object-cover"
+                      sizes="48px"
                     />
                   </div>
                 </td>
@@ -68,6 +70,87 @@ export const TableSection = ({ data, filteredVariations }: TableProps) => {
           </tbody>
         </table>
       </div>
+
+      {/* Mobile Card Layout */}
+      <div className="md:hidden divide-y divide-border">
+        {filteredVariations.map(variation => (
+          <div
+            key={variation.id}
+            className={`p-6 ${
+              variation.id === data.id ? "bg-accent/50" : "bg-card"
+            }`}
+          >
+            {/* Centered Image */}
+            <div className="flex justify-center mb-6">
+              <div className="relative w-40 h-40 bg-white rounded-lg shadow-md">
+                <Image
+                  src={variation.variationImageURL}
+                  alt={`${variation.color} ${variation.size}`}
+                  fill
+                  className="object-contain p-2"
+                  sizes="160px"
+                  priority={variation.id === data.id}
+                />
+              </div>
+            </div>
+
+            {/* Details List */}
+            <div className="space-y-3">
+              {/* Color */}
+              <div className="pb-2 border-b border-border/50">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  COLOR
+                </span>
+                <p className="mt-1 text-base text-card-foreground">
+                  {variation.color}
+                </p>
+              </div>
+
+              {/* Size */}
+              <div className="pb-2 border-b border-border/50">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  SIZE
+                </span>
+                <p className="mt-1 text-base text-card-foreground">
+                  {variation.size}
+                </p>
+              </div>
+
+              {/* Code */}
+              <div className="pb-2 border-b border-border/50">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  CODE
+                </span>
+                <p className="mt-1 text-base text-card-foreground">
+                  {variation.sku2}
+                </p>
+              </div>
+
+              {/* Stock */}
+              <div className="pb-2 border-b border-border/50">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  STOCK
+                </span>
+                <p className="mt-1 text-base text-card-foreground">
+                  {variation.quantity}
+                </p>
+              </div>
+
+              {/* SKU */}
+              <div className="pb-2">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  SKU
+                </span>
+                <p className="mt-1 text-base text-card-foreground break-words">
+                  {variation.sku}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
+
+export default TableSection;
