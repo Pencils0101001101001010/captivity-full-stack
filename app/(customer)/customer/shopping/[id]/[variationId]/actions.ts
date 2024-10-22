@@ -2,19 +2,70 @@
 
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
 import {
-  FetchProductAndVariationResult,
-  FetchVariationResult,
-  FetchVariationsResult,
-} from "./_types/response.types";
-import { ProductAndVariation, VariationWithRelations } from "./_types/variation.types";
+  Product,
+  Variation,
+  DynamicPricing,
+  FeaturedImage,
+  Prisma,
+} from "@prisma/client";
 
+// Type Definitions
+type ProductWithRelations = Product & {
+  dynamicPricing: DynamicPricing[];
+  variations: Variation[];
+  featuredImage: FeaturedImage | null;
+};
+
+type VariationWithRelations = Variation & {
+  product: ProductWithRelations;
+};
+
+type ProductAndVariation = {
+  product: ProductWithRelations;
+  variation: Variation;
+};
+
+type FetchVariationResult =
+  | {
+      success: true;
+      data: VariationWithRelations;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+type FetchProductAndVariationResult =
+  | {
+      success: true;
+      data: ProductAndVariation;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+type FetchVariationsResult =
+  | {
+      success: true;
+      data: Variation[];
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+// Component Props Types
+export interface VariationDetailsProps {
+  data: VariationWithRelations;
+}
+
+// Action Functions
 export async function fetchVariationById(
   variationId: string
 ): Promise<FetchVariationResult> {
   try {
-    // Validate user session
     const { user } = await validateRequest();
     if (!user) {
       return {
@@ -23,7 +74,6 @@ export async function fetchVariationById(
       };
     }
 
-    // Fetch the variation with its related product data
     const variation = await prisma.variation.findUnique({
       where: {
         id: variationId,
@@ -35,8 +85,9 @@ export async function fetchVariationById(
               orderBy: {
                 id: "desc",
               },
-              take: 1, // Get most recent pricing
+              take: 1,
             },
+            variations: true, // Include all variations
             featuredImage: true,
           },
         },
@@ -56,15 +107,12 @@ export async function fetchVariationById(
     };
   } catch (error) {
     console.error("Error fetching variation:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      return {
-        success: false,
-        error: `Database error: ${error.message}`,
-      };
-    }
     return {
       success: false,
-      error: "An unexpected error occurred while fetching the variation",
+      error:
+        error instanceof Prisma.PrismaClientKnownRequestError
+          ? `Database error: ${error.message}`
+          : "An unexpected error occurred",
     };
   }
 }
@@ -74,7 +122,6 @@ export async function fetchProductAndVariation(
   variationId: string
 ): Promise<FetchProductAndVariationResult> {
   try {
-    // Validate user session
     const { user } = await validateRequest();
     if (!user) {
       return {
@@ -83,7 +130,6 @@ export async function fetchProductAndVariation(
       };
     }
 
-    // Fetch product and variation in parallel for better performance
     const [product, variation] = await Promise.all([
       prisma.product.findUnique({
         where: {
@@ -96,11 +142,7 @@ export async function fetchProductAndVariation(
             },
             take: 1,
           },
-          variations: {
-            orderBy: {
-              id: "asc",
-            },
-          },
+          variations: true,
           featuredImage: true,
         },
       }),
@@ -111,21 +153,13 @@ export async function fetchProductAndVariation(
       }),
     ]);
 
-    if (!product) {
+    if (!product || !variation) {
       return {
         success: false,
-        error: "Product not found",
+        error: !product ? "Product not found" : "Variation not found",
       };
     }
 
-    if (!variation) {
-      return {
-        success: false,
-        error: "Variation not found",
-      };
-    }
-
-    // Verify the variation belongs to the product
     if (variation.productId !== product.id) {
       return {
         success: false,
@@ -133,27 +167,18 @@ export async function fetchProductAndVariation(
       };
     }
 
-    const data: ProductAndVariation = {
-      product,
-      variation,
-    };
-
     return {
       success: true,
-      data,
+      data: { product, variation } as ProductAndVariation,
     };
   } catch (error) {
     console.error("Error fetching product and variation:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      return {
-        success: false,
-        error: `Database error: ${error.message}`,
-      };
-    }
     return {
       success: false,
       error:
-        "An unexpected error occurred while fetching the product and variation",
+        error instanceof Prisma.PrismaClientKnownRequestError
+          ? `Database error: ${error.message}`
+          : "An unexpected error occurred",
     };
   }
 }
@@ -162,7 +187,6 @@ export async function fetchVariationsForProduct(
   productId: string
 ): Promise<FetchVariationsResult> {
   try {
-    // Validate user session
     const { user } = await validateRequest();
     if (!user) {
       return {
@@ -171,7 +195,6 @@ export async function fetchVariationsForProduct(
       };
     }
 
-    // Fetch all variations for the product
     const variations = await prisma.variation.findMany({
       where: {
         productId: productId,
@@ -206,20 +229,16 @@ export async function fetchVariationsForProduct(
     };
   } catch (error) {
     console.error("Error fetching variations:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      return {
-        success: false,
-        error: `Database error: ${error.message}`,
-      };
-    }
     return {
       success: false,
-      error: "An unexpected error occurred while fetching variations",
+      error:
+        error instanceof Prisma.PrismaClientKnownRequestError
+          ? `Database error: ${error.message}`
+          : "An unexpected error occurred",
     };
   }
 }
 
-// Helper function to validate variation exists and belongs to product
 export async function validateVariationBelongsToProduct(
   productId: string,
   variationId: string
@@ -236,3 +255,13 @@ export async function validateVariationBelongsToProduct(
     return false;
   }
 }
+
+// Export types for use in components
+export type {
+  ProductWithRelations,
+  VariationWithRelations,
+  ProductAndVariation,
+  FetchVariationResult,
+  FetchProductAndVariationResult,
+  FetchVariationsResult,
+};
