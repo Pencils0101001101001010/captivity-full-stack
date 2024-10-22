@@ -41,7 +41,7 @@ const ProductDetail: React.FC = () => {
         setLoading(true);
         setError(null);
         try {
-          const result = await fetchProductById(Number(id));
+          const result = await fetchProductById(id);
           if (result.success && result.data) {
             setProduct(result.data);
             setMainImage(result.data.featuredImage?.large || "");

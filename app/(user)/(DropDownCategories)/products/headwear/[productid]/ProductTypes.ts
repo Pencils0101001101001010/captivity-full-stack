@@ -2,11 +2,11 @@ import prisma from "@/lib/prisma";
 import { Product, Variation, DynamicPricing } from "@prisma/client";
 
 export type FeaturedImage = {
-  id: number;
+  id: string;
   thumbnail: string;
   medium: string;
   large: string;
-  productId: number;
+  productId: string;
 };
 
 export type ProductWithFeaturedImage = Omit<Product, "featuredImage"> & {

@@ -3,9 +3,7 @@
 import prisma from "@/lib/prisma";
 import { ProductWithFeaturedImage } from "./ProductTypes";
 
-export async function fetchProductById(
-  id: number
-): Promise<{
+export async function fetchProductById(id: string): Promise<{
   success: boolean;
   data?: ProductWithFeaturedImage;
   error?: string;
