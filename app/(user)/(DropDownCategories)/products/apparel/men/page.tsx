@@ -1,7 +1,7 @@
-import ProductList from "./MensProductList";
+import MensApparelProducts from "./MensApparelProducts";
 
 const Page = () => {
-  return <ProductList />;
+  return <MensApparelProducts />;
 };
 
 export default Page;

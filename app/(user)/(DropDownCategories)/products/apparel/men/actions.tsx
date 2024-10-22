@@ -7,36 +7,42 @@ export async function fetchMensApparel() {
       where: {
         AND: [
           {
-            published: true,
-            OR: [
-              {
-                categories: {
-                  contains: "Apparel Collection > Men",
-                },
-              },
-              { categories: { contains: "Men" } },
-            ],
-          },
-          {
-            NOT: {
-              categories: {
-                contains: "New in Apparel",
-              },
+            isPublished: true,
+            category: {
+              hasSome: ["men"],
             },
           },
         ],
       },
-      orderBy: {
-        position: "asc",
-      },
       select: {
         id: true,
-        name: true,
-        imageUrl: true,
-        stock: true,
+        productName: true,
+        featuredImage: {
+          select: {
+            medium: true,
+            large: true,
+          },
+        },
+        variations: {
+          select: {
+            quantity: true,
+          },
+        },
       },
     });
-    return { success: true, data: mensProducts };
+
+    // Transform the data to match the expected format
+    const transformedProducts = mensProducts.map(product => ({
+      id: product.id,
+      name: product.productName,
+      imageUrl: `${product.featuredImage?.medium || ""},${product.featuredImage?.large || ""}`,
+      stock: product.variations.reduce(
+        (total, variation) => total + variation.quantity,
+        0
+      ),
+    }));
+
+    return { success: true, data: transformedProducts };
   } catch (error) {
     console.error("Error fetching Men's apparel:", error);
     return {
@@ -49,24 +55,46 @@ export async function fetchMensApparel() {
 
 export async function fetchProductById(id: string) {
   try {
-    const numericId = parseInt(id, 10);
     const product = await prisma.product.findUnique({
       where: {
-        id: numericId,
-        published: true,
+        id: id,
+        isPublished: true,
       },
       select: {
         id: true,
-        name: true,
-        imageUrl: true,
-        shortDescription: true,
-        stock: true,
+        productName: true,
+        featuredImage: {
+          select: {
+            medium: true,
+            large: true,
+          },
+        },
+        description: true,
+        variations: {
+          select: {
+            quantity: true,
+          },
+        },
       },
     });
+
     if (!product) {
       return { success: false, error: "Product not found" };
     }
-    return { success: true, data: product };
+
+    // Transform the data to match the expected format
+    const transformedProduct = {
+      id: product.id,
+      name: product.productName,
+      imageUrl: `${product.featuredImage?.medium || ""},${product.featuredImage?.large || ""}`,
+      shortDescription: product.description,
+      stock: product.variations.reduce(
+        (total, variation) => total + variation.quantity,
+        0
+      ),
+    };
+
+    return { success: true, data: transformedProduct };
   } catch (error) {
     console.error("Error fetching product:", error);
     return { success: false, error: "Error fetching product" };
