@@ -1,8 +1,46 @@
 "use server";
 import prisma from "@/lib/prisma";
 
-export async function fetchMensApparel() {
+interface PaginatedResponse<T> {
+  success: boolean;
+  data?: T[];
+  error?: string;
+  metadata?: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    itemsPerPage: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
+export async function fetchMensApparel(
+  page: number = 1,
+  itemsPerPage: number = 8
+): Promise<PaginatedResponse<any>> {
   try {
+    // Calculate skip value for pagination
+    const skip = (page - 1) * itemsPerPage;
+
+    // Get total count of products
+    const totalItems = await prisma.product.count({
+      where: {
+        AND: [
+          {
+            isPublished: true,
+            category: {
+              hasSome: ["men"],
+            },
+          },
+        ],
+      },
+    });
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    // Fetch paginated products
     const mensProducts = await prisma.product.findMany({
       where: {
         AND: [
@@ -29,9 +67,14 @@ export async function fetchMensApparel() {
           },
         },
       },
+      skip: skip,
+      take: itemsPerPage,
+      orderBy: {
+        createdAt: "desc", // Optional: sort by creation date
+      },
     });
 
-    // Transform the data to match the expected format
+    // Transform the data
     const transformedProducts = mensProducts.map(product => ({
       id: product.id,
       name: product.productName,
@@ -42,7 +85,21 @@ export async function fetchMensApparel() {
       ),
     }));
 
-    return { success: true, data: transformedProducts };
+    // Prepare pagination metadata
+    const metadata = {
+      totalItems,
+      totalPages,
+      currentPage: page,
+      itemsPerPage,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    };
+
+    return {
+      success: true,
+      data: transformedProducts,
+      metadata,
+    };
   } catch (error) {
     console.error("Error fetching Men's apparel:", error);
     return {
@@ -50,53 +107,5 @@ export async function fetchMensApparel() {
       error:
         error instanceof Error ? error.message : "An unexpected error occurred",
     };
-  }
-}
-
-export async function fetchProductById(id: string) {
-  try {
-    const product = await prisma.product.findUnique({
-      where: {
-        id: id,
-        isPublished: true,
-      },
-      select: {
-        id: true,
-        productName: true,
-        featuredImage: {
-          select: {
-            medium: true,
-            large: true,
-          },
-        },
-        description: true,
-        variations: {
-          select: {
-            quantity: true,
-          },
-        },
-      },
-    });
-
-    if (!product) {
-      return { success: false, error: "Product not found" };
-    }
-
-    // Transform the data to match the expected format
-    const transformedProduct = {
-      id: product.id,
-      name: product.productName,
-      imageUrl: `${product.featuredImage?.medium || ""},${product.featuredImage?.large || ""}`,
-      shortDescription: product.description,
-      stock: product.variations.reduce(
-        (total, variation) => total + variation.quantity,
-        0
-      ),
-    };
-
-    return { success: true, data: transformedProduct };
-  } catch (error) {
-    console.error("Error fetching product:", error);
-    return { success: false, error: "Error fetching product" };
   }
 }

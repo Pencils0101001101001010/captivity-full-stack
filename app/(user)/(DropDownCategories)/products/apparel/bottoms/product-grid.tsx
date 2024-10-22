@@ -15,7 +15,11 @@ interface ProductGridProps {
   onProductHover: (product: Product) => void;
 }
 
-export function ProductGrid({ products, loading, onProductHover }: ProductGridProps) {
+export function ProductGrid({
+  products,
+  loading,
+  onProductHover,
+}: ProductGridProps) {
   return (
     <main className="flex-1">
       <h2 className="text-2xl font-bold mb-6">Bottoms</h2>
