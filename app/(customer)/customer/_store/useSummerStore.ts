@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import {
   Product,
   DynamicPricing,
@@ -27,18 +28,20 @@ export type CategorizedProducts = {
   [key in Category]: ProductWithRelations[];
 };
 
-interface SummerStoreState {
+interface SummerState {
   summerProducts: CategorizedProducts;
   loading: boolean;
   error: string | null;
+}
 
+interface SummerActions {
   setSummerProducts: (products: CategorizedProducts) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   fetchSummerCollection: () => Promise<void>;
 }
 
-const useSummerStore = create<SummerStoreState>((set, get) => ({
+const initialState: SummerState = {
   summerProducts: {
     men: [],
     women: [],
@@ -51,13 +54,20 @@ const useSummerStore = create<SummerStoreState>((set, get) => ({
   },
   loading: false,
   error: null,
+};
+
+const useSummerStore = create<SummerState & SummerActions>()((set, get) => ({
+  ...initialState,
 
   setSummerProducts: products => set({ summerProducts: products }),
+
   setLoading: loading => set({ loading }),
+
   setError: error => set({ error }),
+
   fetchSummerCollection: async () => {
     const { loading } = get();
-    if (loading) return; // Prevent multiple simultaneous fetches
+    if (loading) return;
 
     set({ loading: true, error: null });
     try {
@@ -72,5 +82,24 @@ const useSummerStore = create<SummerStoreState>((set, get) => ({
     }
   },
 }));
+
+// Selector hooks using useShallow for complex objects
+export const useSummerProducts = () =>
+  useSummerStore(useShallow(state => state.summerProducts));
+
+export const useSummerLoading = () => useSummerStore(state => state.loading);
+
+export const useSummerError = () => useSummerStore(state => state.error);
+
+// Group actions together with useShallow
+export const useSummerActions = () =>
+  useSummerStore(
+    useShallow(state => ({
+      setSummerProducts: state.setSummerProducts,
+      setLoading: state.setLoading,
+      setError: state.setError,
+      fetchSummerCollection: state.fetchSummerCollection,
+    }))
+  );
 
 export default useSummerStore;
