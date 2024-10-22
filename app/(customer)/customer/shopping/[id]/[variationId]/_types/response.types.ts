@@ -1,5 +1,5 @@
 import { Variation } from "@prisma/client";
-import { VariationWithRelations, ProductAndVariation } from "./";
+import { VariationWithRelations, ProductAndVariation } from "..";
 import { ProductWithRelations } from "./product.types";
 
 // Generic success/error response type

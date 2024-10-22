@@ -7,8 +7,8 @@ import {
   FetchProductAndVariationResult,
   FetchVariationResult,
   FetchVariationsResult,
-} from "./response.types";
-import { ProductAndVariation, VariationWithRelations } from "./variation.types";
+} from "./_types/response.types";
+import { ProductAndVariation, VariationWithRelations } from "./_types/variation.types";
 
 export async function fetchVariationById(
   variationId: string
