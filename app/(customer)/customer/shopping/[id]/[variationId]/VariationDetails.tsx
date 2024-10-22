@@ -71,7 +71,7 @@ const VariationDetails: React.FC<Props> = ({ data }) => {
             </div>
           </div>
           <Link
-            href={`/customer/shopping/product/${product.id}`}
+            href={`/customer/shopping/${product.id}`}
             className="inline-flex items-center px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             View product details
