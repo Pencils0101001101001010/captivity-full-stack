@@ -1,7 +1,7 @@
 // shared/types.ts
 
 export type FeaturedImage = {
-  id: number;
+  id: string;
   thumbnail: string;
   medium: string;
   large: string;
@@ -9,7 +9,7 @@ export type FeaturedImage = {
 };
 
 export type Variation = {
-  id: number;
+  id: string;
   name: string;
   color: string;
   size: string;
@@ -21,7 +21,7 @@ export type Variation = {
 };
 
 export type DynamicPricing = {
-  id: number;
+  id: string;
   from: string;
   to: string;
   type: string;
@@ -30,7 +30,7 @@ export type DynamicPricing = {
 };
 
 export type ProductWithFeaturedImage = {
-  id: number;
+  id: string;
   productName: string;
   category: string[];
   description: string;
