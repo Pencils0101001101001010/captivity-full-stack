@@ -60,7 +60,7 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
         newSet.delete(cartItemId);
         return newSet;
       });
-    }, 2000);
+    }, 1000);
   };
 
   const handleRemoveItem = async (cartItemId: string) => {
