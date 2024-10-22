@@ -170,13 +170,13 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
             {/* Buttons */}
             <div className="space-y-2">
               <Link
-                href="/custommer/shopping/checkout"
+                href="/customer/shopping/checkout"
                 className="block w-full bg-red-600 text-white text-center py-3 rounded-md font-medium hover:bg-red-700"
               >
                 Checkout Now
               </Link>
               <Link
-                href="/custommer/shopping/cart"
+                href="/customer/shopping/cart"
                 className="block w-full bg-gray-800 text-white text-center py-3 rounded-md font-medium hover:bg-gray-900"
               >
                 View Cart
