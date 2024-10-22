@@ -1,11 +1,7 @@
-import React from 'react'
+import WomensApparelProducts from './WomensApparelProducts'
 
 const WomensCollectionPage = () => {
-  return (
-    <div>
-      <h1>Womens Collection</h1>
-    </div>
-  )
+  return <WomensApparelProducts/>
 }
 
 export default WomensCollectionPage
