@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchNewHeadwear, ProductWithFeaturedImage } from "./actions";
+import { fetchFlatPeaks, ProductWithFeaturedImage } from "./actions";
 
 const useFlatPeaks = () => {
   const [products, setProducts] = useState<ProductWithFeaturedImage[]>([]);
@@ -11,7 +11,7 @@ const useFlatPeaks = () => {
       setLoading(true);
       setError(null);
       try {
-        const result = await fetchNewHeadwear();
+        const result = await fetchFlatPeaks();
 
         if (result.success) {
           setProducts(result.data);

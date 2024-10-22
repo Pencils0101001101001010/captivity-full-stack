@@ -19,7 +19,7 @@ type FetchFlatPeaksResult =
   | { success: true; data: ProductWithFeaturedImage[] }
   | { success: false; error: string };
 
-export async function fetchNewHeadwear(): Promise<FetchFlatPeaksResult> {
+export async function fetchFlatPeaks(): Promise<FetchFlatPeaksResult> {
   try {
     const flatPeaks = await prisma.product.findMany({
       where: {
@@ -47,7 +47,7 @@ export async function fetchNewHeadwear(): Promise<FetchFlatPeaksResult> {
     const errorMessage =
       error instanceof Error ? error.message : "An unexpected error occurred";
 
-    console.error(`Error fetching new headwear: ${errorMessage}`);
+    console.error(`Error fetching flat-peaks: ${errorMessage}`);
 
     return { success: false, error: errorMessage };
   }
