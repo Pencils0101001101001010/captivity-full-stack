@@ -511,8 +511,9 @@ const CheckoutForm = () => {
                       <div className="relative h-16 w-16 rounded-md overflow-hidden">
                         <Image
                           src={
-                            item.variation.product.featuredImage?.medium ||
-                            "/placeholder.png"
+                            item.variation.variationImageURL || // Try variation image first
+                            item.variation.product.featuredImage?.medium || // Then featured image
+                            "/api/placeholder/100/100" // Fallback to placeholder
                           }
                           alt={item.variation.product.productName}
                           fill
@@ -528,29 +529,26 @@ const CheckoutForm = () => {
                           {item.variation.color}
                         </p>
                         <div className="flex items-center mt-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleQuantityChange(item.id, item.quantity - 1)
+                          <select
+                            value={item.quantity}
+                            onChange={e =>
+                              handleQuantityChange(
+                                item.id,
+                                Number(e.target.value)
+                              )
                             }
-                            className="text-gray-500 hover:text-gray-700 p-1"
+                            className="text-sm border rounded px-2 py-1 mr-4"
                           >
-                            -
-                          </button>
-                          <span className="mx-2 text-sm">{item.quantity}</span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleQuantityChange(item.id, item.quantity + 1)
-                            }
-                            className="text-gray-500 hover:text-gray-700 p-1"
-                          >
-                            +
-                          </button>
+                            {[...Array(item.variation.quantity)].map((_, i) => (
+                              <option key={i + 1} value={i + 1}>
+                                {i + 1}
+                              </option>
+                            ))}
+                          </select>
                           <button
                             type="button"
                             onClick={() => handleRemoveItem(item.id)}
-                            className="ml-4 text-red-500 hover:text-red-700 text-sm"
+                            className="text-red-500 hover:text-red-700 text-sm"
                           >
                             Remove
                           </button>

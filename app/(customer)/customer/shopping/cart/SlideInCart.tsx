@@ -120,7 +120,7 @@ const SlideInCart: React.FC<SlideInCartProps> = ({ isOpen, onClose }) => {
                         handleUpdateQuantity(item.id, Number(e.target.value))
                       }
                       disabled={updatingItems.has(item.id)}
-                      className="border rounded px-2 py-1"
+                      className="text-sm border rounded px-2 py-1"
                     >
                       {[...Array(item.variation.quantity)].map((_, i) => (
                         <option key={i + 1} value={i + 1}>
