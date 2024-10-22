@@ -105,7 +105,18 @@ const CheckoutForm = () => {
       });
       return;
     }
-    console.log(formData);
+
+    // Calculate total
+    const orderTotal = calculateTotal();
+
+    // Combine form data with cart items
+    const orderData = {
+      ...formData,
+      cartItems: cart.cartItems,
+      orderTotal: orderTotal,
+    };
+
+    console.log("Complete Order Data:", orderData);
     // Add your checkout logic here
   };
 
