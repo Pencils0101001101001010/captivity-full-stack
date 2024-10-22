@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { Cart, CartItem, Variation, Product } from "@prisma/client";
 import {
   addToCart as addToCartAction,
   updateCartItemQuantity as updateCartItemQuantityAction,
@@ -7,11 +6,19 @@ import {
   fetchCart as fetchCartAction,
   clearCart as clearCartAction,
 } from "../shopping/cart/actions";
+import { Cart, CartItem, Variation, Product } from "@prisma/client";
+
+// Define the extended types without modifying imports
+type ProductWithImage = Product & {
+  featuredImage?: {
+    medium: string;
+  };
+};
 
 type CartWithItems = Cart & {
   cartItems: (CartItem & {
     variation: Variation & {
-      product: Product;
+      product: ProductWithImage;
     };
   })[];
 };
