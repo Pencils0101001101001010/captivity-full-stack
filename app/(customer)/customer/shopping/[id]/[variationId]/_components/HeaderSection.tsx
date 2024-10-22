@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BaseProps } from "./variations";
+import { BaseProps } from "../_types/variations";
 
 export const HeaderSection = ({ data }: BaseProps) => {
   const totalStock = data.product.variations.reduce(

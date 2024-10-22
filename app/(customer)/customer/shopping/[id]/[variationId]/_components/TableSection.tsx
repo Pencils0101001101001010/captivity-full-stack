@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { TableProps } from "./variations";
+import { TableProps } from "../_types/variations";
 
 export const TableSection = ({ data, filteredVariations }: TableProps) => {
   return (

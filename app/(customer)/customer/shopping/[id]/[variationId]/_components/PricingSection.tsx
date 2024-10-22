@@ -1,4 +1,4 @@
-import { BaseProps } from "./variations";
+import { BaseProps } from "../_types/variations";
 
 export const PricingSection = ({ data }: BaseProps) => {
   return (
