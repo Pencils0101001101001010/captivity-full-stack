@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { VariationWithRelations } from "./actions";
+import { VariationWithRelations } from "./types";
 
 interface Props {
   data: VariationWithRelations;

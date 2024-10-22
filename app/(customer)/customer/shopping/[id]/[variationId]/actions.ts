@@ -2,66 +2,15 @@
 
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import {
-  Product,
-  Variation,
-  DynamicPricing,
-  FeaturedImage,
-  Prisma,
-} from "@prisma/client";
+  FetchVariationResult,
+  FetchProductAndVariationResult,
+  FetchVariationsResult,
+  ProductAndVariation,
+  VariationWithRelations,
+} from "./types";
 
-// Type Definitions
-type ProductWithRelations = Product & {
-  dynamicPricing: DynamicPricing[];
-  variations: Variation[];
-  featuredImage: FeaturedImage | null;
-};
-
-type VariationWithRelations = Variation & {
-  product: ProductWithRelations;
-};
-
-type ProductAndVariation = {
-  product: ProductWithRelations;
-  variation: Variation;
-};
-
-type FetchVariationResult =
-  | {
-      success: true;
-      data: VariationWithRelations;
-    }
-  | {
-      success: false;
-      error: string;
-    };
-
-type FetchProductAndVariationResult =
-  | {
-      success: true;
-      data: ProductAndVariation;
-    }
-  | {
-      success: false;
-      error: string;
-    };
-
-type FetchVariationsResult =
-  | {
-      success: true;
-      data: Variation[];
-    }
-  | {
-      success: false;
-      error: string;
-    };
-
-// Component Props Types
-export interface VariationDetailsProps {
-  data: VariationWithRelations;
-}
-
-// Action Functions
 export async function fetchVariationById(
   variationId: string
 ): Promise<FetchVariationResult> {
@@ -87,7 +36,7 @@ export async function fetchVariationById(
               },
               take: 1,
             },
-            variations: true, // Include all variations
+            variations: true,
             featuredImage: true,
           },
         },
@@ -255,13 +204,3 @@ export async function validateVariationBelongsToProduct(
     return false;
   }
 }
-
-// Export types for use in components
-export type {
-  ProductWithRelations,
-  VariationWithRelations,
-  ProductAndVariation,
-  FetchVariationResult,
-  FetchProductAndVariationResult,
-  FetchVariationsResult,
-};
