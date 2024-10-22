@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
@@ -26,8 +26,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import useCartStore from "../../_store/useCartStore";
+import Link from "next/link";
 
 const CheckoutForm = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     cart,
     isLoading,
@@ -105,19 +107,30 @@ const CheckoutForm = () => {
       });
       return;
     }
-
-    // Calculate total
-    const orderTotal = calculateTotal();
-
-    // Combine form data with cart items
-    const orderData = {
-      ...formData,
-      cartItems: cart.cartItems,
-      orderTotal: orderTotal,
-    };
-
-    console.log("Complete Order Data:", orderData);
-    // Add your checkout logic here
+  
+    setIsSubmitting(true);
+    try {
+      // Calculate total
+      const orderTotal = calculateTotal();
+  
+      // Combine form data with cart items
+      const orderData = {
+        ...formData,
+        cartItems: cart.cartItems,
+        orderTotal: orderTotal,
+      };
+  
+      console.log("Complete Order Data:", orderData);
+      // Add your checkout logic here
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit order. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -598,12 +611,10 @@ const CheckoutForm = () => {
               ) : (
                 <div className="text-center py-8">
                   <p className="text-gray-500 mb-4">Your cart is empty</p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => window.history.back()}
-                  >
-                    Continue Shopping
+                  <Button type="button" variant="outline" asChild>
+                    <Link href={"/customer/shopping/express"}>
+                      Continue Shopping
+                    </Link>
                   </Button>
                 </div>
               )}
@@ -621,29 +632,24 @@ const CheckoutForm = () => {
           </div>
 
           <div className="flex justify-between items-center">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => window.history.back()}
-              className="w-[200px]"
-            >
-              Return to Cart
+            <Button type="button" variant="outline" className="w-[200px]">
+              <Link href={"/customer/shopping/cart"}>Go to Cart</Link>
             </Button>
 
             <Button
               type="submit"
               className="w-[200px]"
-              disabled={isLoading || !cart?.cartItems?.length}
+              disabled={isLoading || !cart?.cartItems?.length || isSubmitting}
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>Place Order</>
-              )}
-            </Button>
+              {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+            </>
+  ) : (
+    <>Place Order</>
+  )}
+</Button>
           </div>
         </div>
       </form>
