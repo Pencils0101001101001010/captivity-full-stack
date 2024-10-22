@@ -64,7 +64,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   };
 
   const viewMoreUrl = selectedVariation
-    ? `/customer/shopping/variant/${product.id}/${selectedVariation.id}`
+    ? `/customer/shopping/${product.id}/${selectedVariation.id}`
     : `/customer/shopping/product/${product.id}`;
 
   return (
