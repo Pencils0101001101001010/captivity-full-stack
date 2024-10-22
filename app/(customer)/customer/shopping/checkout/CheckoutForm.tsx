@@ -107,19 +107,19 @@ const CheckoutForm = () => {
       });
       return;
     }
-  
+
     setIsSubmitting(true);
     try {
       // Calculate total
       const orderTotal = calculateTotal();
-  
+
       // Combine form data with cart items
       const orderData = {
         ...formData,
         cartItems: cart.cartItems,
         orderTotal: orderTotal,
       };
-  
+
       console.log("Complete Order Data:", orderData);
       // Add your checkout logic here
     } catch (error) {
@@ -561,7 +561,10 @@ const CheckoutForm = () => {
                                 Number(e.target.value)
                               )
                             }
-                            className="text-sm border rounded px-2 py-1 mr-4"
+                            disabled={isLoading}
+                            className={`text-sm border rounded px-2 py-1 mr-4 ${
+                              isLoading ? "opacity-50" : ""
+                            }`}
                           >
                             {[...Array(item.variation.quantity)].map((_, i) => (
                               <option key={i + 1} value={i + 1}>
@@ -572,7 +575,10 @@ const CheckoutForm = () => {
                           <button
                             type="button"
                             onClick={() => handleRemoveItem(item.id)}
-                            className="text-red-500 hover:text-red-700 text-sm"
+                            disabled={isLoading}
+                            className={`text-red-500 hover:text-red-700 text-sm ${
+                              isLoading ? "opacity-50" : ""
+                            }`}
                           >
                             Remove
                           </button>
@@ -642,14 +648,14 @@ const CheckoutForm = () => {
               disabled={isLoading || !cart?.cartItems?.length || isSubmitting}
             >
               {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
-            </>
-  ) : (
-    <>Place Order</>
-  )}
-</Button>
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>Place Order</>
+              )}
+            </Button>
           </div>
         </div>
       </form>
