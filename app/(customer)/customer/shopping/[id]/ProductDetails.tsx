@@ -63,6 +63,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     setQuantity(Math.min(newQuantity, selectedVariation?.quantity || 1));
   };
 
+  const viewMoreUrl = selectedVariation
+    ? `/customer/shopping/variant/${product.id}/${selectedVariation.id}`
+    : `/customer/shopping/product/${product.id}`;
+
   return (
     <div className="max-w-4xl mx-auto p-3 bg-white my-8 shadow-2xl shadow-black rounded-lg">
       <div className="flex flex-col md:flex-row mb-4">
@@ -109,25 +113,23 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             {selectedVariation?.quantity || 0} in stock
           </p>
 
-          <AddToCartButton
-            selectedVariation={selectedVariation}
-            quantity={quantity}
-            disabled={!selectedVariation || selectedVariation.quantity < 1}
-          />
-          <Link
-            href="/customer/shopping/checkout"
-            className="block w-full bg-red-600 text-white text-center py-3 rounded-md font-medium hover:bg-red-700 transition-colors"
-          >
-            Proceed to Checkout
-          </Link>
+          <div className="space-y-2">
+            <AddToCartButton
+              selectedVariation={selectedVariation}
+              quantity={quantity}
+              disabled={!selectedVariation || selectedVariation.quantity < 1}
+            />
+            <Link
+              href="/customer/shopping/checkout"
+              className="block w-full bg-red-600 text-white text-center py-3 rounded-md font-medium hover:bg-red-700 transition-colors"
+            >
+              Proceed to Checkout
+            </Link>
 
-          <ViewMore
-            href={`/customer/shopping/varaint/${product.variations}`}
-            variant="default"
-            size="md"
-          >
-            View More
-          </ViewMore>
+            <ViewMore href={viewMoreUrl} variant="default" size="md">
+              View More Details
+            </ViewMore>
+          </div>
         </div>
       </div>
     </div>
