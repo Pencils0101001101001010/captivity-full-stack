@@ -3,16 +3,16 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { formSchema, FormValues } from "./validations";
+import { formSchema, FormValues } from "./_lib/validations";
 import { useToast } from "@/hooks/use-toast";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import useCartStore from "../../_store/useCartStore";
-import { BillingDetails } from "./BillingDetails";
-import { AdditionalInformation } from "./AdditionalInformation";
-import { TermsAndConditions } from "./TermsAndConditions";
-import OrderSummary from "./OrderSummary";
+import { BillingDetails } from "./_components/BillingDetails";
+import { AdditionalInformation } from "./_components/AdditionalInformation";
+import { TermsAndConditions } from "./_components/TermsAndConditions";
+import OrderSummary from "./_components/OrderSummary";
 
 const CheckoutForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);

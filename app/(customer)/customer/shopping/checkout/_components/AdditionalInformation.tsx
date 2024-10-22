@@ -8,7 +8,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { FormValues } from "./types";
+import { FormValues } from "../_lib/types";
 
 interface AdditionalInformationProps {
   form: UseFormReturn<FormValues>;

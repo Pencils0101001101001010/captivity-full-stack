@@ -8,7 +8,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FormValues } from "./types";
+import { FormValues } from "../_lib/types";
 
 interface TermsAndConditionsProps {
   form: UseFormReturn<FormValues>;

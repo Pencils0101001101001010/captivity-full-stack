@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { Cart } from "./types";
+import { Cart } from "../_lib/types";
 
 interface OrderSummaryProps {
   cart: Cart | null;
