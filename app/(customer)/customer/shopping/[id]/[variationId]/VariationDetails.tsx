@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import type { VariationWithRelations } from "./actions";
+import { VariationWithRelations } from "./actions";
 
 interface Props {
   data: VariationWithRelations;
@@ -16,7 +16,6 @@ const VariationDetails: React.FC<Props> = ({ data }) => {
   );
   const uniqueSizes = Array.from(new Set(product.variations.map(v => v.size)));
 
-  // Filter states
   const [selectedColors, setSelectedColors] = useState<Set<string>>(
     new Set([data.color])
   );
@@ -24,13 +23,11 @@ const VariationDetails: React.FC<Props> = ({ data }) => {
     new Set([data.size])
   );
 
-  // Filter handlers
   const toggleColorFilter = (color: string) => {
     setSelectedColors(prev => {
       const newSet = new Set(prev);
       if (newSet.has(color)) {
         newSet.delete(color);
-        // If removing last color, keep current variation's color
         if (newSet.size === 0) newSet.add(data.color);
       } else {
         newSet.add(color);
@@ -44,7 +41,6 @@ const VariationDetails: React.FC<Props> = ({ data }) => {
       const newSet = new Set(prev);
       if (newSet.has(size)) {
         newSet.delete(size);
-        // If removing last size, keep current variation's size
         if (newSet.size === 0) newSet.add(data.size);
       } else {
         newSet.add(size);
@@ -53,32 +49,30 @@ const VariationDetails: React.FC<Props> = ({ data }) => {
     });
   };
 
-  // Filter variations based on selected filters
   const filteredVariations = product.variations.filter(
     variation =>
       selectedColors.has(variation.color) && selectedSizes.has(variation.size)
   );
 
-  // Calculate total stock for filtered variations
   const totalStock = filteredVariations.reduce((sum, v) => sum + v.quantity, 0);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto p-6 space-y-8">
       {/* Header Section */}
-      <div className="mb-8">
+      <div className="bg-card rounded-lg p-6 shadow-lg">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
+            <h1 className="text-3xl font-bold text-card-foreground">
               {product.productName}
             </h1>
-            <div className="mt-2 flex items-center space-x-4 text-sm text-gray-600">
+            <div className="mt-2 flex items-center space-x-4 text-sm text-muted-foreground">
               <span>Filtered Stock: {totalStock}</span>
               <span>SKU: {data.sku}</span>
             </div>
           </div>
           <Link
             href={`/customer/shopping/product/${product.id}`}
-            className="bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600"
+            className="inline-flex items-center px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             View product details
           </Link>
@@ -86,10 +80,12 @@ const VariationDetails: React.FC<Props> = ({ data }) => {
       </div>
 
       {/* Filters Section */}
-      <div className="space-y-6 mb-8">
+      <div className="bg-card rounded-lg p-6 shadow-lg space-y-6">
         {/* Color Filter */}
         <div>
-          <h2 className="text-gray-700 mb-2">FILTER BY COLOUR:</h2>
+          <h2 className="text-lg font-semibold text-card-foreground mb-4">
+            FILTER BY COLOUR
+          </h2>
           <div className="flex flex-wrap gap-2">
             {uniqueColors.map(color => {
               const count = product.variations.filter(
@@ -99,13 +95,13 @@ const VariationDetails: React.FC<Props> = ({ data }) => {
                 <button
                   key={color}
                   onClick={() => toggleColorFilter(color)}
-                  className={`px-4 py-2 rounded border transition-colors ${
+                  className={`px-4 py-2 rounded-md border transition-colors ${
                     selectedColors.has(color)
-                      ? "bg-blue-600 text-white"
-                      : "bg-white text-gray-700 hover:bg-gray-50"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-card-foreground border-input hover:bg-accent hover:text-accent-foreground"
                   }`}
                 >
-                  {color} {count}
+                  {color} ({count})
                 </button>
               );
             })}
@@ -114,16 +110,18 @@ const VariationDetails: React.FC<Props> = ({ data }) => {
 
         {/* Size Filter */}
         <div>
-          <h2 className="text-gray-700 mb-2">FILTER BY SIZES:</h2>
+          <h2 className="text-lg font-semibold text-card-foreground mb-4">
+            FILTER BY SIZES
+          </h2>
           <div className="flex flex-wrap gap-2">
             {uniqueSizes.map(size => (
               <button
                 key={size}
                 onClick={() => toggleSizeFilter(size)}
-                className={`px-4 py-2 rounded border transition-colors ${
+                className={`px-4 py-2 rounded-md border transition-colors ${
                   selectedSizes.has(size)
-                    ? "bg-cyan-500 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card text-card-foreground border-input hover:bg-accent hover:text-accent-foreground"
                 }`}
               >
                 {size}
@@ -133,87 +131,98 @@ const VariationDetails: React.FC<Props> = ({ data }) => {
         </div>
       </div>
 
-      {/* Variation Details Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Color
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Code
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Size
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Stock on Hand
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                SKU
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Image
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredVariations.map(variation => (
-              <tr
-                key={variation.id}
-                className={`hover:bg-gray-50 ${variation.id === data.id ? "bg-blue-50" : ""}`}
-              >
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-900">
-                    {variation.color}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-900">
-                    {variation.sku2}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-900">
-                    {variation.size}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-900">
-                    {variation.quantity}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-900">{variation.sku}</span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="h-12 w-12 relative">
-                    <Image
-                      src={variation.variationImageURL}
-                      alt={`${variation.color} ${variation.size}`}
-                      fill
-                      className="object-cover rounded"
-                    />
-                  </div>
-                </td>
+      {/* Table Section */}
+      <div className="bg-card rounded-lg shadow-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-muted">
+              <tr>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
+                  Color
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
+                  Code
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
+                  Size
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
+                  Stock
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
+                  SKU
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-muted-foreground">
+                  Image
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filteredVariations.map(variation => (
+                <tr
+                  key={variation.id}
+                  className={`group transition-colors ${
+                    variation.id === data.id
+                      ? "bg-accent/50"
+                      : "hover:bg-accent/10"
+                  }`}
+                >
+                  <td className="px-6 py-4 text-sm text-card-foreground">
+                    {variation.color}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-card-foreground">
+                    {variation.sku2}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-card-foreground">
+                    {variation.size}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-card-foreground">
+                    {variation.quantity}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-card-foreground">
+                    {variation.sku}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="h-12 w-12 relative rounded-md overflow-hidden">
+                      <Image
+                        src={variation.variationImageURL}
+                        alt={`${variation.color} ${variation.size}`}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Price Information */}
-      <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-        <h2 className="text-lg font-semibold mb-2">Pricing</h2>
-        <p className="text-gray-700">
-          Base Price: R{product.sellingPrice.toFixed(2)}
-        </p>
-        {product.dynamicPricing.map(pricing => (
-          <p key={pricing.id} className="text-gray-700">
-            {pricing.type}: R{pricing.amount} ({pricing.from} - {pricing.to})
+      {/* Pricing Section */}
+      <div className="bg-card rounded-lg p-6 shadow-lg">
+        <h2 className="text-xl font-semibold text-card-foreground mb-4">
+          Pricing Information
+        </h2>
+        <div className="space-y-2 text-card-foreground">
+          <p className="flex justify-between items-center">
+            <span>Base Price</span>
+            <span className="font-semibold">
+              R{product.sellingPrice.toFixed(2)}
+            </span>
           </p>
-        ))}
+          {product.dynamicPricing.map(pricing => (
+            <p
+              key={pricing.id}
+              className="flex justify-between items-center text-muted-foreground"
+            >
+              <span>{pricing.type}</span>
+              <span>
+                R{pricing.amount} ({pricing.from} - {pricing.to})
+              </span>
+            </p>
+          ))}
+        </div>
       </div>
     </div>
   );
