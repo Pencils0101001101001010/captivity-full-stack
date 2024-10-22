@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { VariationWithRelations } from "./types";
-import { HeaderSection } from "./HeaderSection";
-import { FiltersSection } from "./FiltersSection";
-import { TableSection } from "./TableSection";
-import { PricingSection } from "./PricingSection";
+import { VariationWithRelations } from "./_types/types";
+import { HeaderSection } from "./_components/HeaderSection";
+import { FiltersSection } from "./_components/FiltersSection";
+import { TableSection } from "./_components/TableSection";
+import { PricingSection } from "./_components/PricingSection";
 
 interface Props {
   data: VariationWithRelations;

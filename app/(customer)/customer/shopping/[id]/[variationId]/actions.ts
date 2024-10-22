@@ -9,7 +9,7 @@ import {
   FetchVariationsResult,
   ProductAndVariation,
   VariationWithRelations,
-} from "./types";
+} from "./_types/types";
 
 export async function fetchVariationById(
   variationId: string
