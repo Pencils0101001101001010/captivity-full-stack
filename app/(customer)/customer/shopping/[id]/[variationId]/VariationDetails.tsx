@@ -51,7 +51,7 @@ const VariationDetails: React.FC<Props> = ({ data }) => {
   );
 
   return (
-    <div className="w-full h-full max-w-7xl mx-auto px-3 md:px-6 py-3 md:py-8">
+    <div className="mb-20 w-full h-full max-w-7xl mx-auto px-3 md:px-6 py-3 md:py-8">
       <div className="space-y-3 md:space-y-8">
         <HeaderSection data={data} />
         <FiltersSection
