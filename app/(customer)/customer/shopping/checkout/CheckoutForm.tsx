@@ -1,7 +1,10 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
+import { formSchema, FormValues } from "./validations";
+import { useToast } from "@/hooks/use-toast";
 import {
   Form,
   FormControl,
@@ -17,15 +20,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { formSchema, FormValues } from "./validations";
-import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+import useCartStore from "../../_store/useCartStore";
 
 const CheckoutForm = () => {
+  const {
+    cart,
+    isLoading,
+    error,
+    fetchCart,
+    updateCartItemQuantity,
+    removeFromCart,
+  } = useCartStore();
+  const { toast } = useToast();
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -50,8 +62,51 @@ const CheckoutForm = () => {
     },
   });
 
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
+
+  const calculateSubtotal = (quantity: number, price: number) => {
+    return quantity * price;
+  };
+
+  const calculateTotal = () => {
+    if (!cart?.cartItems) return 0;
+    return cart.cartItems.reduce((total, item) => {
+      return (
+        total +
+        calculateSubtotal(item.quantity, item.variation.product.sellingPrice)
+      );
+    }, 0);
+  };
+
+  const handleQuantityChange = async (
+    cartItemId: string,
+    newQuantity: number
+  ) => {
+    if (newQuantity < 1) return;
+    await updateCartItemQuantity(cartItemId, newQuantity);
+  };
+
+  const handleRemoveItem = async (cartItemId: string) => {
+    await removeFromCart(cartItemId);
+    toast({
+      title: "Item removed",
+      description: "The item has been removed from your cart.",
+    });
+  };
+
   const onSubmit = async (formData: FormValues) => {
-    console.log(form);
+    if (!cart?.cartItems?.length) {
+      toast({
+        title: "Cart is empty",
+        description: "Please add items to your cart before checking out.",
+        variant: "destructive",
+      });
+      return;
+    }
+    console.log(formData);
+    // Add your checkout logic here
   };
 
   return (
@@ -61,12 +116,13 @@ const CheckoutForm = () => {
         className="max-w-7xl mx-auto p-6 mb-16"
       >
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Left Column: Billing Details, Additional Information, Terms */}
+          {/* Left Column: Billing Details */}
           <div className="w-full lg:w-2/3 space-y-8">
             {/* Billing Details Section */}
             <div className="bg-white shadow-2xl shadow-black rounded-lg p-6">
               <h3 className="text-xl font-semibold mb-6">Billing Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Branch Selection */}
                 <FormField
                   control={form.control}
                   name="captivityBranch"
@@ -92,6 +148,7 @@ const CheckoutForm = () => {
                   )}
                 />
 
+                {/* Collection Method */}
                 <FormField
                   control={form.control}
                   name="methodOfCollection"
@@ -117,6 +174,7 @@ const CheckoutForm = () => {
                   )}
                 />
 
+                {/* Sales Rep */}
                 <FormField
                   control={form.control}
                   name="salesRep"
@@ -124,17 +182,14 @@ const CheckoutForm = () => {
                     <FormItem>
                       <FormLabel>Sales Rep (optional)</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Sales rep name"
-                          {...field}
-                          className="w-full"
-                        />
+                        <Input placeholder="Sales rep name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
+                {/* Reference Number */}
                 <FormField
                   control={form.control}
                   name="referenceNumber"
@@ -142,17 +197,14 @@ const CheckoutForm = () => {
                     <FormItem>
                       <FormLabel>Reference Number (optional)</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Your reference"
-                          {...field}
-                          className="w-full"
-                        />
+                        <Input placeholder="Your reference" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
+                {/* Personal Information */}
                 <FormField
                   control={form.control}
                   name="firstName"
@@ -160,11 +212,7 @@ const CheckoutForm = () => {
                     <FormItem>
                       <FormLabel>First Name*</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="First name"
-                          {...field}
-                          className="w-full"
-                        />
+                        <Input placeholder="First name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -178,11 +226,7 @@ const CheckoutForm = () => {
                     <FormItem>
                       <FormLabel>Last Name*</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Last name"
-                          {...field}
-                          className="w-full"
-                        />
+                        <Input placeholder="Last name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -196,11 +240,7 @@ const CheckoutForm = () => {
                     <FormItem>
                       <FormLabel>Company Name*</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Company name"
-                          {...field}
-                          className="w-full"
-                        />
+                        <Input placeholder="Company name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -218,7 +258,7 @@ const CheckoutForm = () => {
                         defaultValue={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger className="w-full">
+                          <SelectTrigger>
                             <SelectValue placeholder="Select country/region" />
                           </SelectTrigger>
                         </FormControl>
@@ -233,6 +273,7 @@ const CheckoutForm = () => {
                   )}
                 />
 
+                {/* Address Information */}
                 <FormField
                   control={form.control}
                   name="streetAddress"
@@ -243,7 +284,6 @@ const CheckoutForm = () => {
                         <Input
                           placeholder="House number and street name"
                           {...field}
-                          className="w-full"
                         />
                       </FormControl>
                       <FormMessage />
@@ -261,7 +301,6 @@ const CheckoutForm = () => {
                         <Input
                           placeholder="Apartment, suite, unit, etc."
                           {...field}
-                          className="w-full"
                         />
                       </FormControl>
                       <FormMessage />
@@ -276,11 +315,7 @@ const CheckoutForm = () => {
                     <FormItem>
                       <FormLabel>Town / City*</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Town / City"
-                          {...field}
-                          className="w-full"
-                        />
+                        <Input placeholder="Town / City" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -298,7 +333,7 @@ const CheckoutForm = () => {
                         defaultValue={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger className="w-full">
+                          <SelectTrigger>
                             <SelectValue placeholder="Select province" />
                           </SelectTrigger>
                         </FormControl>
@@ -306,6 +341,19 @@ const CheckoutForm = () => {
                           <SelectItem value="gauteng">Gauteng</SelectItem>
                           <SelectItem value="westernCape">
                             Western Cape
+                          </SelectItem>
+                          <SelectItem value="kwazuluNatal">
+                            KwaZulu-Natal
+                          </SelectItem>
+                          <SelectItem value="easternCape">
+                            Eastern Cape
+                          </SelectItem>
+                          <SelectItem value="freeState">Free State</SelectItem>
+                          <SelectItem value="limpopo">Limpopo</SelectItem>
+                          <SelectItem value="mpumalanga">Mpumalanga</SelectItem>
+                          <SelectItem value="northWest">North West</SelectItem>
+                          <SelectItem value="northernCape">
+                            Northern Cape
                           </SelectItem>
                         </SelectContent>
                       </Select>
@@ -321,11 +369,7 @@ const CheckoutForm = () => {
                     <FormItem>
                       <FormLabel>Postcode / ZIP*</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Postcode / ZIP"
-                          {...field}
-                          className="w-full"
-                        />
+                        <Input placeholder="Postcode / ZIP" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -343,7 +387,6 @@ const CheckoutForm = () => {
                           type="tel"
                           placeholder="Phone number"
                           {...field}
-                          className="w-full"
                         />
                       </FormControl>
                       <FormMessage />
@@ -362,7 +405,6 @@ const CheckoutForm = () => {
                           type="email"
                           placeholder="Email address"
                           {...field}
-                          className="w-full"
                         />
                       </FormControl>
                       <FormMessage />
@@ -386,8 +428,8 @@ const CheckoutForm = () => {
                     <FormControl>
                       <Textarea
                         placeholder="Notes about your order, e.g. special notes for delivery"
+                        className="min-h-[100px]"
                         {...field}
-                        className="w-full"
                       />
                     </FormControl>
                     <FormMessage />
@@ -417,7 +459,7 @@ const CheckoutForm = () => {
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel className="text-sm">
+                      <FormLabel>
                         Check here to receive an email to review our products.
                       </FormLabel>
                     </div>
@@ -429,7 +471,7 @@ const CheckoutForm = () => {
                 control={form.control}
                 name="agreeTerms"
                 render={({ field }) => (
-                  <FormItem className="flex items-start space-x-3 space-y-0 mb-6">
+                  <FormItem className="flex items-start space-x-3 space-y-0 mb-4">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -437,7 +479,7 @@ const CheckoutForm = () => {
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel className="text-sm">
+                      <FormLabel>
                         I have read and agree to the website terms and
                         conditions*
                       </FormLabel>
@@ -452,29 +494,145 @@ const CheckoutForm = () => {
           <div className="w-full lg:w-1/3">
             <div className="bg-white rounded-lg p-6 sticky top-6 shadow-2xl shadow-black">
               <h3 className="text-xl font-semibold mb-6">Order Summary</h3>
-              <div className="space-y-4">
-                <Image
-                  src={""}
-                  alt={"/"}
-                  width={50}
-                  height={50}
-                  className="mr-4 rounded-md"
-                />
-                <div className="flex-grow">
-                  <h4 className="font-semibold text-sm">{"/"}</h4>
-                  <p className="text-xs text-gray-600">{"/"}</p>
-                  <p className="text-xs">Quantity: {"/"}</p>
+
+              {isLoading ? (
+                <div className="flex justify-center items-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold text-sm">R{"/"} each</p>
-                  <p className="text-xs text-gray-600">Subtotal: R</p>
+              ) : error ? (
+                <div className="text-red-500 text-center py-4">{error}</div>
+              ) : cart?.cartItems && cart.cartItems.length > 0 ? (
+                <div className="space-y-6">
+                  {cart.cartItems.map(item => (
+                    <div
+                      key={item.id}
+                      className="flex items-start border-b pb-4"
+                    >
+                      <div className="relative h-16 w-16 rounded-md overflow-hidden">
+                        <Image
+                          src={
+                            item.variation.variationImageURL || // Try variation image first
+                            item.variation.product.featuredImage?.medium || // Then featured image
+                            "/api/placeholder/100/100" // Fallback to placeholder
+                          }
+                          alt={item.variation.product.productName}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex-grow ml-4">
+                        <h4 className="font-semibold text-sm">
+                          {item.variation.product.productName}
+                        </h4>
+                        <p className="text-xs text-gray-600">
+                          Size: {item.variation.size}, Color:{" "}
+                          {item.variation.color}
+                        </p>
+                        <div className="flex items-center mt-2">
+                          <select
+                            value={item.quantity}
+                            onChange={e =>
+                              handleQuantityChange(
+                                item.id,
+                                Number(e.target.value)
+                              )
+                            }
+                            className="text-sm border rounded px-2 py-1 mr-4"
+                          >
+                            {[...Array(item.variation.quantity)].map((_, i) => (
+                              <option key={i + 1} value={i + 1}>
+                                {i + 1}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveItem(item.id)}
+                            className="text-red-500 hover:text-red-700 text-sm"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-sm">
+                          R{item.variation.product.sellingPrice.toFixed(2)} each
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          Subtotal: R
+                          {calculateSubtotal(
+                            item.quantity,
+                            item.variation.product.sellingPrice
+                          ).toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between items-center text-sm mb-2">
+                      <span>Subtotal:</span>
+                      <span>R{calculateTotal().toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm mb-2">
+                      <span>Shipping:</span>
+                      <span>Calculated at next step</span>
+                    </div>
+                    <div className="flex justify-between items-center font-semibold text-lg mt-4">
+                      <span>Total:</span>
+                      <span>R{calculateTotal().toFixed(2)}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-between items-center pt-4 font-semibold">
-                <span>Total:</span>
-                <span className="text-lg"></span>
-              </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">Your cart is empty</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => window.history.back()}
+                  >
+                    Continue Shopping
+                  </Button>
+                </div>
+              )}
             </div>
+          </div>
+        </div>
+
+        {/* Submit Button Section */}
+        <div className="mt-8 flex flex-col gap-4">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p className="text-sm text-yellow-800">
+              Note: By placing your order, you agree to our terms and
+              conditions. A proforma invoice will be sent to your email address.
+            </p>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => window.history.back()}
+              className="w-[200px]"
+            >
+              Return to Cart
+            </Button>
+
+            <Button
+              type="submit"
+              className="w-[200px]"
+              disabled={isLoading || !cart?.cartItems?.length}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>Place Order</>
+              )}
+            </Button>
           </div>
         </div>
       </form>
