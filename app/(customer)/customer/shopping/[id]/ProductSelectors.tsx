@@ -11,16 +11,16 @@ export const ColorSelector: React.FC<ColorSelectorProps> = ({
   onColorSelect,
 }) => (
   <div className="mb-2">
-    <p className="font-bold text-gray-700 mb-2">Color</p>
+    <p className="font-bold text-card-foreground mb-2">Color</p>
     <div className="flex flex-wrap -mx-1">
       {colors.map(color => (
         <button
           key={color}
-          className={`px-4 py-2 m-1 border rounded text-sm font-medium transition-colors
+          className={`px-4 py-2 m-1 border rounded-md text-sm font-medium transition-colors
             ${
               selectedColor === color
-                ? "bg-blue-500 text-white border-blue-500"
-                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card text-card-foreground border-border hover:bg-accent hover:text-accent-foreground"
             }`}
           onClick={() => onColorSelect(color)}
         >
@@ -37,14 +37,17 @@ export const SizeSelector: React.FC<SizeSelectorProps> = ({
   onSizeSelect,
 }) => (
   <div className="mb-4">
-    <label htmlFor="size-select" className="font-bold text-gray-700 block mb-2">
+    <label
+      htmlFor="size-select"
+      className="font-bold text-card-foreground block mb-2"
+    >
       Size
     </label>
     <select
       id="size-select"
       value={selectedSize || ""}
       onChange={onSizeSelect}
-      className="w-full p-2 border border-gray-300 rounded-md"
+      className="w-full p-2 bg-background text-foreground border border-input rounded-md focus:ring-2 focus:ring-ring"
     >
       <option value="">Select a size</option>
       {sizes.map(size => (
@@ -62,14 +65,16 @@ export const QuantitySelector: React.FC<QuantitySelectorProps> = ({
   onQuantityChange,
 }) => (
   <div className="mb-4">
-    <label className="font-bold text-gray-700 block mb-2">Quantity</label>
+    <label className="font-bold text-card-foreground block mb-2">
+      Quantity
+    </label>
     <input
       type="number"
       value={quantity}
       onChange={onQuantityChange}
       min={1}
       max={maxQuantity}
-      className="w-full p-2 border border-gray-300 rounded-md"
+      className="w-full p-2 bg-background text-foreground border border-input rounded-md focus:ring-2 focus:ring-ring"
     />
   </div>
 );

@@ -21,7 +21,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
           fill
           sizes="(max-width: 768px) 90vw, 40vw"
           style={{ objectFit: "cover" }}
-          className="rounded-lg"
+          className="rounded-lg border border-border bg-card"
           priority
         />
       </div>
@@ -31,10 +31,10 @@ const ProductImage: React.FC<ProductImageProps> = ({
           return variation ? (
             <div key={variation.id} className="w-1/4 px-2 mb-4">
               <div
-                className={`relative w-full pt-[100%] cursor-pointer rounded-md overflow-hidden ${
+                className={`relative w-full pt-[100%] cursor-pointer rounded-md overflow-hidden border ${
                   selectedVariation?.color === color
-                    ? "ring-2 ring-blue-500"
-                    : ""
+                    ? "ring-2 ring-ring border-primary"
+                    : "border-border hover:border-primary/50"
                 }`}
                 onClick={() => onColorSelect(color)}
               >
@@ -44,6 +44,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
                   fill
                   sizes="(max-width: 768px) 25vw, 8.5vw"
                   style={{ objectFit: "cover" }}
+                  className="bg-card"
                   priority
                 />
               </div>

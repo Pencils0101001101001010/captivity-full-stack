@@ -68,7 +68,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     : `/customer/shopping/product/${product.id}`;
 
   return (
-    <div className="max-w-4xl mx-auto p-3 bg-white my-8 shadow-2xl shadow-black rounded-lg">
+    <div className="max-w-4xl mx-auto p-3 bg-card my-8 shadow-lg rounded-lg border border-border">
       <div className="flex flex-col md:flex-row mb-4">
         <ProductImage
           selectedVariation={selectedVariation}
@@ -78,14 +78,14 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         />
 
         <div className="w-full md:w-1/2">
-          <h1 className="text-2xl font-bold mb-1 text-gray-800">
+          <h1 className="text-2xl font-bold mb-1 text-card-foreground">
             {product.productName}
           </h1>
           <div
             dangerouslySetInnerHTML={{ __html: product.description }}
-            className="mb-4 text-gray-600"
+            className="mb-4 text-muted-foreground"
           />
-          <p className="text-2xl font-bold mb-2 text-gray-800">
+          <p className="text-2xl font-bold mb-2 text-card-foreground">
             R{product.sellingPrice.toFixed(2)}
           </p>
 
@@ -109,7 +109,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             onQuantityChange={handleQuantityChange}
           />
 
-          <p className="mb-4 text-gray-600">
+          <p className="mb-4 text-muted-foreground">
             {selectedVariation?.quantity || 0} in stock
           </p>
 
@@ -121,7 +121,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             />
             <Link
               href="/customer/shopping/checkout"
-              className="block w-full bg-red-600 text-white text-center py-3 rounded-md font-medium hover:bg-red-700 transition-colors"
+              className="block w-full bg-destructive text-destructive-foreground text-center py-3 rounded-md font-medium hover:bg-destructive/90 transition-colors"
             >
               Proceed to Checkout
             </Link>
