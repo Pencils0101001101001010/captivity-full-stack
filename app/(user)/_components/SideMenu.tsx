@@ -3,7 +3,7 @@ import React from "react";
 
 const SideMenu = () => {
   return (
-    <div className="space-y-5 md:mr-10 lg:mr-10 xl:mr-10 xl:ml-20 lg:ml-20 md:ml-20">
+    <div className="space-y-5 md:mr-10 lg:mr-10 min-h-[500px] xl:mr-10 xl:ml-20 lg:ml-20 md:ml-20">
       <aside className="w-[300px] mb-0 hidden lg:block sticky top-0 h-fit">
         <ul className="menu  text-gray-700">
           <span className="text-xl font-bold">HEADWEAR</span>

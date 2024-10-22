@@ -1,7 +1,9 @@
 import React from "react";
 
+import ViewCart from "./CartPage";
+
 const Page = () => {
-  return <div>User Cart Details</div>;
+  return <ViewCart />;
 };
 
 export default Page;

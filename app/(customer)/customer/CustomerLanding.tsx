@@ -54,17 +54,39 @@ const LandingPage = () => {
       <nav className="mb-8">
         <ul className="flex flex-wrap justify-between bg-white shadow-md rounded-lg p-2">
           {[
-            { icon: ShoppingCart, label: "Previous Orders" },
-            { icon: User, label: "Account Info" },
-            { icon: MapPin, label: "Address Info" },
-            { icon: CreditCard, label: "Price List" },
-            { icon: Camera, label: "Product Images" },
-          ].map(({ icon: Icon, label }) => (
+            {
+              icon: ShoppingCart,
+              label: "Previous Orders",
+              href: "/customer/previous-orders",
+            },
+            {
+              icon: User,
+              label: "Account Info",
+              href: "/customer/account-info",
+            },
+            {
+              icon: MapPin,
+              label: "Address Info",
+              href: "/customer/address-info",
+            },
+            {
+              icon: CreditCard,
+              label: "Price List",
+              href: "/customer/price-list",
+            },
+            {
+              icon: Camera,
+              label: "Product Images",
+              href: "/customer/product-images",
+            },
+          ].map(({ icon: Icon, label, href }) => (
             <li key={label}>
-              <Button variant="ghost" className="flex items-center">
-                <Icon className="mr-2 h-4 w-4" />
-                {label}
-              </Button>
+              <Link key={href} href={href}>
+                <Button variant="ghost" className="flex items-center">
+                  <Icon className="mr-2 h-4 w-4" />
+                  {label}
+                </Button>
+              </Link>
             </li>
           ))}
         </ul>

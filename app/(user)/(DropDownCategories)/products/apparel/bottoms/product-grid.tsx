@@ -21,8 +21,8 @@ export function ProductGrid({
   onProductHover,
 }: ProductGridProps) {
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-6">Men</h2>
+    <main className="flex-1">
+      <h2 className="text-2xl font-bold mb-6">Bottoms</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {loading
           ? Array(6)
@@ -40,6 +40,6 @@ export function ProductGrid({
               </Link>
             ))}
       </div>
-    </div>
+    </main>
   );
 }
