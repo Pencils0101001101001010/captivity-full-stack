@@ -13,8 +13,11 @@ import { BillingDetails } from "./_components/BillingDetails";
 import { AdditionalInformation } from "./_components/AdditionalInformation";
 import { TermsAndConditions } from "./_components/TermsAndConditions";
 import OrderSummary from "./_components/OrderSummary";
+import { createOrder } from "./actions";
+import { useRouter } from "next/navigation";
 
 const CheckoutForm = () => {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     cart,
@@ -71,32 +74,22 @@ const CheckoutForm = () => {
   };
 
   const onSubmit = async (formData: FormValues) => {
-    if (!cart?.cartItems?.length) {
-      toast({
-        title: "Cart is empty",
-        description: "Please add items to your cart before checking out.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsSubmitting(true);
     try {
-      const calculateTotal = () => {
-        if (!cart?.cartItems) return 0;
-        return cart.cartItems.reduce((total, item) => {
-          return total + item.quantity * item.variation.product.sellingPrice;
-        }, 0);
-      };
-
-      const orderData = {
-        ...formData,
-        cartItems: cart.cartItems,
-        orderTotal: calculateTotal(),
-      };
-
-      console.log("Complete Order Data:", orderData);
-      // Add your checkout logic here
+      const result = await createOrder(formData);
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Order placed successfully!",
+        });
+        router.push(`/customer/order-success/${result.data.id}`);
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to place order",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
