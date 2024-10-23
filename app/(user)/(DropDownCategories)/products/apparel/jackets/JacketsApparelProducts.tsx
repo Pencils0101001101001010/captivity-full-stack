@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { fetchBottomsApparel } from "./actions";
+import { fetchJacketsApparel } from "./actions";
 import { SidebarNavigation } from "./sidebar-navigation";
 import { ProductGrid } from "./product-grid";
 import { HeroSection } from "./hero-section";
@@ -24,7 +24,7 @@ interface PaginationMetadata {
   hasPreviousPage: boolean;
 }
 
-export default function BottomsApparelProducts() {
+export default function JacketsApparelProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +35,7 @@ export default function BottomsApparelProducts() {
   useEffect(() => {
     async function loadProducts() {
       setLoading(true);
-      const result = await fetchBottomsApparel(currentPage);
+      const result = await fetchJacketsApparel(currentPage);
       if (result?.success) {
         setProducts(result.data || []);
         setMetadata(result.metadata || null);

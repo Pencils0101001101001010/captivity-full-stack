@@ -1,4 +1,4 @@
-import JacketsApparelProducts from './BottomsApparelProducts'
+import JacketsApparelProducts from './JacketsApparelProducts'
 
 const page = () => {
   return <JacketsApparelProducts/> 
