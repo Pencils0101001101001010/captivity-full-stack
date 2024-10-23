@@ -1,4 +1,4 @@
-import { FilterProps } from "./variations";
+import { FilterProps } from "../_types/variations";
 
 export const FiltersSection = ({
   data,
@@ -15,7 +15,7 @@ export const FiltersSection = ({
   );
 
   return (
-    <div className="bg-card rounded-lg p-4 md:p-6 shadow-lg space-y-6">
+    <div className="bg-card rounded-lg p-4 md:p-6 shadow-2xl shadow-black space-y-6">
       <div>
         <h2 className="text-base md:text-lg font-semibold text-card-foreground mb-4">
           FILTER BY COLOUR

@@ -3,7 +3,7 @@ import { TableProps } from "../_types/variations";
 
 export const TableSection = ({ data, filteredVariations }: TableProps) => {
   return (
-    <div className="bg-card rounded-lg shadow-lg overflow-hidden">
+    <div className="bg-card rounded-lg shadow-2xl shadow-black overflow-hidden">
       {/* Desktop Table - Hidden on mobile */}
       <div className="hidden md:block">
         <table className="w-full">

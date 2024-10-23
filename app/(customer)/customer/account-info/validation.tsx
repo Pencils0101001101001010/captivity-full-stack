@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-const accountFormSchema = z
+export const accountFormSchema = z
   .object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
@@ -9,31 +9,46 @@ const accountFormSchema = z
     currentPassword: z.string().optional(),
     newPassword: z
       .string()
-      .min(8, "Password must be at least 8 characters")
       .optional()
-      .refine(val => !val || /[A-Z]/.test(val), {
-        message: "Password must contain at least one uppercase letter",
-      })
-      .refine(val => !val || /[a-z]/.test(val), {
-        message: "Password must contain at least one lowercase letter",
-      })
-      .refine(val => !val || /[0-9]/.test(val), {
-        message: "Password must contain at least one number",
-      }),
+      .transform(val => (val === "" ? undefined : val)) // Convert empty string to undefined
+      .refine(
+        val => {
+          if (!val) return true; // Skip validation if no password
+          return (
+            val.length >= 8 &&
+            /[A-Z]/.test(val) &&
+            /[a-z]/.test(val) &&
+            /[0-9]/.test(val)
+          );
+        },
+        {
+          message:
+            "Password must be at least 8 characters and contain uppercase, lowercase, and numbers",
+        }
+      ),
     confirmPassword: z.string().optional(),
   })
   .refine(
     data => {
-      // Only validate passwords match if new password is provided
-      if (data.newPassword && data.newPassword !== data.confirmPassword) {
-        return false;
-      }
+      // Only validate if new password is provided
+      if (!data.newPassword) return true;
+      if (!data.currentPassword) return false;
       return true;
+    },
+    {
+      message: "Current password is required when setting a new password",
+      path: ["currentPassword"],
+    }
+  )
+  .refine(
+    data => {
+      // Only validate passwords match if new password is provided
+      if (!data.newPassword) return true;
+      return data.newPassword === data.confirmPassword;
     },
     {
       message: "Passwords do not match",
       path: ["confirmPassword"],
     }
   );
-
-type FormValues = z.infer<typeof accountFormSchema>;
+export type FormValues = z.infer<typeof accountFormSchema>;

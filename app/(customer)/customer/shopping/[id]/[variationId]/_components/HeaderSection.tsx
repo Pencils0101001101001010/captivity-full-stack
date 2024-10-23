@@ -8,7 +8,7 @@ export const HeaderSection = ({ data }: BaseProps) => {
   );
 
   return (
-    <div className="bg-card rounded-lg p-4 md:p-6 shadow-lg">
+    <div className="bg-card rounded-lg p-4 md:p-6 shadow-2xl shadow-black">
       <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
         <div>
           <h1 className="text-xl md:text-3xl font-bold text-card-foreground">
