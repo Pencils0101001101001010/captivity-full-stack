@@ -82,7 +82,7 @@ const CheckoutForm = () => {
           title: "Success",
           description: "Order placed successfully!",
         });
-        router.push(`/customer/order/${result.data.id}`);
+        router.push(`/customer/order-success/${result.data.id}`);
       } else {
         toast({
           title: "Error",
