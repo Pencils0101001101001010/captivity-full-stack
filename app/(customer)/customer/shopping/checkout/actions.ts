@@ -4,14 +4,7 @@ import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { OrderStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { FormValues } from "./_lib/types";
-
-type OrderActionResult = {
-  success: boolean;
-  message: string;
-  data?: any;
-  error?: string;
-};
+import { FormValues, OrderActionResult } from "./_lib/types";
 
 export async function createOrder(
   formData: FormValues
