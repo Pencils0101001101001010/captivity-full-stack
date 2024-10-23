@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { FormValues } from "./types";
+import { FormValues } from "../_lib/types";
 
 interface BillingDetailsProps {
   form: UseFormReturn<FormValues>;

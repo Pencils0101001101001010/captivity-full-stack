@@ -40,3 +40,10 @@ export interface CartItem {
     agreeTerms: boolean;
     receiveEmailReviews: boolean;
   }
+
+  export type OrderActionResult = {
+    success: boolean;
+    message: string;
+    data?: any;
+    error?: string;
+  };

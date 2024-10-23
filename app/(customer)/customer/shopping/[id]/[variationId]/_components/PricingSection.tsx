@@ -1,8 +1,8 @@
-import { BaseProps } from "./variations";
+import { BaseProps } from "../_types/variations";
 
 export const PricingSection = ({ data }: BaseProps) => {
   return (
-    <div className="bg-card rounded-lg p-4 md:p-6 shadow-lg">
+    <div className="bg-card rounded-lg p-4 md:p-6 shadow-2xl shadow-black">
       <h2 className="text-lg md:text-xl font-semibold text-card-foreground mb-4">
         Pricing Information
       </h2>

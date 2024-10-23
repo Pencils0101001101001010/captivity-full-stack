@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 export function CollectionsMenu() {
-  const [isCollectionsOpen, setIsCollectionsOpen] = useState(true);
+  const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
 
   return (
     <div className="border-b pb-4">
