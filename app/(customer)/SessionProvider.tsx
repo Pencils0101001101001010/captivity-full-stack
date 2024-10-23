@@ -14,6 +14,7 @@ interface SessionContext {
       | "SHOPMANAGER"
       | "EDITOR"
       | "ADMIN";
+    isLoading: boolean;
   };
   session: Session;
 }

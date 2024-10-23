@@ -7,6 +7,26 @@ import prisma from "./lib/prisma";
 
 const adapter = new PrismaAdapter(prisma.session, prisma.user);
 
+interface DatabaseUserAttributes {
+  id: string;
+  username: string;
+  displayName: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  avatarUrl: string | null;
+  googleId: string | null;
+  role:
+    | "USER"
+    | "CUSTOMER"
+    | "SUBSCRIBER"
+    | "PROMO"
+    | "DISTRIBUTOR"
+    | "SHOPMANAGER"
+    | "EDITOR"
+    | "ADMIN";
+}
+
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
     expires: false,
@@ -19,6 +39,9 @@ export const lucia = new Lucia(adapter, {
       id: databaseUserAttributes.id,
       username: databaseUserAttributes.username,
       displayName: databaseUserAttributes.displayName,
+      firstName: databaseUserAttributes.firstName,
+      lastName: databaseUserAttributes.lastName,
+      email: databaseUserAttributes.email,
       avatarUrl: databaseUserAttributes.avatarUrl,
       googleId: databaseUserAttributes.googleId,
       role: databaseUserAttributes.role,
@@ -37,6 +60,9 @@ interface DatabaseUserAttributes {
   id: string;
   username: string;
   displayName: string;
+  firstName: string;
+  lastName: string;
+  email: string;
   avatarUrl: string | null;
   googleId: string | null;
   role:
