@@ -162,7 +162,6 @@ model Order {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  totalAmount        Float
   captivityBranch    String
   methodOfCollection String
   salesRep           String?
@@ -183,6 +182,7 @@ model Order {
   orderItems OrderItem[]
   status     OrderStatus @default(PENDING)
 
+  totalAmount         Float
   agreeTerms          Boolean  @default(false)
   receiveEmailReviews Boolean? @default(false)
 
