@@ -1,5 +1,4 @@
 import React, { useMemo, memo } from "react";
-import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Product,
@@ -9,6 +8,7 @@ import {
 } from "@prisma/client";
 import ViewMore from "@/app/(customer)/_components/ViewMore";
 import { Button } from "@/components/ui/button";
+import { ProductImage, ProductPrice } from "./ProductCardComponents";
 
 type ProductWithRelations = Product & {
   dynamicPricing: DynamicPricing[];
@@ -20,50 +20,6 @@ interface ProductCardProps {
   product: ProductWithRelations;
   selectedVariation?: Variation;
 }
-
-const ProductPrice = memo(
-  ({
-    dynamicPricing,
-    sellingPrice,
-  }: {
-    dynamicPricing: DynamicPricing[];
-    sellingPrice: number;
-  }) => {
-    const price =
-      dynamicPricing.length > 0
-        ? parseFloat(dynamicPricing[0].amount)
-        : sellingPrice;
-
-    return (
-      <p className="text-gray-600 font-medium mb-4">R {price.toFixed(2)}</p>
-    );
-  }
-);
-
-ProductPrice.displayName = "ProductPrice";
-
-const DEFAULT_IMAGE = "/placeholder.jpg";
-
-const ProductImage = memo(
-  ({ imageSrc, alt }: { imageSrc?: string | null; alt: string }) => {
-    const imageUrl = useMemo(() => imageSrc || DEFAULT_IMAGE, [imageSrc]);
-
-    return (
-      <div className="relative w-full aspect-square">
-        <Image
-          src={imageUrl}
-          alt={alt}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          priority={false}
-        />
-      </div>
-    );
-  }
-);
-
-ProductImage.displayName = "ProductImage";
 
 const ProductCard: React.FC<ProductCardProps> = memo(
   ({ product, selectedVariation }) => {
