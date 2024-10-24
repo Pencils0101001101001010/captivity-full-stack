@@ -9,6 +9,7 @@ import {
 import ViewMore from "@/app/(customer)/_components/ViewMore";
 import { Button } from "@/components/ui/button";
 import { ProductImage, ProductPrice } from "./ProductCardComponents";
+import { StarRating } from "./StarRating";
 
 type ProductWithRelations = Product & {
   dynamicPricing: DynamicPricing[];
@@ -48,6 +49,9 @@ const ProductCard: React.FC<ProductCardProps> = memo(
             dynamicPricing={product.dynamicPricing}
             sellingPrice={product.sellingPrice}
           />
+          <div className="mb-4">
+            <StarRating />
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <ViewMore
               href={viewMoreUrl}
