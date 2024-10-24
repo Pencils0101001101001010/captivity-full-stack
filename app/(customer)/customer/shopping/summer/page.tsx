@@ -123,10 +123,10 @@ export default async function SummerPage() {
 
             {/* New Products Carousel */}
             {newProducts.length > 0 && (
-              <div className="mt-8">
+              <div className="mt-14">
                 <ProductCarousel
                   products={newProducts}
-                  className="bg-card rounded-lg shadow-md"
+                  className="bg-card rounded-lg shadow-2xl shadow-black"
                 />
               </div>
             )}
