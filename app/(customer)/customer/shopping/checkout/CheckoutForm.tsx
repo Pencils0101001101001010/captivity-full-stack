@@ -13,12 +13,13 @@ import { BillingDetails } from "./_components/BillingDetails";
 import { AdditionalInformation } from "./_components/AdditionalInformation";
 import { TermsAndConditions } from "./_components/TermsAndConditions";
 import OrderSummary from "./_components/OrderSummary";
-import { createOrder } from "./actions";
+import { createOrder, getUserOrders } from "./actions";
 import { useRouter } from "next/navigation";
 
 const CheckoutForm = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingPreviousOrder, setIsLoadingPreviousOrder] = useState(true);
   const {
     cart,
     isLoading,
@@ -52,6 +53,47 @@ const CheckoutForm = () => {
       receiveEmailReviews: false,
     },
   });
+
+  // Load previous order data
+  useEffect(() => {
+    const loadPreviousOrderData = async () => {
+      try {
+        const result = await getUserOrders();
+        if (result.success && result.data && result.data.length > 0) {
+          // Get the most recent order
+          const lastOrder = result.data[0];
+
+          // Pre-fill the form with the last order's data
+          form.reset({
+            captivityBranch: lastOrder.captivityBranch,
+            methodOfCollection: lastOrder.methodOfCollection,
+            salesRep: lastOrder.salesRep || "",
+            referenceNumber: lastOrder.referenceNumber || "",
+            firstName: lastOrder.firstName,
+            lastName: lastOrder.lastName,
+            companyName: lastOrder.companyName,
+            countryRegion: lastOrder.countryRegion,
+            streetAddress: lastOrder.streetAddress,
+            apartmentSuite: lastOrder.apartmentSuite || "",
+            townCity: lastOrder.townCity,
+            province: lastOrder.province,
+            postcode: lastOrder.postcode,
+            phone: lastOrder.phone,
+            email: lastOrder.email,
+            orderNotes: lastOrder.orderNotes || "",
+            agreeTerms: false, // Always start unchecked for safety
+            receiveEmailReviews: false, // Always start unchecked for safety
+          });
+        }
+      } catch (error) {
+        console.error("Error loading previous order data:", error);
+      } finally {
+        setIsLoadingPreviousOrder(false);
+      }
+    };
+
+    loadPreviousOrderData();
+  }, [form]);
 
   useEffect(() => {
     fetchCart();
@@ -100,6 +142,14 @@ const CheckoutForm = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (isLoadingPreviousOrder) {
+    return (
+      <div className="flex justify-center items-center min-h-[200px]">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
