@@ -18,7 +18,6 @@ type Collection = (typeof COLLECTIONS)[number];
 const FilterSidebar = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const [includeClearance, setIncludeClearance] = useState(false);
 
   // Memoize getCurrentCollection to fix dependency warning
   const getCurrentCollection = useCallback((): Collection | null => {

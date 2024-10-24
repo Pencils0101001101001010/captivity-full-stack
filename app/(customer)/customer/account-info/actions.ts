@@ -20,18 +20,7 @@ type ActionResponse<T> = {
   success: boolean;
   data?: T;
   error?: string;
-  debug?: any;
 };
-
-function serializeError(error: unknown) {
-  if (error instanceof Error) {
-    return {
-      message: error.message,
-      name: error.name,
-    };
-  }
-  return { message: String(error) };
-}
 
 export async function updateAccountInfo(
   formData: z.infer<typeof updateAccountSchema>
@@ -64,12 +53,6 @@ export async function updateAccountInfo(
       return { success: false, error: "User not found" };
     }
 
-    console.log("Found user:", {
-      id: dbUser.id,
-      email: dbUser.email,
-      hasPasswordHash: !!dbUser.passwordHash,
-    });
-
     // Prepare update data
     const updateData: any = {
       firstName: validatedData.firstName,
@@ -93,10 +76,7 @@ export async function updateAccountInfo(
     }
 
     // Handle password update
-
     if (validatedData.newPassword && validatedData.currentPassword) {
-      console.log("Starting password update process");
-
       if (!dbUser.passwordHash) {
         return {
           success: false,
@@ -105,27 +85,9 @@ export async function updateAccountInfo(
       }
 
       try {
-        // Clean the hash string to ensure no whitespace
         const cleanHash = dbUser.passwordHash.trim();
 
-        // Log the exact hash format
-        // console.log("Hash format check:", {
-        //   originalHash: cleanHash.slice(0, 20) + "...",
-        //   startsWithDollar: cleanHash.startsWith("$"),
-        //   containsDollar: cleanHash.includes("$"),
-        //   length: cleanHash.length,
-        //   charCodes: Array.from(cleanHash.slice(0, 5)).map(c =>
-        //     c.charCodeAt(0)
-        //   ),
-        // });
-
-        if (!cleanHash.startsWith("$")) {
-          return {
-            success: false,
-            error: "Invalid password hash format",
-          };
-        }
-
+        // Verify current password
         const isValidPassword = await argon2.verify(
           cleanHash,
           validatedData.currentPassword
@@ -145,7 +107,7 @@ export async function updateAccountInfo(
 
         updateData.passwordHash = hashedPassword;
       } catch (error: unknown) {
-        console.error("Password verification error:", serializeError(error));
+        console.error("Password verification error:", error);
         return {
           success: false,
           error: "Error verifying password",
@@ -167,6 +129,7 @@ export async function updateAccountInfo(
       },
     });
 
+    // Revalidate relevant paths
     revalidatePath("/account");
     revalidatePath("/");
 
@@ -175,7 +138,6 @@ export async function updateAccountInfo(
       data: updatedUser,
     };
   } catch (error: unknown) {
-    // console.error("Update account error:", serializeError(error));
     if (error instanceof z.ZodError) {
       return {
         success: false,

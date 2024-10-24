@@ -23,7 +23,7 @@ export default function SearchField({ onSearch }: SearchFieldProps) {
         <Input
           name="q"
           placeholder="Search"
-          className="pe-10"
+          className="pe-10 border-4 outline-none"
           onChange={handleChange}
         />
         <SearchIcon className="absolute right-3 top-1/2 size-5 -translate-y-1/2 transform text-muted-foreground" />
