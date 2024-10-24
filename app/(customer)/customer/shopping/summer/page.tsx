@@ -2,8 +2,8 @@ import React from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import SummerCollectionPage from "./SummerLanding";
-import FilterSidebar from "./FilterSidebar";
-import SearchSection from "./SearchSection";
+import FilterSidebar from "./_components/FilterSidebar";
+import SearchSection from "./_components/SearchSection";
 
 const SummerPage = () => {
   return (

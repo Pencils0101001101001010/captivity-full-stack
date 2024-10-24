@@ -8,7 +8,7 @@ import {
   useSummerError,
   useSummerActions,
 } from "../../_store/useSummerStore";
-import ProductCard from "./ProductsCard";
+import ProductCard from "./_components/ProductsCard";
 import type {
   Category,
   ProductWithRelations,
