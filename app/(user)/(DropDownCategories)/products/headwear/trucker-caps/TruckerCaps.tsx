@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
 import useTruckerCaps from "./useTruckerCaps";
 import { ProductWithFeaturedImage } from "./actions";
 import SideMenu from "@/app/(user)/_components/SideMenu";
@@ -62,7 +61,7 @@ const TruckerCapsProductList: React.FC = () => {
     <section className="container mx-auto my-8">
       <HeroSection
         featuredImage={featuredImage}
-        categoryName="Trucker-caps"
+        categoryName="TRUCKER CAPS"
       />
 
       <div className="flex flex-col md:flex-row gap-6 relative">
@@ -74,11 +73,11 @@ const TruckerCapsProductList: React.FC = () => {
         </aside>
         <main className="w-full md:w-3/4 lg:w-4/5">
           <div className="flex items-center justify-between w-full mb-4">
-            <h4>Trucker-caps...</h4>
+            <h4>Trucker caps...</h4>
             <div className="w-[200px] max-w-sm">
               <Input
                 type="text"
-                placeholder="Search trucker-caps..."
+                placeholder="Search trucker caps..."
                 value={searchQuery}
                 onChange={handleSearch}
               />
