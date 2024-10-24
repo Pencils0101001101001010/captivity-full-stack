@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useCallback, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,15 +19,16 @@ const FlatPeaksProductList: React.FC = () => {
     large: "/Industrial-collection-Btn.jpg",
   });
 
-  const allProducts = useMemo(() => products, [products]);
-
-  // Pagination calculations
-  const totalPages = Math.ceil(allProducts.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedProducts = allProducts.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE
-  );
+  // Memoize pagination calculations
+  const { paginatedProducts, totalPages, startIndex } = useMemo(() => {
+    const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginatedProducts = products.slice(
+      startIndex,
+      startIndex + ITEMS_PER_PAGE
+    );
+    return { paginatedProducts, totalPages, startIndex };
+  }, [products, currentPage]);
 
   useEffect(() => {
     if (products.length > 0 && products[1]?.featuredImage?.large) {
@@ -58,7 +59,7 @@ const FlatPeaksProductList: React.FC = () => {
         </aside>
 
         <main className="w-full md:w-3/4 lg:w-4/5">
-          {allProducts.length === 0 ? (
+          {products.length === 0 ? (
             <div className="text-center py-8">
               <h2 className="text-2xl font-bold text-foreground">
                 No flat-peaks available in the collection.
@@ -148,8 +149,8 @@ const FlatPeaksProductList: React.FC = () => {
               {/* Products Count */}
               <div className="text-sm text-muted-foreground text-center mt-4">
                 Showing {startIndex + 1}-
-                {Math.min(startIndex + ITEMS_PER_PAGE, allProducts.length)} of{" "}
-                {allProducts.length} products
+                {Math.min(startIndex + ITEMS_PER_PAGE, products.length)} of{" "}
+                {products.length} products
               </div>
             </>
           )}
