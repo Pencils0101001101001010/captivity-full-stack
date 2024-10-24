@@ -45,6 +45,11 @@ const SummerCollectionPage: React.FC = () => {
     [nonEmptyCategories]
   );
 
+  // Reset to first page when search results change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [allProducts.length]);
+
   // Pagination calculations
   const totalPages = Math.ceil(allProducts.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -63,6 +68,13 @@ const SummerCollectionPage: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
+  // Ensure current page is valid
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
   if (loading) return <div>Loading summer collection...</div>;
   if (error) return <div>Error: {error}</div>;
 
@@ -71,7 +83,7 @@ const SummerCollectionPage: React.FC = () => {
       {allProducts.length === 0 ? (
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-foreground">
-            No products available in the summer collection.
+            No products found in the summer collection.
           </h2>
         </div>
       ) : (
