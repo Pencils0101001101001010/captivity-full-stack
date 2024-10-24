@@ -63,6 +63,9 @@ const SummerPage = () => {
 
             {/* Products Grid */}
             <div>
+              <h1 className="text-3xl font-bold text-foreground mb-7">
+                Summer Collection
+              </h1>
               <SummerCollectionPage />
             </div>
           </div>
