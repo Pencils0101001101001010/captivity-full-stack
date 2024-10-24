@@ -63,11 +63,6 @@ const SummerCollectionPage: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   if (loading) return <div>Loading summer collection...</div>;
   if (error) return <div>Error: {error}</div>;
 
@@ -93,9 +88,10 @@ const SummerCollectionPage: React.FC = () => {
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
               <button
-                onClick={() => handlePageChange(currentPage - 1)}
+                onClick={() => setCurrentPage(prev => prev - 1)}
                 disabled={currentPage === 1}
                 className="p-2 rounded-lg border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Previous page"
               >
                 <ChevronLeft className="h-5 w-5 text-foreground" />
               </button>
@@ -106,13 +102,15 @@ const SummerCollectionPage: React.FC = () => {
                   page => (
                     <button
                       key={page}
-                      onClick={() => handlePageChange(page)}
+                      onClick={() => setCurrentPage(page)}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
                       ${
                         currentPage === page
                           ? "bg-primary text-primary-foreground"
                           : "hover:bg-muted text-foreground"
                       }`}
+                      aria-label={`Page ${page}`}
+                      aria-current={currentPage === page ? "page" : undefined}
                     >
                       {page}
                     </button>
@@ -121,9 +119,10 @@ const SummerCollectionPage: React.FC = () => {
               </div>
 
               <button
-                onClick={() => handlePageChange(currentPage + 1)}
+                onClick={() => setCurrentPage(prev => prev + 1)}
                 disabled={currentPage === totalPages}
                 className="p-2 rounded-lg border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Next page"
               >
                 <ChevronRight className="h-5 w-5 text-foreground" />
               </button>
