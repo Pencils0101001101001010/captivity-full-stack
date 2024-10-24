@@ -1,5 +1,4 @@
 "use server";
-
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -18,8 +17,6 @@ export async function fetchBaseballCollections(
     if (!user) {
       throw new Error("Unauthorized. Please log in.");
     }
-
-    // Check if the user has the ADMIN role
     if (user.role !== "ADMIN") {
       throw new Error("Only admins can fetch leisure collections.");
     }
