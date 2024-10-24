@@ -10,6 +10,7 @@ import ViewMore from "@/app/(customer)/_components/ViewMore";
 import { Button } from "@/components/ui/button";
 import { ProductImage, ProductPrice } from "./ProductCardComponents";
 import { StarRating } from "./StarRating";
+import Link from "next/link";
 
 type ProductWithRelations = Product & {
   dynamicPricing: DynamicPricing[];
@@ -65,11 +66,8 @@ const ProductCard: React.FC<ProductCardProps> = memo(
               variant="destructive"
               size="sm"
               className="w-full text-sm py-2"
-              onClick={() => {
-                window.location.href = viewMoreUrl;
-              }}
             >
-              Check it out
+              <Link href={`/customer/shopping/${product.id}`}>Shop</Link>
             </Button>
           </div>
         </CardContent>
