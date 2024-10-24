@@ -50,13 +50,13 @@ const Navbar = () => {
             </button>
           </div>
 
-          <Link href="/" className="w-[170px] h-[10px] mb-5">
+          <Link href="/customer" className="w-[170px] h-[10px] mb-5">
             <Image
               src="/captivity-logo-white.png"
               alt="captivityLogo"
               width={331}
               height={54}
-              className="h-auto"
+              className="h-auto border border-white hover:opacity-80 hover:border-2"
               priority
             />
           </Link>
