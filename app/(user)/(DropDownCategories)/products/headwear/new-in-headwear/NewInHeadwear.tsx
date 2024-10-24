@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useCallback, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -35,12 +35,20 @@ const NewInHeadwearProductList: React.FC = () => {
     }
   }, [products]);
 
-  if (loading) return <div>Loading New in headwear collection...</div>;
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[200px]">
+        <Loader2 className="mx-auto my-3 animate-spin h-8 w-8" />
+        <p className="text-muted-foreground">Loading new in headwear collection...</p>
+      </div>
+    );
+  }
+  
   if (error) return <div>Error: {error}</div>;
 
   return (
     <section className="container mx-auto my-8">
-      <HeroSection featuredImage={featuredImage} categoryName="New in headwear" />
+      <HeroSection featuredImage={featuredImage} categoryName="Flat-peaks" />
 
       <div className="flex flex-col md:flex-row gap-6 relative">
         <aside className="md:w-1/4 lg:w-1/4 hidden md:block">

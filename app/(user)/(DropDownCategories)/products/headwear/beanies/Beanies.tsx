@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useCallback, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -35,7 +35,15 @@ const BeaniesProductList: React.FC = () => {
     }
   }, [products]);
 
-  if (loading) return <div>Loading New in beanies collection...</div>;
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[200px]">
+        <Loader2 className="mx-auto my-3 animate-spin h-8 w-8" />
+        <p className="text-muted-foreground">Loading beanies collection...</p>
+      </div>
+    );
+  }
+  
   if (error) return <div>Error: {error}</div>;
 
   return (
