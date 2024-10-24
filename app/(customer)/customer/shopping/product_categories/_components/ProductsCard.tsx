@@ -8,9 +8,9 @@ import {
 } from "@prisma/client";
 import ViewMore from "@/app/(customer)/_components/ViewMore";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { ProductImage, ProductPrice } from "./ProductCardComponents";
 import { StarRating } from "./StarRating";
-import Link from "next/link";
 
 type ProductWithRelations = Product & {
   dynamicPricing: DynamicPricing[];

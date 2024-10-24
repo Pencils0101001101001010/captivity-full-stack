@@ -1,8 +1,8 @@
+// SummerLanding.tsx
 "use client";
 
 import React, { useEffect, useCallback, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import ProductCard from "./_components/ProductsCard";
 import {
   Category,
   ProductWithRelations,
@@ -11,6 +11,7 @@ import {
   useSummerLoading,
   useSummerProducts,
 } from "../../../_store/useSummerStore";
+import ProductCard from "../_components/ProductsCard";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -43,12 +44,10 @@ const SummerCollectionPage: React.FC = () => {
     [nonEmptyCategories]
   );
 
-  // Reset to first page when search results change
   useEffect(() => {
     setCurrentPage(1);
   }, [allProducts.length]);
 
-  // Pagination calculations
   const totalPages = Math.ceil(allProducts.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedProducts = allProducts.slice(
@@ -66,7 +65,6 @@ const SummerCollectionPage: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
-  // Ensure current page is valid
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(totalPages);
@@ -77,7 +75,7 @@ const SummerCollectionPage: React.FC = () => {
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div>
+    <>
       {allProducts.length === 0 ? (
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-foreground">
@@ -94,7 +92,6 @@ const SummerCollectionPage: React.FC = () => {
             ))}
           </div>
 
-          {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
               <button
@@ -106,7 +103,6 @@ const SummerCollectionPage: React.FC = () => {
                 <ChevronLeft className="h-5 w-5 text-foreground" />
               </button>
 
-              {/* Page Numbers */}
               <div className="flex gap-2">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                   page => (
@@ -114,11 +110,11 @@ const SummerCollectionPage: React.FC = () => {
                       key={page}
                       onClick={() => setCurrentPage(page)}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
-                      ${
-                        currentPage === page
-                          ? "bg-primary text-primary-foreground"
-                          : "hover:bg-muted text-foreground"
-                      }`}
+                    ${
+                      currentPage === page
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted text-foreground"
+                    }`}
                       aria-label={`Page ${page}`}
                       aria-current={currentPage === page ? "page" : undefined}
                     >
@@ -139,7 +135,6 @@ const SummerCollectionPage: React.FC = () => {
             </div>
           )}
 
-          {/* Products Count */}
           <div className="text-sm text-muted-foreground text-center mt-4">
             Showing {startIndex + 1}-
             {Math.min(startIndex + ITEMS_PER_PAGE, allProducts.length)} of{" "}
@@ -147,7 +142,7 @@ const SummerCollectionPage: React.FC = () => {
           </div>
         </>
       )}
-    </div>
+    </>
   );
 };
 

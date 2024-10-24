@@ -35,7 +35,7 @@ const FilterSidebar = () => {
     setSelectedCollection(value);
 
     // Use shallow routing for faster navigation
-    const basePath = "/customer/shopping";
+    const basePath = "/customer/shopping/product_categories";
     const newPath = `${basePath}/${value.toLowerCase()}`;
 
     // Use shallow: true for faster route updates when possible
