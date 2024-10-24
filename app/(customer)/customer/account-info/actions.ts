@@ -109,15 +109,15 @@ export async function updateAccountInfo(
         const cleanHash = dbUser.passwordHash.trim();
 
         // Log the exact hash format
-        console.log("Hash format check:", {
-          originalHash: cleanHash.slice(0, 20) + "...",
-          startsWithDollar: cleanHash.startsWith("$"),
-          containsDollar: cleanHash.includes("$"),
-          length: cleanHash.length,
-          charCodes: Array.from(cleanHash.slice(0, 5)).map(c =>
-            c.charCodeAt(0)
-          ),
-        });
+        // console.log("Hash format check:", {
+        //   originalHash: cleanHash.slice(0, 20) + "...",
+        //   startsWithDollar: cleanHash.startsWith("$"),
+        //   containsDollar: cleanHash.includes("$"),
+        //   length: cleanHash.length,
+        //   charCodes: Array.from(cleanHash.slice(0, 5)).map(c =>
+        //     c.charCodeAt(0)
+        //   ),
+        // });
 
         if (!cleanHash.startsWith("$")) {
           return {
@@ -175,7 +175,7 @@ export async function updateAccountInfo(
       data: updatedUser,
     };
   } catch (error: unknown) {
-    console.error("Update account error:", serializeError(error));
+    // console.error("Update account error:", serializeError(error));
     if (error instanceof z.ZodError) {
       return {
         success: false,

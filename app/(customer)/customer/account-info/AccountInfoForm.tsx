@@ -58,13 +58,13 @@ export default function AccountInfoForm() {
     setIsSubmitting(true);
     try {
       const result = await updateAccountInfo(data);
-      if (!result.success) {
-        throw new Error(result.error);
-      } else {
+      if (result.success) {
         toast({
           title: "Success",
           description: "Your account information has been updated.",
         });
+      } else {
+        throw new Error(result.error);
       }
 
       // Reset password fields after successful update
@@ -262,7 +262,7 @@ export default function AccountInfoForm() {
             />
           </div>
 
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" variant="destructive" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
