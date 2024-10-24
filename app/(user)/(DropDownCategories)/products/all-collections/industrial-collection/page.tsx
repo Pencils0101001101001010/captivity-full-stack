@@ -1,12 +1,9 @@
-import React from "react";
-import IndustrialTable from "./IndustrialTable";
+import IndustrialProducts from "./IndustrialCollection";
 
-const Page = () => {
-  return (
-    <div>
-      <IndustrialTable />
-    </div>
-  );
+
+const page = () => {
+  return <IndustrialProducts/>;
 };
 
-export default Page;
+export default page;
+

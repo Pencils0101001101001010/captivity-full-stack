@@ -1,62 +1,107 @@
 "use server";
-
-import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
-import { Product, Prisma } from "@prisma/client";
 
-type FetchLeisureCollectionsResult =
-  | { success: true; data: Product[] }
-  | { success: false; error: string };
+interface PaginatedResponse<T> {
+  success: boolean;
+  data?: T[];
+  error?: string;
+  metadata?: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    itemsPerPage: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
 
-export async function fetchIndustrialCollections(
-  type?: string
-): Promise<FetchLeisureCollectionsResult> {
+export async function fetchIndustrialCollection(
+  page: number = 1,
+  itemsPerPage: number = 8
+): Promise<PaginatedResponse<any>> {
   try {
-    // Validate user session
-    const { user } = await validateRequest();
-    if (!user) {
-      throw new Error("Unauthorized. Please log in.");
-    }
+    // Calculate skip value for pagination
+    const skip = (page - 1) * itemsPerPage;
 
-    // Check if the user has the ADMIN role
-    if (user.role !== "ADMIN") {
-      throw new Error("Only admins can fetch leisure collections.");
-    }
-
-    // Base query for leisure collections
-    const baseWhereCondition: Prisma.ProductWhereInput = {
-      OR: [
-        {
-          categories: {
-            contains: "Headwear Collection >  Industrial Collection",
+    // Get total count of products
+    const totalItems = await prisma.product.count({
+      where: {
+        AND: [
+          {
+            isPublished: true,
+            category: {
+              hasSome: ["industrial-collection"],
+            },
           },
-        },
-        { categories: { contains: "Industrial Collection" } },
-      ],
-    };
-
-    // If type is provided, add it to the query
-    const whereCondition: Prisma.ProductWhereInput = type
-      ? {
-          AND: [baseWhereCondition, { type: type }],
-        }
-      : baseWhereCondition;
-
-    // Fetch leisure collection products from the database
-    const leisureProducts = await prisma.product.findMany({
-      where: whereCondition,
-      orderBy: {
-        position: "asc",
+        ],
       },
     });
 
-    // Revalidate the correct admin path
-    revalidatePath("/admin/products/headwear/industrial-collection");
+    // Calculate total pages
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-    return { success: true, data: leisureProducts };
+    // Fetch paginated products
+    const IndustrialProducts = await prisma.product.findMany({
+      where: {
+        AND: [
+          {
+            isPublished: true,
+            category: {
+              hasSome: ["industrial-collection"],
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        productName: true,
+        featuredImage: {
+          select: {
+            medium: true,
+            large: true,
+          },
+        },
+        variations: {
+          select: {
+            quantity: true,
+          },
+        },
+      },
+      skip: skip,
+      take: itemsPerPage,
+      orderBy: {
+        createdAt: "desc", // Optional: sort by creation date
+      },
+    });
+
+    // Transform the data
+    const transformedProducts = IndustrialProducts.map(product => ({
+      id: product.id,
+      name: product.productName,
+      imageUrl: `${product.featuredImage?.medium || ""},${product.featuredImage?.large || ""}`,
+      stock: product.variations.reduce(
+        (total, variation) => total + variation.quantity,
+        0
+      ),
+    }));
+
+    // Prepare pagination metadata
+    const metadata = {
+      totalItems,
+      totalPages,
+      currentPage: page,
+      itemsPerPage,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    };
+
+    return {
+      success: true,
+      data: transformedProducts,
+      metadata,
+    };
   } catch (error) {
-    console.error("Error fetching leisure collections:", error);
+    console.error("Error fetching Industrial-Collection:", error);
     return {
       success: false,
       error:
