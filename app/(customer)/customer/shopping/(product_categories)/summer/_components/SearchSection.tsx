@@ -1,8 +1,8 @@
 "use client";
 
 import SearchField from "@/app/(customer)/_components/SearchField";
+import { useSummerActions } from "@/app/(customer)/customer/_store/useSummerStore";
 import React from "react";
-import { useSummerActions } from "../../../_store/useSummerStore";
 
 const SearchSection = () => {
   const { setSearchQuery } = useSummerActions();

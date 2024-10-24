@@ -2,17 +2,15 @@
 
 import React, { useEffect, useCallback, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  useSummerProducts,
-  useSummerLoading,
-  useSummerError,
-  useSummerActions,
-} from "../../_store/useSummerStore";
 import ProductCard from "./_components/ProductsCard";
-import type {
+import {
   Category,
   ProductWithRelations,
-} from "../../_store/useSummerStore";
+  useSummerActions,
+  useSummerError,
+  useSummerLoading,
+  useSummerProducts,
+} from "../../../_store/useSummerStore";
 
 const ITEMS_PER_PAGE = 6;
 

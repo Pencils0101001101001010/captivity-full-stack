@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface CarouselProduct {
   id: string;
