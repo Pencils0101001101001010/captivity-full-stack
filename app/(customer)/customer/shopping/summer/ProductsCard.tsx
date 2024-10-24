@@ -27,7 +27,7 @@ const ProductPrice = memo(
         ? parseFloat(dynamicPricing[0].amount)
         : sellingPrice;
 
-    return <p className="text-sm text-gray-600">R {price.toFixed(2)}</p>;
+    return <p className="text-muted-foreground">R {price.toFixed(2)}</p>;
   }
 );
 
@@ -65,13 +65,13 @@ const ProductCard: React.FC<ProductCardProps> = memo(
     );
 
     return (
-      <Card className="h-[380px] w-full overflow-hidden cursor-pointer transition-transform hover:scale-105">
+      <Card className="h-[380px] w-full overflow-hidden cursor-pointer transition-transform hover:scale-105 shadow-2xl dark:shadow-none bg-card">
         <ProductImage
           imageSrc={product.featuredImage?.medium}
           alt={product.productName}
         />
         <CardContent className="p-3 space-y-2">
-          <h3 className="text-lg font-semibold truncate">
+          <h3 className="text-lg font-semibold truncate text-foreground">
             {product.productName}
           </h3>
           <ProductPrice

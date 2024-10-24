@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useCallback, useMemo } from "react";
+import React, { useEffect, useCallback, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   useSummerProducts,
   useSummerLoading,
@@ -13,7 +14,10 @@ import type {
   ProductWithRelations,
 } from "../../_store/useSummerStore";
 
+const ITEMS_PER_PAGE = 6;
+
 const SummerCollectionPage: React.FC = () => {
+  const [currentPage, setCurrentPage] = useState(1);
   const summerProducts = useSummerProducts();
   const loading = useSummerLoading();
   const error = useSummerError();
@@ -41,6 +45,14 @@ const SummerCollectionPage: React.FC = () => {
     [nonEmptyCategories]
   );
 
+  // Pagination calculations
+  const totalPages = Math.ceil(allProducts.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedProducts = allProducts.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
+
   const fetchData = useCallback(async () => {
     if (isProductsEmpty && !loading && !error) {
       await fetchSummerCollection();
@@ -51,6 +63,11 @@ const SummerCollectionPage: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   if (loading) return <div>Loading summer collection...</div>;
   if (error) return <div>Error: {error}</div>;
 
@@ -58,18 +75,68 @@ const SummerCollectionPage: React.FC = () => {
     <div>
       {allProducts.length === 0 ? (
         <div className="text-center py-8">
-          <h2 className="text-2xl font-bold">
+          <h2 className="text-2xl font-bold text-foreground">
             No products available in the summer collection.
           </h2>
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-6">
-          {allProducts.map(product => (
-            <div key={product.id} className="w-full">
-              <ProductCard product={product} />
+        <>
+          <div className="grid grid-cols-3 gap-6 mb-8">
+            {paginatedProducts.map(product => (
+              <div key={product.id} className="w-full">
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="h-5 w-5 text-foreground" />
+              </button>
+
+              {/* Page Numbers */}
+              <div className="flex gap-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  page => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                      ${
+                        currentPage === page
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted text-foreground"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
+              </div>
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="h-5 w-5 text-foreground" />
+              </button>
             </div>
-          ))}
-        </div>
+          )}
+
+          {/* Products Count */}
+          <div className="text-sm text-muted-foreground text-center mt-4">
+            Showing {startIndex + 1}-
+            {Math.min(startIndex + ITEMS_PER_PAGE, allProducts.length)} of{" "}
+            {allProducts.length} products
+          </div>
+        </>
       )}
     </div>
   );

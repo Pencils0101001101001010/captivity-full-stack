@@ -59,20 +59,22 @@ const FilterSidebar = () => {
   };
 
   return (
-    <div className="bg-white p-4">
-      <div className="text-lg font-semibold mb-4">Filters</div>
+    <div className="bg-card p-4 rounded-lg shadow-2xl dark:shadow-none">
+      <div className="text-lg font-semibold mb-4 text-foreground">Filters</div>
 
       {/* Clearance Toggle */}
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-sm">Include Clearance Items</span>
+        <span className="text-sm text-muted-foreground">
+          Include Clearance Items
+        </span>
         <button
           onClick={() => setIncludeClearance(!includeClearance)}
           className={`w-12 h-6 rounded-full transition-colors duration-200 ${
-            includeClearance ? "bg-blue-500" : "bg-gray-200"
+            includeClearance ? "bg-primary" : "bg-muted"
           } relative`}
         >
           <div
-            className={`w-5 h-5 rounded-full bg-white absolute top-0.5 left-0.5 transition-transform duration-200 transform ${
+            className={`w-5 h-5 rounded-full bg-background absolute top-0.5 left-0.5 transition-transform duration-200 transform ${
               includeClearance ? "translate-x-6" : "translate-x-0"
             }`}
           />
@@ -82,12 +84,12 @@ const FilterSidebar = () => {
       {/* Filter Sections */}
       {(Object.entries(filterSections) as [FilterSection, string[]][]).map(
         ([key, options]) => (
-          <div key={key} className="mb-4 border-b border-gray-200 pb-2">
+          <div key={key} className="mb-4 border-b border-border pb-2">
             <button
               onClick={() => toggleSection(key)}
-              className="w-full flex justify-between items-center text-sm font-medium hover:text-blue-500"
+              className="w-full flex justify-between items-center text-sm font-medium hover:text-primary"
             >
-              <span className="capitalize">
+              <span className="capitalize text-foreground">
                 {key.replace(/([A-Z])/g, " $1").trim()}
               </span>
               {openSections[key] ? (
@@ -106,9 +108,9 @@ const FilterSidebar = () => {
                   >
                     <input
                       type="checkbox"
-                      className="rounded border-gray-300"
+                      className="rounded border-input bg-background"
                     />
-                    <span>{option}</span>
+                    <span className="text-muted-foreground">{option}</span>
                   </label>
                 ))}
               </div>
