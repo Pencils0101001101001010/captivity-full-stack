@@ -2,7 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { useState, useEffect } from "react";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import {
@@ -83,7 +82,7 @@ export default function AccountInfoForm() {
     }
   };
   return (
-    <section className="border p-4 shadow-sm">
+    <section className="border p-5 shadow-sm border-gray-700">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
