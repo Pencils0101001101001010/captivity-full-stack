@@ -30,15 +30,20 @@ export type CategorizedProducts = {
 
 interface SummerState {
   summerProducts: CategorizedProducts;
+  filteredProducts: CategorizedProducts;
+  searchQuery: string;
   loading: boolean;
   error: string | null;
 }
 
 interface SummerActions {
   setSummerProducts: (products: CategorizedProducts) => void;
+  setFilteredProducts: (products: CategorizedProducts) => void;
+  setSearchQuery: (query: string) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   fetchSummerCollection: () => Promise<void>;
+  filterProducts: (query: string) => void;
 }
 
 const initialState: SummerState = {
@@ -52,6 +57,17 @@ const initialState: SummerState = {
     caps: [],
     uncategorised: [],
   },
+  filteredProducts: {
+    men: [],
+    women: [],
+    kids: [],
+    hats: [],
+    golfers: [],
+    bottoms: [],
+    caps: [],
+    uncategorised: [],
+  },
+  searchQuery: "",
   loading: false,
   error: null,
 };
@@ -59,11 +75,50 @@ const initialState: SummerState = {
 const useSummerStore = create<SummerState & SummerActions>()((set, get) => ({
   ...initialState,
 
-  setSummerProducts: products => set({ summerProducts: products }),
+  setSummerProducts: products =>
+    set({ summerProducts: products, filteredProducts: products }),
+
+  setFilteredProducts: products => set({ filteredProducts: products }),
+
+  setSearchQuery: query => {
+    set({ searchQuery: query });
+    get().filterProducts(query);
+  },
 
   setLoading: loading => set({ loading }),
 
   setError: error => set({ error }),
+
+  filterProducts: query => {
+    const { summerProducts } = get();
+    const lowercaseQuery = query.toLowerCase().trim();
+
+    if (!lowercaseQuery) {
+      set({ filteredProducts: summerProducts });
+      return;
+    }
+
+    const filtered = Object.entries(summerProducts).reduce(
+      (acc, [category, products]) => {
+        const filteredProducts = products.filter(
+          product =>
+            product.productName.toLowerCase().includes(lowercaseQuery) ||
+            product.description?.toLowerCase().includes(lowercaseQuery) ||
+            product.variations.some(variation =>
+              variation.name.toLowerCase().includes(lowercaseQuery)
+            )
+        );
+
+        return {
+          ...acc,
+          [category]: filteredProducts,
+        };
+      },
+      {} as CategorizedProducts
+    );
+
+    set({ filteredProducts: filtered });
+  },
 
   fetchSummerCollection: async () => {
     const { loading } = get();
@@ -73,7 +128,11 @@ const useSummerStore = create<SummerState & SummerActions>()((set, get) => ({
     try {
       const result = await fetchSummerCollection();
       if (result.success) {
-        set({ summerProducts: result.data, loading: false });
+        set({
+          summerProducts: result.data,
+          filteredProducts: result.data,
+          loading: false,
+        });
       } else {
         throw new Error(result.error);
       }
@@ -83,19 +142,20 @@ const useSummerStore = create<SummerState & SummerActions>()((set, get) => ({
   },
 }));
 
-// Selector hooks using useShallow for complex objects
+// Selector hooks
 export const useSummerProducts = () =>
-  useSummerStore(useShallow(state => state.summerProducts));
+  useSummerStore(useShallow(state => state.filteredProducts));
 
 export const useSummerLoading = () => useSummerStore(state => state.loading);
 
 export const useSummerError = () => useSummerStore(state => state.error);
 
-// Group actions together with useShallow
+// Group actions together
 export const useSummerActions = () =>
   useSummerStore(
     useShallow(state => ({
       setSummerProducts: state.setSummerProducts,
+      setSearchQuery: state.setSearchQuery,
       setLoading: state.setLoading,
       setError: state.setError,
       fetchSummerCollection: state.fetchSummerCollection,

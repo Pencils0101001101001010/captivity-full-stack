@@ -2,11 +2,13 @@
 
 import SearchField from "@/app/(customer)/_components/SearchField";
 import React from "react";
+import { useSummerActions } from "../../../_store/useSummerStore";
 
 const SearchSection = () => {
+  const { setSearchQuery } = useSummerActions();
+
   const handleSearch = (query: string) => {
-    console.log("Searching for:", query);
-    // Implement your search logic here
+    setSearchQuery(query);
   };
 
   return (
