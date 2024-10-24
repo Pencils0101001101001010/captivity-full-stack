@@ -67,7 +67,6 @@ ProductImage.displayName = "ProductImage";
 
 const ProductCard: React.FC<ProductCardProps> = memo(
   ({ product, selectedVariation }) => {
-    // Initialize with first variation if none selected and variations exist
     const defaultVariation = product.variations?.[0];
     const currentVariation = selectedVariation || defaultVariation;
 
@@ -93,19 +92,19 @@ const ProductCard: React.FC<ProductCardProps> = memo(
             dynamicPricing={product.dynamicPricing}
             sellingPrice={product.sellingPrice}
           />
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <ViewMore
               href={viewMoreUrl}
               variant="default"
               size="sm"
-              className="flex-1 bg-[#2c3e50] hover:bg-[#34495e] text-sm py-2"
+              className="w-full bg-[#2c3e50] hover:bg-[#34495e] text-sm py-2 flex justify-center items-center"
             >
               View More
             </ViewMore>
             <Button
               variant="destructive"
               size="sm"
-              className="flex-1 text-sm py-2"
+              className="w-full text-sm py-2"
               onClick={() => {
                 window.location.href = viewMoreUrl;
               }}
