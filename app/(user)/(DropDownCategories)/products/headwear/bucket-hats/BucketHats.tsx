@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useCallback, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -19,15 +19,16 @@ const BucketHatsProductList: React.FC = () => {
     large: "/Industrial-collection-Btn.jpg",
   });
 
-  const allProducts = useMemo(() => products, [products]);
-
-  // Pagination calculations
-  const totalPages = Math.ceil(allProducts.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedProducts = allProducts.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE
-  );
+  // Memoize pagination calculations
+  const { paginatedProducts, totalPages, startIndex } = useMemo(() => {
+    const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginatedProducts = products.slice(
+      startIndex,
+      startIndex + ITEMS_PER_PAGE
+    );
+    return { paginatedProducts, totalPages, startIndex };
+  }, [products, currentPage]);
 
   useEffect(() => {
     if (products.length > 0 && products[1]?.featuredImage?.large) {
@@ -35,12 +36,20 @@ const BucketHatsProductList: React.FC = () => {
     }
   }, [products]);
 
-  if (loading) return <div>Loading bucket hats collection...</div>;
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[200px]">
+        <Loader2 className="mx-auto my-3 animate-spin h-8 w-8" />
+        <p className="text-muted-foreground">Loading bucket hats collection...</p>
+      </div>
+    );
+  }
+  
   if (error) return <div>Error: {error}</div>;
 
   return (
     <section className="container mx-auto my-8">
-      <HeroSection featuredImage={featuredImage} categoryName="Bucket-hats" />
+      <HeroSection featuredImage={featuredImage} categoryName="Bucket hats" />
 
       <div className="flex flex-col md:flex-row gap-6 relative">
         <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
@@ -50,7 +59,7 @@ const BucketHatsProductList: React.FC = () => {
         </aside>
 
         <main className="w-full md:w-3/4 lg:w-4/5">
-          {allProducts.length === 0 ? (
+          {products.length === 0 ? (
             <div className="text-center py-8">
               <h2 className="text-2xl font-bold text-foreground">
                 No bucket hats available in the collection.
@@ -140,8 +149,8 @@ const BucketHatsProductList: React.FC = () => {
               {/* Products Count */}
               <div className="text-sm text-muted-foreground text-center mt-4">
                 Showing {startIndex + 1}-
-                {Math.min(startIndex + ITEMS_PER_PAGE, allProducts.length)} of{" "}
-                {allProducts.length} products
+                {Math.min(startIndex + ITEMS_PER_PAGE, products.length)} of{" "}
+                {products.length} products
               </div>
             </>
           )}
