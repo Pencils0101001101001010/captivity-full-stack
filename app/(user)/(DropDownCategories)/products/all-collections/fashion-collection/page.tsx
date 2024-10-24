@@ -1,12 +1,8 @@
-import React from "react";
-import FashionTable from "./FashionTable";
+import FashionProducts from "./FashionCollection";
 
-const Page = () => {
-  return (
-    <div>
-      <FashionTable />
-    </div>
-  );
+const page = () => {
+  return <FashionProducts />;
 };
 
-export default Page;
+export default page;
+

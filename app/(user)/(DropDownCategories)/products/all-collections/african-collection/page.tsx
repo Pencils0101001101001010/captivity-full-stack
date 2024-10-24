@@ -1,7 +1,8 @@
-import BottomsApparelProducts from "./AfricanCollection";
+import AfricanProducts from "./AfricanCollection";
+
 
 const page = () => {
-  return <BottomsApparelProducts />;
+  return <AfricanProducts />;
 };
 
 export default page;
