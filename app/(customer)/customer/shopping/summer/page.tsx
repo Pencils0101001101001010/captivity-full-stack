@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import SummerCollectionPage from "./SummerLanding";
 import FilterSidebar from "./FilterSidebar";
+import SearchSection from "./SearchSection";
 
 const SummerPage = () => {
   return (
@@ -44,12 +45,26 @@ const SummerPage = () => {
 
       {/* Main Content */}
       <div className="container mx-auto py-8">
-        <div className="flex gap-8">
-          <div className="w-[300px] flex-shrink-0">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar Column */}
+          <div className="w-full lg:w-[300px] lg:flex-shrink-0">
+            {/* Search - Only visible on large screens */}
+            <div className="hidden lg:block mb-6">
+              <SearchSection />
+            </div>
             <FilterSidebar />
           </div>
-          <div className="flex-1">
-            <SummerCollectionPage />
+
+          <div className="flex-1 flex flex-col gap-6">
+            {/* Search - Only visible on mobile/small screens */}
+            <div className="lg:hidden">
+              <SearchSection />
+            </div>
+
+            {/* Products Grid */}
+            <div>
+              <SummerCollectionPage />
+            </div>
           </div>
         </div>
       </div>

@@ -59,7 +59,7 @@ const FilterSidebar = () => {
   };
 
   return (
-    <div className="bg-card p-4 rounded-lg shadow-2xl dark:shadow-none">
+    <div className="bg-card p-4 rounded-lg shadow-2xl shadow-black dark:shadow-none">
       <div className="text-lg font-semibold mb-4 text-foreground">Filters</div>
 
       {/* Clearance Toggle */}

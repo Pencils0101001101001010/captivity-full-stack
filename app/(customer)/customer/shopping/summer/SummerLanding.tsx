@@ -76,7 +76,7 @@ const SummerCollectionPage: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             {paginatedProducts.map(product => (
               <div key={product.id} className="w-full">
                 <ProductCard product={product} />

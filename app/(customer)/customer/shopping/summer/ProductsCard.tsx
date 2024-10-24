@@ -1,6 +1,5 @@
 import React, { useMemo, memo } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Product, DynamicPricing, FeaturedImage } from "@prisma/client";
 import ViewMore from "@/app/(customer)/_components/ViewMore";
@@ -44,11 +43,10 @@ const ProductImage = memo(
         <Image
           src={imageUrl}
           alt={alt}
-          layout="fill"
-          objectFit="cover"
+          fill
+          style={{ objectFit: "cover" }}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           priority={false}
-          loading="lazy"
         />
       </div>
     );
@@ -65,12 +63,12 @@ const ProductCard: React.FC<ProductCardProps> = memo(
     );
 
     return (
-      <Card className="h-[380px] w-full overflow-hidden cursor-pointer transition-transform hover:scale-105 shadow-2xl dark:shadow-none bg-card">
+      <Card className="h-[380px] overflow-hidden cursor-pointer transition-transform hover:scale-105 shadow-[0_25px_50px_-12px_rgba(0,0,0,1)] dark:shadow-none bg-card">
         <ProductImage
           imageSrc={product.featuredImage?.medium}
           alt={product.productName}
         />
-        <CardContent className="p-3 space-y-2">
+        <CardContent className="p-3">
           <h3 className="text-lg font-semibold truncate text-foreground">
             {product.productName}
           </h3>
