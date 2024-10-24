@@ -1,12 +1,7 @@
-import React from "react";
-import AfricanTable from "./AfricanTable";
+import BottomsApparelProducts from "./AfricanCollection";
 
-const Page = () => {
-  return (
-    <div>
-      <AfricanTable />
-    </div>
-  );
+const page = () => {
+  return <BottomsApparelProducts />;
 };
 
-export default Page;
+export default page;

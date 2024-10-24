@@ -1,71 +1,111 @@
 "use server";
-
 import prisma from "@/lib/prisma";
 
-export async function fetchAfricanCollections() {
+interface PaginatedResponse<T> {
+  success: boolean;
+  data?: T[];
+  error?: string;
+  metadata?: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    itemsPerPage: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
+export async function fetchAfricanCollection(
+  page: number = 1,
+  itemsPerPage: number = 8
+): Promise<PaginatedResponse<any>> {
   try {
-    const africanProducts = await prisma.product.findMany({
+    // Calculate skip value for pagination
+    const skip = (page - 1) * itemsPerPage;
+
+    // Get total count of products
+    const totalItems = await prisma.product.count({
       where: {
         AND: [
           {
-            published: true,
-            OR: [
-              {
-                categories: {
-                  contains: "Headwear Collection > African Collection",
-                },
-              },
-              { categories: { contains: "African Collection" } },
-            ],
+            isPublished: true,
+            category: {
+              hasSome: ["african-collection"],
+            },
           },
         ],
       },
-      orderBy: {
-        position: "asc",
+    });
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    // Fetch paginated products
+    const AfricanProducts = await prisma.product.findMany({
+      where: {
+        AND: [
+          {
+            isPublished: true,
+            category: {
+              hasSome: ["african-collection"],
+            },
+          },
+        ],
       },
       select: {
         id: true,
-        name: true,
-        imageUrl: true,
-        stock: true,
+        productName: true,
+        featuredImage: {
+          select: {
+            medium: true,
+            large: true,
+          },
+        },
+        variations: {
+          select: {
+            quantity: true,
+          },
+        },
+      },
+      skip: skip,
+      take: itemsPerPage,
+      orderBy: {
+        createdAt: "desc", // Optional: sort by creation date
       },
     });
-    //TODO: DONT FOR GET TO REVALIDATE YOUR PATH WHEN YOUB FETCH DATA
-    return { success: true, data: africanProducts };
+
+    // Transform the data
+    const transformedProducts = AfricanProducts.map(product => ({
+      id: product.id,
+      name: product.productName,
+      imageUrl: `${product.featuredImage?.medium || ""},${product.featuredImage?.large || ""}`,
+      stock: product.variations.reduce(
+        (total, variation) => total + variation.quantity,
+        0
+      ),
+    }));
+
+    // Prepare pagination metadata
+    const metadata = {
+      totalItems,
+      totalPages,
+      currentPage: page,
+      itemsPerPage,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    };
+
+    return {
+      success: true,
+      data: transformedProducts,
+      metadata,
+    };
   } catch (error) {
-    console.error("Error fetching African collections:", error);
+    console.error("Error fetching African-Collection:", error);
     return {
       success: false,
       error:
         error instanceof Error ? error.message : "An unexpected error occurred",
     };
-  }
-}
-
-export async function fetchProductById(id: string) {
-  try {
-    const numericId = parseInt(id, 10);
-    const product = await prisma.product.findUnique({
-      where: {
-        id: numericId,
-        published: true,
-      },
-      select: {
-        id: true,
-        name: true,
-        imageUrl: true,
-        shortDescription: true,
-        stock: true,
-      },
-    });
-
-    if (!product) {
-      return { success: false, error: "Product not found" };
-    }
-
-    return { success: true, data: product };
-  } catch (error) {
-    console.error("Error fetching product:", error);
-    return { success: false, error: "Error fetching product" };
   }
 }
