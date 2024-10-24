@@ -10,9 +10,7 @@ type FilterSection =
   | "genders"
   | "brands"
   | "colours"
-  | "size"
-  | "brandingTechniques"
-  | "materials";
+  | "size";
 
 type FilterState = {
   [K in FilterSection]: boolean;
@@ -32,8 +30,6 @@ const FilterSidebar = () => {
     brands: false,
     colours: false,
     size: false,
-    brandingTechniques: false,
-    materials: false,
   });
 
   const [includeClearance, setIncludeClearance] = useState(false);
@@ -54,8 +50,6 @@ const FilterSidebar = () => {
     brands: ["Brand A", "Brand B"],
     colours: ["Black", "White"],
     size: ["Small", "Medium"],
-    brandingTechniques: ["Screen Print", "Embroidery"],
-    materials: ["Cotton", "Polyester"],
   };
 
   return (
