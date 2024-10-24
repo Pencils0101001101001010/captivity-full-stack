@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 // shopping/layout.tsx
 import React, { ReactNode } from "react";
 import prisma from "@/lib/prisma";
@@ -96,6 +97,13 @@ export default async function Layout({
                 />
               </div>
             )}
+
+            {/* Shop Name Banner */}
+            <div className="mt-[52px] bg-black shadow-2xl shadow-black text-white p-6 rounded-lg">
+              <h2 className="text-2xl font-medium text-center">
+                Welcome to Captivity's new Express Shop.
+              </h2>
+            </div>
           </div>
 
           {/* Main Content Column */}

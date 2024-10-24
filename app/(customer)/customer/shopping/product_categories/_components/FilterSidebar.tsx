@@ -56,25 +56,6 @@ const FilterSidebar = () => {
         Collections
       </div>
 
-      {/* Clearance Toggle */}
-      <div className="mb-6 flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">
-          Include Clearance Items
-        </span>
-        <button
-          onClick={() => setIncludeClearance(!includeClearance)}
-          className={`w-12 h-6 rounded-full transition-colors duration-200 ${
-            includeClearance ? "bg-primary" : "bg-muted"
-          } relative`}
-        >
-          <div
-            className={`w-5 h-5 rounded-full bg-background absolute top-0.5 left-0.5 transition-transform duration-200 transform ${
-              includeClearance ? "translate-x-6" : "translate-x-0"
-            }`}
-          />
-        </button>
-      </div>
-
       {/* Collections */}
       <div className="flex flex-col space-y-4" role="radiogroup">
         {COLLECTIONS.map(collection => (
