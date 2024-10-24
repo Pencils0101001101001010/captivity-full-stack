@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSession } from "../../SessionProvider";
 import { updateAccountInfo } from "./actions";
 import { accountFormSchema, FormValues } from "./validation";
+import Link from "next/link";
 
 export default function AccountInfoForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,25 +58,49 @@ export default function AccountInfoForm() {
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
+      // Check if password fields are filled
+      const isPasswordUpdate = !!data.newPassword && !!data.currentPassword;
+
       const result = await updateAccountInfo(data);
+
       if (result.success) {
+        // Show success message
         toast({
           title: "Success",
-          description: "Your account information has been updated.",
+          description: isPasswordUpdate
+            ? "Your account information and password have been updated."
+            : "Your account information has been updated.",
+          variant: "default",
+          duration: 5000,
         });
-      } else {
-        throw new Error(result.error);
-      }
 
-      // Reset password fields after successful update
-      form.setValue("currentPassword", "");
-      form.setValue("newPassword", "");
-      form.setValue("confirmPassword", "");
+        // Reset password fields after successful update
+        form.setValue("currentPassword", "");
+        form.setValue("newPassword", "");
+        form.setValue("confirmPassword", "");
+      } else {
+        // Handle specific error cases
+        if (result.error === "Current password is incorrect") {
+          form.setError("currentPassword", {
+            type: "manual",
+            message: "Current password is incorrect",
+          });
+        }
+
+        // Show error toast
+        toast({
+          title: "Error",
+          description: result.error || "Failed to update account information.",
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to update account information.",
+        description: error.message || "An unexpected error occurred.",
         variant: "destructive",
+        duration: 5000,
       });
     } finally {
       setIsSubmitting(false);
@@ -83,6 +108,18 @@ export default function AccountInfoForm() {
   };
   return (
     <section className="border p-5 shadow-sm border-gray-700">
+      <header className="text-center mb-8 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-lg">
+        <h1 className="text-4xl font-bold mb-2">Instant Purchase Power</h1>
+        <p className="text-xl mb-4">
+          Unlock the Speed of Our Quick Order Page Today!
+        </p>
+        <Button
+          asChild
+          className="mt-2 bg-green-500 hover:bg-green-600 text-white"
+        >
+          <Link href={"/customer/shopping/express"}>Quick Order</Link>
+        </Button>
+      </header>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

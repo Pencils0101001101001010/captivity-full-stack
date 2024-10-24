@@ -1,109 +1,46 @@
-import { Prisma } from "@prisma/client";
+// types.ts
+import { OrderStatus } from "@prisma/client";
 
-export function getUserDataSelect() {
-  return {
-    id: true,
-    username: true,
-    displayName: true,
-    avatarUrl: true,
-    bio: true,
-    role: true,
-    createdAt: true,
-    orders: {
-      select: {
-        id: true,
-        totalAmount: true,
-        status: true,
-        createdAt: true,
-        orderItems: {
-          select: {
-            id: true,
-            variation: {
-              select: {
-                id: true,
-                name: true,
-                color: true,
-                size: true,
-                sku: true,
-                sku2: true,
-                variationImageURL: true,
-              },
-            },
-            quantity: true,
-            price: true,
-          },
-        },
-      },
-    },
-    cart: {
-      select: {
-        id: true,
-        cartItems: {
-          select: {
-            id: true,
-            quantity: true,
-            variation: {
-              select: {
-                id: true,
-                name: true,
-                color: true,
-                size: true,
-                sku: true,
-                sku2: true,
-                variationImageURL: true,
-              },
-            },
-          },
-        },
-      },
-    },
-    products: {
-      select: {
-        id: true,
-        productName: true,
-        description: true,
-        sellingPrice: true,
-        isPublished: true,
-        dynamicPricing: {
-          select: {
-            id: true,
-            from: true,
-            to: true,
-            type: true,
-            amount: true,
-          },
-        },
-        variations: {
-          select: {
-            id: true,
-            name: true,
-            color: true,
-            size: true,
-            sku: true,
-            sku2: true,
-            variationImageURL: true,
-            quantity: true,
-          },
-        },
-        featuredImage: {
-          select: {
-            id: true,
-            thumbnail: true,
-            medium: true,
-            large: true,
-          },
-        },
-      },
-    },
-    sessions: {
-      select: {
-        id: true,
-        expiresAt: true,
-      },
-    },
-  } satisfies Prisma.UserSelect;
+export interface OrderItem {
+  id: string;
+  quantity: number;
+  price: number;
+  variation: {
+    id: string;
+    name: string;
+    color: string;
+    size: string;
+    sku: string;
+    sku2: string | null;
+    variationImageURL: string | null;
+  };
 }
 
-export type UserData = Prisma.UserGetPayload<{
-  select: ReturnType<typeof getUserDataSelect>;
-}>;
+export interface Order {
+  id: string;
+  totalAmount: number;
+  status: OrderStatus;
+  createdAt: string;
+  orderItems: OrderItem[];
+}
+
+export interface User {
+  id: string;
+  role:
+    | "USER"
+    | "CUSTOMER"
+    | "SUBSCRIBER"
+    | "PROMO"
+    | "DISTRIBUTOR"
+    | "SHOPMANAGER"
+    | "EDITOR"
+    | "ADMIN";
+  isLoading?: boolean;
+  orders?: Order[];
+}
+
+export interface ActionResponse<T = void> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
