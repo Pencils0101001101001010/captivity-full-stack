@@ -49,7 +49,7 @@ const FlatPeaksProductList: React.FC = () => {
 
   return (
     <section className="container mx-auto my-8">
-      <HeroSection featuredImage={featuredImage} categoryName="Flat-peaks" />
+      <HeroSection featuredImage={featuredImage} categoryName="FLAT PEAK CAPS" />
 
       <div className="flex flex-col md:flex-row gap-6 relative">
         <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
