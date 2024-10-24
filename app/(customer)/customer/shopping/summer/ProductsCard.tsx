@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Product, DynamicPricing, FeaturedImage } from "@prisma/client";
+import ViewMore from "@/app/(customer)/_components/ViewMore";
 
 type ProductWithRelations = Product & {
   dynamicPricing: DynamicPricing[];
@@ -36,7 +37,6 @@ const DEFAULT_IMAGE = "/placeholder.jpg";
 
 const ProductImage = memo(
   ({ imageSrc, alt }: { imageSrc?: string | null; alt: string }) => {
-    // Ensure we always have a valid string for the src
     const imageUrl = useMemo(() => imageSrc || DEFAULT_IMAGE, [imageSrc]);
 
     return (
@@ -65,27 +65,27 @@ const ProductCard: React.FC<ProductCardProps> = memo(
     );
 
     return (
-      <Link href={productUrl} passHref>
-        <Card className="w-64 h-80 overflow-hidden cursor-pointer transition-transform hover:scale-105">
-          <ProductImage
-            imageSrc={product.featuredImage?.medium}
-            alt={product.productName}
+      <Card className="h-[380px] w-full overflow-hidden cursor-pointer transition-transform hover:scale-105">
+        <ProductImage
+          imageSrc={product.featuredImage?.medium}
+          alt={product.productName}
+        />
+        <CardContent className="p-3 space-y-2">
+          <h3 className="text-lg font-semibold truncate">
+            {product.productName}
+          </h3>
+          <ProductPrice
+            dynamicPricing={product.dynamicPricing}
+            sellingPrice={product.sellingPrice}
           />
-          <CardContent className="p-4">
-            <h3 className="text-lg font-semibold truncate">
-              {product.productName}
-            </h3>
-            <ProductPrice
-              dynamicPricing={product.dynamicPricing}
-              sellingPrice={product.sellingPrice}
-            />
-          </CardContent>
-        </Card>
-      </Link>
+          <ViewMore href={productUrl} variant="default" size="md">
+            View More Details
+          </ViewMore>
+        </CardContent>
+      </Card>
     );
   },
   (prevProps, nextProps) => {
-    // Custom comparison function for memo
     const prevImage = prevProps.product.featuredImage?.medium;
     const nextImage = nextProps.product.featuredImage?.medium;
 
