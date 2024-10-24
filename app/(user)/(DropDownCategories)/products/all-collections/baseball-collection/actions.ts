@@ -1,57 +1,107 @@
 "use server";
-import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
-import { Product, Prisma } from "@prisma/client";
 
-type FetchLeisureCollectionsResult =
-  | { success: true; data: Product[] }
-  | { success: false; error: string };
+interface PaginatedResponse<T> {
+  success: boolean;
+  data?: T[];
+  error?: string;
+  metadata?: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    itemsPerPage: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
 
 export async function fetchBaseballCollections(
-  type?: string
-): Promise<FetchLeisureCollectionsResult> {
+  page: number = 1,
+  itemsPerPage: number = 8
+): Promise<PaginatedResponse<any>> {
   try {
-    // Validate user session
-    const { user } = await validateRequest();
-    if (!user) {
-      throw new Error("Unauthorized. Please log in.");
-    }
-    if (user.role !== "ADMIN") {
-      throw new Error("Only admins can fetch leisure collections.");
-    }
+    // Calculate skip value for pagination
+    const skip = (page - 1) * itemsPerPage;
 
-    // Base query for leisure collections
-    const baseWhereCondition: Prisma.ProductWhereInput = {
-      OR: [
-        {
-          categories: { contains: "Headwear Collection > Baseball Collection" },
-        },
-        { categories: { contains: "Baseball Collection" } },
-      ],
-    };
-
-    // If type is provided, add it to the query
-    const whereCondition: Prisma.ProductWhereInput = type
-      ? {
-          AND: [baseWhereCondition, { type: type }],
-        }
-      : baseWhereCondition;
-
-    // Fetch leisure collection products from the database
-    const leisureProducts = await prisma.product.findMany({
-      where: whereCondition,
-      orderBy: {
-        position: "asc",
+    // Get total count of products
+    const totalItems = await prisma.product.count({
+      where: {
+        AND: [
+          {
+            isPublished: true,
+            category: {
+              hasSome: ["baseball-collection"],
+            },
+          },
+        ],
       },
     });
 
-    // Revalidate the correct admin path
-    revalidatePath("/admin/products/headwear/baseball-collection");
+    // Calculate total pages
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-    return { success: true, data: leisureProducts };
+    // Fetch paginated products
+    const BaseballProducts = await prisma.product.findMany({
+      where: {
+        AND: [
+          {
+            isPublished: true,
+            category: {
+              hasSome: ["baseball-collection"],
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        productName: true,
+        featuredImage: {
+          select: {
+            medium: true,
+            large: true,
+          },
+        },
+        variations: {
+          select: {
+            quantity: true,
+          },
+        },
+      },
+      skip: skip,
+      take: itemsPerPage,
+      orderBy: {
+        createdAt: "desc", // Optional: sort by creation date
+      },
+    });
+
+    // Transform the data
+    const transformedProducts = BaseballProducts.map(product => ({
+      id: product.id,
+      name: product.productName,
+      imageUrl: `${product.featuredImage?.medium || ""},${product.featuredImage?.large || ""}`,
+      stock: product.variations.reduce(
+        (total, variation) => total + variation.quantity,
+        0
+      ),
+    }));
+
+    // Prepare pagination metadata
+    const metadata = {
+      totalItems,
+      totalPages,
+      currentPage: page,
+      itemsPerPage,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    };
+
+    return {
+      success: true,
+      data: transformedProducts,
+      metadata,
+    };
   } catch (error) {
-    console.error("Error fetching leisure collections:", error);
+    console.error("Error fetching Baseball-Collection:", error);
     return {
       success: false,
       error:

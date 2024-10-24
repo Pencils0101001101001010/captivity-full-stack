@@ -1,10 +1,11 @@
 import React from "react";
-import BaseballTable from "./BaseballTable";
+import BaseballCollections from "./BaseballCollections";
+//import BaseballTable from "./BaseballTable";
 
 const Page = () => {
   return (
     <div>
-      <BaseballTable />
+      <BaseballCollections />
     </div>
   );
 };
