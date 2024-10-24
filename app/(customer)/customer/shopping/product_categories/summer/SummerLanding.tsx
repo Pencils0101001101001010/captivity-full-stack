@@ -1,7 +1,7 @@
 // SummerLanding.tsx
 "use client";
 
-import React, { useEffect, useCallback, useMemo, useState } from "react";
+import React, { useEffect, useCallback, useMemo, useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Category,
@@ -17,15 +17,11 @@ const ITEMS_PER_PAGE = 6;
 
 const SummerCollectionPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const summerProducts = useSummerProducts();
+  const { products: summerProducts, hasInitiallyFetched } = useSummerProducts();
   const loading = useSummerLoading();
   const error = useSummerError();
   const { fetchSummerCollection } = useSummerActions();
-
-  const isProductsEmpty = useMemo(
-    () => Object.values(summerProducts).every(arr => arr.length === 0),
-    [summerProducts]
-  );
+  const initializationRef = useRef(false);
 
   const nonEmptyCategories = useMemo(
     () =>
@@ -45,6 +41,13 @@ const SummerCollectionPage: React.FC = () => {
   );
 
   useEffect(() => {
+    if (!hasInitiallyFetched && !initializationRef.current) {
+      initializationRef.current = true;
+      fetchSummerCollection();
+    }
+  }, [hasInitiallyFetched, fetchSummerCollection]);
+
+  useEffect(() => {
     setCurrentPage(1);
   }, [allProducts.length]);
 
@@ -54,16 +57,6 @@ const SummerCollectionPage: React.FC = () => {
     startIndex,
     startIndex + ITEMS_PER_PAGE
   );
-
-  const fetchData = useCallback(async () => {
-    if (isProductsEmpty && !loading && !error) {
-      await fetchSummerCollection();
-    }
-  }, [isProductsEmpty, loading, error, fetchSummerCollection]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
@@ -110,11 +103,11 @@ const SummerCollectionPage: React.FC = () => {
                       key={page}
                       onClick={() => setCurrentPage(page)}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
-                    ${
-                      currentPage === page
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-muted text-foreground"
-                    }`}
+                      ${
+                        currentPage === page
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted text-foreground"
+                      }`}
                       aria-label={`Page ${page}`}
                       aria-current={currentPage === page ? "page" : undefined}
                     >
