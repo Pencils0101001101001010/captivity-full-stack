@@ -15,9 +15,13 @@ interface ProductGridProps {
   onProductHover: (product: Product) => void;
 }
 
-export function ProductGrid({ products, loading, onProductHover }: ProductGridProps) {
+export function ProductGrid({
+  products,
+  loading,
+  onProductHover,
+}: ProductGridProps) {
   return (
-    <main className="flex-1">
+    <div>
       <h2 className="text-2xl font-bold mb-6">Women</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {loading
@@ -36,6 +40,6 @@ export function ProductGrid({ products, loading, onProductHover }: ProductGridPr
               </Link>
             ))}
       </div>
-    </main>
+    </div>
   );
 }
