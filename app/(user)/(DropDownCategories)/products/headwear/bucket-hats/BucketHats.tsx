@@ -1,156 +1,159 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import React, { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import Link from "next/link";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ProductWithFeaturedImage } from "./actions";
 import SideMenu from "@/app/(user)/_components/SideMenu";
 import HeroSection from "@/app/(user)/_components/HeroSection";
 import useBucketHats from "./useBucketHats";
+import type { ProductWithFeaturedImage } from "./actions";
+
+const ITEMS_PER_PAGE = 6;
 
 const BucketHatsProductList: React.FC = () => {
+  const [currentPage, setCurrentPage] = useState(1);
   const { products, loading, error } = useBucketHats();
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [featuredImage, setFeaturedImage] = useState<{ large: string }>({
     large: "/Industrial-collection-Btn.jpg",
   });
-  const productsPerPage = 9;
+
+  // Memoize pagination calculations
+  const { paginatedProducts, totalPages, startIndex } = useMemo(() => {
+    const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginatedProducts = products.slice(
+      startIndex,
+      startIndex + ITEMS_PER_PAGE
+    );
+    return { paginatedProducts, totalPages, startIndex };
+  }, [products, currentPage]);
 
   useEffect(() => {
-    if (products.length > 0 && products[1].featuredImage?.large) {
+    if (products.length > 0 && products[1]?.featuredImage?.large) {
       setFeaturedImage({ large: products[1].featuredImage.large });
     }
   }, [products]);
 
-  const filteredProducts = products.filter(product =>
-    product.productName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = filteredProducts.slice(
-    indexOfFirstProduct,
-    indexOfLastProduct
-  );
-
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
-  };
-
-  if (error) {
+  if (loading) {
     return (
-      <div className="container mx-auto my-8 text-center">
-        <p className="text-red-500">Error loading products: {error}</p>
+      <div className="flex flex-col items-center justify-center min-h-[200px]">
+        <Loader2 className="mx-auto my-3 animate-spin h-8 w-8" />
+        <p className="text-muted-foreground">Loading bucket hats collection...</p>
       </div>
     );
   }
+  
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <section className="container mx-auto my-8">
-      <HeroSection featuredImage={featuredImage} categoryName="Bucket-hats" />
+      <HeroSection featuredImage={featuredImage} categoryName="BUCKET HATS" />
 
       <div className="flex flex-col md:flex-row gap-6 relative">
-        {/* Updated sidebar with hidden scrollbar */}
         <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
           <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto overflow-x-hidden no-scrollbar">
             <SideMenu />
           </div>
         </aside>
+
         <main className="w-full md:w-3/4 lg:w-4/5">
-          <div className="flex items-center justify-between w-full mb-4">
-            <h4>New in Bucket-hats...</h4>
-            <div className="w-[200px] max-w-sm">
-              <Input
-                type="text"
-                placeholder="Search bucket-hats..."
-                value={searchQuery}
-                onChange={handleSearch}
-              />
-            </div>
-          </div>
-          <hr className="w-full bg-gray-100 mt-0 mb-5" />
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(9)].map((_, index) => (
-                <Card key={index} className="animate-pulse">
-                  <div className="h-48 bg-gray-200 rounded-t-lg"></div>
-                  <CardContent className="p-4">
-                    <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                  </CardContent>
-                </Card>
-              ))}
+          {products.length === 0 ? (
+            <div className="text-center py-8">
+              <h2 className="text-2xl font-bold text-foreground">
+                No bucket hats available in the collection.
+              </h2>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {currentProducts.map((product: ProductWithFeaturedImage) => (
-                <Link
-                  href={`/products/headwear/${product.id}`}
-                  key={product.id}
-                >
-                  <Card className="hover:shadow-lg transition-shadow duration-300">
-                    <div className="relative h-48 w-full">
-                      <Image
-                        src={
-                          product.featuredImage?.medium ||
-                          "/Industrial-collection-Btn.jpg"
-                        }
-                        alt={product.productName}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        style={{ objectFit: "cover" }}
-                        className="rounded-t-lg"
-                        priority
-                      />
-                    </div>
-                    <CardContent className="p-4">
-                      <h2 className="text-lg font-semibold mb-2 truncate">
-                        {product.productName}
-                      </h2>
-                      {/* <Badge 
-  variant="secondary"
-  className={product.variations?.some(v => v.quantity > 0) ? "bg-green-500 hover:bg-green-600" : ""}
->
-  {product.variations?.some(v => v.quantity > 0) ? "In Stock" : "Out of Stock"}
-</Badge> */}
-                    </CardContent>
-                    <CardFooter>
-                      <p>click to view</p>
-                    </CardFooter>
-                  </Card>
-                </Link>
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                {paginatedProducts.map((product: ProductWithFeaturedImage) => (
+                  <Link
+                    href={`/products/headwear/${product.id}`}
+                    key={product.id}
+                  >
+                    <Card className="hover:shadow-lg transition-shadow duration-300">
+                      <div className="relative h-48 w-full">
+                        <Image
+                          src={
+                            product.featuredImage?.medium ||
+                            "/Industrial-collection-Btn.jpg"
+                          }
+                          alt={product.productName}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          style={{ objectFit: "cover" }}
+                          className="rounded-t-lg"
+                          priority
+                        />
+                      </div>
+                      <CardContent className="p-4">
+                        <h2 className="text-lg font-semibold mb-2 truncate">
+                          {product.productName}
+                        </h2>
+                      </CardContent>
+                      <CardFooter>
+                        <p>click to view</p>
+                      </CardFooter>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => prev - 1)}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft className="h-5 w-5 text-foreground" />
+                  </button>
+
+                  {/* Page Numbers */}
+                  <div className="flex gap-2">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      page => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                          ${
+                            currentPage === page
+                              ? "bg-primary text-primary-foreground"
+                              : "hover:bg-muted text-foreground"
+                          }`}
+                          aria-label={`Page ${page}`}
+                          aria-current={currentPage === page ? "page" : undefined}
+                        >
+                          {page}
+                        </button>
+                      )
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage(prev => prev + 1)}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Next page"
+                  >
+                    <ChevronRight className="h-5 w-5 text-foreground" />
+                  </button>
+                </div>
+              )}
+
+              {/* Products Count */}
+              <div className="text-sm text-muted-foreground text-center mt-4">
+                Showing {startIndex + 1}-
+                {Math.min(startIndex + ITEMS_PER_PAGE, products.length)} of{" "}
+                {products.length} products
+              </div>
+            </>
           )}
-          <div className="mt-8 flex justify-center items-center space-x-2">
-            <Button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            <span>
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
-          </div>
         </main>
       </div>
     </section>

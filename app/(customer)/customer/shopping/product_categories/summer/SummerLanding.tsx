@@ -1,32 +1,27 @@
+// SummerLanding.tsx
 "use client";
 
-import React, { useEffect, useCallback, useMemo, useState } from "react";
+import React, { useEffect, useCallback, useMemo, useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
-  useSummerProducts,
-  useSummerLoading,
-  useSummerError,
-  useSummerActions,
-} from "../../_store/useSummerStore";
-import ProductCard from "./ProductsCard";
-import type {
   Category,
   ProductWithRelations,
-} from "../../_store/useSummerStore";
+  useSummerActions,
+  useSummerError,
+  useSummerLoading,
+  useSummerProducts,
+} from "../../../_store/useSummerStore";
+import ProductCard from "../_components/ProductsCard";
 
 const ITEMS_PER_PAGE = 6;
 
 const SummerCollectionPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const summerProducts = useSummerProducts();
+  const { products: summerProducts, hasInitiallyFetched } = useSummerProducts();
   const loading = useSummerLoading();
   const error = useSummerError();
   const { fetchSummerCollection } = useSummerActions();
-
-  const isProductsEmpty = useMemo(
-    () => Object.values(summerProducts).every(arr => arr.length === 0),
-    [summerProducts]
-  );
+  const initializationRef = useRef(false);
 
   const nonEmptyCategories = useMemo(
     () =>
@@ -45,7 +40,17 @@ const SummerCollectionPage: React.FC = () => {
     [nonEmptyCategories]
   );
 
-  // Pagination calculations
+  useEffect(() => {
+    if (!hasInitiallyFetched && !initializationRef.current) {
+      initializationRef.current = true;
+      fetchSummerCollection();
+    }
+  }, [hasInitiallyFetched, fetchSummerCollection]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [allProducts.length]);
+
   const totalPages = Math.ceil(allProducts.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedProducts = allProducts.slice(
@@ -53,30 +58,26 @@ const SummerCollectionPage: React.FC = () => {
     startIndex + ITEMS_PER_PAGE
   );
 
-  const fetchData = useCallback(async () => {
-    if (isProductsEmpty && !loading && !error) {
-      await fetchSummerCollection();
-    }
-  }, [isProductsEmpty, loading, error, fetchSummerCollection]);
-
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   if (loading) return <div>Loading summer collection...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div>
+    <>
       {allProducts.length === 0 ? (
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-foreground">
-            No products available in the summer collection.
+            No products found in the summer collection.
           </h2>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             {paginatedProducts.map(product => (
               <div key={product.id} className="w-full">
                 <ProductCard product={product} />
@@ -84,7 +85,6 @@ const SummerCollectionPage: React.FC = () => {
             ))}
           </div>
 
-          {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
               <button
@@ -96,7 +96,6 @@ const SummerCollectionPage: React.FC = () => {
                 <ChevronLeft className="h-5 w-5 text-foreground" />
               </button>
 
-              {/* Page Numbers */}
               <div className="flex gap-2">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                   page => (
@@ -129,7 +128,6 @@ const SummerCollectionPage: React.FC = () => {
             </div>
           )}
 
-          {/* Products Count */}
           <div className="text-sm text-muted-foreground text-center mt-4">
             Showing {startIndex + 1}-
             {Math.min(startIndex + ITEMS_PER_PAGE, allProducts.length)} of{" "}
@@ -137,7 +135,7 @@ const SummerCollectionPage: React.FC = () => {
           </div>
         </>
       )}
-    </div>
+    </>
   );
 };
 

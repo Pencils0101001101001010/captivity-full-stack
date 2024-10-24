@@ -21,7 +21,7 @@ type FetchBucketHats =
 
 export async function fetchBucketHats(): Promise<FetchBucketHats> {
   try {
-    const bucketHats = await prisma.product.findMany({
+    const beanies = await prisma.product.findMany({
       where: {
         category: {
           hasSome: ["bucket-hats"],
@@ -38,7 +38,7 @@ export async function fetchBucketHats(): Promise<FetchBucketHats> {
 
     return {
       success: true,
-      data: bucketHats.map(product => ({
+      data: beanies.map(product => ({
         ...product,
         featuredImage: product.featuredImage || null,
       })) as ProductWithFeaturedImage[],

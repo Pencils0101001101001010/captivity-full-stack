@@ -19,9 +19,7 @@ export default async function CustomerLayout({
       <Toaster />
       <div className="flex min-h-screen flex-col">
         <Navbar />
-        <div className="bg-slate-400">
-          <CategoriesDropDown />
-        </div>
+        <div className="bg-slate-400"></div>
         <div className="flex w-full grow">
           <main className="flex-grow">{children}</main>
         </div>
