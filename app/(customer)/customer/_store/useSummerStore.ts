@@ -1,3 +1,4 @@
+// useSummerStore.ts
 import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import {
@@ -34,6 +35,8 @@ interface SummerState {
   searchQuery: string;
   loading: boolean;
   error: string | null;
+  hasInitiallyFetched: boolean;
+  isInitializing: boolean;
 }
 
 interface SummerActions {
@@ -70,7 +73,11 @@ const initialState: SummerState = {
   searchQuery: "",
   loading: false,
   error: null,
+  hasInitiallyFetched: false,
+  isInitializing: false,
 };
+
+let fetchPromise: Promise<void> | null = null;
 
 const useSummerStore = create<SummerState & SummerActions>()((set, get) => ({
   ...initialState,
@@ -121,36 +128,60 @@ const useSummerStore = create<SummerState & SummerActions>()((set, get) => ({
   },
 
   fetchSummerCollection: async () => {
-    const { loading } = get();
-    if (loading) return;
+    const { loading, hasInitiallyFetched, isInitializing } = get();
 
-    set({ loading: true, error: null });
-    try {
-      const result = await fetchSummerCollection();
-      if (result.success) {
-        set({
-          summerProducts: result.data,
-          filteredProducts: result.data,
-          loading: false,
-        });
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error) {
-      set({ error: (error as Error).message, loading: false });
+    if (loading || hasInitiallyFetched || isInitializing) {
+      return;
     }
+
+    if (fetchPromise) {
+      return fetchPromise;
+    }
+
+    set({ loading: true, error: null, isInitializing: true });
+
+    fetchPromise = fetchSummerCollection()
+      .then(result => {
+        if (result.success) {
+          set({
+            summerProducts: result.data,
+            filteredProducts: result.data,
+            loading: false,
+            hasInitiallyFetched: true,
+            isInitializing: false,
+          });
+        } else {
+          throw new Error(result.error);
+        }
+      })
+      .catch(error => {
+        set({
+          error: (error as Error).message,
+          loading: false,
+          hasInitiallyFetched: true,
+          isInitializing: false,
+        });
+      })
+      .finally(() => {
+        fetchPromise = null;
+      });
+
+    return fetchPromise;
   },
 }));
 
-// Selector hooks
 export const useSummerProducts = () =>
-  useSummerStore(useShallow(state => state.filteredProducts));
+  useSummerStore(
+    useShallow(state => ({
+      products: state.filteredProducts,
+      hasInitiallyFetched: state.hasInitiallyFetched,
+    }))
+  );
 
 export const useSummerLoading = () => useSummerStore(state => state.loading);
 
 export const useSummerError = () => useSummerStore(state => state.error);
 
-// Group actions together
 export const useSummerActions = () =>
   useSummerStore(
     useShallow(state => ({
