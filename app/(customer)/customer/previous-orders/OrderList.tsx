@@ -4,7 +4,9 @@
 import { Order } from "./types";
 import { formatDate, getStatusColor } from "@/lib/utils";
 import Link from "next/link";
+
 import { OrderStatus } from "@prisma/client";
+import Image from "next/image";
 
 interface OrderHistoryProps {
   orders?: Order[];
@@ -32,12 +34,12 @@ export function OrderHistory({ orders, error }: OrderHistoryProps) {
 
   return (
     <div className="space-y-6">
-      {orders.map((order) => (
-        <div key={order.id} className="bg-gray-800 rounded-lg p-6 shadow-sm">
+      {orders.map(order => (
+        <div key={order.id} className="bg-gray-200 rounded-lg p-6 shadow-sm">
           {/* Order Header */}
           <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
             <div>
-              <h3 className="text-lg font-medium text-gray-200">
+              <h3 className="text-lg font-medium ">
                 Order #{order.referenceNumber || order.id.slice(-8)}
               </h3>
               <p className="text-sm text-gray-400">
@@ -89,13 +91,15 @@ export function OrderHistory({ orders, error }: OrderHistoryProps) {
 
           {/* Order Items */}
           <div className="divide-y divide-gray-700">
-            {order.orderItems.map((item) => (
+            {order.orderItems.map(item => (
               <div key={item.id} className="py-4 flex items-center gap-4">
                 <div className="flex-shrink-0 w-20 h-20">
-                  <img
+                  <Image
                     src={item.variation.variationImageURL || "/placeholder.png"}
                     alt={item.variation.name}
                     className="w-full h-full object-cover rounded"
+                    width={60}
+                    height={60}
                   />
                 </div>
                 <div className="flex-grow">
@@ -119,7 +123,9 @@ export function OrderHistory({ orders, error }: OrderHistoryProps) {
           {/* Order Notes */}
           {order.orderNotes && (
             <div className="mt-4 p-4 bg-gray-700/20 rounded-md">
-              <p className="text-sm font-medium text-gray-300 mb-1">Order Notes:</p>
+              <p className="text-sm font-medium text-gray-300 mb-1">
+                Order Notes:
+              </p>
               <p className="text-sm text-gray-400">{order.orderNotes}</p>
             </div>
           )}
