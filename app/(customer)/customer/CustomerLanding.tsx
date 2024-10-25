@@ -26,7 +26,7 @@ import {
 import Link from "next/link";
 import { getOrder } from "./shopping/checkout/actions";
 
-const LandingPage = () => {
+const CustomerLanding = () => {
   const [latestOrderId, setLatestOrderId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl bg-gray-50">
+    <div className="container mx-auto p-4 max-w-4xl bg-background">
       <header className="text-center mb-8 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-lg">
         <h1 className="text-4xl font-bold mb-2">Instant Purchase Power</h1>
         <p className="text-xl mb-4">
@@ -64,8 +64,12 @@ const LandingPage = () => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <div>
-            <h2 className="text-2xl font-semibold">Welcome, Jaco!</h2>
-            <p className="text-gray-600">Last login: Today at 10:30 AM</p>
+            <h2 className="text-2xl font-semibold text-foreground">
+              Welcome, Jaco!
+            </h2>
+            <p className="text-muted-foreground">
+              Last login: Today at 10:30 AM
+            </p>
           </div>
         </div>
         <Button variant="outline">
@@ -74,7 +78,7 @@ const LandingPage = () => {
       </div>
 
       <nav className="mb-8">
-        <ul className="flex flex-wrap justify-between bg-white shadow-md rounded-lg p-2">
+        <ul className="flex flex-wrap justify-between bg-card shadow-md rounded-lg p-2">
           {[
             {
               icon: ShoppingCart,
@@ -157,43 +161,48 @@ const LandingPage = () => {
         </CardContent>
       </Card>
 
-      <Card className="mb-8 bg-white shadow-md">
-        <CardHeader className="bg-blue-50">
-          <CardTitle className="flex items-center text-blue-700">
+      <Card className="mb-8 bg-card shadow-md">
+        <CardHeader className="bg-accent">
+          <CardTitle className="flex items-center text-accent-foreground">
             <Clock className="mr-2" /> Order Collection Time
           </CardTitle>
         </CardHeader>
         <CardContent className="mt-4">
-          <p className="text-lg flex items-center">
-            <Truck className="mr-2 text-green-500" />
-            Orders are to be collected{" "}
-            <Badge variant="outline" className="ml-2 text-red-500 font-bold">
+          <div className="flex items-center text-lg space-x-2">
+            <Truck className="text-green-500" />
+            <span>Orders are to be collected</span>
+            <Badge variant="outline" className="font-bold text-destructive">
               24 hours
-            </Badge>{" "}
-            after payment received.
-          </p>
-          <ul className="list-none mt-4">
-            <li className="flex items-center mt-2">
+            </Badge>
+            <span>after payment received.</span>
+          </div>
+
+          <div className="space-y-2 mt-4">
+            <div className="flex items-center">
               <Badge variant="secondary" className="mr-2">
                 Note
               </Badge>
-              We do not offer a courier service.
-            </li>
-            <li className="flex items-center mt-2">
+              <span className="text-muted-foreground">
+                We do not offer a courier service.
+              </span>
+            </div>
+            <div className="flex items-center">
               <Badge variant="secondary" className="mr-2">
                 Note
               </Badge>
-              We do not offer any branding.
-            </li>
-          </ul>
+              <span className="text-muted-foreground">
+                We do not offer any branding.
+              </span>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      <footer className="mt-8 text-center text-sm text-gray-500 border-t pt-4">
+      <footer className="mt-8 text-center text-sm text-muted-foreground border-t border-border pt-4">
         <p>&copy; 2024 Your Company Name. All rights reserved.</p>
       </footer>
     </div>
   );
 };
 
-export default LandingPage;
+export default CustomerLanding;
