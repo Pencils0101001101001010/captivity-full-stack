@@ -46,7 +46,7 @@ const CustomerLanding = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-4xl bg-background">
-      <header className="text-center mb-8 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-lg">
+      <header className="text-center mb-8 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-2xl shadow-black">
         <h1 className="text-4xl font-bold mb-2">Instant Purchase Power</h1>
         <p className="text-xl mb-4">
           Unlock the Speed of Our Quick Order Page Today!
@@ -72,13 +72,13 @@ const CustomerLanding = () => {
             </p>
           </div>
         </div>
-        <Button variant="outline">
+        <Button variant="default" className="shadow-2xl shadow-black">
           <LogOut className="mr-2 h-4 w-4" /> Log out
         </Button>
       </div>
 
       <nav className="mb-8">
-        <ul className="flex flex-wrap justify-between bg-card shadow-md rounded-lg p-2">
+        <ul className="flex flex-wrap justify-between bg-card shadow-2xl shadow-black rounded-lg p-2">
           {[
             {
               icon: ShoppingCart,
@@ -118,7 +118,7 @@ const CustomerLanding = () => {
         </ul>
       </nav>
 
-      <Card className="mb-8">
+      <Card className="mb-8 shadow-2xl shadow-black">
         <CardHeader>
           <CardTitle>Account Overview</CardTitle>
           <CardDescription>
@@ -161,7 +161,7 @@ const CustomerLanding = () => {
         </CardContent>
       </Card>
 
-      <Card className="mb-8 bg-card shadow-md">
+      <Card className="mb-8 bg-card shadow-2xl shadow-black">
         <CardHeader className="bg-accent">
           <CardTitle className="flex items-center text-accent-foreground">
             <Clock className="mr-2" /> Order Collection Time
