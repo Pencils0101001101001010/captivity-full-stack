@@ -132,13 +132,7 @@ const CustomerLanding = ({ initialOrderId }: CustomerLandingProps) => {
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
             <Button variant="outline" asChild>
-              <Link
-                href={
-                  initialOrderId
-                    ? `/customer/order-success/${initialOrderId}`
-                    : "/customer/orders"
-                }
-              >
+              <Link href={`/customer/order-success/${initialOrderId}`}>
                 <FileText className="mr-2 h-4 w-4" />
                 {initialOrderId ? "View Recent Order" : "View Orders"}
               </Link>
