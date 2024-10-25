@@ -26,7 +26,11 @@ import {
 import Link from "next/link";
 import { getOrder } from "./shopping/checkout/actions";
 
-const CustomerLanding = () => {
+interface CustomerLandingProps {
+  initialOrderId: string | null;
+}
+
+const CustomerLanding = ({ initialOrderId }: CustomerLandingProps) => {
   const [latestOrderId, setLatestOrderId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -130,13 +134,13 @@ const CustomerLanding = () => {
             <Button variant="outline" asChild>
               <Link
                 href={
-                  latestOrderId
-                    ? `/customer/order-success/${latestOrderId}`
+                  initialOrderId
+                    ? `/customer/order-success/${initialOrderId}`
                     : "/customer/orders"
                 }
               >
                 <FileText className="mr-2 h-4 w-4" />
-                View Recent Order
+                {initialOrderId ? "View Recent Order" : "View Orders"}
               </Link>
             </Button>
             <Button variant="outline" asChild>
