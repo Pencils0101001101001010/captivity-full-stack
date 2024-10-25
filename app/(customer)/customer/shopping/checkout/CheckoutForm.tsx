@@ -27,6 +27,7 @@ const CheckoutForm = () => {
     fetchCart,
     updateCartItemQuantity,
     removeFromCart,
+    setCart
   } = useCartStore();
   const { toast } = useToast();
 
@@ -60,10 +61,7 @@ const CheckoutForm = () => {
       try {
         const result = await getUserOrders();
         if (result.success && result.data && result.data.length > 0) {
-          // Get the most recent order
           const lastOrder = result.data[0];
-
-          // Pre-fill the form with the last order's data
           form.reset({
             captivityBranch: lastOrder.captivityBranch,
             methodOfCollection: lastOrder.methodOfCollection,
@@ -81,8 +79,8 @@ const CheckoutForm = () => {
             phone: lastOrder.phone,
             email: lastOrder.email,
             orderNotes: lastOrder.orderNotes || "",
-            agreeTerms: false, // Always start unchecked for safety
-            receiveEmailReviews: false, // Always start unchecked for safety
+            agreeTerms: false,
+            receiveEmailReviews: false,
           });
         }
       } catch (error) {
@@ -96,8 +94,10 @@ const CheckoutForm = () => {
   }, [form]);
 
   useEffect(() => {
-    fetchCart();
-  }, [fetchCart]);
+    if (!cart) {
+      fetchCart();
+    }
+  }, [cart, fetchCart]);
 
   const handleQuantityChange = async (
     cartItemId: string,
@@ -120,6 +120,8 @@ const CheckoutForm = () => {
     try {
       const result = await createOrder(formData);
       if (result.success) {
+        // Clear cart in store immediately to prevent unnecessary reloads
+        setCart(null);
         toast({
           title: "Success",
           description: "Order placed successfully!",
@@ -158,14 +160,12 @@ const CheckoutForm = () => {
         className="max-w-7xl mx-auto p-6 mb-16"
       >
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Left Column: Form Sections */}
           <div className="w-full lg:w-2/3 space-y-8">
             <BillingDetails form={form} />
             <AdditionalInformation form={form} />
             <TermsAndConditions form={form} />
           </div>
 
-          {/* Right Column: Order Summary */}
           <div className="w-full lg:w-1/3">
             <OrderSummary
               cart={cart}
@@ -177,7 +177,6 @@ const CheckoutForm = () => {
           </div>
         </div>
 
-        {/* Submit Button Section */}
         <div className="mt-8 flex flex-col gap-4">
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-sm text-yellow-800">

@@ -1,12 +1,17 @@
-import React from "react";
 import CustomerLanding from "./CustomerLanding";
+import { getOrder } from "./shopping/checkout/actions";
 
-const CustomerOPage = () => {
-  return (
-    <div>
-      <CustomerLanding />
-    </div>
-  );
-};
+export default async function CustomerPage() {
+  let latestOrderId = null;
 
-export default CustomerOPage;
+  try {
+    const result = await getOrder();
+    if (result.success && result.data) {
+      latestOrderId = result.data.id;
+    }
+  } catch (error) {
+    console.error("Error fetching latest order:", error);
+  }
+
+  return <CustomerLanding initialOrderId={latestOrderId} />;
+}

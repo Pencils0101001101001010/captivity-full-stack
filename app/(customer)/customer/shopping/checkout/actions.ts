@@ -153,7 +153,7 @@ export async function createOrder(
   }
 }
 
-export async function getOrder(orderId: string): Promise<OrderActionResult> {
+export async function getOrder(orderId?: string): Promise<OrderActionResult> {
   try {
     const { user } = await validateRequest();
     if (!user) {
@@ -164,10 +164,13 @@ export async function getOrder(orderId: string): Promise<OrderActionResult> {
       };
     }
 
-    const order = await prisma.order.findUnique({
+    const order = await prisma.order.findFirst({
       where: {
-        id: orderId,
         userId: user.id,
+        ...(orderId ? { id: orderId } : {}), // Only include id in where clause if provided
+      },
+      orderBy: {
+        createdAt: "desc", // Get the most recent order
       },
       include: {
         orderItems: {
@@ -186,7 +189,7 @@ export async function getOrder(orderId: string): Promise<OrderActionResult> {
       return {
         success: false,
         message: "Order not found",
-        error: "The requested order does not exist",
+        error: "No orders found",
       };
     }
 

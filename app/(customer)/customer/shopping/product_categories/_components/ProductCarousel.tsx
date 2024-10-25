@@ -35,16 +35,6 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
     return () => clearInterval(interval);
   }, [products.length]);
 
-  const handlePrevious = () => {
-    setDirection("left");
-    setCurrentIndex(prev => (prev - 1 + products.length) % products.length);
-  };
-
-  const handleNext = () => {
-    setDirection("right");
-    setCurrentIndex(prev => (prev + 1) % products.length);
-  };
-
   if (!products.length) {
     return null;
   }

@@ -23,8 +23,6 @@ export interface OrderItem {
 export interface Order {
   id: string;
   userId: string;
-
-  // Address and contact details
   captivityBranch: string;
   methodOfCollection: string;
   salesRep: string | null;
@@ -42,7 +40,6 @@ export interface Order {
   email: string;
   orderNotes: string | null;
 
-  // Order details
   orderItems: OrderItem[];
   status: OrderStatus;
   totalAmount: number;

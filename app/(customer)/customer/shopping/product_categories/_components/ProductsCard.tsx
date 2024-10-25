@@ -39,7 +39,7 @@ const ProductCard: React.FC<ProductCardProps> = memo(
     return (
       <Card className="h-auto overflow-hidden shadow-2xl shadow-black transition-transform duration-300 hover:scale-95 bg-white">
         <ProductImage
-          imageSrc={product.featuredImage?.medium}
+          imageSrc={product.featuredImage?.large}
           alt={product.productName}
         />
         <CardContent className="p-4">

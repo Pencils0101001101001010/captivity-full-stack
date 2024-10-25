@@ -50,18 +50,21 @@ export const TermsAndConditions: React.FC<TermsAndConditionsProps> = ({
         control={form.control}
         name="agreeTerms"
         render={({ field }) => (
-          <FormItem className="flex items-start space-x-3 space-y-0 mb-4">
-            <FormControl>
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-            <div className="space-y-1 leading-none">
-              <FormLabel>
-                I have read and agree to the website terms and conditions*
-              </FormLabel>
+          <FormItem className="flex flex-col space-y-2">
+            <div className="flex items-start space-x-3">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel>
+                  I have read and agree to the website terms and conditions*
+                </FormLabel>
+              </div>
             </div>
+            <FormMessage className="text-red-500 text-sm" />
           </FormItem>
         )}
       />

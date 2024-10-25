@@ -35,6 +35,7 @@ interface CartStore {
   ) => Promise<void>;
   removeFromCart: (cartItemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
+  setCart: (cart: CartWithItems | null) => void;
 }
 
 const useCartStore = create<CartStore>((set, get) => ({
@@ -42,7 +43,16 @@ const useCartStore = create<CartStore>((set, get) => ({
   isLoading: false,
   error: null,
 
+  setCart: cart => {
+    set({ cart });
+  },
+
   fetchCart: async () => {
+    const currentCart = get().cart;
+    if (currentCart?.cartItems.length === 0) {
+      return;
+    }
+
     set({ isLoading: true, error: null });
     try {
       const result = await fetchCartAction();
