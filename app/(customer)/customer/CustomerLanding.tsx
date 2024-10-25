@@ -134,7 +134,7 @@ const CustomerLanding = ({ initialOrderId }: CustomerLandingProps) => {
             <Button variant="outline" asChild>
               <Link href={`/customer/order-success/${initialOrderId}`}>
                 <FileText className="mr-2 h-4 w-4" />
-                {initialOrderId ? "View Recent Order" : "View Orders"}
+                View Recent Order
               </Link>
             </Button>
             <Button variant="outline" asChild>
