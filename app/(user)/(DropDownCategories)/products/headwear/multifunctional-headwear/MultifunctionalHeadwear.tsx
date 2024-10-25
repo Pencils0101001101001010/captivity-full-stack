@@ -58,7 +58,7 @@ const MultifunctionalHeadwearProductList: React.FC = () => {
           </div>
         </aside>
         <main className="w-full md:w-3/4 lg:w-4/5">
-          <h4 className="text-gray-500 text-xl mb-6">Multifunctional Headwear</h4>
+          <h1 className="text-gray-500 text-xl mb-6">Multifunctional Headwear</h1>
           {products.length === 0 ? (
             <div className="text-center py-8">
               <h2 className="text-2xl font-bold text-foreground">

@@ -59,6 +59,7 @@ const BucketHatsProductList: React.FC = () => {
         </aside>
 
         <main className="w-full md:w-3/4 lg:w-4/5">
+        <h1 className="text-gray-500 text-xl mb-6">Bucket Hats</h1>
           {products.length === 0 ? (
             <div className="text-center py-8">
               <h2 className="text-2xl font-bold text-foreground">
