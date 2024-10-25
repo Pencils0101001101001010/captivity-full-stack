@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,8 +24,26 @@ import {
   LogOut,
 } from "lucide-react";
 import Link from "next/link";
+import { getOrder } from "./shopping/checkout/actions";
 
 const LandingPage = () => {
+  const [latestOrderId, setLatestOrderId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchLatestOrder = async () => {
+      try {
+        const result = await getOrder();
+        if (result.success && result.data) {
+          setLatestOrderId(result.data.id);
+        }
+      } catch (error) {
+        console.error("Error fetching latest order:", error);
+      }
+    };
+
+    fetchLatestOrder();
+  }, []);
+
   return (
     <div className="container mx-auto p-4 max-w-4xl bg-gray-50">
       <header className="text-center mb-8 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-lg">
@@ -103,17 +123,35 @@ const LandingPage = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline">
-              <FileText className="mr-2 h-4 w-4" /> View Recent Orders
+            <Button variant="outline" asChild>
+              <Link
+                href={
+                  latestOrderId
+                    ? `/customer/order-success/${latestOrderId}`
+                    : "/customer/orders"
+                }
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                View Recent Order
+              </Link>
             </Button>
-            <Button variant="outline">
-              <Truck className="mr-2 h-4 w-4" /> Manage Addresses
+            <Button variant="outline" asChild>
+              <Link href="/customer/address-info">
+                <Truck className="mr-2 h-4 w-4" />
+                Manage Addresses
+              </Link>
             </Button>
-            <Button variant="outline">
-              <Settings className="mr-2 h-4 w-4" /> Account Settings
+            <Button variant="outline" asChild>
+              <Link href="/customer/account-info">
+                <Settings className="mr-2 h-4 w-4" />
+                Account Settings
+              </Link>
             </Button>
-            <Button variant="outline">
-              <LayoutGrid className="mr-2 h-4 w-4" /> Product Catalog
+            <Button variant="outline" asChild>
+              <Link href="/customer/shopping/product_categories/summer">
+                <LayoutGrid className="mr-2 h-4 w-4" />
+                Product Catalog
+              </Link>
             </Button>
           </div>
         </CardContent>
