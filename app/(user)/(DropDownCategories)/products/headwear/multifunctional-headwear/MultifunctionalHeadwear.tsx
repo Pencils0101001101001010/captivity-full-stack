@@ -49,7 +49,7 @@ const MultifunctionalHeadwearProductList: React.FC = () => {
 
   return (
     <section className="container mx-auto my-8">
-      <HeroSection featuredImage={featuredImage} categoryName="MULTIFUNTIONAL HEADWEAR" />
+      <HeroSection featuredImage={featuredImage} categoryName="MULTIFUNCTIONAL HEADWEAR" />
 
       <div className="flex flex-col md:flex-row gap-6 relative">
         <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
@@ -57,12 +57,12 @@ const MultifunctionalHeadwearProductList: React.FC = () => {
             <SideMenu />
           </div>
         </aside>
-
         <main className="w-full md:w-3/4 lg:w-4/5">
+          <h4 className="text-gray-500 text-xl mb-6">Multifunctional Headwear</h4>
           {products.length === 0 ? (
             <div className="text-center py-8">
               <h2 className="text-2xl font-bold text-foreground">
-                No multifuntional headwear available in the collection.
+                No multifunctional headwear available in the collection.
               </h2>
             </div>
           ) : (
