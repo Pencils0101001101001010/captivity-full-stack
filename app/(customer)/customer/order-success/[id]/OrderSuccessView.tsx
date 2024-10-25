@@ -259,7 +259,7 @@ export const OrderSuccessView: React.FC<OrderSuccessViewProps> = ({
             <p className="text-sm text-blue-600 dark:text-blue-300 mt-2">
               You can track your order status in{" "}
               <Link
-                href="/customer/orders"
+                href="/customer/previous-orders"
                 className="font-medium underline hover:text-blue-800 dark:hover:text-blue-100 transition-colors"
               >
                 your orders
