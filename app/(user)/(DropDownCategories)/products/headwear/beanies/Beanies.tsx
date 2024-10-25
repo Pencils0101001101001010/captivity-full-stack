@@ -10,6 +10,7 @@ import HeroSection from "@/app/(user)/_components/HeroSection";
 import useBeanies from "./useBeanies";
 import type { ProductWithFeaturedImage } from "./actions";
 
+
 const ITEMS_PER_PAGE = 6;
 
 const BeaniesProductList: React.FC = () => {
