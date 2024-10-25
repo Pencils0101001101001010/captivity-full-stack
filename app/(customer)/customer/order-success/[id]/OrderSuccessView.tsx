@@ -266,7 +266,7 @@ export const OrderSuccessView: React.FC<OrderSuccessViewProps> = ({
               </Button>
             </div>
             <Button asChild className="shadow-sm">
-              <Link href="/customer/orders">
+              <Link href="/customer/previous-orders">
                 View All Orders
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Link>
@@ -284,7 +284,7 @@ export const OrderSuccessView: React.FC<OrderSuccessViewProps> = ({
             <p className="text-sm text-blue-600 mt-2">
               You can track your order status in{" "}
               <Link
-                href="/customer/orders"
+                href="/customer/previous-orders"
                 className="font-medium underline hover:text-blue-800 transition-colors"
               >
                 your orders
