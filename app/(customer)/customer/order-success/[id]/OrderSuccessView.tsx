@@ -117,7 +117,7 @@ export const OrderSuccessView: React.FC<OrderSuccessViewProps> = ({
         </div>
 
         {/* Order Details Card */}
-        <Card className="mb-8 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+        <Card className="mb-8 shadow-2xl shadow-black hover:shadow-2xl transition-shadow duration-300">
           <CardHeader className="border-b border-gray-100">
             <div className="flex justify-between items-center">
               <div>
@@ -275,8 +275,8 @@ export const OrderSuccessView: React.FC<OrderSuccessViewProps> = ({
         </Card>
 
         {/* Next Steps */}
-        <div className="text-center space-y-4 mt-8">
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+        <div className="text-center space-y-4 mt-8 ">
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 shadow-2xl shadow-black">
             <p className="text-sm text-blue-800">
               A confirmation email has been sent to{" "}
               <span className="font-medium">{order.email}</span>
