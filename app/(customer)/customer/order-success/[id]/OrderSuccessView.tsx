@@ -24,36 +24,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-interface OrderSuccessViewProps {
-  order: {
-    id: string;
-    createdAt: string;
-    totalAmount: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    companyName: string;
-    streetAddress: string;
-    apartmentSuite?: string;
-    townCity: string;
-    province: string;
-    postcode: string;
-    countryRegion: string;
-    orderItems: Array<{
-      quantity: number;
-      price: number;
-      variation: {
-        size: string;
-        color: string;
-        product: {
-          productName: string;
-        };
-      };
-    }>;
-  };
-}
+import { OrderSuccessViewProps } from "./types";
 
 export const OrderSuccessView: React.FC<OrderSuccessViewProps> = ({
   order,
@@ -119,7 +90,7 @@ export const OrderSuccessView: React.FC<OrderSuccessViewProps> = ({
         </div>
 
         {/* Order Details Card */}
-        <Card className="mb-8 shadow-xl">
+        <Card className="mb-8 shadow-2xl shadow-black">
           <CardHeader className="border-b border-border">
             <div className="flex justify-between items-center">
               <div>
