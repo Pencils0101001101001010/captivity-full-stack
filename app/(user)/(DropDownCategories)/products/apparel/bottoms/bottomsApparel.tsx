@@ -9,6 +9,8 @@ import SideMenu from "@/app/(user)/_components/SideMenu";
 import HeroSection from "@/app/(user)/_components/HeroSection";
 import useBottoms from "./useBottoms";
 import type { ProductWithFeaturedImage } from "./actions";
+import { CollectionsMenu } from "./collections-menu";
+
 
 const ITEMS_PER_PAGE = 6;
 
@@ -55,6 +57,7 @@ const BottomsProductList: React.FC = () => {
         <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
           <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto overflow-x-hidden no-scrollbar">
             <SideMenu />
+            <CollectionsMenu/>
           </div>
         </aside>
 
