@@ -7,15 +7,15 @@ import Link from "next/link";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import SideMenu from "@/app/(user)/_components/SideMenu";
 import HeroSection from "@/app/(user)/_components/HeroSection";
-import useAfrican from "./useAfrican";
+import useIndustrial from "./useIndustrial";
 import type { ProductWithFeaturedImage } from "./actions";
 
 
 const ITEMS_PER_PAGE = 6;
 
-const AfricanProductList: React.FC = () => {
+const IndustrialProductList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const { products, loading, error } = useAfrican();
+  const { products, loading, error } = useIndustrial();
   const [featuredImage, setFeaturedImage] = useState<{ large: string }>({
     large: "/Industrial-collection-Btn.jpg",
   });
@@ -41,7 +41,7 @@ const AfricanProductList: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[200px]">
         <Loader2 className="mx-auto my-3 animate-spin h-8 w-8" />
-        <p className="text-muted-foreground">Loading african collection...</p>
+        <p className="text-muted-foreground">Loading industrial collection...</p>
       </div>
     );
   };
@@ -60,11 +60,11 @@ const AfricanProductList: React.FC = () => {
         </aside>
 
         <main className="w-full md:w-3/4 lg:w-4/5">
-        <h1 className="text-gray-500 text-xl mb-6">African Collection</h1>
+        <h1 className="text-gray-500 text-xl mb-6">Industrial Collection</h1>
           {products.length === 0 ? (
             <div className="text-center py-8">
               <h2 className="text-2xl font-bold text-foreground">
-                No african products available in the collection.
+                No industrail products available in the collection.
               </h2>
             </div>
           ) : (
@@ -162,4 +162,4 @@ const AfricanProductList: React.FC = () => {
   );
 };
 
-export default AfricanProductList;
+export default IndustrialProductList;
