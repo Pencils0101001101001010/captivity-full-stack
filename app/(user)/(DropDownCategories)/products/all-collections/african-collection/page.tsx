@@ -1,8 +1,12 @@
-import AfricanProducts from "./AfricanCollection";
-
+import React from "react";
+import AfricanProductList from "./African";
 
 const page = () => {
-  return <AfricanProducts />;
+  return (
+    <div>
+      <AfricanProductList />
+    </div>
+  );
 };
 
-export default page
+export default page;
