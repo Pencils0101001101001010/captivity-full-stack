@@ -241,7 +241,7 @@ export const OrderSuccessView: React.FC<OrderSuccessViewProps> = ({
               </Button>
             </div>
             <Button asChild>
-              <Link href="/customer/orders">
+              <Link href="/customer/previous-orders">
                 View All Orders
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Link>
