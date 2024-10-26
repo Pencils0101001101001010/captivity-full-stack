@@ -4,25 +4,68 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import SideMenu from "@/app/(user)/_components/SideMenu";
 import HeroSection from "@/app/(user)/_components/HeroSection";
 import useBeanies from "./useBeanies";
-import useNewProducts from "./useNewProducts"; // We'll create this next
 import type { ProductWithFeaturedImage } from "./actions";
-import ProductCarousel from "@/app/(user)/_components/ProductCarousal";
+import { fetchNewInHeadwear } from "../../_global/actions";
+import ProductCarousel from "@/app/(customer)/customer/shopping/product_categories/_components/ProductCarousel";
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 8;
+
+const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <span 
+          key={star} 
+          className={`text-lg ${star <= rating ? "text-yellow-400" : "text-gray-300"}`}
+        >
+          ★
+        </span>
+      ))}
+    </div>
+  );
+};
+
+interface BeanieProduct extends ProductWithFeaturedImage {
+  rating?: number;
+}
 
 const BeaniesProductList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { products, loading, error } = useBeanies();
-  const { newProducts, loading: newProductsLoading } = useNewProducts();
   const [featuredImage, setFeaturedImage] = useState<{ large: string }>({
     large: "/Industrial-collection-Btn.jpg",
   });
+  const [newHeadwear, setNewHeadwear] = useState<any[]>([]);
 
-  // Memoize pagination calculations
+  // Transform products for carousel
+  const carouselProducts = useMemo(() => {
+    return newHeadwear.map(product => ({
+      id: product.id,
+      name: product.productName,
+      imageUrl: product.featuredImage?.medium || "/placeholder.jpg",
+      stock: product.stock || 0
+    }));
+  }, [newHeadwear]);
+
+  useEffect(() => {
+    const loadNewHeadwear = async () => {
+      try {
+        const result = await fetchNewInHeadwear();
+        if (result.success && result.data) {
+          setNewHeadwear(result.data);
+        }
+      } catch (error) {
+        console.error("Error loading new headwear:", error);
+      }
+    };
+    
+    loadNewHeadwear();
+  }, []);
+
   const { paginatedProducts, totalPages, startIndex } = useMemo(() => {
     const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE);
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -32,12 +75,6 @@ const BeaniesProductList: React.FC = () => {
     );
     return { paginatedProducts, totalPages, startIndex };
   }, [products, currentPage]);
-
-  useEffect(() => {
-    if (products.length > 0 && products[1]?.featuredImage?.large) {
-      setFeaturedImage({ large: products[1].featuredImage.large });
-    }
-  }, [products]);
 
   if (loading) {
     return (
@@ -50,13 +87,6 @@ const BeaniesProductList: React.FC = () => {
   
   if (error) return <div>Error: {error}</div>;
 
-  const carouselProducts = newProducts?.map(product => ({
-    id: product.id,
-    name: product.name,
-    imageUrl: product.imageUrl,
-    stock: product.stock
-  })) || [];
-
   return (
     <section className="container mx-auto my-8">
       <HeroSection featuredImage={featuredImage} categoryName="BEANIES" />
@@ -64,117 +94,75 @@ const BeaniesProductList: React.FC = () => {
       <div className="flex flex-col md:flex-row gap-6 relative">
         <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
           <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto overflow-x-hidden no-scrollbar">
-            <SideMenu />
+            <SideMenu /><ProductCarousel 
+              products={carouselProducts}
+              className="w-full"
+            />
           </div>
         </aside>
 
-        <main className="w-full md:w-3/4 lg:w-4/5">
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">NEW IN HEADWEAR</h2>
-            {!newProductsLoading && carouselProducts.length > 0 && (
-              <ProductCarousel 
-                products={carouselProducts} 
-                className="max-w-md mx-auto"
-              />
-            )}
+        {/* Main Content */}
+        <main className="w-3/4">
+          <div className="grid grid-cols-4 gap-6">
+            {paginatedProducts.map((product: BeanieProduct) => (
+              <Link
+                href={`/products/headwear/${product.id}`}
+                key={product.id}
+                className="block"
+              >
+                <div className="bg-gray-50 rounded-lg overflow-hidden">
+                  <div className="relative h-48 w-full">
+                    <Image
+                      src={product.featuredImage?.medium || "/placeholder.jpg"}
+                      alt={product.productName}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                      style={{ objectFit: "cover" }}
+                      className="hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h2 className="text-gray-700 mb-2">{product.productName}</h2>
+                    <StarRating rating={product.rating || 4} />
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
 
-          <h1 className="text-gray-500 text-xl mb-6">Beanies</h1>
-          {products.length === 0 ? (
-            <div className="text-center py-8">
-              <h2 className="text-2xl font-bold text-foreground">
-                No beanies available in the collection.
-              </h2>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-8 gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => prev - 1)}
+                disabled={currentPage === 1}
+                className="p-2 bg-white border rounded hover:bg-gray-50"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`px-4 py-2 rounded ${
+                    currentPage === i + 1
+                      ? "bg-blue-600 text-white"
+                      : "bg-white border hover:bg-gray-50"
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              
+              <button
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                disabled={currentPage === totalPages}
+                className="p-2 bg-white border rounded hover:bg-gray-50"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
             </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                {/* Rest of your existing product grid code */}
-                {paginatedProducts.map((product: ProductWithFeaturedImage) => (
-                  <Link
-                    href={`/products/headwear/${product.id}`}
-                    key={product.id}
-                  >
-                    <Card className="hover:shadow-lg transition-shadow duration-300">
-                      <div className="relative h-48 w-full">
-                        <Image
-                          src={
-                            product.featuredImage?.medium ||
-                            "/Industrial-collection-Btn.jpg"
-                          }
-                          alt={product.productName}
-                          fill
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          style={{ objectFit: "cover" }}
-                          className="rounded-t-lg"
-                          priority
-                        />
-                      </div>
-                      <CardContent className="p-4">
-                        <h2 className="text-lg font-semibold mb-2 truncate">
-                          {product.productName}
-                        </h2>
-                      </CardContent>
-                      <CardFooter>
-                        <p>click to view</p>
-                      </CardFooter>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage(prev => prev - 1)}
-                    disabled={currentPage === 1}
-                    className="p-2 rounded-lg border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Previous page"
-                  >
-                    <ChevronLeft className="h-5 w-5 text-foreground" />
-                  </button>
-
-                  {/* Page Numbers */}
-                  <div className="flex gap-2">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      page => (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
-                          ${
-                            currentPage === page
-                              ? "bg-primary text-primary-foreground"
-                              : "hover:bg-muted text-foreground"
-                          }`}
-                          aria-label={`Page ${page}`}
-                          aria-current={currentPage === page ? "page" : undefined}
-                        >
-                          {page}
-                        </button>
-                      )
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() => setCurrentPage(prev => prev + 1)}
-                    disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Next page"
-                  >
-                    <ChevronRight className="h-5 w-5 text-foreground" />
-                  </button>
-                </div>
-              )}
-
-              {/* Products Count */}
-              <div className="text-sm text-muted-foreground text-center mt-4">
-                Showing {startIndex + 1}-
-                {Math.min(startIndex + ITEMS_PER_PAGE, products.length)} of{" "}
-                {products.length} products
-              </div>
-            </>
           )}
         </main>
       </div>
