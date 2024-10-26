@@ -8,14 +8,16 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import SideMenu from "@/app/(user)/_components/SideMenu";
 import HeroSection from "@/app/(user)/_components/HeroSection";
 import useBeanies from "./useBeanies";
+import useNewProducts from "./useNewProducts"; // We'll create this next
 import type { ProductWithFeaturedImage } from "./actions";
-
+import ProductCarousel from "@/app/(user)/_components/ProductCarousal";
 
 const ITEMS_PER_PAGE = 6;
 
 const BeaniesProductList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { products, loading, error } = useBeanies();
+  const { newProducts, loading: newProductsLoading } = useNewProducts();
   const [featuredImage, setFeaturedImage] = useState<{ large: string }>({
     large: "/Industrial-collection-Btn.jpg",
   });
@@ -48,6 +50,13 @@ const BeaniesProductList: React.FC = () => {
   
   if (error) return <div>Error: {error}</div>;
 
+  const carouselProducts = newProducts?.map(product => ({
+    id: product.id,
+    name: product.name,
+    imageUrl: product.imageUrl,
+    stock: product.stock
+  })) || [];
+
   return (
     <section className="container mx-auto my-8">
       <HeroSection featuredImage={featuredImage} categoryName="BEANIES" />
@@ -60,7 +69,17 @@ const BeaniesProductList: React.FC = () => {
         </aside>
 
         <main className="w-full md:w-3/4 lg:w-4/5">
-        <h1 className="text-gray-500 text-xl mb-6">Beanies</h1>
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">NEW IN HEADWEAR</h2>
+            {!newProductsLoading && carouselProducts.length > 0 && (
+              <ProductCarousel 
+                products={carouselProducts} 
+                className="max-w-md mx-auto"
+              />
+            )}
+          </div>
+
+          <h1 className="text-gray-500 text-xl mb-6">Beanies</h1>
           {products.length === 0 ? (
             <div className="text-center py-8">
               <h2 className="text-2xl font-bold text-foreground">
@@ -70,6 +89,7 @@ const BeaniesProductList: React.FC = () => {
           ) : (
             <>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                {/* Rest of your existing product grid code */}
                 {paginatedProducts.map((product: ProductWithFeaturedImage) => (
                   <Link
                     href={`/products/headwear/${product.id}`}
