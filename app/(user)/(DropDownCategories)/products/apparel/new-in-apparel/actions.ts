@@ -15,16 +15,16 @@ export type ProductWithFeaturedImage = Omit<Product, "featuredImage"> & {
   featuredImage: FeaturedImage | null;
 };
 
-type FetchJacketsResult =
+type FetchNewApparelResult =
   | { success: true; data: ProductWithFeaturedImage[] }
   | { success: false; error: string };
 
-export async function fetchJackets(): Promise<FetchJacketsResult> {
+export async function fetchNewApparel(): Promise<FetchNewApparelResult> {
   try {
-    const jackets = await prisma.product.findMany({
+    const newApparel = await prisma.product.findMany({
       where: {
         category: {
-          hasSome: ["jackets"],
+          hasSome: ["new-in-apparel"],
         },
         isPublished: true,
       },
@@ -38,7 +38,7 @@ export async function fetchJackets(): Promise<FetchJacketsResult> {
 
     return {
       success: true,
-      data: jackets.map(product => ({
+      data: newApparel.map(product => ({
         ...product,
         featuredImage: product.featuredImage || null,
       })) as ProductWithFeaturedImage[],
@@ -47,7 +47,7 @@ export async function fetchJackets(): Promise<FetchJacketsResult> {
     const errorMessage =
       error instanceof Error ? error.message : "An unexpected error occurred";
 
-    console.error(`Error fetching Jackets: ${errorMessage}`);
+    console.error(`Error fetching New-In-Apparel: ${errorMessage}`);
 
     return { success: false, error: errorMessage };
   }

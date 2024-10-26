@@ -1,111 +1,54 @@
 "use server";
+
 import prisma from "@/lib/prisma";
+import { Product } from "@prisma/client";
 
-interface PaginatedResponse<T> {
-  success: boolean;
-  data?: T[];
-  error?: string;
-  metadata?: {
-    totalItems: number;
-    totalPages: number;
-    currentPage: number;
-    itemsPerPage: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-  };
-}
+export type FeaturedImage = {
+  id: string;
+  thumbnail: string;
+  medium: string;
+  large: string;
+  productId: string;
+};
 
-export async function fetchTshirtsApparel(
-  page: number = 1,
-  itemsPerPage: number = 8
-): Promise<PaginatedResponse<any>> {
+export type ProductWithFeaturedImage = Omit<Product, "featuredImage"> & {
+  featuredImage: FeaturedImage | null;
+};
+
+type FetchTshirtsResult =
+  | { success: true; data: ProductWithFeaturedImage[] }
+  | { success: false; error: string };
+
+export async function fetchTshirts(): Promise<FetchTshirtsResult> {
   try {
-    // Calculate skip value for pagination
-    const skip = (page - 1) * itemsPerPage;
-
-    // Get total count of products
-    const totalItems = await prisma.product.count({
+    const tshirts = await prisma.product.findMany({
       where: {
-        AND: [
-          {
-            isPublished: true,
-            category: {
-              hasSome: ["t-shirts"],
-            },
-          },
-        ],
-      },
-    });
-
-    // Calculate total pages
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-    // Fetch paginated products
-    const tshirtsProducts = await prisma.product.findMany({
-      where: {
-        AND: [
-          {
-            isPublished: true,
-            category: {
-              hasSome: ["t-shirts"],
-            },
-          },
-        ],
-      },
-      select: {
-        id: true,
-        productName: true,
-        featuredImage: {
-          select: {
-            medium: true,
-            large: true,
-          },
+        category: {
+          hasSome: ["t-shirts"],
         },
-        variations: {
-          select: {
-            quantity: true,
-          },
-        },
+        isPublished: true,
       },
-      skip: skip,
-      take: itemsPerPage,
       orderBy: {
-        createdAt: "desc", // Optional: sort by creation date
+        createdAt: "desc",
+      },
+      include: {
+        featuredImage: true,
       },
     });
-
-    // Transform the data
-    const transformedProducts = tshirtsProducts.map(product => ({
-      id: product.id,
-      name: product.productName,
-      imageUrl: `${product.featuredImage?.medium || ""},${product.featuredImage?.large || ""}`,
-      stock: product.variations.reduce(
-        (total, variation) => total + variation.quantity,
-        0
-      ),
-    }));
-
-    // Prepare pagination metadata
-    const metadata = {
-      totalItems,
-      totalPages,
-      currentPage: page,
-      itemsPerPage,
-      hasNextPage: page < totalPages,
-      hasPreviousPage: page > 1,
-    };
 
     return {
       success: true,
-      data: transformedProducts,
-      metadata,
+      data: tshirts.map(product => ({
+        ...product,
+        featuredImage: product.featuredImage || null,
+      })) as ProductWithFeaturedImage[],
     };
-  } catch (error) {
-    console.error("Error fetching T-shirt's apparel:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
+  } catch (error: any) {
+    const errorMessage =
+      error instanceof Error ? error.message : "An unexpected error occurred";
+
+    console.error(`Error fetching T-Shirts: ${errorMessage}`);
+
+    return { success: false, error: errorMessage };
   }
 }

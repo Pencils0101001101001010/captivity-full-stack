@@ -1,7 +1,8 @@
-import JacketsApparelProducts from './JacketsApparelProducts'
+import React from "react";
+import ProductList from "./jacketsApparel";
 
 const page = () => {
-  return <JacketsApparelProducts/> 
-}
+  return <ProductList />;
+};
 
-export default page
+export default page;

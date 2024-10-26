@@ -1,7 +1,8 @@
-import GolfersApparelProducts from './GolfersApparelProducts'
+import React from "react";
+import ProductList from "./golfersApparel";
 
 const page = () => {
-  return <GolfersApparelProducts/> 
-}
+  return <ProductList />;
+};
 
-export default page
+export default page;

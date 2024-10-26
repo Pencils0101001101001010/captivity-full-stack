@@ -1,7 +1,8 @@
-import HoodiesApparelProducts from './HoodiesApparelProducts'
+import React from "react";
+import ProductList from "./hoodiesApparel";
 
 const page = () => {
-  return <HoodiesApparelProducts/>
-}
+  return <ProductList />;
+};
 
-export default page
+export default page;

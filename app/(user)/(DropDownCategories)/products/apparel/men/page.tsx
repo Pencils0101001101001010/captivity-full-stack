@@ -1,7 +1,8 @@
-import MensApparelProducts from "./MensApparelProducts";
+import React from "react";
+import ProductList from "./menApparel";
 
-const Page = () => {
-  return <MensApparelProducts />;
+const page = () => {
+  return <ProductList />;
 };
 
-export default Page;
+export default page;

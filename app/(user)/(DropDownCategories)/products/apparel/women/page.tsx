@@ -1,7 +1,8 @@
-import WomensApparelProducts from './WomensApparelProducts'
+import React from "react";
+import ProductList from "./womenAppaels";
 
-const WomensCollectionPage = () => {
-  return <WomensApparelProducts/>
-}
+const page = () => {
+  return <ProductList />;
+};
 
-export default WomensCollectionPage
+export default page;

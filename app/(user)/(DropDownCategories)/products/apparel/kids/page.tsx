@@ -1,7 +1,8 @@
-import KidsApparelProducts from './KidsApparelProducts'
+import React from "react";
+import ProductList from "./kidsApparel";
 
 const page = () => {
-  return <KidsApparelProducts/>
-}
+  return <ProductList />;
+};
 
-export default page
+export default page;
