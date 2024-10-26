@@ -26,7 +26,11 @@ import {
 import Link from "next/link";
 import { getOrder } from "./shopping/checkout/actions";
 
-const CustomerLanding = () => {
+interface CustomerLandingProps {
+  initialOrderId: string | null;
+}
+
+const CustomerLanding = ({ initialOrderId }: CustomerLandingProps) => {
   const [latestOrderId, setLatestOrderId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -128,13 +132,7 @@ const CustomerLanding = () => {
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
             <Button variant="outline" asChild>
-              <Link
-                href={
-                  latestOrderId
-                    ? `/customer/order-success/${latestOrderId}`
-                    : "/customer/orders"
-                }
-              >
+              <Link href={`/customer/order-success/${initialOrderId}`}>
                 <FileText className="mr-2 h-4 w-4" />
                 View Recent Order
               </Link>
