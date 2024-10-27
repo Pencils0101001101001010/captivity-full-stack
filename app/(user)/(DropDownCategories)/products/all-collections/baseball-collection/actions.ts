@@ -15,16 +15,16 @@ export type ProductWithFeaturedImage = Omit<Product, "featuredImage"> & {
   featuredImage: FeaturedImage | null;
 };
 
-type FetchSignature =
+type FetchBaseball =
   | { success: true; data: ProductWithFeaturedImage[] }
   | { success: false; error: string };
 
-export async function fetchSignature(): Promise<FetchSignature> {
+export async function fetchBaseball(): Promise<FetchBaseball> {
   try {
-    const signature = await prisma.product.findMany({
+    const baseball = await prisma.product.findMany({
       where: {
         category: {
-          hasSome: ["signature-collection"],
+          hasSome: ["baseball-collection"],
         },
         isPublished: true,
       },
@@ -38,7 +38,7 @@ export async function fetchSignature(): Promise<FetchSignature> {
 
     return {
       success: true,
-      data: signature.map(product => ({
+      data: baseball.map(product => ({
         ...product,
         featuredImage: product.featuredImage || null,
       })) as ProductWithFeaturedImage[],
@@ -47,7 +47,7 @@ export async function fetchSignature(): Promise<FetchSignature> {
     const errorMessage =
       error instanceof Error ? error.message : "An unexpected error occurred";
 
-    console.error(`Error fetching signature-collection: ${errorMessage}`);
+    console.error(`Error fetching baseball-collection: ${errorMessage}`);
 
     return { success: false, error: errorMessage };
   }

@@ -1,9 +1,10 @@
 import React from "react";
+import BaseballProductList from "./Baseball";
 
 const page = () => {
   return (
     <div>
-      <SignatureProductList />
+      <BaseballProductList />
     </div>
   );
 };

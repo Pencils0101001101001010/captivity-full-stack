@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
-import { fetchSignature, ProductWithFeaturedImage } from "./actions";
+import { fetchBaseball, ProductWithFeaturedImage } from "./actions";
 
-const useSignature = () => {
+const useBaseball = () => {
   const [products, setProducts] = useState<ProductWithFeaturedImage[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadSignature = async () => {
+    const loadBaseball = async () => {
       setLoading(true);
       setError(null);
       try {
-        const result = await fetchSignature();
+        const result = await fetchBaseball();
 
         if (result.success) {
           setProducts(result.data);
@@ -20,17 +20,17 @@ const useSignature = () => {
         }
       } catch (err) {
         setError(
-          "An unexpected error occurred while fetching signature collection."
+          "An unexpected error occurred while fetching baseball collection."
         );
       } finally {
         setLoading(false);
       }
     };
 
-    loadSignature();
+    loadBaseball();
   }, []);
 
   return { products, loading, error };
 };
 
-export default useSignature;
+export default useBaseball;

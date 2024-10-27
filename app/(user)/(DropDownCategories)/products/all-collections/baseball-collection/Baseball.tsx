@@ -7,15 +7,15 @@ import Link from "next/link";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import SideMenu from "@/app/(user)/_components/SideMenu";
 import HeroSection from "@/app/(user)/_components/HeroSection";
-import useSignature from "./useSignature";
+import useBaseball from "./useBaseball";
 import type { ProductWithFeaturedImage } from "./actions";
 
 
 const ITEMS_PER_PAGE = 6;
 
-const SignatureProductList: React.FC = () => {
+const BaseballProductList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const { products, loading, error } = useSignature();
+  const { products, loading, error } = useBaseball();
   const [featuredImage, setFeaturedImage] = useState<{ large: string }>({
     large: "/Industrial-collection-Btn.jpg",
   });
@@ -41,7 +41,7 @@ const SignatureProductList: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[200px]">
         <Loader2 className="mx-auto my-3 animate-spin h-8 w-8" />
-        <p className="text-muted-foreground">Loading signature collection...</p>
+        <p className="text-muted-foreground">Loading baseball collection...</p>
       </div>
     );
   };
@@ -50,7 +50,7 @@ const SignatureProductList: React.FC = () => {
 
   return (
     <section className="container mx-auto my-8">
-      <HeroSection featuredImage={featuredImage} categoryName="SIGNATURE-COLLECTION" />
+      <HeroSection featuredImage={featuredImage} categoryName="BASEBALL-COLLECTION" />
 
       <div className="flex flex-col md:flex-row gap-6 relative">
         <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
@@ -60,11 +60,11 @@ const SignatureProductList: React.FC = () => {
         </aside>
 
         <main className="w-full md:w-3/4 lg:w-4/5">
-        <h1 className="text-gray-500 text-xl mb-6">Signature Collection</h1>
+        <h1 className="text-gray-500 text-xl mb-6">Baseball Collection</h1>
           {products.length === 0 ? (
             <div className="text-center py-8">
               <h2 className="text-2xl font-bold text-foreground">
-                No signature products available in the collection.
+                No baseball products available in the collection.
               </h2>
             </div>
           ) : (
@@ -162,4 +162,4 @@ const SignatureProductList: React.FC = () => {
   );
 };
 
-export default SignatureProductList;
+export default BaseballProductList;
