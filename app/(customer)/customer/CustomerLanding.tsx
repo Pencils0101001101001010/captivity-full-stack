@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { getOrder } from "./shopping/checkout/actions";
+import { useSession } from "../SessionProvider";
 
 interface CustomerLandingProps {
   initialOrderId: string | null;
@@ -32,7 +33,7 @@ interface CustomerLandingProps {
 
 const CustomerLanding = ({ initialOrderId }: CustomerLandingProps) => {
   const [latestOrderId, setLatestOrderId] = useState<string | null>(null);
-
+  const { user } = useSession();
   useEffect(() => {
     const fetchLatestOrder = async () => {
       try {
@@ -69,7 +70,7 @@ const CustomerLanding = ({ initialOrderId }: CustomerLandingProps) => {
         <div className="flex items-center">
           <div>
             <h2 className="text-2xl font-semibold text-foreground">
-              Welcome, Jaco!
+              Welcome {user.displayName}
             </h2>
             <p className="text-muted-foreground">
               Last login: Today at 10:30 AM
