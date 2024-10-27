@@ -58,7 +58,9 @@ const BeaniesProductList: React.FC = () => {
         <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
           <div className="sticky top-4 max-h-[calc(150vh-4rem)] overflow-y-auto overflow-x-hidden no-scrollbar">
             <SideMenu />
-            <ProductCarousel/>
+            <div className="sticky top-4 h-100 overflow-y-auto overflow-x-hidden no-scrollbar bg-background rounded-lg  shadow-sm w-80 pl-20">
+            <ProductCarousel />
+            </div>
           </div>
         </aside>
 
