@@ -7,17 +7,15 @@ import Link from "next/link";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import SideMenu from "@/app/(user)/_components/SideMenu";
 import HeroSection from "@/app/(user)/_components/HeroSection";
-import useBeanies from "./useBeanies";
+import useFashion from "./useFashion";
 import type { ProductWithFeaturedImage } from "./actions";
-import NewHeadwearCarouselSection from "@/app/(user)/_components/ProductCarousal";
-import ProductCarousel from "@/app/(user)/_components/ProductCarousal";
 
 
 const ITEMS_PER_PAGE = 6;
 
-const BeaniesProductList: React.FC = () => {
+const FashionProductList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const { products, loading, error } = useBeanies();
+  const { products, loading, error } = useFashion();
   const [featuredImage, setFeaturedImage] = useState<{ large: string }>({
     large: "/Industrial-collection-Btn.jpg",
   });
@@ -43,31 +41,30 @@ const BeaniesProductList: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[200px]">
         <Loader2 className="mx-auto my-3 animate-spin h-8 w-8" />
-        <p className="text-muted-foreground">Loading beanies collection...</p>
+        <p className="text-muted-foreground">Loading fashion collection...</p>
       </div>
     );
-  }
+  };
   
   if (error) return <div>Error: {error}</div>;
 
   return (
     <section className="container mx-auto my-8">
-      <HeroSection featuredImage={featuredImage} categoryName="BEANIES" />
+      <HeroSection featuredImage={featuredImage} categoryName="Fashion-COLLECTION" />
 
       <div className="flex flex-col md:flex-row gap-6 relative">
         <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
-          <div className="sticky top-4 max-h-[calc(150vh-4rem)] overflow-y-auto overflow-x-hidden no-scrollbar">
+          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto overflow-x-hidden no-scrollbar">
             <SideMenu />
-            <ProductCarousel/>
           </div>
         </aside>
 
         <main className="w-full md:w-3/4 lg:w-4/5">
-        <h1 className="text-gray-500 text-xl mb-6">Beanies</h1>
+        <h1 className="text-gray-500 text-xl mb-6">Fashion Collection</h1>
           {products.length === 0 ? (
             <div className="text-center py-8">
               <h2 className="text-2xl font-bold text-foreground">
-                No beanies available in the collection.
+                No fashion products available in the collection.
               </h2>
             </div>
           ) : (
@@ -165,4 +162,4 @@ const BeaniesProductList: React.FC = () => {
   );
 };
 
-export default BeaniesProductList;
+export default FashionProductList;
