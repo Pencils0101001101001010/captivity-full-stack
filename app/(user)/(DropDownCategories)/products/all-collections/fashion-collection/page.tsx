@@ -1,9 +1,10 @@
 import React from "react";
+import FashionProductList from "./Fashion";
 
 const page = () => {
   return (
     <div>
-      <SignatureProductList />
+      <FashionProductList />
     </div>
   );
 };
