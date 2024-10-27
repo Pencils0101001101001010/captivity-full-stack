@@ -9,7 +9,6 @@ import SideMenu from "@/app/(user)/_components/SideMenu";
 import HeroSection from "@/app/(user)/_components/HeroSection";
 import useBeanies from "./useBeanies";
 import type { ProductWithFeaturedImage } from "./actions";
-import NewHeadwearCarouselSection from "@/app/(user)/_components/ProductCarousal";
 import ProductCarousel from "@/app/(user)/_components/ProductCarousal";
 
 
