@@ -61,6 +61,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ className }) => {
 
   return (
     <div className={cn("w-full space-y-4", className)}>
+      <h1>NEW PRODUCTS</h1>
       <div className="relative w-full overflow-hidden rounded-lg">
         <div
           className="relative w-full transition-transform duration-500 ease-out"
@@ -87,9 +88,9 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ className }) => {
               <h3 className="font-medium text-lg text-card-foreground truncate">
                 {currentProduct.name}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              {/* <p className="text-sm text-muted-foreground">
                 Stock: {currentProduct.stock} available
-              </p>
+              </p> */}
             </div>
           </Card>
         </div>
