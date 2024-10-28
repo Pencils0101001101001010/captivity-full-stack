@@ -2,24 +2,12 @@
 // shopping/layout.tsx
 import React, { ReactNode } from "react";
 import prisma from "@/lib/prisma";
-import SearchSection from "./_components/SearchSection";
 import FilterSidebar from "./_components/FilterSidebar";
 import ProductCarousel from "./_components/ProductCarousel";
+import SearchField from "@/app/(customer)/_components/SearchField";
 
 interface LayoutProps {
   children: ReactNode;
-}
-
-interface Breadcrumb {
-  href: string;
-  label: string;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  imageUrl: string;
-  stock: number;
 }
 
 async function fetchNewProducts() {
@@ -79,7 +67,7 @@ export default async function Layout({
           <div className="w-full lg:w-[300px] lg:flex-shrink-0">
             {/* Search - Desktop Only */}
             <div className="hidden lg:block mb-6">
-              <SearchSection />
+              <SearchField />
             </div>
 
             {/* Filters */}
@@ -110,7 +98,7 @@ export default async function Layout({
           <div className="flex-1">
             {/* Search - Mobile Only */}
             <div className="lg:hidden mb-6">
-              <SearchSection />
+              <SearchField />
             </div>
             {children}
           </div>

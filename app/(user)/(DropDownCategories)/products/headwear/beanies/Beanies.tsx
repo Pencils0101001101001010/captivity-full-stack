@@ -53,20 +53,20 @@ const BeaniesProductList: React.FC = () => {
     <section className="container mx-auto my-8">
       <HeroSection featuredImage={featuredImage} categoryName="BEANIES" />
 
-      <div className="flex flex-col md:flex-row gap-6 relative">
-        <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
-          <div className="sticky top-4 max-h-[calc(150vh-4rem)] overflow-y-auto overflow-x-visible no-scrollbar">
+      <div className="flex flex-col md:flex-row gap-12 relative">
+        <aside className="md:w-1/4 lg:w-1/5 hidden md:block">
+          <div className="sticky top-4 space-y-8">
             <SideMenu />
-            <div className="sticky top-0 h-100 overflow-y-auto overflow-x-visible no-scrollbar bg-background rounded-lg shadow-sm w-80 pl-20">
+            <div className="bg-background rounded-lg shadow-sm w-full pl-6">
               <CollectionsMenu products={products} loading={loading} />
-            </div>
-            <div className="sticky top-4 h-100 overflow-y-auto overflow-x-visible no-scrollbar bg-background rounded-lg shadow-sm w-80 pl-20">
-              <ProductCarousel />
+              <div className="mt-8">
+                <ProductCarousel />
+              </div>
             </div>
           </div>
         </aside>
 
-        <main className="w-full md:w-3/4 lg:w-4/5">
+        <main className="w-full md:w-3/4 lg:w-4/5 pl-8">
           <h1 className="text-gray-500 text-xl mb-6">Beanies</h1>
           {products.length === 0 ? (
             <div className="text-center py-8">
@@ -76,7 +76,7 @@ const BeaniesProductList: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                 {paginatedProducts.map((product: ProductWithFeaturedImage) => (
                   <Link
                     href={`/products/headwear/${product.id}`}
@@ -122,7 +122,6 @@ const BeaniesProductList: React.FC = () => {
                     <ChevronLeft className="h-5 w-5 text-foreground" />
                   </button>
 
-                  {/* Page Numbers */}
                   <div className="flex gap-2">
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                       page => (
@@ -157,7 +156,6 @@ const BeaniesProductList: React.FC = () => {
                 </div>
               )}
 
-              {/* Products Count */}
               <div className="text-sm text-muted-foreground text-center mt-4">
                 Showing {startIndex + 1}-
                 {Math.min(startIndex + ITEMS_PER_PAGE, products.length)} of{" "}
