@@ -4,16 +4,16 @@ import React, { useState, useEffect, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { 
-  LayoutDashboard, 
-  Users, 
-  ShoppingBag, 
-  Shirt, 
-  Sun, 
-  Package, 
+import {
+  LayoutDashboard,
+  Users,
+  ShoppingBag,
+  Shirt,
+  Sun,
+  Package,
   PlusCircle,
   ChevronDown,
-  LucideIcon
+  LucideIcon,
 } from "lucide-react";
 
 type NavItem = {
@@ -40,90 +40,258 @@ const Sidebar: React.FC<SidebarProps> = ({ className, onClose }) => {
   const [openSections, setOpenSections] = useState<string[]>([]);
   const [activeItems, setActiveItems] = useState<string[]>([]);
 
-  const navItems: Section[] = useMemo(() => [
-    {
-      section: "USERS",
-      items: [
-        { href: "/admin/update/user-role", icon: Users, label: "Update Roles", color: "#4CAF50" },
-      ],
-    },
-    {
-      section: "PRODUCTS",
-      items: [
-        { href: "/admin/products/create", icon: PlusCircle, label: "Create", color: "#4CAF50" },
-        {
-          href: "/admin/products",
-          icon: ShoppingBag,
-          label: "Products",
-          color: "#2196F3",
-          subItems: [
-            {
-              href: "/headwear",
-              icon: Sun,
-              label: "Headwear",
-              color: "#FF9800",
-              subItems: [
-                { href: "/leisure-collection", icon: Package, label: "Leisure", color: "#9C27B0" },
-                { href: "/industrial-collection", icon: Package, label: "Industrial", color: "#795548" },
-                { href: "/signature-collection", icon: Package, label: "Signature", color: "#607D8B" },
-                { href: "/baseball-collection", icon: Package, label: "Baseball", color: "#F44336" },
-                { href: "/fashion-collection", icon: Package, label: "Fashion", color: "#E91E63" },
-                { href: "/sport-collection", icon: Package, label: "Sport", color: "#00BCD4" },
-                { href: "/multi-functional-collection", icon: Package, label: "Multi-Functional", color: "#8BC34A" },
-                { href: "/new-in-headwear-collection", icon: Package, label: "New", color: "#FFEB3B" },
-                { href: "/african-collection", icon: Package, label: "African", color: "#FF5722" },
-              ],
-            },
-            {
-              href: "/apparel",
-              icon: Shirt,
-              label: "Apparel",
-              color: "#3F51B5",
-              subItems: [
-                { href: "/new-in-apparel-collection", icon: Package, label: "New", color: "#FFEB3B" },
-                { href: "/men-collection", icon: Package, label: "Men", color: "#2196F3" },
-                { href: "/woman-collection", icon: Package, label: "Women", color: "#E91E63" },
-                { href: "/kids-collection", icon: Package, label: "Kids", color: "#4CAF50" },
-                { href: "/t-shirts-collection", icon: Package, label: "T-Shirts", color: "#9C27B0" },
-                { href: "/golfers-collection", icon: Package, label: "Golfers", color: "#795548" },
-                { href: "/hoodies-collection", icon: Package, label: "Hoodies", color: "#607D8B" },
-                { href: "/jackets-collection", icon: Package, label: "Jackets", color: "#F44336" },
-                { href: "/bottoms-collection", icon: Package, label: "Bottoms", color: "#00BCD4" },
-              ],
-            },
-            {
-              href: "/all-collections",
-              icon: Package,
-              label: "All Collections",
-              color: "#673AB7",
-              subItems: [
-                { href: "/signature", icon: Package, label: "Signature", color: "#607D8B" },
-                { href: "/baseball", icon: Package, label: "Baseball", color: "#F44336" },
-                { href: "/fashion", icon: Package, label: "Fashion", color: "#E91E63" },
-                { href: "/leisure", icon: Package, label: "Leisure", color: "#9C27B0" },
-                { href: "/sport", icon: Package, label: "Sport", color: "#00BCD4" },
-                { href: "/industrial", icon: Package, label: "Industrial", color: "#795548" },
-                { href: "/camo", icon: Package, label: "Camo", color: "#4CAF50" },
-                { href: "/summer", icon: Package, label: "Summer", color: "#FF9800" },
-                { href: "/winter", icon: Package, label: "Winter", color: "#2196F3" },
-                { href: "/kids", icon: Package, label: "Kids", color: "#4CAF50" },
-                { href: "/african", icon: Package, label: "African", color: "#FF5722" },
-              ],
-            },
-          ],
-        },
-        
-      ],
-    },
-  ], []);
+  const navItems: Section[] = useMemo(
+    () => [
+      {
+        section: "USERS",
+        items: [
+          {
+            href: "/admin/update/user-role",
+            icon: Users,
+            label: "Update Roles",
+            color: "#4CAF50",
+          },
+        ],
+      },
+      {
+        section: "PRODUCTS",
+        items: [
+          {
+            href: "/admin/products/create",
+            icon: PlusCircle,
+            label: "Create",
+            color: "#4CAF50",
+          },
+          {
+            href: "/admin/products",
+            icon: ShoppingBag,
+            label: "Products",
+            color: "#2196F3",
+            subItems: [
+              {
+                href: "/headwear",
+                icon: Sun,
+                label: "Headwear",
+                color: "#FF9800",
+                subItems: [
+                  {
+                    href: "/leisure-collection",
+                    icon: Package,
+                    label: "Leisure",
+                    color: "#9C27B0",
+                  },
+                  {
+                    href: "/industrial-collection",
+                    icon: Package,
+                    label: "Industrial",
+                    color: "#795548",
+                  },
+                  {
+                    href: "/signature-collection",
+                    icon: Package,
+                    label: "Signature",
+                    color: "#607D8B",
+                  },
+                  {
+                    href: "/baseball-collection",
+                    icon: Package,
+                    label: "Baseball",
+                    color: "#F44336",
+                  },
+                  {
+                    href: "/fashion-collection",
+                    icon: Package,
+                    label: "Fashion",
+                    color: "#E91E63",
+                  },
+                  {
+                    href: "/sport-collection",
+                    icon: Package,
+                    label: "Sport",
+                    color: "#00BCD4",
+                  },
+                  {
+                    href: "/multi-functional-collection",
+                    icon: Package,
+                    label: "Multi-Functional",
+                    color: "#8BC34A",
+                  },
+                  {
+                    href: "/new-in-headwear-collection",
+                    icon: Package,
+                    label: "New",
+                    color: "#FFEB3B",
+                  },
+                  {
+                    href: "/african-collection",
+                    icon: Package,
+                    label: "African",
+                    color: "#FF5722",
+                  },
+                ],
+              },
+              {
+                href: "/apparel",
+                icon: Shirt,
+                label: "Apparel",
+                color: "#3F51B5",
+                subItems: [
+                  {
+                    href: "/new-in-apparel-collection",
+                    icon: Package,
+                    label: "New",
+                    color: "#FFEB3B",
+                  },
+                  {
+                    href: "/men-collection",
+                    icon: Package,
+                    label: "Men",
+                    color: "#2196F3",
+                  },
+                  {
+                    href: "/woman-collection",
+                    icon: Package,
+                    label: "Women",
+                    color: "#E91E63",
+                  },
+                  {
+                    href: "/kids-collection",
+                    icon: Package,
+                    label: "Kids",
+                    color: "#4CAF50",
+                  },
+                  {
+                    href: "/t-shirts-collection",
+                    icon: Package,
+                    label: "T-Shirts",
+                    color: "#9C27B0",
+                  },
+                  {
+                    href: "/golfers-collection",
+                    icon: Package,
+                    label: "Golfers",
+                    color: "#795548",
+                  },
+                  {
+                    href: "/hoodies-collection",
+                    icon: Package,
+                    label: "Hoodies",
+                    color: "#607D8B",
+                  },
+                  {
+                    href: "/jackets-collection",
+                    icon: Package,
+                    label: "Jackets",
+                    color: "#F44336",
+                  },
+                  {
+                    href: "/bottoms-collection",
+                    icon: Package,
+                    label: "Bottoms",
+                    color: "#00BCD4",
+                  },
+                ],
+              },
+              {
+                href: "/all-collections",
+                icon: Package,
+                label: "All Collections",
+                color: "#673AB7",
+                subItems: [
+                  {
+                    href: "/signature",
+                    icon: Package,
+                    label: "Signature",
+                    color: "#607D8B",
+                  },
+                  {
+                    href: "/baseball",
+                    icon: Package,
+                    label: "Baseball",
+                    color: "#F44336",
+                  },
+                  {
+                    href: "/fashion",
+                    icon: Package,
+                    label: "Fashion",
+                    color: "#E91E63",
+                  },
+                  {
+                    href: "/leisure",
+                    icon: Package,
+                    label: "Leisure",
+                    color: "#9C27B0",
+                  },
+                  {
+                    href: "/sport",
+                    icon: Package,
+                    label: "Sport",
+                    color: "#00BCD4",
+                  },
+                  {
+                    href: "/industrial",
+                    icon: Package,
+                    label: "Industrial",
+                    color: "#795548",
+                  },
+                  {
+                    href: "/camo",
+                    icon: Package,
+                    label: "Camo",
+                    color: "#4CAF50",
+                  },
+                  {
+                    href: "/summer",
+                    icon: Package,
+                    label: "Summer",
+                    color: "#FF9800",
+                  },
+                  {
+                    href: "/winter",
+                    icon: Package,
+                    label: "Winter",
+                    color: "#2196F3",
+                  },
+                  {
+                    href: "/kids",
+                    icon: Package,
+                    label: "Kids",
+                    color: "#4CAF50",
+                  },
+                  {
+                    href: "/african",
+                    icon: Package,
+                    label: "African",
+                    color: "#FF5722",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        section: "ORDERS",
+        items: [
+          {
+            href: "/admin/orders",
+            icon: Users,
+            label: "Pending",
+            color: "#4CAF50",
+          },
+        ],
+      },
+    ],
+    []
+  );
 
   useEffect(() => {
     const updateActiveItems = (items: NavItem[], parentPath: string = "") => {
-      items.forEach((item) => {
+      items.forEach(item => {
         const fullPath = `${parentPath}${item.href}`;
         if (pathname?.startsWith(fullPath)) {
-          setActiveItems((prev) => [...new Set([...prev, fullPath])]);
-          setOpenSections((prev) => [...new Set([...prev, item.label])]);
+          setActiveItems(prev => [...new Set([...prev, fullPath])]);
+          setOpenSections(prev => [...new Set([...prev, item.label])]);
           if (item.subItems) {
             updateActiveItems(item.subItems, fullPath);
           }
@@ -132,20 +300,24 @@ const Sidebar: React.FC<SidebarProps> = ({ className, onClose }) => {
     };
 
     setActiveItems([]);
-    navItems.forEach((section) => updateActiveItems(section.items));
+    navItems.forEach(section => updateActiveItems(section.items));
   }, [pathname, navItems]);
 
   const toggleSection = (section: string) => {
-    setOpenSections((prev) =>
+    setOpenSections(prev =>
       prev.includes(section)
-        ? prev.filter((sec) => sec !== section)
+        ? prev.filter(sec => sec !== section)
         : [...prev, section]
     );
   };
 
   const isItemActive = (href: string): boolean => activeItems.includes(href);
 
-  const renderNavItem = (item: NavItem, parentPath: string = "", depth: number = 0) => {
+  const renderNavItem = (
+    item: NavItem,
+    parentPath: string = "",
+    depth: number = 0
+  ) => {
     const fullPath = `${parentPath}${item.href}`;
     const isActive = isItemActive(fullPath);
     const isOpen = openSections.includes(item.label);
@@ -162,7 +334,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className, onClose }) => {
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
             depth > 0 && "pl-4"
           )}
-          onClick={(e) => {
+          onClick={e => {
             e.preventDefault();
             e.stopPropagation();
             if (hasSubItems) {
@@ -194,7 +366,9 @@ const Sidebar: React.FC<SidebarProps> = ({ className, onClose }) => {
             )}
           >
             <div className="space-y-1 pl-4">
-              {item.subItems.map((subItem) => renderNavItem(subItem, fullPath, depth + 1))}
+              {item.subItems.map(subItem =>
+                renderNavItem(subItem, fullPath, depth + 1)
+              )}
             </div>
           </div>
         )}
@@ -214,7 +388,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className, onClose }) => {
         <Button
           variant="link"
           className="text-xl font-semibold text-primary"
-          onClick={(e) => {
+          onClick={e => {
             e.preventDefault();
             router.push("/admin");
             onClose?.();
@@ -225,13 +399,13 @@ const Sidebar: React.FC<SidebarProps> = ({ className, onClose }) => {
       </div>
 
       <nav className="flex-grow space-y-4">
-        {navItems.map((section) => (
+        {navItems.map(section => (
           <div key={section.section} className="space-y-2">
             <h3 className="text-sm font-semibold uppercase text-muted-foreground">
               {section.section}
             </h3>
             <div className="space-y-1">
-              {section.items.map((item) => renderNavItem(item))}
+              {section.items.map(item => renderNavItem(item))}
             </div>
           </div>
         ))}
