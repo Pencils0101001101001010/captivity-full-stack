@@ -10,7 +10,7 @@ import HeroSection from "@/app/(user)/_components/HeroSection";
 import useMen from "./useMen";
 import type { ProductWithFeaturedImage } from "./actions";
 import { CollectionsMenu } from "./collections-menu";
-import ProductCarousel from "@/app/(user)/_components/ProductCarousal";
+import ProductCarousel from "@/app/(user)/_components/ApparelsCarousel";
 
 const ITEMS_PER_PAGE = 6;
 
