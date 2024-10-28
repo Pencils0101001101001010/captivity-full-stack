@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import type { ProductWithFeaturedImage } from "./actions";
+import type { ProductWithFeaturedImage } from "../(DropDownCategories)/products/headwear/beanies/actions";
 
 interface CollectionsMenuProps {
   products?: ProductWithFeaturedImage[];
