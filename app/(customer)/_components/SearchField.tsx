@@ -2,26 +2,48 @@
 
 import { Input } from "@/components/ui/input";
 import { SearchIcon } from "lucide-react";
-import React from "react";
+import { usePathname } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import { useSummerActions } from "../customer/_store/useSummerStore";
+import { useWinterActions } from "../customer/_store/useWinterStore";
 
-interface SearchFieldProps {
-  onSearch: (query: string) => void;
-}
+export default function SearchField() {
+  const pathname = usePathname() || '';
+  const [searchValue, setSearchValue] = useState("");
+  const { setSearchQuery: setSummerSearch } = useSummerActions();
+  const { setSearchQuery: setWinterSearch } = useWinterActions();
 
-export default function SearchField({ onSearch }: SearchFieldProps) {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
   }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    onSearch(e.target.value);
+    const query = e.target.value;
+    setSearchValue(query);
+    
+    if (pathname.includes("/summer")) {
+      setSummerSearch(query);
+    } else if (pathname.includes("/winter")) {
+      setWinterSearch(query);
+    }
   }
+
+  // Reset search when changing collections
+  useEffect(() => {
+    setSearchValue("");
+    if (pathname.includes("/summer")) {
+      setSummerSearch("");
+    } else if (pathname.includes("/winter")) {
+      setWinterSearch("");
+    }
+  }, [pathname, setSummerSearch, setWinterSearch]);
 
   return (
     <form onSubmit={handleSubmit}>
       <div className="relative">
         <Input
           name="q"
+          value={searchValue}
           placeholder="Search"
           className="pe-10 border-4 outline-none"
           onChange={handleChange}

@@ -6,7 +6,7 @@ import {
   Variation,
   FeaturedImage,
 } from "@prisma/client";
-import { fetchSummerCollection } from "../shopping/product_categories/summer/actions";
+import { fetchWinterCollection } from "../shopping/product_categories/winter/actions";
 
 export type ProductWithRelations = Product & {
   dynamicPricing: DynamicPricing[];
@@ -28,8 +28,8 @@ export type CategorizedProducts = {
   [key in Category]: ProductWithRelations[];
 };
 
-interface SummerState {
-  summerProducts: CategorizedProducts;
+interface WinterState {
+  winterProducts: CategorizedProducts;
   filteredProducts: CategorizedProducts;
   searchQuery: string;
   loading: boolean;
@@ -38,17 +38,17 @@ interface SummerState {
   isInitializing: boolean;
 }
 
-interface SummerActions {
-  setSummerProducts: (products: CategorizedProducts) => void;
+interface WinterActions {
+  setWinterProducts: (products: CategorizedProducts) => void;
   setFilteredProducts: (products: CategorizedProducts) => void;
   setSearchQuery: (query: string) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  fetchSummerCollection: () => Promise<void>;
+  fetchWinterCollection: () => Promise<void>;
 }
 
-const initialState: SummerState = {
-  summerProducts: {
+const initialState: WinterState = {
+  winterProducts: {
     men: [],
     women: [],
     kids: [],
@@ -77,25 +77,25 @@ const initialState: SummerState = {
 
 let fetchPromise: Promise<void> | null = null;
 
-const useSummerStore = create<SummerState & SummerActions>()((set, get) => ({
+const useWinterStore = create<WinterState & WinterActions>()((set, get) => ({
   ...initialState,
 
-  setSummerProducts: products =>
-    set({ summerProducts: products, filteredProducts: products }),
+  setWinterProducts: products =>
+    set({ winterProducts: products, filteredProducts: products }),
 
   setFilteredProducts: products => set({ filteredProducts: products }),
 
   setSearchQuery: query => {
-    const { summerProducts } = get();
+    const { winterProducts } = get();
     set({ searchQuery: query });
 
     if (!query.trim()) {
-      set({ filteredProducts: summerProducts });
+      set({ filteredProducts: winterProducts });
       return;
     }
 
     const lowercaseQuery = query.toLowerCase().trim();
-    const filtered = Object.entries(summerProducts).reduce(
+    const filtered = Object.entries(winterProducts).reduce(
       (acc, [category, products]) => {
         const filteredProducts = products.filter(
           product =>
@@ -121,7 +121,7 @@ const useSummerStore = create<SummerState & SummerActions>()((set, get) => ({
 
   setError: error => set({ error }),
 
-  fetchSummerCollection: async () => {
+  fetchWinterCollection: async () => {
     const { loading, hasInitiallyFetched, isInitializing } = get();
 
     if (loading || hasInitiallyFetched || isInitializing) {
@@ -134,11 +134,11 @@ const useSummerStore = create<SummerState & SummerActions>()((set, get) => ({
 
     set({ loading: true, error: null, isInitializing: true });
 
-    fetchPromise = fetchSummerCollection()
+    fetchPromise = fetchWinterCollection()
       .then(result => {
         if (result.success) {
           set({
-            summerProducts: result.data,
+            winterProducts: result.data,
             filteredProducts: result.data,
             loading: false,
             hasInitiallyFetched: true,
@@ -164,27 +164,27 @@ const useSummerStore = create<SummerState & SummerActions>()((set, get) => ({
   },
 }));
 
-export const useSummerProducts = () =>
-  useSummerStore(
+export const useWinterProducts = () =>
+  useWinterStore(
     useShallow(state => ({
       products: state.filteredProducts,
       hasInitiallyFetched: state.hasInitiallyFetched,
     }))
   );
 
-export const useSummerLoading = () => useSummerStore(state => state.loading);
+export const useWinterLoading = () => useWinterStore(state => state.loading);
 
-export const useSummerError = () => useSummerStore(state => state.error);
+export const useWinterError = () => useWinterStore(state => state.error);
 
-export const useSummerActions = () =>
-  useSummerStore(
+export const useWinterActions = () =>
+  useWinterStore(
     useShallow(state => ({
-      setSummerProducts: state.setSummerProducts,
+      setWinterProducts: state.setWinterProducts,
       setSearchQuery: state.setSearchQuery,
       setLoading: state.setLoading,
       setError: state.setError,
-      fetchSummerCollection: state.fetchSummerCollection,
+      fetchWinterCollection: state.fetchWinterCollection,
     }))
   );
 
-export default useSummerStore;
+export default useWinterStore;
