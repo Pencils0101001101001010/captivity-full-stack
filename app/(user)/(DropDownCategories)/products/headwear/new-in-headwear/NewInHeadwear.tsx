@@ -9,6 +9,8 @@ import SideMenu from "@/app/(user)/_components/SideMenu";
 import HeroSection from "@/app/(user)/_components/HeroSection";
 import useNewInHeadwear from "./useNewInHeadwear";
 import type { ProductWithFeaturedImage } from "./actions";
+import ProductCarousel from "@/app/(user)/_components/ProductCarousal";
+import { CollectionsMenu } from "../../../../_components/CollectionsMenu";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -44,32 +46,37 @@ const NewInHeadwearProductList: React.FC = () => {
       </div>
     );
   }
-  
+
   if (error) return <div>Error: {error}</div>;
 
   return (
     <section className="container mx-auto my-8">
       <HeroSection featuredImage={featuredImage} categoryName="NEW IN HEADWEAR" />
 
-      <div className="flex flex-col md:flex-row gap-6 relative">
-        <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
-          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto overflow-x-hidden no-scrollbar">
+      <div className="flex flex-col md:flex-row gap-12 relative">
+        <aside className="md:w-1/4 lg:w-1/5 hidden md:block">
+          <div className="sticky top-4 space-y-8">
             <SideMenu />
+            <div className="bg-background rounded-lg shadow-sm w-full pl-6">
+              <CollectionsMenu products={products} loading={loading} />
+              <div className="mt-8">
+                <ProductCarousel />
+              </div>
+            </div>
           </div>
         </aside>
 
-        <main className="w-full md:w-3/4 lg:w-4/5">
-        <h1 className="text-gray-500 text-xl mb-6">New in Headwear</h1>
-
+        <main className="w-full md:w-3/4 lg:w-4/5 pl-8">
+          <h1 className="text-gray-500 text-xl mb-6">New In Headwear</h1>
           {products.length === 0 ? (
             <div className="text-center py-8">
               <h2 className="text-2xl font-bold text-foreground">
-                No new headwear available in the collection.
+                No new in headwear available in the collection.
               </h2>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                 {paginatedProducts.map((product: ProductWithFeaturedImage) => (
                   <Link
                     href={`/products/headwear/${product.id}`}
@@ -115,7 +122,6 @@ const NewInHeadwearProductList: React.FC = () => {
                     <ChevronLeft className="h-5 w-5 text-foreground" />
                   </button>
 
-                  {/* Page Numbers */}
                   <div className="flex gap-2">
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                       page => (
@@ -129,7 +135,9 @@ const NewInHeadwearProductList: React.FC = () => {
                               : "hover:bg-muted text-foreground"
                           }`}
                           aria-label={`Page ${page}`}
-                          aria-current={currentPage === page ? "page" : undefined}
+                          aria-current={
+                            currentPage === page ? "page" : undefined
+                          }
                         >
                           {page}
                         </button>
@@ -148,7 +156,6 @@ const NewInHeadwearProductList: React.FC = () => {
                 </div>
               )}
 
-              {/* Products Count */}
               <div className="text-sm text-muted-foreground text-center mt-4">
                 Showing {startIndex + 1}-
                 {Math.min(startIndex + ITEMS_PER_PAGE, products.length)} of{" "}
