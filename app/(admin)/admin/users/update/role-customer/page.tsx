@@ -10,7 +10,7 @@ export default async function Page({ searchParams }: PageProps) {
     <div className="p-6">
       <UserTable
         role={UserRole.CUSTOMER}
-        title="Pending Approval Users"
+        title="Customer"
         searchParams={searchParams as { q?: string }}
       />
     </div>
