@@ -15,7 +15,7 @@ export default async function Page() {
 
   return (
     <div className="p-6">
-      <UserTable users={result.data} title="Pending Approval Users" />
+      <UserTable users={result.data} title="Customers" />
     </div>
   );
 }
