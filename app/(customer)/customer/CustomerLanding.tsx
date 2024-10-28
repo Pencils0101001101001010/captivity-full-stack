@@ -82,7 +82,7 @@ const CustomerLanding = ({ initialOrderId }: CustomerLandingProps) => {
         </Button>
       </div>
 
-      <nav className="mb-8">
+      <nav className="mb-5">
         <ul className="flex flex-wrap justify-between bg-card shadow-2xl shadow-black rounded-lg p-2">
           {[
             {
