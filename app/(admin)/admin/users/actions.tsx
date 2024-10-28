@@ -61,40 +61,7 @@ async function fetchUsersByRole(role: UserRole): Promise<FetchUsersResult> {
 
 // Function to fetch pending approval users (users with role USER)
 export async function fetchPendingApprovalUsers(): Promise<FetchUsersResult> {
-  try {
-    const { user } = await validateRequest();
-    if (!user || user.role !== UserRole.ADMIN) {
-      throw new Error("Unauthorized. Only admins can fetch users.");
-    }
-
-    const users = await prisma.user.findMany({
-      where: { role: UserRole.USER },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        displayName: true,
-        role: true,
-        companyName: true,
-        createdAt: true,
-      },
-    });
-
-    return {
-      success: true,
-      data: users,
-      count: users.length,
-    };
-  } catch (error) {
-    console.error("Error fetching pending approval users:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
-  }
+  return fetchUsersByRole(UserRole.USER);
 }
 
 // Role-specific fetch functions
@@ -201,7 +168,7 @@ export async function updateUserRole(
       data: { role: newRole },
     });
 
-    revalidatePath("/admin/users");
+    revalidatePath("/admin/users/update");
     return { success: true, message: "User role updated successfully" };
   } catch (error) {
     console.error("Error updating user role:", error);

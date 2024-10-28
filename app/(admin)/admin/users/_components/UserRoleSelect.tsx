@@ -53,9 +53,7 @@ const UserRoleSelect: React.FC<UserRoleSelectProps> = ({
           disabled:bg-gray-100 disabled:cursor-not-allowed
         `}
       >
-        <option value={UserRole.USER} disabled>
-          Pending Approval
-        </option>
+        <option value={UserRole.USER}>User</option>
         <option value={UserRole.CUSTOMER}>Customer</option>
         <option value={UserRole.SUBSCRIBER}>Subscriber</option>
         <option value={UserRole.PROMO}>Promo User</option>
