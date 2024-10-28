@@ -22,7 +22,9 @@ export type FetchUsersResult =
   | { success: false; error: string };
 
 // Function to fetch users by role
-async function fetchUsersByRole(role: UserRole): Promise<FetchUsersResult> {
+export async function fetchUsersByRole(
+  role: UserRole
+): Promise<FetchUsersResult> {
   try {
     const { user } = await validateRequest();
     if (!user || user.role !== UserRole.ADMIN) {

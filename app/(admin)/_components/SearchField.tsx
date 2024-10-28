@@ -1,39 +1,74 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { SearchIcon } from "lucide-react";
+import { SearchIcon, XIcon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useDebouncedCallback } from "use-debounce";
 
-export default function UserTableSearch() {
+interface SearchFieldProps {
+  onSearch?: (query: string) => void;
+}
+
+export default function SearchField({ onSearch }: SearchFieldProps) {
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePathname() || "";
   const searchParams = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState(searchParams?.get("q") ?? "");
+  const [value, setValue] = useState(searchParams?.get("q") ?? "");
 
-  const handleSearch = (value: string) => {
+  // Update local state when URL search param changes
+  useEffect(() => {
+    setValue(searchParams?.get("q") ?? "");
+  }, [searchParams]);
+
+  const debouncedSearch = useDebouncedCallback((term: string) => {
     const params = new URLSearchParams(searchParams?.toString() || "");
-    if (value) {
-      params.set("q", value);
+    if (term) {
+      params.set("q", term);
     } else {
       params.delete("q");
     }
-    router.push(`${pathname}?${params.toString()}`);
+
+    const newPath = params.toString()
+      ? `${pathname}?${params.toString()}`
+      : pathname;
+    router.push(newPath);
+
+    if (onSearch) {
+      onSearch(term);
+    }
+  }, 300);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setValue(newValue);
+    debouncedSearch(newValue);
+  };
+
+  const handleClear = () => {
+    setValue("");
+    debouncedSearch("");
+    router.push(pathname);
   };
 
   return (
     <div className="relative">
       <Input
-        name="q"
-        placeholder="Search users..."
+        value={value}
+        onChange={handleChange}
+        placeholder="Search"
         className="pe-10"
-        value={searchQuery}
-        onChange={e => {
-          setSearchQuery(e.target.value);
-          handleSearch(e.target.value);
-        }}
       />
-      <SearchIcon className="absolute right-3 top-1/2 size-5 -translate-y-1/2 transform text-muted-foreground" />
+      {value ? (
+        <button
+          onClick={handleClear}
+          className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-500 hover:text-gray-700"
+        >
+          <XIcon className="size-4" />
+        </button>
+      ) : (
+        <SearchIcon className="absolute right-3 top-1/2 size-5 -translate-y-1/2 transform text-muted-foreground" />
+      )}
     </div>
   );
 }
