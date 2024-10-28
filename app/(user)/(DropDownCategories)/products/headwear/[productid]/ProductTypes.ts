@@ -1,15 +1,12 @@
 import prisma from "@/lib/prisma";
-import { Product, Variation, DynamicPricing } from "@prisma/client";
+import {
+  Product,
+  Variation,
+  DynamicPricing,
+  FeaturedImage,
+} from "@prisma/client";
 
-export type FeaturedImage = {
-  id: string;
-  thumbnail: string;
-  medium: string;
-  large: string;
-  productId: string;
-};
-
-export type ProductWithFeaturedImage = Omit<Product, "featuredImage"> & {
+export type ProductWithFeaturedImage = Product & {
   featuredImage: FeaturedImage | null;
   variations: Variation[];
   dynamicPricing: DynamicPricing[];
@@ -44,12 +41,9 @@ export async function fetchNewHeadwear(): Promise<FetchNewHeadwearResult> {
 
     return {
       success: true,
-      data: newHeadwear.map(product => ({
-        ...product,
-        featuredImage: product.featuredImage || null,
-      })) as ProductWithFeaturedImage[],
+      data: newHeadwear,
     };
-  } catch (error: any) {
+  } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "An unexpected error occurred";
     console.error(`Error fetching new headwear: ${errorMessage}`);
@@ -58,7 +52,7 @@ export async function fetchNewHeadwear(): Promise<FetchNewHeadwearResult> {
 }
 
 export async function fetchProductById(
-  id: number
+  id: string
 ): Promise<FetchProductByIdResult> {
   try {
     const product = await prisma.product.findUnique({
@@ -76,12 +70,9 @@ export async function fetchProductById(
 
     return {
       success: true,
-      data: {
-        ...product,
-        featuredImage: product.featuredImage || null,
-      } as ProductWithFeaturedImage,
+      data: product,
     };
-  } catch (error: any) {
+  } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "An unexpected error occurred";
     console.error(`Error fetching product by ID: ${errorMessage}`);

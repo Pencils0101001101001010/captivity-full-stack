@@ -11,7 +11,7 @@ interface CollectionsMenuProps {
 }
 
 export function CollectionsMenu({ products, loading }: CollectionsMenuProps) {
-  const [isCollectionsOpen, setIsCollectionsOpen] = useState(true);
+  const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
 
   const collections = [
     "Signature",
@@ -28,25 +28,25 @@ export function CollectionsMenu({ products, loading }: CollectionsMenuProps) {
 
   return (
     <div className="mt-4">
-      <div 
+      <div
         onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
         className="flex items-center justify-between cursor-pointer mb-4"
       >
         <h2 className="text-gray-700 font-medium">COLLECTIONS</h2>
-        <ChevronDown 
+        <ChevronDown
           className={`h-5 w-5 transform transition-transform ${
-            isCollectionsOpen ? 'rotate-180' : ''
+            isCollectionsOpen ? "rotate-180" : ""
           }`}
         />
       </div>
-      
+
       <div
         className={`transition-all duration-200 ease-in-out overflow-hidden ${
-          isCollectionsOpen ? 'max-h-[500px]' : 'max-h-0'
+          isCollectionsOpen ? "max-h-[500px]" : "max-h-0"
         }`}
       >
         <ul className="space-y-3">
-          {collections.map((item) => (
+          {collections.map(item => (
             <li key={item}>
               <Link
                 href={`/collections/${item.toLowerCase()}`}
