@@ -64,7 +64,7 @@ export function useMenuItems() {
         },
         {
           name: "Distributors",
-          href: "/admin/users/distributors",
+          href: "/admin/users/update/role-distributors",
           count: counts.distributors,
         },
         {
