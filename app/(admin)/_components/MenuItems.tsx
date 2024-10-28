@@ -2,7 +2,7 @@ export const menuItems = [
   {
     title: "USERS",
     links: [
-      { name: "Pending Approval", href: "/admin/dashboard" },
+      { name: "Pending Approval", href: "/admin/dashboard", count: 5 },
       { name: "Customers", href: "/admin/dashboard/analytics" },
       { name: "Distributors", href: "/admin/dashboard/analytics" },
       { name: "Editors", href: "/admin/dashboard/analytics" },

@@ -1,7 +1,7 @@
 import React from "react";
 
 const AdminPanel = () => {
-  return <div></div>;
+  return <div className="text-center">halo</div>;
 };
 
 export default AdminPanel;

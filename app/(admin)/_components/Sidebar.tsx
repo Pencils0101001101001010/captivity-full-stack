@@ -12,7 +12,7 @@ import { usePathname } from "next/navigation";
 import { menuItems } from "./MenuItems";
 
 const CollapsibleSidebar = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [openDropdowns, setOpenDropdowns] = useState<number[]>([]);
   const { user } = useSession();
   const pathname = usePathname();
@@ -79,13 +79,20 @@ const CollapsibleSidebar = () => {
                         <Link
                           key={linkIndex}
                           href={link.href}
-                          className={`block px-6 py-2 text-sm transition-colors duration-200 ${
+                          className={`block px-6 py-2 text-sm transition-colors duration-200 relative ${
                             pathname === link.href
                               ? "bg-gray-700 text-white border-l-4 border-blue-500"
                               : "text-gray-400 hover:text-white hover:bg-gray-700"
                           }`}
                         >
-                          {link.name}
+                          <div className="flex items-center justify-between">
+                            <span>{link.name}</span>
+                            {link.count && link.count > 0 && (
+                              <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                                {link.count}
+                              </span>
+                            )}
+                          </div>
                         </Link>
                       ))}
                     </div>
