@@ -40,7 +40,7 @@ export function useMenuItems() {
 
   const menuItems: MenuItem[] = [
     {
-      title: "USERS",
+      title: "Users",
       links: [
         {
           name: "Pending Approval",
