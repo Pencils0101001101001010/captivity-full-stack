@@ -1,10 +1,18 @@
 import { UserRole } from "@prisma/client";
 import UserTable from "../../_components/UserTable";
 
-export default function PendingUsersPage() {
+interface PageProps {
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
+export default async function Page({ searchParams }: PageProps) {
   return (
     <div className="p-6">
-      <UserTable role={UserRole.USER} title="Pending Approval Users" />
+      <UserTable 
+        role={UserRole.USER} 
+        title="Pending Approval Users" 
+        searchParams={searchParams as { q?: string }}
+      />
     </div>
   );
 }

@@ -12,13 +12,14 @@ import {
 } from "../actions";
 import { UserRole } from "@prisma/client";
 import UserRoleSelect from "./UserRoleSelect";
+import UserTableSearch from "@/app/(admin)/_components/SearchField";
 
 interface UserTableProps {
   role: UserRole;
   title: string;
+  searchParams?: { q?: string };
 }
 
-// Move fetch logic outside component
 async function fetchUsersByRole(role: UserRole): Promise<FetchUsersResult> {
   switch (role) {
     case UserRole.USER:
@@ -43,7 +44,7 @@ async function fetchUsersByRole(role: UserRole): Promise<FetchUsersResult> {
   }
 }
 
-const UserTable = async ({ role, title }: UserTableProps) => {
+const UserTable = async ({ role, title, searchParams }: UserTableProps) => {
   const result = await fetchUsersByRole(role);
 
   if (!result.success) {
@@ -58,19 +59,51 @@ const UserTable = async ({ role, title }: UserTableProps) => {
     );
   }
 
-  const users = result.data;
+  let users = result.data;
+
+  // Filter users based on search query
+  const searchQuery = searchParams?.q?.toLowerCase();
+  if (searchQuery) {
+    users = users.filter(user => {
+      const searchFields = [
+        user.displayName,
+        user.firstName,
+        user.lastName,
+        user.email,
+        user.companyName,
+      ].map(field => field?.toLowerCase() || "");
+
+      return searchFields.some(field => field.includes(searchQuery));
+    });
+  }
 
   if (users.length === 0) {
     return (
-      <div className="bg-white shadow-md rounded-lg p-6 text-center text-gray-500">
-        No {title.toLowerCase()} to display at this time.
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+          <div className="w-72">
+            <UserTableSearch />
+          </div>
+        </div>
+        <div className="bg-white shadow-md rounded-lg p-6 text-center text-gray-500">
+          {searchQuery
+            ? `No ${title.toLowerCase()} found matching "${searchParams?.q}"`
+            : `No ${title.toLowerCase()} to display at this time`}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+        <div className="w-72">
+          <UserTableSearch />
+        </div>
+      </div>
+
       <div className="overflow-x-auto bg-white shadow-md rounded-lg">
         <table className="min-w-full leading-normal">
           <thead>

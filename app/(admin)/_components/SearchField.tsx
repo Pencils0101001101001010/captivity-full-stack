@@ -2,26 +2,38 @@
 
 import { Input } from "@/components/ui/input";
 import { SearchIcon } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
-interface SearchFieldProps {
-  onSearch: (query: string) => void;
-}
+export default function UserTableSearch() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams?.get("q") ?? "");
 
-export default function SearchField({ onSearch }: SearchFieldProps) {
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const q = (form.q as HTMLInputElement).value.trim();
-    if (!q) return;
-    onSearch(q);
-  }
+  const handleSearch = (value: string) => {
+    const params = new URLSearchParams(searchParams?.toString() || "");
+    if (value) {
+      params.set("q", value);
+    } else {
+      params.delete("q");
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="relative">
-        <Input name="q" placeholder="Search" className="pe-10" />
-        <SearchIcon className="absolute right-3 top-1/2 size-5 -translate-y-1/2 transform text-muted-foreground" />
-      </div>
-    </form>
+    <div className="relative">
+      <Input
+        name="q"
+        placeholder="Search users..."
+        className="pe-10"
+        value={searchQuery}
+        onChange={e => {
+          setSearchQuery(e.target.value);
+          handleSearch(e.target.value);
+        }}
+      />
+      <SearchIcon className="absolute right-3 top-1/2 size-5 -translate-y-1/2 transform text-muted-foreground" />
+    </div>
   );
 }
