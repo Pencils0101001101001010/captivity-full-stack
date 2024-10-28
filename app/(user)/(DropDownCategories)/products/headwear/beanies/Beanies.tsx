@@ -10,6 +10,7 @@ import HeroSection from "@/app/(user)/_components/HeroSection";
 import useBeanies from "./useBeanies";
 import type { ProductWithFeaturedImage } from "./actions";
 import ProductCarousel from "@/app/(user)/_components/ProductCarousal";
+import { CollectionsMenu } from "./collectionsMenu";
 
 
 const ITEMS_PER_PAGE = 6;
@@ -54,14 +55,15 @@ const BeaniesProductList: React.FC = () => {
       <HeroSection featuredImage={featuredImage} categoryName="BEANIES" />
 
       <div className="flex flex-col md:flex-row gap-6 relative">
-        <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
-          <div className="sticky top-4 max-h-[calc(150vh-4rem)] overflow-y-auto overflow-x-hidden no-scrollbar">
-            <SideMenu />
-            <div className="sticky top-4 h-100 overflow-y-auto overflow-x-hidden no-scrollbar bg-background rounded-lg  shadow-sm w-80 pl-20">
-            <ProductCarousel />
-            </div>
-          </div>
-        </aside>
+      <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
+  <div className="sticky top-4 max-h-[calc(150vh-4rem)] overflow-y-auto overflow-x-hidden no-scrollbar">
+    <SideMenu />
+    <div className="sticky top-4 h-100 overflow-y-auto overflow-x-hidden no-scrollbar bg-background rounded-lg shadow-sm w-80 pl-20">
+      <CollectionsMenu products={products} loading={loading} />
+      <ProductCarousel />
+    </div>
+  </div>
+</aside>
 
         <main className="w-full md:w-3/4 lg:w-4/5">
         <h1 className="text-gray-500 text-xl mb-6">Beanies</h1>
