@@ -1,20 +1,13 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { GoHomeFill } from "react-icons/go";
-import { TbCategoryFilled } from "react-icons/tb";
-import { FaHeart } from "react-icons/fa";
-import { MdAccountCircle } from "react-icons/md";
 import { RxDividerVertical } from "react-icons/rx";
-import { ShoppingCart } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
 
 const Navbar = () => {
   const session = useSession();
-  const [isOpen, setIsOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
 
   return (
     <div>
@@ -77,37 +70,6 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile Menu */}
-      {isOpen && (
-        <div className="md:hidden bg-white text-black shadow-xl z-10">
-          <ul>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/headwear/category">Headwear Collection</Link>
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/apparel/category">Apparel Collection</Link>
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/collections/category">All Collections</Link>
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/catalogue">Catalogue</Link>
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/clearance">CLEARANCE</Link>
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/Help">Help</Link>
-            </li>
-            {!session?.user && (
-              <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-                <Link href="/signup">Register</Link>
-              </li>
-            )}
-          </ul>
-        </div>
-      )}
-
       {/* Mobile search bar */}
       <div className="md:hidden m-2">
         <div className="flex items-center justify-center border-b-2 p-2">
@@ -119,41 +81,6 @@ const Navbar = () => {
           <button className="bg-red-600 hover:bg-red-500 rounded-r-sm text-white px-2 py-2">
             SEARCH
           </button>
-        </div>
-      </div>
-
-      {/* Mobile bottom Nav */}
-      <div className="md:hidden fixed inset-x-0 bottom-0 bg-white shadow-xl shadow-gray-400 border-t-2 border-t-gray-400 border-2 ml-5 mr-5 z-10">
-        <div className="flex justify-around text-gray-500 m-auto">
-          <Link
-            href="/"
-            className="flex flex-col items-center py-2 hover:text-red-500"
-          >
-            <GoHomeFill />
-            <div className="text-xs mt-2">Home</div>
-          </Link>
-          <Link
-            href="/mobileCategories"
-            className="flex flex-col items-center py-2 hover:text-red-500"
-          >
-            <TbCategoryFilled />
-            <div className="text-xs mt-2">Categories</div>
-          </Link>
-
-          <Link
-            href="/Favourites"
-            className="flex text-gray-600 flex-col items-center py-2 hover:text-red-500"
-          >
-            <FaHeart />
-            <div className="text-xs mt-2">Favourites</div>
-          </Link>
-          <Link
-            href={session?.user ? `/users/${session.user.username}` : "/Login"}
-            className="flex flex-col items-center py-2 hover:text-red-500"
-          >
-            <MdAccountCircle />
-            <div className="text-xs mt-2">Account</div>
-          </Link>
         </div>
       </div>
     </div>
