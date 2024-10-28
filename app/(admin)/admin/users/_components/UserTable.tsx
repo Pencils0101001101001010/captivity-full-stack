@@ -1,46 +1,41 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { User } from "lucide-react";
 import { UserRole } from "@prisma/client";
 import UserRoleSelect from "./UserRoleSelect";
 import SearchField from "@/app/(admin)/_components/SearchField";
 
 interface UserTableProps {
-  users: any[]; // Replace any with your User type
+  users: any[]; // Replace with your User type
   title: string;
 }
 
 const UserTable = ({ users, title }: UserTableProps) => {
-  const [filteredUsers, setFilteredUsers] = useState(users);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Update filtered users when initial users change
-  useEffect(() => {
-    setFilteredUsers(users);
-  }, [users]);
+  // Memoize filtered users to prevent unnecessary recalculations
+  const filteredUsers = useMemo(() => {
+    if (!searchTerm) return users;
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (!query.trim()) {
-      setFilteredUsers(users);
-      return;
-    }
-
-    const searchTerm = query.toLowerCase();
-    const results = users.filter(user => {
+    const lowerSearch = searchTerm.toLowerCase();
+    return users.filter(user => {
       const searchFields = [
         user.displayName,
         user.firstName,
         user.lastName,
         user.email,
         user.companyName,
-      ].map(field => field?.toLowerCase() || "");
+      ];
 
-      return searchFields.some(field => field.includes(searchTerm));
+      return searchFields.some(field =>
+        field?.toLowerCase().includes(lowerSearch)
+      );
     });
+  }, [users, searchTerm]);
 
-    setFilteredUsers(results);
+  const handleSearch = (query: string) => {
+    setSearchTerm(query);
   };
 
   return (
@@ -48,14 +43,14 @@ const UserTable = ({ users, title }: UserTableProps) => {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
         <div className="w-72">
-          <SearchField onSearch={handleSearch} />
+          <SearchField onSearch={handleSearch} initialValue={searchTerm} />
         </div>
       </div>
 
-      {!filteredUsers || filteredUsers.length === 0 ? (
+      {filteredUsers.length === 0 ? (
         <div className="bg-white shadow-md rounded-lg p-6 text-center text-gray-500">
-          {searchQuery
-            ? `No ${title.toLowerCase()} found matching "${searchQuery}"`
+          {searchTerm
+            ? `No ${title.toLowerCase()} found matching "${searchTerm}"`
             : `No ${title.toLowerCase()} to display at this time`}
         </div>
       ) : (
