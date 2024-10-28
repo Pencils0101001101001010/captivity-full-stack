@@ -26,6 +26,7 @@ import {
 import Link from "next/link";
 import { getOrder } from "./shopping/checkout/actions";
 import { useSession } from "../SessionProvider";
+import Header from "./_components/Header";
 
 interface CustomerLandingProps {
   initialOrderId: string | null;
@@ -51,20 +52,7 @@ const CustomerLanding = ({ initialOrderId }: CustomerLandingProps) => {
 
   return (
     <div className="container mx-auto p-4 max-w-4xl bg-background">
-      <header className="text-center mb-8 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-2xl shadow-black">
-        <h1 className="text-4xl font-bold mb-2">Instant Purchase Power</h1>
-        <p className="text-xl mb-4">
-          Unlock the Speed of Our Quick Order Page Today!
-        </p>
-        <Button
-          asChild
-          className="mt-2 bg-green-500 hover:bg-green-600 text-white"
-        >
-          <Link href={"/customer/shopping/product_categories/summer"}>
-            Quick Order
-          </Link>
-        </Button>
-      </header>
+      <Header />
 
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">

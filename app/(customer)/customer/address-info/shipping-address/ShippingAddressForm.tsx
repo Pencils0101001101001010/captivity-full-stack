@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Header from "../../_components/Header";
 
 const billingAddressSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -99,7 +100,8 @@ export default function ShippingAddressForm() {
   };
 
   return (
-    <section className=" p-5 rounded-md shadow-sm  mb-20">
+    <section className=" max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mb-20">
+      <Header />
       <div className="flex items-center justify-between mb-6 ">
         <span>
           {" "}
