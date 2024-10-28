@@ -86,7 +86,7 @@ export function OrderHistory({ orders, error }: OrderHistoryProps) {
               <div className="space-y-1">
                 <div className="flex items-center space-x-2">
                   <CardTitle className="text-xl">
-                    #{order.referenceNumber || order.id.slice(-8)}
+                    #{order.id.slice(-8)}
                   </CardTitle>
                   <Badge
                     variant="secondary"
