@@ -71,56 +71,6 @@ const SideMenu = () => {
           </li>
         </ul>
       </aside>
-      <aside className="w-[300px] mb-0 hidden lg:block sticky top-0 h-fit">
-      <ul className="menu  text-gray-700">
-        <span className="text-xl font-bold">All Collections</span>
-        <li className="hover:text-red-400">
-          <Link href="/products/all-collections/leisure-collection">
-            Leisure collection
-          </Link>
-        </li>
-        <li className="hover:text-red-400">
-            <Link href="/products/all-collections/industrial-collection">
-              Industrial Collection
-            </Link>
-        </li>
-        <li className="hover:text-red-400">
-          <Link href="/products/all-collections/signature-collection">
-            Signature Collection
-          </Link>
-        </li>
-        <li className="hover:text-red-400">
-            <Link href="/products/all-collections/baseball-collection">
-              Baseball Collection
-            </Link>
-        </li>
-        <li className="hover:text-red-400">
-          <Link href="/products/all-collections/fashion-collection">
-            Fashion Collection 
-          </Link>
-        </li>
-        <li className="hover:text-red-400">
-            <Link href="/products/all-collections/sport-collection">
-              Sport Collection
-            </Link>
-        </li>
-        <li className="hover:text-red-400">
-            <Link href="/products/all-collections/camo-collection">
-              Camo Collection
-            </Link>
-        </li>
-        <li className="hover:text-red-400">
-            <Link href="/products/all-collections/winter-collection">
-              Winter Collecton
-            </Link>
-          </li>
-         <li className="hover:text-red-400">
-            <Link href="/products/all-collections/african-collection">
-              African Collecton
-            </Link>
-        </li>
-      </ul>
-    </aside>
     </div>
   );
 };
