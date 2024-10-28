@@ -1,5 +1,5 @@
-import { Order } from "../types";
 import { formatDate } from "@/lib/utils";
+import { Order } from "../types";
 
 interface PrintTemplateProps {
   order: Order;

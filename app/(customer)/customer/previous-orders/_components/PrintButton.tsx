@@ -2,8 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
-import { Order } from "../types";
+
 import { PrintTemplate } from "./PrintTemplate";
+import { Order } from "../types";
 
 interface PrintButtonProps {
   order: Order;
