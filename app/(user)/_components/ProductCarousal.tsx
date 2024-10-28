@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import Link from "next/link";
 import { fetchNewInHeadwear } from "../(DropDownCategories)/products/_global/actions";
 
 interface CarouselProduct {
@@ -56,7 +57,6 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ className }) => {
     return null;
   };
   
-
   const currentProduct = products[currentIndex];
 
   return (
@@ -70,29 +70,28 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ className }) => {
             animation: `slide-${direction} 500ms forwards`,
           }}
         >
-          <Card className="bg-white overflow-hidden">
-            <div className="relative aspect-square w-full">
-              <Image
-                src={
-                  currentProduct.imageUrl.split(",")[0] || "/placeholder.jpg"
-                }
-                alt={currentProduct.name}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-            </div>
-            <div className="p-4">
-              <h3 className="font-medium text-lg text-card-foreground truncate">
-                {currentProduct.name}
-              </h3>
-              {/* <p className="text-sm text-muted-foreground">
-                Stock: {currentProduct.stock} available
-              </p> */}
-            </div>
-          </Card>
+          <Link href={`/products/headwear/${currentProduct.id}`}>
+            <Card className="bg-white overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-300">
+              <div className="relative aspect-square w-full">
+                <Image
+                  src={
+                    currentProduct.imageUrl.split(",")[0] || "/placeholder.jpg"
+                  }
+                  alt={currentProduct.name}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+              </div>
+              <div className="p-4">
+                <h3 className="font-medium text-lg text-card-foreground truncate">
+                  {currentProduct.name}
+                </h3>
+              </div>
+            </Card>
+          </Link>
         </div>
 
         {/* Progress indicators */}

@@ -33,7 +33,7 @@ export default function CarouselPlugin() {
 
   const startCarousel = () => {
     intervalRef.current = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+      setCurrentIndex(prevIndex => (prevIndex + 1) % images.length);
     }, 4000);
   };
 

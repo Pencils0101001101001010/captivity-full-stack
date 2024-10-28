@@ -1,55 +1,65 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
 
-export function CollectionsMenu() {
+import { useState } from "react";
+import Link from "next/link";
+import { ChevronDown } from "lucide-react";
+import type { ProductWithFeaturedImage } from "./actions";
+
+interface CollectionsMenuProps {
+  products?: ProductWithFeaturedImage[];
+  loading?: boolean;
+}
+
+export function CollectionsMenu({ products, loading }: CollectionsMenuProps) {
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
 
+  const collections = [
+    "Signature",
+    "Camo",
+    "Winter",
+    "Baseball",
+    "Fashion",
+    "Sport",
+    "Industrial",
+    "Leisure",
+    "Kids",
+    "African",
+  ];
+
   return (
-    <div className="space-y-5 md:mr-10 lg:mr-10 min-h-[500px] xl:mr-10 xl:ml-20 lg:ml-20 md:ml-20">
-      <button
-        onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
-        className="flex items-center justify-between w-full text-left font-semibold text-lg mb-2 hover:text-gray-700"
-      >
-        COLLECTIONS
-        {isCollectionsOpen ? (
-          <ChevronUp className="h-5 w-5" />
-        ) : (
-          <ChevronDown className="h-5 w-5" />
-        )}
-      </button>
+    <div className="mt-4">
       <div
-        className={`transition-all duration-200 ease-in-out ${
-          isCollectionsOpen ? "max-h-96" : "max-h-0 overflow-hidden"
+        onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
+        className="flex items-center justify-between cursor-pointer mb-4"
+      >
+        <h2 className="text-gray-700 font-medium">COLLECTIONS</h2>
+        <ChevronDown
+          className={`h-5 w-5 transform transition-transform ${
+            isCollectionsOpen ? "rotate-180" : ""
+          }`}
+        />
+      </div>
+
+      <div
+        className={`transition-all duration-200 ease-in-out overflow-hidden ${
+          isCollectionsOpen ? "max-h-[500px]" : "max-h-0"
         }`}
       >
-        <aside className="w-[300px] mb-0 hidden lg:block sticky top-0 h-fit">
-        <ul className="space-y-2 pt-2">
-          {[
-            "Signature",
-            "Camo",
-            "Winter",
-            "Baseball",
-            "Fashion",
-            "Sport",
-            "Industrial",
-            "Leisure",
-            "Kids",
-            "African",
-          ].map(item => (
+        <ul className="space-y-3">
+          {collections.map(item => (
             <li key={item}>
               <Link
                 href={`/collections/${item.toLowerCase()}`}
-                className="text-gray-600 hover:text-red-400 block"
+                className="text-gray-600 hover:text-gray-900 transition-colors duration-200"
               >
                 {item}
               </Link>
             </li>
           ))}
         </ul>
-        </aside>
       </div>
     </div>
   );
 }
+
+export default CollectionsMenu;

@@ -5,33 +5,35 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Category,
   ProductWithRelations,
-  useSummerActions,
-  useSummerError,
-  useSummerLoading,
-  useSummerProducts,
-} from "../../../_store/useSummerStore";
+  useWinterActions,
+  useWinterError,
+  useWinterLoading,
+  useWinterProducts,
+} from "../../../_store/useWinterStore";
 import ProductCard from "../_components/ProductsCard";
 
 const ITEMS_PER_PAGE = 6;
 
-const SummerCollectionPage: React.FC = () => {
+const WinterCollectionPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const { products: summerProducts, hasInitiallyFetched } = useSummerProducts();
-  const loading = useSummerLoading();
-  const error = useSummerError();
-  const { fetchSummerCollection } = useSummerActions();
+  const { products: winterProducts, hasInitiallyFetched } = useWinterProducts();
+  const loading = useWinterLoading();
+  const error = useWinterError();
+  const { fetchWinterCollection } = useWinterActions();
   const initializationRef = useRef(false);
 
   // Create flat array of products
-  const allProducts = Object.values(summerProducts).flat().filter(Boolean);
+  const allProducts = Object.values(winterProducts)
+    .flat()
+    .filter(Boolean);
 
   // Initial fetch
   useEffect(() => {
     if (!hasInitiallyFetched && !initializationRef.current) {
       initializationRef.current = true;
-      fetchSummerCollection();
+      fetchWinterCollection();
     }
-  }, [hasInitiallyFetched, fetchSummerCollection]);
+  }, [hasInitiallyFetched, fetchWinterCollection]);
 
   // Reset to first page whenever products array changes (including search)
   useEffect(() => {
@@ -39,18 +41,12 @@ const SummerCollectionPage: React.FC = () => {
   }, [allProducts.length]);
 
   // Pagination calculations
-  const totalPages = Math.max(
-    1,
-    Math.ceil(allProducts.length / ITEMS_PER_PAGE)
-  );
+  const totalPages = Math.max(1, Math.ceil(allProducts.length / ITEMS_PER_PAGE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
-  const currentProducts = allProducts.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE
-  );
+  const currentProducts = allProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  if (loading) return <div>Loading summer collection...</div>;
+  if (loading) return <div>Loading winter collection...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
@@ -58,7 +54,7 @@ const SummerCollectionPage: React.FC = () => {
       {allProducts.length === 0 ? (
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-foreground">
-            No products found in the summer collection.
+            No products found in the winter collection.
           </h2>
         </div>
       ) : (
@@ -83,32 +79,26 @@ const SummerCollectionPage: React.FC = () => {
               </button>
 
               <div className="flex gap-2">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  page => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
                     ${
                       safeCurrentPage === page
                         ? "bg-primary text-primary-foreground"
                         : "hover:bg-muted text-foreground"
                     }`}
-                      aria-label={`Page ${page}`}
-                      aria-current={
-                        safeCurrentPage === page ? "page" : undefined
-                      }
-                    >
-                      {page}
-                    </button>
-                  )
-                )}
+                    aria-label={`Page ${page}`}
+                    aria-current={safeCurrentPage === page ? "page" : undefined}
+                  >
+                    {page}
+                  </button>
+                ))}
               </div>
 
               <button
-                onClick={() =>
-                  setCurrentPage(prev => Math.min(totalPages, prev + 1))
-                }
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={safeCurrentPage === totalPages}
                 className="p-2 rounded-lg border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Next page"
@@ -129,4 +119,4 @@ const SummerCollectionPage: React.FC = () => {
   );
 };
 
-export default React.memo(SummerCollectionPage);
+export default React.memo(WinterCollectionPage);

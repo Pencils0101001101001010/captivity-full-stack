@@ -4,7 +4,7 @@ import React from "react";
 const SideMenu = () => {
   return (
     <div className="space-y-5 md:mr-10 lg:mr-10 min-h-[500px] xl:mr-10 xl:ml-20 lg:ml-20 md:ml-20">
-      <aside className="w-[300px] mb-0 hidden lg:block sticky top-0 h-fit">
+      <aside className="w-[230px] mb-0 hidden lg:block top-0 border-2 -ml-10 border-gray-800 pl-4 pb-4 pt-4">
         <ul className="menu  text-gray-700">
           <span className="text-xl font-bold">HEADWEAR</span>
           <li className="hover:text-red-400">
@@ -39,8 +39,8 @@ const SideMenu = () => {
           </li>
         </ul>
       </aside>
-      <aside className="w-[300px] hidden lg:block sticky top-0 h-fit">
-        <ul className="menu  text-gray-700">
+      <aside className="w-[230px]  hidden lg:block top-0 border-2 -ml-10 border-gray-800 pl-4 pb-4 pt-4">
+        <ul className="menu  text-gray-700 ">
           <span className="text-xl font-bold">APPAREL</span>
           <li className="hover:text-red-400">
             <Link href="/products/apparel/new-in-apparel">New in Apparel</Link>

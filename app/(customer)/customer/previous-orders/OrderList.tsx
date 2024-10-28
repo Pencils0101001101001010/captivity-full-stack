@@ -1,7 +1,5 @@
 "use client";
 
-//* The order reference number must be changed to order number and there needs to some order counting system to use those numbers as the order number
-
 import React from "react";
 import { Order } from "./types";
 import { formatDate, getStatusColor } from "@/lib/utils";
@@ -86,7 +84,7 @@ export function OrderHistory({ orders, error }: OrderHistoryProps) {
               <div className="space-y-1">
                 <div className="flex items-center space-x-2">
                   <CardTitle className="text-xl">
-                    #{order.referenceNumber || order.id.slice(-8)}
+                    #{order.id.slice(-8)}
                   </CardTitle>
                   <Badge
                     variant="secondary"

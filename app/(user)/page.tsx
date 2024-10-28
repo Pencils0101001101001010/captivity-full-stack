@@ -1,9 +1,10 @@
-import CustomContainer from "@/components/CustomContainer/CustomContainer";
-import HowToRegister from "@/components/Register/HowToRegister";
+import CustomContainer from "@/components/(how to register section on home page)/CustomContainer/CustomContainer";
+import HowToRegister from "@/components/(how to register section on home page)/Register/HowToRegister";
 import BestSeller from "@/components/BestSeller/BestSeller";
-import ProductSection from "@/components/ProductSection/ProductSection";
 import CarouselPlugin from "@/components/Carousel/CarouselPlugin";
-import Carousel from "@/components/SmallCarousel/SmallCarousel";
+import ProductSection from "@/components/ProductSection/ProductSection";
+ 
+import Carousel from "@/components/(small screen carousel)/SmallCarousel/SmallCarousel";
 //import connectDB from "@/config/database"
 
 const Home = async () => {

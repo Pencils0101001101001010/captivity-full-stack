@@ -10,6 +10,7 @@ import HeroSection from "@/app/(user)/_components/HeroSection";
 import useKids from "./useKids";
 import type { ProductWithFeaturedImage } from "./actions";
 import { CollectionsMenu } from "./collections-menu";
+import ProductCarousel from "@/app/(user)/_components/ProductCarousal";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -54,9 +55,14 @@ const KidsProductList: React.FC = () => {
 
       <div className="flex flex-col md:flex-row gap-6 relative">
         <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
-          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto overflow-x-hidden no-scrollbar">
+        <div className="sticky top-4 space-y-8">
             <SideMenu />
-            <CollectionsMenu/>
+            <div className="bg-background rounded-lg shadow-sm w-full pl-6">
+              <CollectionsMenu products={products} loading={loading} />
+              <div className="mt-8">
+                <ProductCarousel />
+              </div>
+            </div>
           </div>
         </aside>
 
