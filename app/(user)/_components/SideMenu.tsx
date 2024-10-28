@@ -71,7 +71,7 @@ const SideMenu = () => {
           </li>
         </ul>
       </aside>
-      <aside className="w-[300px] mb-0 hidden lg:block sticky top-0 h-fit">
+      <aside className="w-[230px] hidden lg:block top-0 border-2 -ml-16 border-gray-800 p-4" >
       <ul className="menu  text-gray-700">
         <span className="text-xl font-bold">All Collections</span>
         <li className="hover:text-red-400">
