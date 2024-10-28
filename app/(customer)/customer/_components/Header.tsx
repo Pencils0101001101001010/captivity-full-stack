@@ -12,7 +12,9 @@ const Header = () => {
         asChild
         className="mt-2 bg-green-500 hover:bg-green-600 text-white"
       >
-        <Link href={"/customer/shopping/express"}>Quick Order</Link>
+        <Link href={"/customer/shopping/product_categories/summer"}>
+          Quick Order
+        </Link>
       </Button>
     </header>
   );
