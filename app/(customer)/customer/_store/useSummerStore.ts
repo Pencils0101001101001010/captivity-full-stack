@@ -7,7 +7,7 @@ import {
   Variation,
   FeaturedImage,
 } from "@prisma/client";
-import { fetchSummerCollection } from "../shopping/product_categories/actions";
+import { fetchSummerCollection } from "../shopping/product_categories/summer/actions";
 
 export type ProductWithRelations = Product & {
   dynamicPricing: DynamicPricing[];
