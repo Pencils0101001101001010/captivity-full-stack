@@ -80,7 +80,7 @@ const WomenProductList: React.FC = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                 {paginatedProducts.map((product: ProductWithFeaturedImage) => (
                   <Link
-                    href={`/products/women/${product.id}`}
+                    href={`/products/apparel/${product.id}`}
                     key={product.id}
                   >
                     <Card className="hover:shadow-lg transition-shadow duration-300">

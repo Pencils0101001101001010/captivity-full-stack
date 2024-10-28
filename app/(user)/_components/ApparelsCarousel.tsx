@@ -70,7 +70,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ className }) => {
             animation: `slide-${direction} 500ms forwards`,
           }}
         >
-          <Link href={`/products/new-in-apparel/${currentProduct.id}`}>
+          <Link href={`/products/apparel/${currentProduct.id}`}>
             <Card className="bg-white overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-300">
               <div className="relative aspect-square w-full">
                 <Image
