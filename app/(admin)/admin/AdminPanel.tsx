@@ -93,7 +93,7 @@ const AdminPanel = () => {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <button className="p-6 text-left transition-all bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-xl hover:shadow-md border border-blue-200">
                 <h3 className="mb-2 text-lg font-medium text-blue-700">
-                  Process Order
+                  View Pending Orders
                 </h3>
                 <p className="text-sm text-blue-600/80">
                   Handle new customer orders
@@ -107,7 +107,7 @@ const AdminPanel = () => {
                   Create Product
                 </h3>
                 <p className="text-sm text-purple-600/80">
-                  Create a new project
+                  Create a new product
                 </p>
               </Link>
               <button className="p-6 text-left transition-all bg-gradient-to-br from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 rounded-xl hover:shadow-md border border-emerald-200">
@@ -115,7 +115,7 @@ const AdminPanel = () => {
                   Generate Report
                 </h3>
                 <p className="text-sm text-emerald-600/80">
-                  Download activity report
+                  Report to the Distirbutor
                 </p>
               </button>
             </div>
