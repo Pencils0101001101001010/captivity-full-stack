@@ -179,7 +179,7 @@ export const useSignatureError = () => useSignatureStore(state => state.error);
 export const useSignatureActions = () =>
   useSignatureStore(
     useShallow(state => ({
-      setSignatureProducts: state.setSignatureProducts,
+      setSummerProducts: state.setSignatureProducts,
       setSearchQuery: state.setSearchQuery,
       setLoading: state.setLoading,
       setError: state.setError,
