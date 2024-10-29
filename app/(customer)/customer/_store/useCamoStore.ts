@@ -15,13 +15,7 @@ export type ProductWithRelations = Product & {
 };
 
 export type Category =
-  | "men"
-  | "women"
-  | "kids"
-  | "hats"
-  | "golfers"
-  | "bottoms"
-  | "caps"
+  | "camo-collection"
   | "uncategorised";
 
 export type CategorizedProducts = {
@@ -49,24 +43,12 @@ interface CamoActions {
 
 const initialState: CamoState = {
   camoProducts: {
-    men: [],
-    women: [],
-    kids: [],
-    hats: [],
-    golfers: [],
-    bottoms: [],
-    caps: [],
     uncategorised: [],
+    "camo-collection": []
   },
   filteredProducts: {
-    men: [],
-    women: [],
-    kids: [],
-    hats: [],
-    golfers: [],
-    bottoms: [],
-    caps: [],
     uncategorised: [],
+    "camo-collection": []
   },
   searchQuery: "",
   loading: false,
@@ -179,7 +161,7 @@ export const useCamoError = () => useCamoStore(state => state.error);
 export const useCamoActions = () =>
   useCamoStore(
     useShallow(state => ({
-      setSummerProducts: state.setCamoProducts,
+      setCamoProducts: state.setCamoProducts,
       setSearchQuery: state.setSearchQuery,
       setLoading: state.setLoading,
       setError: state.setError,

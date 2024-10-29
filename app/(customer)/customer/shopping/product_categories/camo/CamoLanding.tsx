@@ -50,7 +50,7 @@ const CamoCollectionPage: React.FC = () => {
     startIndex + ITEMS_PER_PAGE
   );
 
-  if (loading) return <div>Loading camo collection...</div>;
+  if (loading) return <div>Loading Camo collection...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
@@ -58,7 +58,7 @@ const CamoCollectionPage: React.FC = () => {
       {allProducts.length === 0 ? (
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-foreground">
-            No products found in the camo collection.
+            No products found in the Camo collection.
           </h2>
         </div>
       ) : (
