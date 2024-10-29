@@ -38,7 +38,7 @@ export default function UserButton({ className }: UserButtonProps) {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuLabel>Logged in as @{user.username}</DropdownMenuLabel>
+        <DropdownMenuLabel>Logged in as {user.displayName}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <Link href={`/customer`}>
           <DropdownMenuItem>
