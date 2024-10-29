@@ -62,17 +62,16 @@ const CheckoutForm = () => {
         const result = await getUserDetails();
         if (result.success && result.data) {
           form.reset({
-            ...form.getValues(), // Keep existing values
-            // Only set the fields that exist in your User model
+            ...form.getValues(),
             firstName: result.data.firstName || "",
             lastName: result.data.lastName || "",
             email: result.data.email || "",
-            phone: "",
 
             captivityBranch: "",
             methodOfCollection: "",
             salesRep: result.data.salesRep || "",
             referenceNumber: "",
+            phone: result.data.phoneNumber?.toString() || "",
             companyName: result.data.companyName || "",
             countryRegion: result.data.country || "",
             streetAddress: result.data.streetAddress || "",
