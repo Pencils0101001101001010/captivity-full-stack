@@ -1,3 +1,4 @@
+//app/(customer)/customer/_store/useFashionStore.ts
 import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import {
@@ -22,6 +23,8 @@ export type Category =
   | "golfers"
   | "bottoms"
   | "caps"
+  | "pre-curved-peaks"
+  | "trucker-caps"
   | "uncategorised";
 
 export type CategorizedProducts = {
@@ -56,6 +59,8 @@ const initialState: FashionState = {
     golfers: [],
     bottoms: [],
     caps: [],
+    "pre-curved-peaks": [],
+    "trucker-caps": [],
     uncategorised: [],
   },
   filteredProducts: {
@@ -66,6 +71,8 @@ const initialState: FashionState = {
     golfers: [],
     bottoms: [],
     caps: [],
+    "pre-curved-peaks": [],
+    "trucker-caps": [],
     uncategorised: [],
   },
   searchQuery: "",

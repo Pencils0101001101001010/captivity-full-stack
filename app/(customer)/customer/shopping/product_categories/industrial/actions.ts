@@ -27,6 +27,7 @@ type Category =
   | "golfers"
   | "bottoms"
   | "caps"
+  | "pre-curved-peaks"
   | "uncategorised";
 
 type CategorizedProducts = {
@@ -68,7 +69,9 @@ export async function fetchIndustrialCollection(): Promise<FetchIndustrialCollec
       hats: [],
       golfers: [],
       bottoms: [],
+      "pre-curved-peaks": [],
       caps: [],
+
       uncategorised: [],
     };
 
@@ -82,9 +85,12 @@ export async function fetchIndustrialCollection(): Promise<FetchIndustrialCollec
     });
 
     // Revalidate the products page
-    revalidatePath("/customer/shopping/industrail");
+    revalidatePath("/customer/shopping/product_categories/industrial");
 
-    return { success: true, data: categorizedProducts };
+    return {
+      success: true,
+      data: categorizedProducts,
+    };
   } catch (error) {
     console.error("Error fetching industrial collection:", error);
     return {

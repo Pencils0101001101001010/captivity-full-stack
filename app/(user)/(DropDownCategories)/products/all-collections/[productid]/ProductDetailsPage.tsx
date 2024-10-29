@@ -34,7 +34,6 @@ const ProductDetail: React.FC = () => {
     null
   );
   const [quantity, setQuantity] = useState<number>(1);
-
   useEffect(() => {
     const loadProduct = async () => {
       if (id) {

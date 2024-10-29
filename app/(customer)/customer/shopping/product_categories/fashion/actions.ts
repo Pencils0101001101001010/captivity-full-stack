@@ -1,3 +1,4 @@
+//app/(customer)/customer/shopping/product_categories/fashion/actions.ts
 "use server";
 
 import { validateRequest } from "@/auth";
@@ -24,6 +25,8 @@ type Category =
   | "golfers"
   | "bottoms"
   | "caps"
+  | "trucker-caps"
+  | "pre-curved-peaks"
   | "uncategorised";
 
 type CategorizedProducts = {
@@ -66,6 +69,8 @@ export async function fetchFashionCollection(): Promise<FetchFashionCollectionRe
       golfers: [],
       bottoms: [],
       caps: [],
+      "pre-curved-peaks": [],
+      "trucker-caps": [],
       uncategorised: [],
     };
 
@@ -79,7 +84,7 @@ export async function fetchFashionCollection(): Promise<FetchFashionCollectionRe
     });
 
     // Revalidate the products page
-    revalidatePath("/customer/shopping/fashion");
+    revalidatePath("/customer/shopping/product_categories/fashion");
 
     return { success: true, data: categorizedProducts };
   } catch (error) {
