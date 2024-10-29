@@ -72,58 +72,7 @@ const SideMenu = () => {
           </li>
         </ul>
       </aside>
-      <DropdownMenu>
-      <div className="w-[230px] hidden lg:block top-0 border-2 -ml-16 border-gray-800 p-4" >
-      <ul className="menu  text-gray-700">
-        <span className="text-xl font-bold">All Collections</span>
-        <li className="hover:text-red-400">
-          <Link href="/products/all-collections/leisure-collection">
-            Leisure collection
-          </Link>
-        </li>
-        <li className="hover:text-red-400">
-            <Link href="/products/all-collections/industrial-collection">
-              Industrial Collection
-            </Link>
-        </li>
-        <li className="hover:text-red-400">
-          <Link href="/products/all-collections/signature-collection">
-            Signature Collection
-          </Link>
-        </li>
-        <li className="hover:text-red-400">
-            <Link href="/products/all-collections/baseball-collection">
-              Baseball Collection
-            </Link>
-        </li>
-        <li className="hover:text-red-400">
-          <Link href="/products/all-collections/fashion-collection">
-            Fashion Collection 
-          </Link>
-        </li>
-        <li className="hover:text-red-400">
-            <Link href="/products/all-collections/sport-collection">
-              Sport Collection
-            </Link>
-        </li>
-        <li className="hover:text-red-400">
-            <Link href="/products/all-collections/camo-collection">
-              Camo Collection
-            </Link>
-        </li>
-        <li className="hover:text-red-400">
-            <Link href="/products/all-collections/winter-collection">
-              Winter Collecton
-            </Link>
-          </li>
-         <li className="hover:text-red-400">
-            <Link href="/products/all-collections/african-collection">
-              African Collecton
-            </Link>
-        </li>
-          </ul>
-      </div>
-    </DropdownMenu>
+     
     </div>
   );
 };
