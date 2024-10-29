@@ -30,11 +30,11 @@ export function CollectionsMenu({ products, loading }: CollectionsMenuProps) {
     <div className="mt-4">
       <div
         onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
-        className="flex items-center justify-between cursor-pointer mb-4"
+        className="flex items-center  cursor-pointer mb-4"
       >
-        <h2 className="text-gray-700 font-medium">COLLECTIONS</h2>
+        <h2 className="text-gray-700 text-xl hidden lg:block font-bold p-[2px] ">COLLECTIONS</h2>
         <ChevronDown
-          className={`h-5 w-5 transform transition-transform ${
+          className={`h-5 w-5 hidden lg:block transform transition-transform ${
             isCollectionsOpen ? "rotate-180" : ""
           }`}
         />
