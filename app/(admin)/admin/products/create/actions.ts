@@ -5,122 +5,288 @@ import { validateRequest } from "@/auth";
 import { put } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
 import { ProductFormData, productFormSchema } from "./types";
+import { Prisma } from "@prisma/client";
 
+// Type Definitions
 export type CreateProductResult =
   | { success: true; data: { id: string }; message: string }
   | { success: false; error: string };
 
-async function uploadImage(file: File, path: string) {
+interface ImageUrls {
+  thumbnail: string;
+  medium: string;
+  large: string;
+}
+
+// Define the complete product type with relations
+type ProductWithRelations = Prisma.ProductGetPayload<{
+  include: {
+    featuredImage: true;
+    variations: true;
+    dynamicPricing: true;
+  };
+}>;
+
+// Define allowed image types
+const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/svg+xml",
+  "image/bmp",
+  "image/tiff",
+];
+
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+
+// Validate image file
+function validateImage(file: File): void {
+  console.log("🔍 Validating image:", {
+    name: file.name,
+    type: file.type,
+    size: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
+  });
+
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    console.error("❌ Invalid image type:", {
+      providedType: file.type,
+      allowedTypes: ALLOWED_IMAGE_TYPES,
+    });
+    throw new Error(
+      `Invalid image type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(", ")}`
+    );
+  }
+
+  if (file.size > MAX_IMAGE_SIZE) {
+    console.error("❌ Image too large:", {
+      size: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
+      maxSize: `${MAX_IMAGE_SIZE / 1024 / 1024}MB`,
+    });
+    throw new Error(
+      `Image size must be less than ${MAX_IMAGE_SIZE / (1024 * 1024)}MB`
+    );
+  }
+
+  console.log("✅ Image validation passed");
+}
+
+async function uploadImage(file: File, path: string): Promise<string> {
+  console.log("📤 Starting image upload:", {
+    fileName: file.name,
+    fileType: file.type,
+    fileSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
+    uploadPath: path,
+  });
+
   try {
+    validateImage(file);
+
+    console.log("🚀 Initiating blob upload...");
     const blob = await put(path, file, {
       access: "public",
       addRandomSuffix: false,
     });
+
+    console.log("📥 Blob upload response:", {
+      url: blob.url,
+      pathname: blob.pathname,
+    });
+
+    if (!blob.url) {
+      console.error("❌ No URL in blob response");
+      throw new Error("Failed to get URL from blob storage");
+    }
+
+    console.log("✅ Image upload successful:", blob.url);
     return blob.url;
   } catch (error) {
-    console.error(`Error uploading image to ${path}:`, error);
+    console.error("❌ Error uploading image:", {
+      path,
+      error:
+        error instanceof Error
+          ? {
+              message: error.message,
+              stack: error.stack,
+            }
+          : "Unknown error",
+    });
     throw error;
+  }
+}
+
+async function uploadFeaturedImages(file: File): Promise<ImageUrls> {
+  console.log("🎯 Starting featured images upload");
+  const fileExt = file.name.split(".").pop() || "jpg";
+  const timestamp = Date.now();
+
+  try {
+    console.log("📁 Uploading three versions of featured image");
+    const [thumbnail, medium, large] = await Promise.all([
+      uploadImage(file, `products/featured/thumbnail_${timestamp}.${fileExt}`),
+      uploadImage(file, `products/featured/medium_${timestamp}.${fileExt}`),
+      uploadImage(file, `products/featured/large_${timestamp}.${fileExt}`),
+    ]);
+
+    const urls = {
+      thumbnail,
+      medium,
+      large,
+    };
+
+    console.log("✅ All featured images uploaded successfully:", urls);
+    return urls;
+  } catch (error) {
+    console.error("❌ Featured images upload failed:", {
+      error:
+        error instanceof Error
+          ? {
+              message: error.message,
+              stack: error.stack,
+            }
+          : "Unknown error",
+    });
+    throw new Error(
+      `Failed to upload featured images: ${error instanceof Error ? error.message : "Unknown error"}`
+    );
   }
 }
 
 export async function createProduct(
   formData: FormData
 ): Promise<CreateProductResult> {
+  console.log("🚀 Starting product creation process");
+
   try {
+    // Log all form data entries
+    console.log("📝 Received form data:", {
+      entries: Array.from(formData.entries()).map(([key, value]) => ({
+        key,
+        type: value instanceof File ? "File" : typeof value,
+        fileSize:
+          value instanceof File
+            ? `${(value.size / 1024 / 1024).toFixed(2)}MB`
+            : null,
+      })),
+    });
+
     const { user } = await validateRequest();
     if (!user) {
+      console.error("❌ No user found in request");
       throw new Error("Unauthorized access");
     }
+    console.log("👤 User authorized:", { userId: user.id });
 
     // Handle featured image upload first
-    let featuredImageUrls = {
+    let featuredImageUrls: ImageUrls = {
       thumbnail: "",
       medium: "",
       large: "",
     };
 
     const featuredImageFile = formData.get("featuredImage");
+    console.log("🖼️ Featured image file:", {
+      exists: !!featuredImageFile,
+      isFile: featuredImageFile instanceof File,
+      size:
+        featuredImageFile instanceof File
+          ? `${(featuredImageFile.size / 1024 / 1024).toFixed(2)}MB`
+          : "N/A",
+      type: featuredImageFile instanceof File ? featuredImageFile.type : "N/A",
+    });
+
     if (featuredImageFile instanceof File && featuredImageFile.size > 0) {
-      const fileExt = featuredImageFile.name.split(".").pop() || "jpg";
-      const timestamp = Date.now();
+      featuredImageUrls = await uploadFeaturedImages(featuredImageFile);
 
-      const [thumbnail, medium, large] = await Promise.all([
-        put(
-          `products/featured/thumbnail_${timestamp}.${fileExt}`,
-          featuredImageFile,
-          {
-            access: "public",
-            addRandomSuffix: false,
-          }
-        ),
-        put(
-          `products/featured/medium_${timestamp}.${fileExt}`,
-          featuredImageFile,
-          {
-            access: "public",
-            addRandomSuffix: false,
-          }
-        ),
-        put(
-          `products/featured/large_${timestamp}.${fileExt}`,
-          featuredImageFile,
-          {
-            access: "public",
-            addRandomSuffix: false,
-          }
-        ),
-      ]);
-
-      featuredImageUrls = {
-        thumbnail: thumbnail.url,
-        medium: medium.url,
-        large: large.url,
-      };
+      if (
+        !featuredImageUrls.thumbnail ||
+        !featuredImageUrls.medium ||
+        !featuredImageUrls.large
+      ) {
+        console.error(
+          "❌ Missing URLs in featuredImageUrls:",
+          featuredImageUrls
+        );
+        throw new Error("Failed to get featured image URLs from blob storage");
+      }
+      console.log("✅ Featured image URLs received:", featuredImageUrls);
     }
 
     // Get the number of variations
-    const variationCount = Array.from(formData.entries())
-      .filter(([key]) => key.startsWith("variations"))
-      .reduce((max, [key]) => {
-        const match = key.match(/variations\.(\d+)\./);
-        return match ? Math.max(max, parseInt(match[1]) + 1) : max;
-      }, 0);
+    const variationEntries = Array.from(formData.entries()).filter(([key]) =>
+      key.startsWith("variations")
+    );
+
+    console.log(
+      "📦 Found variation entries:",
+      variationEntries.map(([key]) => key)
+    );
+
+    const variationCount = variationEntries.reduce((max, [key]) => {
+      const match = key.match(/variations\.(\d+)\./);
+      return match ? Math.max(max, parseInt(match[1]) + 1) : max;
+    }, 0);
+
+    console.log("📊 Processing variations:", { count: variationCount });
 
     // Handle variation images upload
     const variationImages: string[] = [];
     for (let i = 0; i < variationCount; i++) {
+      console.log(`📎 Processing variation ${i}`);
       const variationImageFile = formData.get(`variations.${i}.image`);
+      console.log(`🖼️ Variation image ${i}:`, {
+        exists: !!variationImageFile,
+        isFile: variationImageFile instanceof File,
+        size:
+          variationImageFile instanceof File
+            ? `${(variationImageFile.size / 1024 / 1024).toFixed(2)}MB`
+            : "N/A",
+        type:
+          variationImageFile instanceof File ? variationImageFile.type : "N/A",
+      });
+
       if (variationImageFile instanceof File && variationImageFile.size > 0) {
-        const fileExt = variationImageFile.name.split(".").pop() || "jpg";
-        const blob = await put(
-          `products/variations/variation_${i}_${Date.now()}.${fileExt}`,
-          variationImageFile,
-          { access: "public", addRandomSuffix: false }
-        );
-        variationImages[i] = blob.url;
+        try {
+          const fileExt = variationImageFile.name.split(".").pop() || "jpg";
+          const url = await uploadImage(
+            variationImageFile,
+            `products/variations/variation_${i}_${Date.now()}.${fileExt}`
+          );
+
+          if (!url) {
+            console.error(`❌ No URL received for variation ${i}`);
+            throw new Error(`Failed to get URL for variation image ${i}`);
+          }
+
+          variationImages[i] = url;
+          console.log(`✅ Variation ${i} image uploaded:`, url);
+        } catch (error) {
+          console.error(`❌ Error uploading variation ${i} image:`, error);
+          throw error;
+        }
       } else {
         variationImages[i] = "";
+        console.log(`ℹ️ No image provided for variation ${i}`);
       }
     }
 
-    // Process other form data
+    // Process form data
+    console.log("🔄 Processing form data...");
     const processedData = {
       productName: formData.get("productName") as string,
       category: formData.getAll("category[]").map(cat => cat.toString()),
       description: formData.get("description") as string,
       sellingPrice: Number(formData.get("sellingPrice")),
       isPublished: formData.get("isPublished") === "true",
-
       variations: Array.from({ length: variationCount }, (_, i) => ({
         name: formData.get(`variations.${i}.name`) as string,
         color: (formData.get(`variations.${i}.color`) as string) || "",
         size: (formData.get(`variations.${i}.size`) as string) || "",
         sku: formData.get(`variations.${i}.sku`) as string,
         sku2: (formData.get(`variations.${i}.sku2`) as string) || "",
-        variationImageURL: variationImages[i] || "",
+        variationImageURL: variationImages[i],
         quantity: Number(formData.get(`variations.${i}.quantity`)) || 0,
       })),
-
       dynamicPricing: Array.from(
         { length: formData.getAll("dynamicPricing.0.from").length },
         (_, i) => ({
@@ -134,44 +300,71 @@ export async function createProduct(
       ),
     };
 
-    // Create product in database
-    const product = await prisma.product.create({
-      data: {
-        userId: user.id,
-        productName: processedData.productName,
-        category: processedData.category,
-        description: processedData.description,
-        sellingPrice: processedData.sellingPrice,
-        isPublished: processedData.isPublished,
-        featuredImage: featuredImageUrls.thumbnail
-          ? {
-              create: {
-                thumbnail: featuredImageUrls.thumbnail,
-                medium: featuredImageUrls.medium,
-                large: featuredImageUrls.large,
-              },
-            }
-          : undefined,
-        variations: {
-          create: processedData.variations.map(variation => ({
-            name: variation.name,
-            color: variation.color,
-            size: variation.size,
-            sku: variation.sku,
-            sku2: variation.sku2,
-            variationImageURL: variation.variationImageURL,
-            quantity: variation.quantity,
-          })),
-        },
-        dynamicPricing: {
-          create: processedData.dynamicPricing.map(pricing => ({
-            from: pricing.from,
-            to: pricing.to,
-            type: pricing.type,
-            amount: pricing.amount,
-          })),
-        },
+    console.log("📝 Processed data:", {
+      productName: processedData.productName,
+      variationCount: processedData.variations.length,
+      dynamicPricingCount: processedData.dynamicPricing.length,
+      hasImages: {
+        featured: !!featuredImageUrls.thumbnail,
+        variations: variationImages.filter(url => !!url).length,
       },
+    });
+
+    // Create product in database
+    console.log("💾 Creating product in database...");
+    const createData = {
+      userId: user.id,
+      productName: processedData.productName,
+      category: processedData.category,
+      description: processedData.description,
+      sellingPrice: processedData.sellingPrice,
+      isPublished: processedData.isPublished,
+      featuredImage: featuredImageUrls.thumbnail
+        ? {
+            create: {
+              thumbnail: featuredImageUrls.thumbnail,
+              medium: featuredImageUrls.medium,
+              large: featuredImageUrls.large,
+            },
+          }
+        : undefined,
+      variations: {
+        create: processedData.variations.map(variation => ({
+          name: variation.name,
+          color: variation.color,
+          size: variation.size,
+          sku: variation.sku,
+          sku2: variation.sku2,
+          variationImageURL: variation.variationImageURL,
+          quantity: variation.quantity,
+        })),
+      },
+      dynamicPricing: {
+        create: processedData.dynamicPricing.map(pricing => ({
+          from: pricing.from,
+          to: pricing.to,
+          type: pricing.type,
+          amount: pricing.amount,
+        })),
+      },
+    };
+
+    console.log("📦 Database create payload:", createData);
+
+    const product = await prisma.product.create({
+      data: createData,
+      include: {
+        featuredImage: true,
+        variations: true,
+        dynamicPricing: true,
+      },
+    });
+
+    console.log("✅ Product created successfully:", {
+      productId: product.id,
+      hasFeaturedImage: !!product.featuredImage,
+      variationsCount: product.variations.length,
+      dynamicPricingCount: product.dynamicPricing.length,
     });
 
     revalidatePath("/products");
@@ -183,7 +376,16 @@ export async function createProduct(
       message: "Product created successfully",
     };
   } catch (error) {
-    console.error("Error creating product:", error);
+    console.error("❌ Error in createProduct:", {
+      error:
+        error instanceof Error
+          ? {
+              message: error.message,
+              stack: error.stack,
+            }
+          : "Unknown error",
+    });
+
     return {
       success: false,
       error:
