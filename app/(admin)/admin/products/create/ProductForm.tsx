@@ -41,6 +41,7 @@ const ProductForm = () => {
           sku: "",
           sku2: "",
           variationImageURL: "",
+          variationImage: undefined, // Added this field
           quantity: 0,
         },
       ],
@@ -55,14 +56,13 @@ const ProductForm = () => {
 
   const onSubmit = async (data: ProductFormData) => {
     try {
-      const formData = new FormData();
-
-      // Log form data for debugging
-      console.log("Submitting form data:", {
-        hasFeaturedImage: !!data.featuredImage.file,
-        variationCount: data.variations.length,
+      console.log("Form submission started with data:", {
+        hasFeatureImage: !!data.featuredImage.file,
+        variationsCount: data.variations.length,
         categories: data.category,
       });
+
+      const formData = new FormData();
 
       // Basic fields
       formData.append("productName", data.productName);
@@ -78,10 +78,10 @@ const ProductForm = () => {
       // Featured Image
       if (data.featuredImage.file instanceof File) {
         formData.append("featuredImage", data.featuredImage.file);
-        console.log("Added featured image to form data:", {
+        console.log("Adding featured image:", {
           fileName: data.featuredImage.file.name,
-          fileSize: data.featuredImage.file.size,
-          fileType: data.featuredImage.file.type,
+          size: data.featuredImage.file.size,
+          type: data.featuredImage.file.type,
         });
       }
 
@@ -93,7 +93,7 @@ const ProductForm = () => {
         formData.append(`dynamicPricing.${index}.amount`, pricing.amount);
       });
 
-      // Variations
+      // Variations with images
       data.variations.forEach((variation, index) => {
         formData.append(`variations.${index}.name`, variation.name);
         formData.append(`variations.${index}.color`, variation.color || "");
@@ -111,16 +111,28 @@ const ProductForm = () => {
             `variations.${index}.image`,
             variation.variationImage
           );
-          console.log(`Added variation ${index} image:`, {
+          console.log(`Adding variation ${index} image to form data:`, {
             fileName: variation.variationImage.name,
             fileSize: variation.variationImage.size,
             fileType: variation.variationImage.type,
           });
+        } else {
+          console.log(`No image for variation ${index}`);
         }
       });
 
-      // Log final FormData for debugging
-      console.log("Final FormData entries:", Array.from(formData.entries()));
+      // Log form data before submission
+      console.log(
+        "Form data entries before submission:",
+        Array.from(formData.entries()).map(([key, value]) => ({
+          key,
+          type: value instanceof File ? "File" : typeof value,
+          fileSize:
+            value instanceof File
+              ? `${(value.size / 1024 / 1024).toFixed(2)}MB`
+              : null,
+        }))
+      );
 
       const result = await createProduct(formData);
 
@@ -129,6 +141,19 @@ const ProductForm = () => {
           title: "Success",
           description: result.message,
         });
+
+        // Cleanup any object URLs before resetting
+        data.variations.forEach(variation => {
+          if (variation.variationImageURL?.startsWith("blob:")) {
+            URL.revokeObjectURL(variation.variationImageURL);
+          }
+        });
+        if (data.featuredImage.thumbnail.startsWith("blob:")) {
+          URL.revokeObjectURL(data.featuredImage.thumbnail);
+          URL.revokeObjectURL(data.featuredImage.medium);
+          URL.revokeObjectURL(data.featuredImage.large);
+        }
+
         form.reset();
       } else {
         toast({
@@ -147,6 +172,23 @@ const ProductForm = () => {
       });
     }
   };
+
+  // Cleanup object URLs when component unmounts
+  React.useEffect(() => {
+    return () => {
+      const formData = form.getValues();
+      formData.variations.forEach(variation => {
+        if (variation.variationImageURL?.startsWith("blob:")) {
+          URL.revokeObjectURL(variation.variationImageURL);
+        }
+      });
+      if (formData.featuredImage.thumbnail.startsWith("blob:")) {
+        URL.revokeObjectURL(formData.featuredImage.thumbnail);
+        URL.revokeObjectURL(formData.featuredImage.medium);
+        URL.revokeObjectURL(formData.featuredImage.large);
+      }
+    };
+  }, [form]);
 
   return (
     <Card className="w-full max-w-3xl mx-auto shadow-2xl shadow-black">

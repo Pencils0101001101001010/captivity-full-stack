@@ -18,13 +18,13 @@ interface VariationsTabProps {
 }
 
 const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
-  const { setValue } = useFormContext<ProductFormData>();
+  const { setValue, watch } = useFormContext<ProductFormData>();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "variations",
   });
 
-  const handleVariationImageUpload = (
+  const handleVariationImageUpload = async (
     index: number,
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -32,22 +32,46 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
     if (!file) return;
 
     try {
-      const imageUrl = URL.createObjectURL(file);
-      setValue(`variations.${index}.variationImageURL`, imageUrl, {
-        shouldValidate: true,
+      // Store both the File object and create a preview URL
+      setValue(`variations.${index}.variationImage`, file);
+      setValue(
+        `variations.${index}.variationImageURL`,
+        URL.createObjectURL(file),
+        {
+          shouldValidate: true,
+        }
+      );
+
+      console.log(`Variation ${index} image stored:`, {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
       });
     } catch (error) {
-      console.error("Error handling image upload:", error);
+      console.error("Error handling variation image upload:", error);
     }
   };
 
-  const emptyVariation: Omit<ProductFormData["variations"][number], "id"> = {
+  React.useEffect(() => {
+    // Cleanup object URLs when component unmounts
+    return () => {
+      fields.forEach((field, index) => {
+        const imageUrl = watch(`variations.${index}.variationImageURL`);
+        if (imageUrl && imageUrl.startsWith("blob:")) {
+          URL.revokeObjectURL(imageUrl);
+        }
+      });
+    };
+  }, [fields, watch]);
+
+  const emptyVariation = {
     name: "",
     color: "",
     size: "",
     sku: "",
     sku2: "",
     variationImageURL: "",
+    variationImage: null,
     quantity: 0,
   };
 
@@ -183,6 +207,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
                       type="file"
                       accept="image/*"
                       onChange={e => handleVariationImageUpload(index, e)}
+                      className="cursor-pointer"
                     />
                     {field.value && (
                       <div className="relative w-16 h-16">
