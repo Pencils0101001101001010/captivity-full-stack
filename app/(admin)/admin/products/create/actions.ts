@@ -71,6 +71,76 @@ function validateImage(file: File): void {
   console.log("✅ Image validation passed");
 }
 
+function validateVariationData(
+  formData: FormData,
+  variationIndex: number
+): void {
+  const name = formData.get(`variations.${variationIndex}.name`);
+  const color = formData.get(`variations.${variationIndex}.color`);
+
+  // Get the number of sizes for this variation
+  const sizesEntries = Array.from(formData.entries()).filter(([key]) =>
+    key.startsWith(`variations.${variationIndex}.sizes.`)
+  );
+
+  const sizesCount = new Set(
+    sizesEntries
+      .map(([key]) => key.match(/variations\.\d+\.sizes\.(\d+)\./)?.[1])
+      .filter(Boolean)
+  ).size;
+
+  console.log(`🔍 Validating variation ${variationIndex} data:`, {
+    name,
+    color,
+    sizesCount,
+  });
+
+  if (!name || typeof name !== "string" || name.trim() === "") {
+    console.error(`❌ Invalid name for variation ${variationIndex}`);
+    throw new Error(`Name is required for variation ${variationIndex}`);
+  }
+
+  // Validate each size entry
+  for (let sizeIndex = 0; sizeIndex < sizesCount; sizeIndex++) {
+    const sku = formData.get(
+      `variations.${variationIndex}.sizes.${sizeIndex}.sku`
+    );
+    const size = formData.get(
+      `variations.${variationIndex}.sizes.${sizeIndex}.size`
+    );
+    const quantity = formData.get(
+      `variations.${variationIndex}.sizes.${sizeIndex}.quantity`
+    );
+
+    console.log(
+      `🔍 Validating size ${sizeIndex} for variation ${variationIndex}:`,
+      {
+        sku,
+        size,
+        quantity,
+      }
+    );
+
+    if (!sku || typeof sku !== "string" || sku.trim() === "") {
+      console.error(
+        `❌ Invalid SKU for size ${sizeIndex} in variation ${variationIndex}`
+      );
+      throw new Error(
+        `SKU is required for size ${sizeIndex} in variation ${variationIndex}`
+      );
+    }
+
+    if (!size || typeof size !== "string" || size.trim() === "") {
+      console.error(
+        `❌ Invalid size for size ${sizeIndex} in variation ${variationIndex}`
+      );
+      throw new Error(
+        `Size is required for size ${sizeIndex} in variation ${variationIndex}`
+      );
+    }
+  }
+}
+
 async function uploadImage(file: File, path: string): Promise<string> {
   console.log("📤 Starting image upload:", {
     fileName: file.name,
@@ -103,13 +173,7 @@ async function uploadImage(file: File, path: string): Promise<string> {
   } catch (error) {
     console.error("❌ Error uploading image:", {
       path,
-      error:
-        error instanceof Error
-          ? {
-              message: error.message,
-              stack: error.stack,
-            }
-          : "Unknown error",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
     throw error;
   }
@@ -233,6 +297,10 @@ export async function createProduct(
     const variationImages: string[] = [];
     for (let i = 0; i < variationCount; i++) {
       console.log(`📎 Processing variation ${i}`);
+
+      // Validate variation data first
+      validateVariationData(formData, i);
+
       const variationImageFile = formData.get(`variations.${i}.image`);
       console.log(`🖼️ Variation image ${i}:`, {
         exists: !!variationImageFile,
@@ -270,55 +338,19 @@ export async function createProduct(
       }
     }
 
-    // Process form data
-    console.log("🔄 Processing form data...");
-    const processedData = {
+    // Create product in database
+    console.log("💾 Creating product in database...");
+    const createData: Prisma.ProductCreateInput = {
+      user: {
+        connect: {
+          id: user.id,
+        },
+      },
       productName: formData.get("productName") as string,
       category: formData.getAll("category[]").map(cat => cat.toString()),
       description: formData.get("description") as string,
       sellingPrice: Number(formData.get("sellingPrice")),
       isPublished: formData.get("isPublished") === "true",
-      variations: Array.from({ length: variationCount }, (_, i) => ({
-        name: formData.get(`variations.${i}.name`) as string,
-        color: (formData.get(`variations.${i}.color`) as string) || "",
-        size: (formData.get(`variations.${i}.size`) as string) || "",
-        sku: formData.get(`variations.${i}.sku`) as string,
-        sku2: (formData.get(`variations.${i}.sku2`) as string) || "",
-        variationImageURL: variationImages[i],
-        quantity: Number(formData.get(`variations.${i}.quantity`)) || 0,
-      })),
-      dynamicPricing: Array.from(
-        { length: formData.getAll("dynamicPricing.0.from").length },
-        (_, i) => ({
-          from: formData.get(`dynamicPricing.${i}.from`) as string,
-          to: formData.get(`dynamicPricing.${i}.to`) as string,
-          type: formData.get(`dynamicPricing.${i}.type`) as
-            | "fixed_price"
-            | "percentage",
-          amount: formData.get(`dynamicPricing.${i}.amount`) as string,
-        })
-      ),
-    };
-
-    console.log("📝 Processed data:", {
-      productName: processedData.productName,
-      variationCount: processedData.variations.length,
-      dynamicPricingCount: processedData.dynamicPricing.length,
-      hasImages: {
-        featured: !!featuredImageUrls.thumbnail,
-        variations: variationImages.filter(url => !!url).length,
-      },
-    });
-
-    // Create product in database
-    console.log("💾 Creating product in database...");
-    const createData = {
-      userId: user.id,
-      productName: processedData.productName,
-      category: processedData.category,
-      description: processedData.description,
-      sellingPrice: processedData.sellingPrice,
-      isPublished: processedData.isPublished,
       featuredImage: featuredImageUrls.thumbnail
         ? {
             create: {
@@ -329,23 +361,53 @@ export async function createProduct(
           }
         : undefined,
       variations: {
-        create: processedData.variations.map(variation => ({
-          name: variation.name,
-          color: variation.color,
-          size: variation.size,
-          sku: variation.sku,
-          sku2: variation.sku2,
-          variationImageURL: variation.variationImageURL,
-          quantity: variation.quantity,
-        })),
+        create: Array.from({ length: variationCount }, (_, i) => {
+          const sizesEntries = Array.from(formData.entries()).filter(([key]) =>
+            key.startsWith(`variations.${i}.sizes.`)
+          );
+
+          const sizesCount = new Set(
+            sizesEntries
+              .map(([key]) => key.match(/variations\.\d+\.sizes\.(\d+)\./)?.[1])
+              .filter(Boolean)
+          ).size;
+
+          return {
+            name: formData.get(`variations.${i}.name`) as string,
+            color: (formData.get(`variations.${i}.color`) as string) || "",
+            variationImageURL: variationImages[i] || "",
+            sizes: {
+              create: Array.from({ length: sizesCount }, (_, j) => ({
+                size: (
+                  formData.get(`variations.${i}.sizes.${j}.size`) as string
+                ).trim(),
+                quantity:
+                  Number(formData.get(`variations.${i}.sizes.${j}.quantity`)) ||
+                  0,
+                sku: (
+                  formData.get(`variations.${i}.sizes.${j}.sku`) as string
+                ).trim(),
+                sku2:
+                  (
+                    formData.get(`variations.${i}.sizes.${j}.sku2`) as string
+                  )?.trim() || undefined,
+              })),
+            },
+          };
+        }),
       },
       dynamicPricing: {
-        create: processedData.dynamicPricing.map(pricing => ({
-          from: pricing.from,
-          to: pricing.to,
-          type: pricing.type,
-          amount: pricing.amount,
-        })),
+        create: Array.from(
+          { length: formData.getAll("dynamicPricing.0.from").length },
+          (_, i) => ({
+            from: formData.get(`dynamicPricing.${i}.from`) as string,
+            to: formData.get(`dynamicPricing.${i}.to`) as string,
+            type: formData.get(`dynamicPricing.${i}.type`) as
+              | "fixed_price"
+              | "percentage",
+            amount: formData.get(`dynamicPricing.${i}.amount`) as string,
+          })
+        ),
       },
     };
 
