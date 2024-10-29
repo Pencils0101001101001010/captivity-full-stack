@@ -6,6 +6,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -52,8 +53,9 @@ const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
               <FormItem className="flex-1">
                 <FormLabel>From</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} type="number" min="0" />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -65,8 +67,9 @@ const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
               <FormItem className="flex-1">
                 <FormLabel>To</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} type="number" min="0" />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -78,8 +81,9 @@ const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
               <FormItem className="flex-1">
                 <FormLabel>Amount</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} type="number" step="0.01" min="0" />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />

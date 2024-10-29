@@ -1,5 +1,5 @@
-/* eslint-disable @next/next/no-img-element */
 import React from "react";
+import Image from "next/image";
 import { Control, useFormContext } from "react-hook-form";
 import { Upload } from "lucide-react";
 import {
@@ -24,12 +24,22 @@ const FeaturedImageTab: React.FC<FeaturedImageTabProps> = ({ control }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const imageUrl = URL.createObjectURL(file);
-    setValue("featuredImage", {
-      thumbnail: imageUrl,
-      medium: imageUrl,
-      large: imageUrl,
-    });
+    try {
+      const imageUrl = URL.createObjectURL(file);
+      setValue(
+        "featuredImage",
+        {
+          thumbnail: imageUrl,
+          medium: imageUrl,
+          large: imageUrl,
+        },
+        {
+          shouldValidate: true,
+        }
+      );
+    } catch (error) {
+      console.error("Error handling image upload:", error);
+    }
   };
 
   return (
@@ -48,11 +58,15 @@ const FeaturedImageTab: React.FC<FeaturedImageTabProps> = ({ control }) => {
                   onChange={handleFeatureImageUpload}
                 />
                 {field.value.thumbnail && (
-                  <img
-                    src={field.value.thumbnail}
-                    alt="Featured image preview"
-                    className="w-16 h-16 object-cover"
-                  />
+                  <div className="relative w-16 h-16">
+                    <Image
+                      src={field.value.thumbnail}
+                      alt="Featured image preview"
+                      fill
+                      className="object-cover"
+                      sizes="64px"
+                    />
+                  </div>
                 )}
                 <Upload className="w-6 h-6" />
               </div>
@@ -71,31 +85,43 @@ const FeaturedImageTab: React.FC<FeaturedImageTabProps> = ({ control }) => {
         {watch("featuredImage.thumbnail") && (
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Thumbnail</p>
-            <img
-              src={watch("featuredImage.thumbnail")}
-              alt="Thumbnail preview"
-              className="w-full aspect-square object-cover rounded-md"
-            />
+            <div className="relative aspect-square">
+              <Image
+                src={watch("featuredImage.thumbnail")}
+                alt="Thumbnail preview"
+                fill
+                className="object-cover rounded-md"
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
+            </div>
           </div>
         )}
         {watch("featuredImage.medium") && (
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Medium</p>
-            <img
-              src={watch("featuredImage.medium")}
-              alt="Medium preview"
-              className="w-full aspect-square object-cover rounded-md"
-            />
+            <div className="relative aspect-square">
+              <Image
+                src={watch("featuredImage.medium")}
+                alt="Medium preview"
+                fill
+                className="object-cover rounded-md"
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
+            </div>
           </div>
         )}
         {watch("featuredImage.large") && (
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Large</p>
-            <img
-              src={watch("featuredImage.large")}
-              alt="Large preview"
-              className="w-full aspect-square object-cover rounded-md"
-            />
+            <div className="relative aspect-square">
+              <Image
+                src={watch("featuredImage.large")}
+                alt="Large preview"
+                fill
+                className="object-cover rounded-md"
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
+            </div>
           </div>
         )}
       </div>

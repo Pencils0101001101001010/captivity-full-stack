@@ -1,12 +1,13 @@
-/* eslint-disable @next/next/no-img-element */
 import React from "react";
-import { Control, useFieldArray } from "react-hook-form";
+import Image from "next/image";
+import { Control, useFormContext, useFieldArray } from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ interface VariationsTabProps {
 }
 
 const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
+  const { setValue } = useFormContext<ProductFormData>();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "variations",
@@ -29,8 +31,24 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const imageUrl = URL.createObjectURL(file);
-    // You'll need to implement setValue here through props or context
+    try {
+      const imageUrl = URL.createObjectURL(file);
+      setValue(`variations.${index}.variationImageURL`, imageUrl, {
+        shouldValidate: true,
+      });
+    } catch (error) {
+      console.error("Error handling image upload:", error);
+    }
+  };
+
+  const emptyVariation: Omit<ProductFormData["variations"][number], "id"> = {
+    name: "",
+    color: "",
+    size: "",
+    sku: "",
+    sku2: "",
+    variationImageURL: "",
+    quantity: 0,
   };
 
   return (
@@ -41,17 +59,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
           type="button"
           variant="outline"
           size="sm"
-          onClick={() =>
-            append({
-              name: "",
-              color: "",
-              size: "",
-              sku: "",
-              sku2: "",
-              variationImageURL: "",
-              quantity: 0,
-            })
-          }
+          onClick={() => append(emptyVariation)}
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Variation
@@ -81,6 +89,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -94,6 +103,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -107,6 +117,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -120,6 +131,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -133,6 +145,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -147,9 +160,12 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
                     <Input
                       type="number"
                       {...field}
-                      onChange={e => field.onChange(parseInt(e.target.value))}
+                      onChange={e =>
+                        field.onChange(parseInt(e.target.value) || 0)
+                      }
                     />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -169,14 +185,19 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
                       onChange={e => handleVariationImageUpload(index, e)}
                     />
                     {field.value && (
-                      <img
-                        src={field.value}
-                        alt="Variation preview"
-                        className="w-16 h-16 object-cover"
-                      />
+                      <div className="relative w-16 h-16">
+                        <Image
+                          src={field.value}
+                          alt="Variation preview"
+                          fill
+                          className="object-cover rounded-md"
+                          sizes="64px"
+                        />
+                      </div>
                     )}
                   </div>
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />

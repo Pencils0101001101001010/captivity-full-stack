@@ -1,25 +1,37 @@
 "use client";
 import React from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form } from "@/components/ui/form";
-import { ProductFormData } from "./types";
+import { useToast } from "@/hooks/use-toast";
+import { ProductFormData, productFormSchema } from "./types";
 import BasicInfoTab from "./BasicInfoTab";
 import DynamicPricingTab from "./DynamicPricingTab";
 import VariationsTab from "./VariationsTab";
 import FeaturedImageTab from "./FeaturedImageTab";
 
 const ProductForm = () => {
+  const { toast } = useToast();
+
   const form = useForm<ProductFormData>({
+    resolver: zodResolver(productFormSchema),
     defaultValues: {
       productName: "",
       category: [],
       description: "",
       sellingPrice: 0,
       isPublished: true,
-      dynamicPricing: [{ from: "", to: "", type: "fixed_price", amount: "" }],
+      dynamicPricing: [
+        {
+          from: "",
+          to: "",
+          type: "fixed_price",
+          amount: "",
+        },
+      ],
       variations: [
         {
           name: "",
@@ -40,7 +52,23 @@ const ProductForm = () => {
   });
 
   const onSubmit = async (data: ProductFormData) => {
-    console.log("Form submitted with data:", data);
+    try {
+      // Validate the data against the schema
+      const validatedData = productFormSchema.parse(data);
+      console.log("Validated form data:", validatedData);
+
+      toast({
+        title: "Success",
+        description: "Product created successfully",
+      });
+    } catch (error) {
+      console.error("Validation error:", error);
+      toast({
+        title: "Error",
+        description: "Please check all fields and try again",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
