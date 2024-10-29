@@ -10,6 +10,7 @@ export type UserRole =
 
 export interface SessionUser {
   id: string;
+  captivityBranch: string;
   username: string;
   displayName: string;
   firstName: string;
