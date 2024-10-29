@@ -6,12 +6,14 @@ import { usePathname } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { useSummerActions } from "../customer/_store/useSummerStore";
 import { useWinterActions } from "../customer/_store/useWinterStore";
+import { useFashionActions } from "../customer/_store/useFashionStore";
 
 export default function SearchField() {
-  const pathname = usePathname() || '';
+  const pathname = usePathname() || "";
   const [searchValue, setSearchValue] = useState("");
   const { setSearchQuery: setSummerSearch } = useSummerActions();
   const { setSearchQuery: setWinterSearch } = useWinterActions();
+  const { setSearchQuery: setFashionSearch } = useFashionActions();
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -20,8 +22,10 @@ export default function SearchField() {
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const query = e.target.value;
     setSearchValue(query);
-    
-    if (pathname.includes("/summer")) {
+
+    if (pathname.includes("/fashion")) {
+      setFashionSearch(query);
+    } else if (pathname.includes("/summer")) {
       setSummerSearch(query);
     } else if (pathname.includes("/winter")) {
       setWinterSearch(query);
@@ -31,12 +35,14 @@ export default function SearchField() {
   // Reset search when changing collections
   useEffect(() => {
     setSearchValue("");
-    if (pathname.includes("/summer")) {
+    if (pathname.includes("/fashion")) {
+      setFashionSearch("");
+    } else if (pathname.includes("/summer")) {
       setSummerSearch("");
     } else if (pathname.includes("/winter")) {
       setWinterSearch("");
     }
-  }, [pathname, setSummerSearch, setWinterSearch]);
+  }, [pathname, setSummerSearch, setWinterSearch, setFashionSearch]);
 
   return (
     <form onSubmit={handleSubmit}>
