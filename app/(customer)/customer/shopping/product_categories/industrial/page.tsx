@@ -1,5 +1,6 @@
 // shopping/(product_categories)/industrial/page.tsx
 import React from "react";
+import IndustrialCollectionPage from "./IndustrialLanding";
 
 export default async function IndustrialPage(): Promise<JSX.Element> {
   return (
@@ -14,7 +15,7 @@ export default async function IndustrialPage(): Promise<JSX.Element> {
           </p>
         </div>
       </div>
-      {/** <SummerCollectionPage /> **/}
+      <IndustrialCollectionPage /> 
     </div>
   );
 }

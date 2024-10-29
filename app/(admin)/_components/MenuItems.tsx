@@ -83,7 +83,7 @@ export function useMenuItems() {
       title: "Products",
       links: [
         { name: "All Products", href: "/admin/products" },
-        { name: "Add Product", href: "/admin/products/add" },
+        { name: "Add Product", href: "/admin/products/create" },
       ],
     },
     {
