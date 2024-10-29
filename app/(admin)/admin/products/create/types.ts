@@ -1,4 +1,3 @@
-// types.ts
 import { z } from "zod";
 
 // Define the schema first
@@ -24,10 +23,12 @@ export const productFormSchema = z.object({
       sku: z.string().min(3, "SKU must be at least 3 characters"),
       sku2: z.string().optional(),
       variationImageURL: z.string().optional(),
+      variationImage: z.any().optional(), // For the File object
       quantity: z.number().min(0, "Quantity cannot be negative"),
     })
   ),
   featuredImage: z.object({
+    file: z.any().optional(), // For the File object
     thumbnail: z.string(),
     medium: z.string(),
     large: z.string(),
@@ -45,3 +46,8 @@ export type Variation = ProductFormData["variations"][number];
 
 // Type for featured image
 export type FeaturedImage = ProductFormData["featuredImage"];
+
+// Extended types for file handling
+export interface FileWithPreview extends File {
+  preview?: string;
+}

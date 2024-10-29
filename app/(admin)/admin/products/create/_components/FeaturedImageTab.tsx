@@ -25,22 +25,43 @@ const FeaturedImageTab: React.FC<FeaturedImageTabProps> = ({ control }) => {
     if (!file) return;
 
     try {
-      const imageUrl = URL.createObjectURL(file);
+      // Create object URLs for preview
+      const previewUrl = URL.createObjectURL(file);
+
       setValue(
         "featuredImage",
         {
-          thumbnail: imageUrl,
-          medium: imageUrl,
-          large: imageUrl,
+          file: file, // Store the actual file
+          thumbnail: previewUrl,
+          medium: previewUrl,
+          large: previewUrl,
         },
         {
           shouldValidate: true,
         }
       );
+
+      console.log("Featured image file stored:", {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+      });
     } catch (error) {
       console.error("Error handling image upload:", error);
     }
   };
+
+  React.useEffect(() => {
+    // Cleanup object URLs when component unmounts
+    return () => {
+      const featuredImage = watch("featuredImage");
+      if (featuredImage.thumbnail) {
+        URL.revokeObjectURL(featuredImage.thumbnail);
+        URL.revokeObjectURL(featuredImage.medium);
+        URL.revokeObjectURL(featuredImage.large);
+      }
+    };
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -56,6 +77,7 @@ const FeaturedImageTab: React.FC<FeaturedImageTabProps> = ({ control }) => {
                   type="file"
                   accept="image/*"
                   onChange={handleFeatureImageUpload}
+                  className="cursor-pointer"
                 />
                 {field.value.thumbnail && (
                   <div className="relative w-16 h-16">
@@ -63,12 +85,12 @@ const FeaturedImageTab: React.FC<FeaturedImageTabProps> = ({ control }) => {
                       src={field.value.thumbnail}
                       alt="Featured image preview"
                       fill
-                      className="object-cover"
+                      className="object-cover rounded-md"
                       sizes="64px"
                     />
                   </div>
                 )}
-                <Upload className="w-6 h-6" />
+                <Upload className="w-6 h-6 text-gray-400" />
               </div>
             </FormControl>
             <FormDescription>

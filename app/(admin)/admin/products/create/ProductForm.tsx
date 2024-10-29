@@ -45,6 +45,7 @@ const ProductForm = () => {
         },
       ],
       featuredImage: {
+        file: undefined,
         thumbnail: "",
         medium: "",
         large: "",
@@ -56,16 +57,33 @@ const ProductForm = () => {
     try {
       const formData = new FormData();
 
+      // Log form data for debugging
+      console.log("Submitting form data:", {
+        hasFeaturedImage: !!data.featuredImage.file,
+        variationCount: data.variations.length,
+        categories: data.category,
+      });
+
       // Basic fields
       formData.append("productName", data.productName);
       formData.append("description", data.description);
       formData.append("sellingPrice", data.sellingPrice.toString());
       formData.append("isPublished", data.isPublished.toString());
 
-      // Categories - append each category separately
+      // Categories
       data.category.forEach(cat => {
-        formData.append("category[]", cat); // Note the [] syntax
+        formData.append("category[]", cat);
       });
+
+      // Featured Image
+      if (data.featuredImage.file instanceof File) {
+        formData.append("featuredImage", data.featuredImage.file);
+        console.log("Added featured image to form data:", {
+          fileName: data.featuredImage.file.name,
+          fileSize: data.featuredImage.file.size,
+          fileType: data.featuredImage.file.type,
+        });
+      }
 
       // Dynamic Pricing
       data.dynamicPricing.forEach((pricing, index) => {
@@ -88,24 +106,21 @@ const ProductForm = () => {
         );
 
         // Handle variation image
-        if (
-          variation.variationImageURL &&
-          typeof variation.variationImageURL !== "string"
-        ) {
+        if (variation.variationImage instanceof File) {
           formData.append(
             `variations.${index}.image`,
-            variation.variationImageURL
+            variation.variationImage
           );
+          console.log(`Added variation ${index} image:`, {
+            fileName: variation.variationImage.name,
+            fileSize: variation.variationImage.size,
+            fileType: variation.variationImage.type,
+          });
         }
       });
 
-      // Featured Image
-      if (
-        data.featuredImage.thumbnail &&
-        typeof data.featuredImage.thumbnail !== "string"
-      ) {
-        formData.append("featuredImage", data.featuredImage.thumbnail);
-      }
+      // Log final FormData for debugging
+      console.log("Final FormData entries:", Array.from(formData.entries()));
 
       const result = await createProduct(formData);
 
@@ -140,7 +155,11 @@ const ProductForm = () => {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-6"
+            encType="multipart/form-data"
+          >
             <Tabs defaultValue="basic-info" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
