@@ -10,7 +10,7 @@ import HeroSection from "@/app/(user)/_components/HeroSection";
 import useKids from "./useKids";
 import type { ProductWithFeaturedImage } from "./actions";
 import { CollectionsMenu } from "./collections-menu";
-import ProductCarousel from "@/app/(user)/_components/ProductCarousal";
+import ProductCarousel from "@/app/(user)/_components/ApparelsCarousel";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -80,7 +80,7 @@ const KidsProductList: React.FC = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                 {paginatedProducts.map((product: ProductWithFeaturedImage) => (
                   <Link
-                    href={`/products/kids/${product.id}`}
+                    href={`/products/apparel/${product.id}`}
                     key={product.id}
                   >
                     <Card className="hover:shadow-lg transition-shadow duration-300">

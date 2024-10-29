@@ -20,7 +20,7 @@ export default async function Layout({
       <div className="flex min-h-screen flex-col">
         <Navbar />
         <div className="flex w-full grow">
-          <Sidebar className="hidden h-full w-64 lg:block" />
+          <Sidebar />
           <main className="flex-grow p-5">{children}</main>
         </div>
       </div>

@@ -1,27 +1,54 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { SearchIcon } from "lucide-react";
+import { SearchIcon, XIcon } from "lucide-react";
+import { useDebouncedCallback } from "use-debounce";
+import { useState, useEffect } from "react";
 
 interface SearchFieldProps {
   onSearch: (query: string) => void;
+  initialValue?: string;
 }
 
-export default function SearchField({ onSearch }: SearchFieldProps) {
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const q = (form.q as HTMLInputElement).value.trim();
-    if (!q) return;
-    onSearch(q);
-  }
+export default function SearchField({
+  onSearch,
+  initialValue = "",
+}: SearchFieldProps) {
+  const [value, setValue] = useState(initialValue);
+
+  const debouncedSearch = useDebouncedCallback((term: string) => {
+    onSearch(term);
+  }, 200); // Reduced debounce time for better responsiveness
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setValue(newValue);
+    debouncedSearch(newValue);
+  };
+
+  const handleClear = () => {
+    setValue("");
+    onSearch("");
+  };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="relative">
-        <Input name="q" placeholder="Search" className="pe-10" />
+    <div className="relative">
+      <Input
+        value={value}
+        onChange={handleChange}
+        placeholder="Search"
+        className="pe-10"
+      />
+      {value ? (
+        <button
+          onClick={handleClear}
+          className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-500 hover:text-gray-700"
+        >
+          <XIcon className="size-4" />
+        </button>
+      ) : (
         <SearchIcon className="absolute right-3 top-1/2 size-5 -translate-y-1/2 transform text-muted-foreground" />
-      </div>
-    </form>
+      )}
+    </div>
   );
 }
