@@ -9,6 +9,7 @@ import {
   Search,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
 
 const AdminPanel = () => {
   return (
@@ -98,14 +99,17 @@ const AdminPanel = () => {
                   Handle new customer orders
                 </p>
               </button>
-              <button className="p-6 text-left transition-all bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-xl hover:shadow-md border border-purple-200">
+              <Link
+                href={"/admin/products/create"}
+                className="p-6 text-left transition-all bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-xl hover:shadow-md border border-purple-200"
+              >
                 <h3 className="mb-2 text-lg font-medium text-purple-700">
-                  Create Project
+                  Create Product
                 </h3>
                 <p className="text-sm text-purple-600/80">
-                  Start a new project
+                  Create a new project
                 </p>
-              </button>
+              </Link>
               <button className="p-6 text-left transition-all bg-gradient-to-br from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 rounded-xl hover:shadow-md border border-emerald-200">
                 <h3 className="mb-2 text-lg font-medium text-emerald-700">
                   Generate Report
