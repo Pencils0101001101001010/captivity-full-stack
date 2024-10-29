@@ -86,7 +86,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ className }) => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
               </div>
               <div className="p-4">
-                <h3 className="font-medium text-lg text-card-foreground truncate">
+                <h3 className=" text-gray-700 text-xl font-bold text-card-foreground truncate">
                   {currentProduct.name}
                 </h3>
               </div>
