@@ -24,6 +24,7 @@ type Category =
   | "golfers"
   | "bottoms"
   | "caps"
+  | "pre-curved-peaks"
   | "uncategorised";
 
 type CategorizedProducts = {
@@ -67,6 +68,7 @@ export async function fetchAfricanCollection(): Promise<FetchAfricanCollectionRe
       bottoms: [],
       caps: [],
       uncategorised: [],
+      "pre-curved-peaks": []
     };
 
     products.forEach(product => {

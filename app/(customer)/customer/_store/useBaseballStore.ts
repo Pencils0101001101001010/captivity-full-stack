@@ -22,6 +22,7 @@ export type Category =
   | "golfers"
   | "bottoms"
   | "caps"
+  | "pre-curved-peaks"
   | "uncategorised";
 
 export type CategorizedProducts = {
@@ -57,6 +58,7 @@ const initialState: BaseballState = {
     bottoms: [],
     caps: [],
     uncategorised: [],
+    "pre-curved-peaks": []
   },
   filteredProducts: {
     men: [],
@@ -67,6 +69,7 @@ const initialState: BaseballState = {
     bottoms: [],
     caps: [],
     uncategorised: [],
+    "pre-curved-peaks": []
   },
   searchQuery: "",
   loading: false,
@@ -179,7 +182,7 @@ export const useBaseballError = () => useBaseballStore(state => state.error);
 export const useBaseballActions = () =>
   useBaseballStore(
     useShallow(state => ({
-      setSummerProducts: state.setBaseballProducts,
+      setBaseballProducts: state.setBaseballProducts,
       setSearchQuery: state.setSearchQuery,
       setLoading: state.setLoading,
       setError: state.setError,
