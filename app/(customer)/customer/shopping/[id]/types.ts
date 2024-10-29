@@ -35,9 +35,22 @@ export type QuantitySelectorProps = {
   onQuantityChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
-export type ProductImageProps = {
+export interface ProductImageProps {
   selectedVariation: Variation | null;
-  product: ProductWithRelations;
+  product: {
+    id: string;
+    productName: string;
+    featuredImage: {
+      thumbnail: string;
+      medium: string;
+      large: string;
+    } | null;
+    variations: Array<{
+      id: string;
+      color: string;
+      variationImageURL: string;
+    }>;
+  };
   uniqueColors: string[];
   onColorSelect: (color: string) => void;
-};
+}
