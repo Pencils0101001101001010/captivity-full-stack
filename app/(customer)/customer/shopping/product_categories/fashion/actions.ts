@@ -42,7 +42,7 @@ export async function fetchFashionCollection(): Promise<FetchFashionCollectionRe
       throw new Error("Unauthorized. Please log in.");
     }
 
-    // Fetch summer collection products with all relations
+    // Fetch fashion collection products with all relations
     const products = await prisma.product.findMany({
       where: {
         category: {
