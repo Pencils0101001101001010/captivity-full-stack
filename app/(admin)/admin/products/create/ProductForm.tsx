@@ -8,10 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { ProductFormData, productFormSchema } from "./types";
-import BasicInfoTab from "./BasicInfoTab";
-import DynamicPricingTab from "./DynamicPricingTab";
-import VariationsTab from "./VariationsTab";
-import FeaturedImageTab from "./FeaturedImageTab";
+import BasicInfoTab from "./_components/BasicInfoTab";
+import DynamicPricingTab from "./_components/DynamicPricingTab";
+import VariationsTab from "./_components/VariationsTab";
+import FeaturedImageTab from "./_components/FeaturedImageTab";
 import { createProduct } from "./actions";
 
 const ProductForm = () => {

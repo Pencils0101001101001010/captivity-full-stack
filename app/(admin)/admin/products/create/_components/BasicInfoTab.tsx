@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { ProductFormData } from "./types";
+import { ProductFormData } from "../types";
 
 interface BasicInfoTabProps {
   control: Control<ProductFormData>;

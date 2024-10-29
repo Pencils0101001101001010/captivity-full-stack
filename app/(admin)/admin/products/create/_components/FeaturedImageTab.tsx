@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ProductFormData } from "./types";
+import { ProductFormData } from "../types";
 
 interface FeaturedImageTabProps {
   control: Control<ProductFormData>;
