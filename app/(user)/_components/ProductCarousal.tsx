@@ -60,7 +60,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ className }) => {
   const currentProduct = products[currentIndex];
 
   return (
-    <div className={cn("w-full space-y-4", className)}>
+    <div className={cn("w-full space-y-4 text-gray-700 text-xl font-bold hidden lg:block", className)}>
       <h1>NEW PRODUCTS</h1>
       <div className="relative w-full overflow-hidden rounded-lg">
         <div
