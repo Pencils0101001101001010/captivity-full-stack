@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import useCartStore from "../../_store/useCartStore";
 import { useSession } from "@/app/(customer)/SessionProvider";
+import BackToCustomerPage from "../../_components/BackToCustomerButton";
 
 const ViewCart = () => {
   const { cart, updateCartItemQuantity, removeFromCart } = useCartStore();
@@ -76,12 +77,16 @@ const ViewCart = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-semibold mb-8">
-        {user?.username
-          ? `${user.displayName}'s Shopping Cart`
-          : "Shopping Cart"}
-      </h1>
-
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-semibold mb-8">
+          {user?.username
+            ? `${user.displayName}'s Shopping Cart`
+            : "Shopping Cart"}
+        </h1>
+        <span>
+          <BackToCustomerPage />
+        </span>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items Section */}
         <div className="lg:col-span-2 space-y-4">
