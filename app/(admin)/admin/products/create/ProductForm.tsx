@@ -12,6 +12,7 @@ import BasicInfoTab from "./BasicInfoTab";
 import DynamicPricingTab from "./DynamicPricingTab";
 import VariationsTab from "./VariationsTab";
 import FeaturedImageTab from "./FeaturedImageTab";
+import { createProduct } from "./actions";
 
 const ProductForm = () => {
   const { toast } = useToast();
@@ -53,19 +54,80 @@ const ProductForm = () => {
 
   const onSubmit = async (data: ProductFormData) => {
     try {
-      // Validate the data against the schema
-      const validatedData = productFormSchema.parse(data);
-      console.log("Validated form data:", validatedData);
+      const formData = new FormData();
 
-      toast({
-        title: "Success",
-        description: "Product created successfully",
+      // Basic fields
+      formData.append("productName", data.productName);
+      formData.append("description", data.description);
+      formData.append("sellingPrice", data.sellingPrice.toString());
+      formData.append("isPublished", data.isPublished.toString());
+
+      // Categories - append each category separately
+      data.category.forEach(cat => {
+        formData.append("category[]", cat); // Note the [] syntax
       });
+
+      // Dynamic Pricing
+      data.dynamicPricing.forEach((pricing, index) => {
+        formData.append(`dynamicPricing.${index}.from`, pricing.from);
+        formData.append(`dynamicPricing.${index}.to`, pricing.to);
+        formData.append(`dynamicPricing.${index}.type`, pricing.type);
+        formData.append(`dynamicPricing.${index}.amount`, pricing.amount);
+      });
+
+      // Variations
+      data.variations.forEach((variation, index) => {
+        formData.append(`variations.${index}.name`, variation.name);
+        formData.append(`variations.${index}.color`, variation.color || "");
+        formData.append(`variations.${index}.size`, variation.size || "");
+        formData.append(`variations.${index}.sku`, variation.sku);
+        formData.append(`variations.${index}.sku2`, variation.sku2 || "");
+        formData.append(
+          `variations.${index}.quantity`,
+          variation.quantity.toString()
+        );
+
+        // Handle variation image
+        if (
+          variation.variationImageURL &&
+          typeof variation.variationImageURL !== "string"
+        ) {
+          formData.append(
+            `variations.${index}.image`,
+            variation.variationImageURL
+          );
+        }
+      });
+
+      // Featured Image
+      if (
+        data.featuredImage.thumbnail &&
+        typeof data.featuredImage.thumbnail !== "string"
+      ) {
+        formData.append("featuredImage", data.featuredImage.thumbnail);
+      }
+
+      const result = await createProduct(formData);
+
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: result.message,
+        });
+        form.reset();
+      } else {
+        toast({
+          title: "Error",
+          description: result.error,
+          variant: "destructive",
+        });
+      }
     } catch (error) {
-      console.error("Validation error:", error);
+      console.error("Error submitting form:", error);
       toast({
         title: "Error",
-        description: "Please check all fields and try again",
+        description:
+          error instanceof Error ? error.message : "Failed to create product",
         variant: "destructive",
       });
     }
