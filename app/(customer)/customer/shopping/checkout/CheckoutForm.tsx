@@ -13,7 +13,7 @@ import { BillingDetails } from "./_components/BillingDetails";
 import { AdditionalInformation } from "./_components/AdditionalInformation";
 import { TermsAndConditions } from "./_components/TermsAndConditions";
 import OrderSummary from "./_components/OrderSummary";
-import { createOrder, getUserOrders } from "./actions";
+import { createOrder, getUserDetails } from "./actions";
 import { useRouter } from "next/navigation";
 
 const CheckoutForm = () => {
@@ -27,7 +27,7 @@ const CheckoutForm = () => {
     fetchCart,
     updateCartItemQuantity,
     removeFromCart,
-    setCart
+    setCart,
   } = useCartStore();
   const { toast } = useToast();
 
@@ -57,40 +57,42 @@ const CheckoutForm = () => {
 
   // Load previous order data
   useEffect(() => {
-    const loadPreviousOrderData = async () => {
+    const loadUserData = async () => {
       try {
-        const result = await getUserOrders();
-        if (result.success && result.data && result.data.length > 0) {
-          const lastOrder = result.data[0];
+        const result = await getUserDetails();
+        if (result.success && result.data) {
           form.reset({
-            captivityBranch: lastOrder.captivityBranch,
-            methodOfCollection: lastOrder.methodOfCollection,
-            salesRep: lastOrder.salesRep || "",
-            referenceNumber: lastOrder.referenceNumber || "",
-            firstName: lastOrder.firstName,
-            lastName: lastOrder.lastName,
-            companyName: lastOrder.companyName,
-            countryRegion: lastOrder.countryRegion,
-            streetAddress: lastOrder.streetAddress,
-            apartmentSuite: lastOrder.apartmentSuite || "",
-            townCity: lastOrder.townCity,
-            province: lastOrder.province,
-            postcode: lastOrder.postcode,
-            phone: lastOrder.phone,
-            email: lastOrder.email,
-            orderNotes: lastOrder.orderNotes || "",
+            ...form.getValues(), // Keep existing values
+            // Only set the fields that exist in your User model
+            firstName: result.data.firstName || "",
+            lastName: result.data.lastName || "",
+            email: result.data.email || "",
+            phone: "",
+
+            captivityBranch: "",
+            methodOfCollection: "",
+            salesRep: result.data.salesRep || "",
+            referenceNumber: "",
+            companyName: result.data.companyName || "",
+            countryRegion: result.data.country || "",
+            streetAddress: result.data.streetAddress || "",
+            apartmentSuite: result.data.addressLine2 || "",
+            townCity: result.data.townCity || "",
+            province: result.data.suburb || "",
+            postcode: result.data.postcode || "",
+            orderNotes: "",
             agreeTerms: false,
             receiveEmailReviews: false,
           });
         }
       } catch (error) {
-        console.error("Error loading previous order data:", error);
+        console.error("Error loading user data:", error);
       } finally {
         setIsLoadingPreviousOrder(false);
       }
     };
 
-    loadPreviousOrderData();
+    loadUserData();
   }, [form]);
 
   useEffect(() => {
