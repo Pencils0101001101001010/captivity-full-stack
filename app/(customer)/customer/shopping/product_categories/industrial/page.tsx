@@ -1,7 +1,7 @@
 // shopping/(product_categories)/industrial/page.tsx
 import React from "react";
 
-export default async function FashionPage(): Promise<JSX.Element> {
+export default async function IndustrialPage(): Promise<JSX.Element> {
   return (
     <div>
       <div className="bg-muted border-b border-border mb-6">
