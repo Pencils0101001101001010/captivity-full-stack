@@ -8,9 +8,9 @@ const COLLECTIONS = [
   "Fashion",
   "Industrial",
   "Kids",
-  "Resort",
-  "Basic",
-  "Limited Edition",
+  "Leisure",
+  "Signature",
+  "Sport",
 ] as const;
 
 type Collection = (typeof COLLECTIONS)[number];

@@ -30,11 +30,11 @@ type CategorizedProducts = {
   [key in Category]: ProductWithRelations[];
 };
 
-type FetchLeisureCollectionResult =
+type FetchSportCollectionResult =
   | { success: true; data: CategorizedProducts }
   | { success: false; error: string };
 
-export async function fetchLeisureCollection(): Promise<FetchLeisureCollectionResult> {
+export async function fetchSportCollection(): Promise<FetchSportCollectionResult> {
   try {
     // Validate user session
     const { user } = await validateRequest();
@@ -42,11 +42,11 @@ export async function fetchLeisureCollection(): Promise<FetchLeisureCollectionRe
       throw new Error("Unauthorized. Please log in.");
     }
 
-    // Fetch leisure collection products with all relations
+    // Fetch sport collection products with all relations
     const products = await prisma.product.findMany({
       where: {
         category: {
-          has: "leisure-collection", // Changed from summer to leisure
+          has: "sport-collection", // Changed from summer to winter
         },
         isPublished: true,
       },
@@ -79,11 +79,11 @@ export async function fetchLeisureCollection(): Promise<FetchLeisureCollectionRe
     });
 
     // Revalidate the products page
-    revalidatePath("/customer/shopping/leisure"); // Changed from summer to winter
+    revalidatePath("/customer/shopping/sport"); // Changed from summer to winter
 
     return { success: true, data: categorizedProducts };
   } catch (error) {
-    console.error("Error fetching leisure collection:", error);
+    console.error("Error fetching sport collection:", error);
     return {
       success: false,
       error:
