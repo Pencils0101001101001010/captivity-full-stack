@@ -116,17 +116,7 @@ const navItems: Section[] = [
   {
     label: "All Collections",
     items: [
-      {
-        href: "/products/all-collections/leisure-collection",
-        icon: DotIcon,
-        label: "Leisure Collection",
-      },
-      {
-        href: "/products/all-collections/industrial-collection",
-        icon: DotIcon,
-        label: "Industrial Collection",
-      },
-      {
+     {
         href: "/products/all-collections/signature-collection",
         icon: DotIcon,
         label: "Signature Collection",
@@ -142,9 +132,19 @@ const navItems: Section[] = [
         label: "Fashion Collection",
       },
       {
+        href: "/products/all-collections/leisure-collection",
+        icon: DotIcon,
+        label: "Leisure Collection",
+      },
+      {
         href: "/products/all-collections/sport-collection",
         icon: DotIcon,
         label: "Sport Collection",
+      },
+      {
+        href: "/products/all-collections/industrial-collection",
+        icon: DotIcon,
+        label: "Industrial Collection",
       },
       {
         href: "/products/all-collections/camo-collection",
@@ -155,6 +155,11 @@ const navItems: Section[] = [
         href: "/products/all-collections/winter-collection",
         icon: DotIcon,
         label: "Winter Collection",
+      },
+      {
+        href: "/products/all-collections/kids-collection",
+        icon: DotIcon,
+        label: "Kids Collection",
       },
       {
         href: "/products/all-collections/african-collection",

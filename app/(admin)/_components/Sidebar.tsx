@@ -9,13 +9,25 @@ import {
 import { useSession } from "../SessionProvider";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { menuItems } from "./MenuItems";
+import { useMenuItems } from "./MenuItems";
+
+type MenuLink = {
+  name: string;
+  href: string;
+  count?: number;
+};
+
+type MenuItem = {
+  title: string;
+  links: MenuLink[];
+};
 
 const CollapsibleSidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [openDropdowns, setOpenDropdowns] = useState<number[]>([]);
   const { user } = useSession();
   const pathname = usePathname();
+  const menuItems = useMenuItems();
 
   const toggleDropdown = (index: number) => {
     setOpenDropdowns(prev => {
@@ -87,7 +99,7 @@ const CollapsibleSidebar = () => {
                         >
                           <div className="flex items-center justify-between">
                             <span>{link.name}</span>
-                            {link.count && link.count > 0 && (
+                            {typeof link.count !== 'undefined' && (
                               <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] text-center">
                                 {link.count}
                               </span>

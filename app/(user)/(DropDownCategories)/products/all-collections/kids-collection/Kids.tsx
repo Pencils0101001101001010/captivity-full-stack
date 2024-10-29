@@ -7,16 +7,16 @@ import Link from "next/link";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import SideMenu from "@/app/(user)/_components/SideMenu";
 import HeroSection from "@/app/(user)/_components/HeroSection";
-import useIndustrial from "./useIndustrial";
+import useChildCollect from "./useKidsCollection";
 import type { ProductWithFeaturedImage } from "./actions";
 import ProductCarousel from "@/app/(user)/_components/ProductCarousal";
 import { CollectionsMenu } from "../../../../_components/CollectionsMenu";
 
 const ITEMS_PER_PAGE = 6;
 
-const IndustrialProductList: React.FC = () => {
+const KidsProductList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const { products, loading, error } = useIndustrial();
+  const { products, loading, error } = useChildCollect();
   const [featuredImage, setFeaturedImage] = useState<{ large: string }>({
     large: "/Industrial-collection-Btn.jpg",
   });
@@ -42,7 +42,7 @@ const IndustrialProductList: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[200px]">
         <Loader2 className="mx-auto my-3 animate-spin h-8 w-8" />
-        <p className="text-muted-foreground">Loading industrial collection...</p>
+        <p className="text-muted-foreground">Loading kid&apos;s collection...</p>
       </div>
     );
   };
@@ -51,7 +51,7 @@ const IndustrialProductList: React.FC = () => {
 
   return (
     <section className="container mx-auto my-8">
-      <HeroSection featuredImage={featuredImage} categoryName="INDUSTRIAL-COLLECTION" />
+      <HeroSection featuredImage={featuredImage} categoryName="KID&apos;s-COLLECTION" />
 
       <div className="flex flex-col md:flex-row gap-6 relative">
         <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
@@ -68,11 +68,11 @@ const IndustrialProductList: React.FC = () => {
         </aside>
 
         <main className="w-full md:w-3/4 lg:w-4/5">
-        <h1 className="text-gray-500 text-xl mb-6">Industrial Collection</h1>
+        <h1 className="text-gray-500 text-xl mb-6">Kid&apos;s Collection</h1>
           {products.length === 0 ? (
             <div className="text-center py-8">
               <h2 className="text-2xl font-bold text-foreground">
-                No industrail products available in the collection.
+                No kid&apos;s products available in the collection.
               </h2>
             </div>
           ) : (
@@ -170,4 +170,4 @@ const IndustrialProductList: React.FC = () => {
   );
 };
 
-export default IndustrialProductList;
+export default KidsProductList;

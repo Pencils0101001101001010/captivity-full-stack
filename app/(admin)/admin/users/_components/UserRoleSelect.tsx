@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { UserRole } from "@prisma/client";
-import { updateUserRole } from "./actions";
+import { updateUserRole } from "../actions";
 
 interface UserRoleSelectProps {
   userId: string;
@@ -28,6 +28,8 @@ const UserRoleSelect: React.FC<UserRoleSelectProps> = ({
       if (!result.success) {
         throw new Error(result.error);
       }
+      // Reload the page after successful update to refresh all counts
+      window.location.reload();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "An unexpected error occurred"
@@ -39,21 +41,34 @@ const UserRoleSelect: React.FC<UserRoleSelectProps> = ({
   };
 
   return (
-    <div>
+    <div className="relative">
       <select
         value={role}
         onChange={handleRoleChange}
         disabled={isUpdating}
-        className="block w-full bg-white border border-gray-300 hover:border-gray-400 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"
+        className={`
+          block w-full px-3 py-2 text-sm
+          bg-white border border-gray-300 rounded-md shadow-sm
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          disabled:bg-gray-100 disabled:cursor-not-allowed
+        `}
       >
-        {Object.values(UserRole).map((roleOption) => (
-          <option key={roleOption} value={roleOption}>
-            {roleOption}
-          </option>
-        ))}
+        <option value={UserRole.USER}>User</option>
+        <option value={UserRole.CUSTOMER}>Customer</option>
+        <option value={UserRole.SUBSCRIBER}>Subscriber</option>
+        <option value={UserRole.PROMO}>Promo User</option>
+        <option value={UserRole.DISTRIBUTOR}>Distributor</option>
+        <option value={UserRole.SHOPMANAGER}>Shop Manager</option>
+        <option value={UserRole.EDITOR}>Editor</option>
       </select>
-      {isUpdating && <p className="text-gray-500 mt-1">Updating...</p>}
-      {error && <p className="text-red-500 mt-1">{error}</p>}
+
+      {isUpdating && (
+        <div className="absolute inset-0 bg-white/50 flex items-center justify-center">
+          <div className="w-5 h-5 border-2 border-blue-500 rounded-full animate-spin border-t-transparent" />
+        </div>
+      )}
+
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   );
 };
