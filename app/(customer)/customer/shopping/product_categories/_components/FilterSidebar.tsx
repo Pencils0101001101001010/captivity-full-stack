@@ -6,7 +6,7 @@ const COLLECTIONS = [
   "Winter",
   "Summer",
   "Fashion",
-  "Fall",
+  "Leisure",
   "Holiday",
   "Resort",
   "Basic",
