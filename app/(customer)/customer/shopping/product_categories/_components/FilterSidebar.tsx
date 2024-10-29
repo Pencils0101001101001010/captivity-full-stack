@@ -5,9 +5,9 @@ import { useRouter, usePathname } from "next/navigation";
 const COLLECTIONS = [
   "Winter",
   "Summer",
-  "Spring",
-  "Fall",
-  "Holiday",
+  "Fashion",
+  "Industrial",
+  "Kids",
   "Resort",
   "Basic",
   "Limited Edition",
