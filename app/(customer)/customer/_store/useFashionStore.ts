@@ -22,11 +22,11 @@ export type Category =
   | "golfers"
   | "bottoms"
   | "caps"
+  | "trucker-caps"
+  | "flat-peaks"
   | "uncategorised";
 
-export type CategorizedProducts = {
-  [key in Category]: ProductWithRelations[];
-};
+export type CategorizedProducts = Record<Category, ProductWithRelations[]>;
 
 interface FashionState {
   fashionProducts: CategorizedProducts;
@@ -56,6 +56,8 @@ const initialState: FashionState = {
     golfers: [],
     bottoms: [],
     caps: [],
+    "trucker-caps": [],
+    "flat-peaks": [],
     uncategorised: [],
   },
   filteredProducts: {
@@ -66,6 +68,8 @@ const initialState: FashionState = {
     golfers: [],
     bottoms: [],
     caps: [],
+    "trucker-caps": [],
+    "flat-peaks": [],
     uncategorised: [],
   },
   searchQuery: "",
@@ -138,8 +142,8 @@ const useFashionStore = create<FashionState & FashionActions>()((set, get) => ({
       .then(result => {
         if (result.success) {
           set({
-            fashionProducts: result.data,
-            filteredProducts: result.data,
+            fashionProducts: result.data as CategorizedProducts,
+            filteredProducts: result.data as CategorizedProducts,
             loading: false,
             hasInitiallyFetched: true,
             isInitializing: false,

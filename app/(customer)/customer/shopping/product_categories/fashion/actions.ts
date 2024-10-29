@@ -24,6 +24,8 @@ type Category =
   | "golfers"
   | "bottoms"
   | "caps"
+  | "trucker-caps"
+  | "flat-peaks"
   | "uncategorised";
 
 type CategorizedProducts = {
@@ -66,6 +68,8 @@ export async function fetchFashionCollection(): Promise<FetchFashionCollectionRe
       golfers: [],
       bottoms: [],
       caps: [],
+      "trucker-caps": [],
+      "flat-peaks": [],
       uncategorised: [],
     };
 

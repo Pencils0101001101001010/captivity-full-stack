@@ -134,7 +134,7 @@ const ProductForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-3xl mx-auto">
+    <Card className="w-full max-w-3xl mx-auto shadow-2xl shadow-black">
       <CardHeader>
         <CardTitle>Create New Product</CardTitle>
       </CardHeader>
