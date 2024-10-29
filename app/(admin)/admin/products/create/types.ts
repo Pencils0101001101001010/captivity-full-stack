@@ -1,3 +1,5 @@
+// @/lib/schema/product.ts
+
 import { z } from "zod";
 import { Control } from "react-hook-form";
 
@@ -30,7 +32,9 @@ export const productFormSchema = z.object({
       color: z.string().optional(),
       variationImageURL: z.string().optional(),
       variationImage: z.any().optional(), // For the File object
-      sizes: z.array(sizeVariationSchema).min(1, "At least one size is required"),
+      sizes: z
+        .array(sizeVariationSchema)
+        .min(1, "At least one size is required"),
     })
   ),
   featuredImage: z.object({
