@@ -1,5 +1,6 @@
 import Link from "next/link";
 import React from "react";
+import { DropdownMenu } from "@radix-ui/react-dropdown-menu";
 
 const SideMenu = () => {
   return (
@@ -71,7 +72,8 @@ const SideMenu = () => {
           </li>
         </ul>
       </aside>
-      <aside className="w-[230px] hidden lg:block top-0 border-2 -ml-16 border-gray-800 p-4" >
+      <DropdownMenu>
+      <div className="w-[230px] hidden lg:block top-0 border-2 -ml-16 border-gray-800 p-4" >
       <ul className="menu  text-gray-700">
         <span className="text-xl font-bold">All Collections</span>
         <li className="hover:text-red-400">
@@ -119,8 +121,9 @@ const SideMenu = () => {
               African Collecton
             </Link>
         </li>
-      </ul>
-    </aside>
+          </ul>
+      </div>
+    </DropdownMenu>
     </div>
   );
 };
