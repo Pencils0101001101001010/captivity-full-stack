@@ -99,7 +99,7 @@ const CollapsibleSidebar = () => {
                         >
                           <div className="flex items-center justify-between">
                             <span>{link.name}</span>
-                            {typeof link.count !== 'undefined' && (
+                            {typeof link.count !== "undefined" && (
                               <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] text-center">
                                 {link.count}
                               </span>

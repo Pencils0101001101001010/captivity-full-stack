@@ -21,7 +21,7 @@ export default async function Layout({
         <Navbar />
         <div className="flex w-full grow">
           <Sidebar />
-          <main className="flex-grow p-5">{children}</main>
+          <main className="flex-grow p-2">{children}</main>
         </div>
       </div>
     </SessionProvider>
