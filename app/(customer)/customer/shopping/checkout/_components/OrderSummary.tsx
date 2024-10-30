@@ -133,7 +133,9 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
         <div className="text-center py-8">
           <p className="text-gray-500 mb-4">Your cart is empty</p>
           <Button type="button" variant="outline" asChild>
-            <Link href={"/customer/shopping/express"}>Continue Shopping</Link>
+            <Link href={"/customer/shopping/product_categories/summer"}>
+              Continue Shopping
+            </Link>
           </Button>
         </div>
       )}
