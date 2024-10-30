@@ -1,5 +1,4 @@
 "use server";
-
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -16,9 +15,7 @@ type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
-type Category =
-  | "camo-collection"
-  | "uncategorised";
+type Category = "camo-collection" | "uncategorised";
 
 type CategorizedProducts = {
   [key in Category]: ProductWithRelations[];
@@ -30,13 +27,11 @@ type FetchCamoCollectionResult =
 
 export async function fetchCamoCollection(): Promise<FetchCamoCollectionResult> {
   try {
-    // Validate user session
     const { user } = await validateRequest();
     if (!user) {
       throw new Error("Unauthorized. Please log in.");
     }
 
-    // Fetch fashion collection products with all relations
     const products = await prisma.product.findMany({
       where: {
         category: {
@@ -51,22 +46,25 @@ export async function fetchCamoCollection(): Promise<FetchCamoCollectionResult> 
       },
     });
 
-    // Categorize products
     const categorizedProducts: CategorizedProducts = {
+      "camo-collection": [],
       uncategorised: [],
-      "camo-collection": []
     };
 
+    const processedProductIds = new Set<string>();
+
     products.forEach(product => {
+      if (processedProductIds.has(product.id)) return;
+
       const categories = product.category as string[];
-      categories.forEach(category => {
-        if (category in categorizedProducts) {
-          categorizedProducts[category as Category].push(product);
-        }
-      });
+      if (categories.includes("camo-collection")) {
+        categorizedProducts["camo-collection"].push(product);
+      } else {
+        categorizedProducts.uncategorised.push(product);
+      }
+      processedProductIds.add(product.id);
     });
 
-    // Revalidate the products page
     revalidatePath("/customer/shopping/camo");
 
     return { success: true, data: categorizedProducts };
