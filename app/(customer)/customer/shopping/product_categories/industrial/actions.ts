@@ -1,5 +1,4 @@
 "use server";
-
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -31,13 +30,11 @@ type FetchIndustrialCollectionResult =
 
 export async function fetchIndustrialCollection(): Promise<FetchIndustrialCollectionResult> {
   try {
-    // Validate user session
     const { user } = await validateRequest();
     if (!user) {
       throw new Error("Unauthorized. Please log in.");
     }
 
-    // Fetch industrial collection products with all relations
     const products = await prisma.product.findMany({
       where: {
         category: {
@@ -52,21 +49,19 @@ export async function fetchIndustrialCollection(): Promise<FetchIndustrialCollec
       },
     });
 
-    // Categorize products
     const categorizedProducts: CategorizedProducts = {
       "industrial-collection": [],
     };
 
+    const processedProductIds = new Set<string>();
+
     products.forEach(product => {
-      const categories = product.category as string[];
-      categories.forEach(category => {
-        if (category in categorizedProducts) {
-          categorizedProducts[category as Category].push(product);
-        }
-      });
+      if (!processedProductIds.has(product.id)) {
+        categorizedProducts["industrial-collection"].push(product);
+        processedProductIds.add(product.id);
+      }
     });
 
-    // Revalidate the products page
     revalidatePath("/customer/shopping/product_categories/industrial");
 
     return {
