@@ -1,5 +1,4 @@
 "use server";
-
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -37,13 +36,11 @@ type FetchBaseballCollectionResult =
 
 export async function fetchBaseballCollection(): Promise<FetchBaseballCollectionResult> {
   try {
-    // Validate user session
     const { user } = await validateRequest();
     if (!user) {
       throw new Error("Unauthorized. Please log in.");
     }
 
-    // Fetch summer collection products with all relations
     const products = await prisma.product.findMany({
       where: {
         category: {
@@ -58,7 +55,6 @@ export async function fetchBaseballCollection(): Promise<FetchBaseballCollection
       },
     });
 
-    // Categorize products
     const categorizedProducts: CategorizedProducts = {
       men: [],
       women: [],
@@ -67,20 +63,25 @@ export async function fetchBaseballCollection(): Promise<FetchBaseballCollection
       golfers: [],
       bottoms: [],
       caps: [],
+      "pre-curved-peaks": [],
       uncategorised: [],
-      "pre-curved-peaks": []
     };
 
+    const processedProductIds = new Set<string>();
+
     products.forEach(product => {
+      if (processedProductIds.has(product.id)) return;
+
       const categories = product.category as string[];
-      categories.forEach(category => {
-        if (category in categorizedProducts) {
-          categorizedProducts[category as Category].push(product);
-        }
-      });
+      const primaryCategory =
+        (categories.find(
+          category => category in categorizedProducts
+        ) as Category) || "uncategorised";
+
+      categorizedProducts[primaryCategory].push(product);
+      processedProductIds.add(product.id);
     });
 
-    // Revalidate the products page
     revalidatePath("/customer/shopping/baseball");
 
     return { success: true, data: categorizedProducts };

@@ -3,8 +3,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
-  Category,
-  ProductWithRelations,
   useBaseballActions,
   useBaseballError,
   useBaseballLoading,
@@ -12,11 +10,12 @@ import {
 } from "../../../_store/useBaseballStore";
 import ProductCard from "../_components/ProductsCard";
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 12;
 
 const BaseballCollectionPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const { products: baseballProducts, hasInitiallyFetched } = useBaseballProducts();
+  const { products: baseballProducts, hasInitiallyFetched } =
+    useBaseballProducts();
   const loading = useBaseballLoading();
   const error = useBaseballError();
   const { fetchBaseballCollection } = useBaseballActions();
@@ -63,7 +62,7 @@ const BaseballCollectionPage: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
             {currentProducts.map(product => (
               <div key={product.id} className="w-full">
                 <ProductCard product={product} />
