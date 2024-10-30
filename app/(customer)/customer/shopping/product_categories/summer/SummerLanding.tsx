@@ -3,8 +3,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
-  Category,
-  ProductWithRelations,
   useSummerActions,
   useSummerError,
   useSummerLoading,
