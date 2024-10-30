@@ -19,15 +19,7 @@ type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
-type Category =
-  | "men"
-  | "women"
-  | "kids"
-  | "hats"
-  | "golfers"
-  | "bottoms"
-  | "caps"
-  | "uncategorised";
+type Category = "industrial-collection";
 
 type CategorizedProducts = {
   [key in Category]: ProductWithRelations[];
@@ -62,14 +54,7 @@ export async function fetchIndustrialCollection(): Promise<FetchIndustrialCollec
 
     // Categorize products
     const categorizedProducts: CategorizedProducts = {
-      men: [],
-      women: [],
-      kids: [],
-      hats: [],
-      golfers: [],
-      bottoms: [],
-      caps: [],
-      uncategorised: [],
+      "industrial-collection": [],
     };
 
     products.forEach(product => {
@@ -82,9 +67,12 @@ export async function fetchIndustrialCollection(): Promise<FetchIndustrialCollec
     });
 
     // Revalidate the products page
-    revalidatePath("/customer/shopping/industrail");
+    revalidatePath("/customer/shopping/product_categories/industrial");
 
-    return { success: true, data: categorizedProducts };
+    return {
+      success: true,
+      data: categorizedProducts,
+    };
   } catch (error) {
     console.error("Error fetching industrial collection:", error);
     return {

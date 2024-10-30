@@ -12,7 +12,6 @@ import BasicInfoTab from "./_components/BasicInfoTab";
 import DynamicPricingTab from "./_components/DynamicPricingTab";
 import VariationsTab from "./_components/VariationsTab";
 import FeaturedImageTab from "./_components/FeaturedImageTab";
-import { createProduct } from "./actions";
 
 const ProductForm = () => {
   const { toast } = useToast();
@@ -39,13 +38,13 @@ const ProductForm = () => {
           color: "",
           variationImageURL: "",
           variationImage: undefined,
-          sizes: [
+          size: [
             {
               size: "",
               quantity: 0,
               sku: "",
               sku2: "",
-            }
+            },
           ],
         },
       ],
@@ -59,118 +58,7 @@ const ProductForm = () => {
   });
 
   const onSubmit = async (data: ProductFormData) => {
-    try {
-      console.log('Form submission started:', {
-        variations: data.variations,
-        hasFeatureImage: !!data.featuredImage.file,
-      });
-
-      const formData = new FormData();
-
-      // Basic fields
-      formData.append("productName", data.productName);
-      formData.append("description", data.description);
-      formData.append("sellingPrice", data.sellingPrice.toString());
-      formData.append("isPublished", data.isPublished.toString());
-
-      // Categories
-      data.category.forEach(cat => {
-        formData.append("category[]", cat);
-      });
-
-      // Featured Image
-      if (data.featuredImage.file instanceof File) {
-        formData.append("featuredImage", data.featuredImage.file);
-        console.log('Adding featured image:', {
-          fileName: data.featuredImage.file.name,
-          size: data.featuredImage.file.size
-        });
-      }
-
-      // Dynamic Pricing
-      data.dynamicPricing.forEach((pricing, index) => {
-        formData.append(`dynamicPricing.${index}.from`, pricing.from);
-        formData.append(`dynamicPricing.${index}.to`, pricing.to);
-        formData.append(`dynamicPricing.${index}.type`, pricing.type);
-        formData.append(`dynamicPricing.${index}.amount`, pricing.amount);
-      });
-
-      // Variations with sizes
-      data.variations.forEach((variation, varIndex) => {
-        formData.append(`variations.${varIndex}.name`, variation.name);
-        formData.append(`variations.${varIndex}.color`, variation.color || "");
-
-        // Handle variation image
-        if (variation.variationImage instanceof File) {
-          formData.append(`variations.${varIndex}.image`, variation.variationImage);
-          console.log(`Adding variation ${varIndex} image:`, {
-            fileName: variation.variationImage.name,
-            fileSize: variation.variationImage.size,
-            fileType: variation.variationImage.type
-          });
-        }
-
-        // Handle sizes for each variation
-        variation.sizes.forEach((size, sizeIndex) => {
-          formData.append(
-            `variations.${varIndex}.sizes.${sizeIndex}.size`,
-            size.size
-          );
-          formData.append(
-            `variations.${varIndex}.sizes.${sizeIndex}.quantity`,
-            size.quantity.toString()
-          );
-          formData.append(
-            `variations.${varIndex}.sizes.${sizeIndex}.sku`,
-            size.sku
-          );
-          if (size.sku2) {
-            formData.append(
-              `variations.${varIndex}.sizes.${sizeIndex}.sku2`,
-              size.sku2
-            );
-          }
-        });
-
-        console.log(`Added variation ${varIndex} with ${variation.sizes.length} sizes`);
-      });
-
-      const result = await createProduct(formData);
-
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: result.message,
-        });
-
-        // Cleanup any object URLs before resetting
-        data.variations.forEach(variation => {
-          if (variation.variationImageURL?.startsWith('blob:')) {
-            URL.revokeObjectURL(variation.variationImageURL);
-          }
-        });
-        if (data.featuredImage.thumbnail.startsWith('blob:')) {
-          URL.revokeObjectURL(data.featuredImage.thumbnail);
-          URL.revokeObjectURL(data.featuredImage.medium);
-          URL.revokeObjectURL(data.featuredImage.large);
-        }
-
-        form.reset();
-      } else {
-        toast({
-          title: "Error",
-          description: result.error,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create product",
-        variant: "destructive",
-      });
-    }
+    console.log(data);
   };
 
   // Cleanup object URLs when component unmounts
@@ -178,11 +66,11 @@ const ProductForm = () => {
     return () => {
       const formData = form.getValues();
       formData.variations.forEach(variation => {
-        if (variation.variationImageURL?.startsWith('blob:')) {
+        if (variation.variationImageURL?.startsWith("blob:")) {
           URL.revokeObjectURL(variation.variationImageURL);
         }
       });
-      if (formData.featuredImage.thumbnail.startsWith('blob:')) {
+      if (formData.featuredImage.thumbnail.startsWith("blob:")) {
         URL.revokeObjectURL(formData.featuredImage.thumbnail);
         URL.revokeObjectURL(formData.featuredImage.medium);
         URL.revokeObjectURL(formData.featuredImage.large);
