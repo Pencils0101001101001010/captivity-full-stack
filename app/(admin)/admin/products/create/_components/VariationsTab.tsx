@@ -60,7 +60,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
 
   const addSizeToVariation = (variationIndex: number) => {
     const variation = colorFields[variationIndex];
-    const currentSizes = variation.sizes || [];
+    const currentSizes = variation.size || [];
     const newSize = {
       size: "",
       quantity: 0,
@@ -70,7 +70,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
 
     updateColor(variationIndex, {
       ...variation,
-      sizes: [...currentSizes, newSize],
+      size: [...currentSizes, newSize],
     });
   };
 
@@ -79,11 +79,11 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
     sizeIndex: number
   ) => {
     const variation = colorFields[variationIndex];
-    const newSizes = variation.sizes.filter((_, idx) => idx !== sizeIndex);
+    const newSizes = variation.size.filter((_, idx) => idx !== sizeIndex);
 
     updateColor(variationIndex, {
       ...variation,
-      sizes: newSizes,
+      size: newSizes,
     });
   };
 
@@ -108,7 +108,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
   const emptyVariation = {
     name: "",
     color: "",
-    sizes: [emptySize],
+    size: [emptySize],
     variationImageURL: "",
     variationImage: null,
   };
@@ -223,14 +223,14 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
               </Button>
             </div>
 
-            {field.sizes?.map((size, sizeIndex) => (
+            {field.size?.map((size, sizeIndex) => (
               <div
                 key={sizeIndex}
                 className="grid grid-cols-4 gap-4 p-4 bg-accent/50 rounded-lg mb-2"
               >
                 <FormField
                   control={control}
-                  name={`variations.${variationIndex}.sizes.${sizeIndex}.size`}
+                  name={`variations.${variationIndex}.size.${sizeIndex}.size`}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Size</FormLabel>
@@ -244,7 +244,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
 
                 <FormField
                   control={control}
-                  name={`variations.${variationIndex}.sizes.${sizeIndex}.quantity`}
+                  name={`variations.${variationIndex}.size.${sizeIndex}.quantity`}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Quantity</FormLabel>
@@ -264,7 +264,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
 
                 <FormField
                   control={control}
-                  name={`variations.${variationIndex}.sizes.${sizeIndex}.sku`}
+                  name={`variations.${variationIndex}.size.${sizeIndex}.sku`}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>SKU</FormLabel>

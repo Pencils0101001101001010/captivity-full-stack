@@ -120,19 +120,8 @@ model Variation {
   productId         String
   cartItems         CartItem[]
   orderItems        OrderItem[]
-  sizes             Size[]
 
   @@map("variations")
-}
-
-model Size {
-  id          String    @id @default(uuid())
-  size        String
-  quantity    Int
-  sku         String
-  sku2        String?
-  variation   Variation @relation(fields: [variationId], references: [id])
-  variationId String
 }
 
 model FeaturedImage {
