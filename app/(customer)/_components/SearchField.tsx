@@ -94,9 +94,12 @@ export default function SearchField() {
     setCamoSearch,
     setAfricanSearch,
     setBaseballSearch,
-    setIndustrialSearch
-  ]);
-  }, [pathname, setSummerSearch, setWinterSearch, setFashionSearch, setLeisureSearch, setSignatureSearch, setSportSearch]);
+    setIndustrialSearch,
+    setLeisureSearch,
+    setSignatureSearch,
+    setSportSearch,
+  ])
+  , [pathname, setSummerSearch, setWinterSearch, setFashionSearch, setLeisureSearch, setSignatureSearch, setSportSearch];
 
   return (
     <form onSubmit={handleSubmit}>
