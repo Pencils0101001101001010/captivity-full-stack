@@ -2,12 +2,15 @@
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import {
-  Product,
-  DynamicPricing,
-  Variation,
-  FeaturedImage,
-} from "@prisma/client";
+import { Product, DynamicPricing, Variation } from "@prisma/client";
+
+export type FeaturedImage = {
+  id: string;
+  thumbnail: string;
+  medium: string;
+  large: string;
+  productId: string;
+};
 
 type ProductWithRelations = Product & {
   dynamicPricing: DynamicPricing[];
@@ -15,26 +18,17 @@ type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
-type Category =
-  | "men"
-  | "women"
-  | "kids"
-  | "hats"
-  | "golfers"
-  | "bottoms"
-  | "caps"
-  | "pre-curved-peaks"
-  | "uncategorised";
+type Category = "kids-collection";
 
 type CategorizedProducts = {
   [key in Category]: ProductWithRelations[];
 };
 
-type FetchBaseballCollectionResult =
+type FetchKidsCollectionResult =
   | { success: true; data: CategorizedProducts }
   | { success: false; error: string };
 
-export async function fetchBaseballCollection(): Promise<FetchBaseballCollectionResult> {
+export async function fetchKidsCollection(): Promise<FetchKidsCollectionResult> {
   try {
     const { user } = await validateRequest();
     if (!user) {
@@ -44,7 +38,7 @@ export async function fetchBaseballCollection(): Promise<FetchBaseballCollection
     const products = await prisma.product.findMany({
       where: {
         category: {
-          has: "baseball-collection",
+          has: "kids-collection",
         },
         isPublished: true,
       },
@@ -56,37 +50,26 @@ export async function fetchBaseballCollection(): Promise<FetchBaseballCollection
     });
 
     const categorizedProducts: CategorizedProducts = {
-      men: [],
-      women: [],
-      kids: [],
-      hats: [],
-      golfers: [],
-      bottoms: [],
-      caps: [],
-      "pre-curved-peaks": [],
-      uncategorised: [],
+      "kids-collection": [],
     };
 
     const processedProductIds = new Set<string>();
 
     products.forEach(product => {
-      if (processedProductIds.has(product.id)) return;
-
-      const categories = product.category as string[];
-      const primaryCategory =
-        (categories.find(
-          category => category in categorizedProducts
-        ) as Category) || "uncategorised";
-
-      categorizedProducts[primaryCategory].push(product);
-      processedProductIds.add(product.id);
+      if (!processedProductIds.has(product.id)) {
+        categorizedProducts["kids-collection"].push(product);
+        processedProductIds.add(product.id);
+      }
     });
 
-    revalidatePath("/customer/shopping/baseball");
+    revalidatePath("/customer/shopping/product_categories/kids");
 
-    return { success: true, data: categorizedProducts };
+    return {
+      success: true,
+      data: categorizedProducts,
+    };
   } catch (error) {
-    console.error("Error fetching baseball collection:", error);
+    console.error("Error fetching kids collection:", error);
     return {
       success: false,
       error:

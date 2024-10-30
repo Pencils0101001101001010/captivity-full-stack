@@ -43,7 +43,7 @@ const ProductCard: React.FC<ProductCardProps> = memo(
           alt={product.productName}
         />
         <CardContent className="p-4">
-          <h3 className="text-lg font-medium text-gray-800 mb-2">
+          <h3 className="text-sm font-sm text-gray-800 mb-2 line-clamp-1 hover:line-clamp-none">
             {product.productName}
           </h3>
           <ProductPrice

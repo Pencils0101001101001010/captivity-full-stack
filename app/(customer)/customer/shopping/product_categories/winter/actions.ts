@@ -36,17 +36,15 @@ type FetchWinterCollectionResult =
 
 export async function fetchWinterCollection(): Promise<FetchWinterCollectionResult> {
   try {
-    // Validate user session
     const { user } = await validateRequest();
     if (!user) {
       throw new Error("Unauthorized. Please log in.");
     }
 
-    // Fetch winter collection products with all relations
     const products = await prisma.product.findMany({
       where: {
         category: {
-          has: "winter-collection", // Changed from summer to winter
+          has: "winter-collection",
         },
         isPublished: true,
       },
@@ -57,7 +55,6 @@ export async function fetchWinterCollection(): Promise<FetchWinterCollectionResu
       },
     });
 
-    // Categorize products
     const categorizedProducts: CategorizedProducts = {
       men: [],
       women: [],
@@ -69,17 +66,19 @@ export async function fetchWinterCollection(): Promise<FetchWinterCollectionResu
       uncategorised: [],
     };
 
+    // Assign each product to only its primary category
     products.forEach(product => {
       const categories = product.category as string[];
-      categories.forEach(category => {
-        if (category in categorizedProducts) {
-          categorizedProducts[category as Category].push(product);
-        }
-      });
+      // Find the first valid category or default to uncategorised
+      const primaryCategory =
+        (categories.find(category =>
+          Object.keys(categorizedProducts).includes(category)
+        ) as Category) || "uncategorised";
+
+      categorizedProducts[primaryCategory].push(product);
     });
 
-    // Revalidate the products page
-    revalidatePath("/customer/shopping/winter"); // Changed from summer to winter
+    revalidatePath("/customer/shopping/winter");
 
     return { success: true, data: categorizedProducts };
   } catch (error) {

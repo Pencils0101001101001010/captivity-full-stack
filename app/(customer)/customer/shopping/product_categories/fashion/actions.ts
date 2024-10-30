@@ -1,4 +1,3 @@
-//app/(customer)/customer/shopping/product_categories/fashion/actions.ts
 "use server";
 
 import { validateRequest } from "@/auth";
@@ -29,13 +28,11 @@ type FetchFashionCollectionResult =
 
 export async function fetchFashionCollection(): Promise<FetchFashionCollectionResult> {
   try {
-    // Validate user session
     const { user } = await validateRequest();
     if (!user) {
       throw new Error("Unauthorized. Please log in.");
     }
 
-    // Fetch fashion collection products with all relations
     const products = await prisma.product.findMany({
       where: {
         category: {
@@ -50,21 +47,19 @@ export async function fetchFashionCollection(): Promise<FetchFashionCollectionRe
       },
     });
 
-    // Categorize products
     const categorizedProducts: CategorizedProducts = {
       "fashion-collection": [],
     };
 
+    const processedProductIds = new Set<string>();
+
     products.forEach(product => {
-      const categories = product.category as string[];
-      categories.forEach(category => {
-        if (category in categorizedProducts) {
-          categorizedProducts[category as Category].push(product);
-        }
-      });
+      if (!processedProductIds.has(product.id)) {
+        categorizedProducts["fashion-collection"].push(product);
+        processedProductIds.add(product.id);
+      }
     });
 
-    // Revalidate the products page
     revalidatePath("/customer/shopping/product_categories/fashion");
 
     return { success: true, data: categorizedProducts };

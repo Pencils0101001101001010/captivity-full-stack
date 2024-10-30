@@ -36,13 +36,11 @@ type FetchSummerCollectionResult =
 
 export async function fetchSummerCollection(): Promise<FetchSummerCollectionResult> {
   try {
-    // Validate user session
     const { user } = await validateRequest();
     if (!user) {
       throw new Error("Unauthorized. Please log in.");
     }
 
-    // Fetch summer collection products with all relations
     const products = await prisma.product.findMany({
       where: {
         category: {
@@ -57,7 +55,6 @@ export async function fetchSummerCollection(): Promise<FetchSummerCollectionResu
       },
     });
 
-    // Categorize products
     const categorizedProducts: CategorizedProducts = {
       men: [],
       women: [],
@@ -69,16 +66,21 @@ export async function fetchSummerCollection(): Promise<FetchSummerCollectionResu
       uncategorised: [],
     };
 
+    // Only categorize each product once based on its first valid category
     products.forEach(product => {
       const categories = product.category as string[];
-      categories.forEach(category => {
-        if (category in categorizedProducts) {
-          categorizedProducts[category as Category].push(product);
-        }
-      });
+      const primaryCategory =
+        (categories.find(
+          category => category in categorizedProducts
+        ) as Category) || "uncategorised";
+
+      if (
+        !categorizedProducts[primaryCategory].some(p => p.id === product.id)
+      ) {
+        categorizedProducts[primaryCategory].push(product);
+      }
     });
 
-    // Revalidate the products page
     revalidatePath("/customer/shopping/summer");
 
     return { success: true, data: categorizedProducts };

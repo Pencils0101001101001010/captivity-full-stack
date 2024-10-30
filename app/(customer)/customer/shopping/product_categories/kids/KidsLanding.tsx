@@ -3,33 +3,33 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
-  useWinterActions,
-  useWinterError,
-  useWinterLoading,
-  useWinterProducts,
-} from "../../../_store/useWinterStore";
+  useKidsActions,
+  useKidsError,
+  useKidsLoading,
+  useKidsProducts,
+} from "../../../_store/useKidsCollectionStore";
 import ProductCard from "../_components/ProductsCard";
 
 const ITEMS_PER_PAGE = 12;
 
-const WinterCollectionPage: React.FC = () => {
+const KidsCollectionPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const { products: winterProducts, hasInitiallyFetched } = useWinterProducts();
-  const loading = useWinterLoading();
-  const error = useWinterError();
-  const { fetchWinterCollection } = useWinterActions();
+  const { products: kidsProducts, hasInitiallyFetched } = useKidsProducts();
+  const loading = useKidsLoading();
+  const error = useKidsError();
+  const { fetchKidsCollection } = useKidsActions();
   const initializationRef = useRef(false);
 
   // Create flat array of products
-  const allProducts = Object.values(winterProducts).flat().filter(Boolean);
+  const allProducts = Object.values(kidsProducts).flat().filter(Boolean);
 
   // Initial fetch
   useEffect(() => {
     if (!hasInitiallyFetched && !initializationRef.current) {
       initializationRef.current = true;
-      fetchWinterCollection();
+      fetchKidsCollection();
     }
-  }, [hasInitiallyFetched, fetchWinterCollection]);
+  }, [hasInitiallyFetched, fetchKidsCollection]);
 
   // Reset to first page whenever products array changes (including search)
   useEffect(() => {
@@ -43,10 +43,12 @@ const WinterCollectionPage: React.FC = () => {
   );
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, allProducts.length);
-  const currentProducts = allProducts.slice(startIndex, endIndex);
+  const currentProducts = allProducts.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
 
-  if (loading) return <div>Loading winter collection...</div>;
+  if (loading) return <div>Loading kid&apos;s collection...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
@@ -54,7 +56,7 @@ const WinterCollectionPage: React.FC = () => {
       {allProducts.length === 0 ? (
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-foreground">
-            No products found in the winter collection.
+            No products found in the kid&apos;s collection.
           </h2>
         </div>
       ) : (
@@ -115,7 +117,9 @@ const WinterCollectionPage: React.FC = () => {
           )}
 
           <div className="text-sm text-muted-foreground text-center mt-4">
-            Showing {startIndex + 1}-{endIndex} of {allProducts.length} products
+            Showing {startIndex + 1}-
+            {Math.min(startIndex + ITEMS_PER_PAGE, allProducts.length)} of{" "}
+            {allProducts.length} products
           </div>
         </>
       )}
@@ -123,4 +127,4 @@ const WinterCollectionPage: React.FC = () => {
   );
 };
 
-export default React.memo(WinterCollectionPage);
+export default React.memo(KidsCollectionPage);

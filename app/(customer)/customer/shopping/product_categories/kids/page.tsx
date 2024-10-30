@@ -1,5 +1,6 @@
 // shopping/(product_categories)/kids/page.tsx
 import React from "react";
+import KidsCollectionPage from "./KidsLanding";
 
 export default async function KidsPage(): Promise<JSX.Element> {
   return (
@@ -14,7 +15,7 @@ export default async function KidsPage(): Promise<JSX.Element> {
           </p>
         </div>
       </div>
-      {/** <SummerCollectionPage /> **/}
+      <KidsCollectionPage />
     </div>
   );
 }
