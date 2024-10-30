@@ -27,6 +27,7 @@ export const accountFormSchema = z
         }
       ),
     confirmPassword: z.string().optional(),
+    avatar: z.any().optional(),
   })
   .refine(
     data => {

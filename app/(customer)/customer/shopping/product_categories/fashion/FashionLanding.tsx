@@ -1,3 +1,4 @@
+//app/(customer)/customer/shopping/product_categories/fashion/FashionLanding.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";

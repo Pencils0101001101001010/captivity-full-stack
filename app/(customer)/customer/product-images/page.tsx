@@ -1,7 +1,7 @@
-import React from "react";
+import SelectImageFormatField from "./SelectImageFormatField";
 
-const page = () => {
-  return <div>Product Image</div>;
+const Page = () => {
+  return <SelectImageFormatField />;
 };
 
-export default page;
+export default Page;
