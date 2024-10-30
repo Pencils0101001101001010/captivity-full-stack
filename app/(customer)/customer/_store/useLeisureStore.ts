@@ -22,7 +22,8 @@ export type Category =
   | "golfers"
   | "bottoms"
   | "caps"
-  | "uncategorised";
+  | "uncategorised"
+  | "bucket-hats";
 
 export type CategorizedProducts = {
   [key in Category]: ProductWithRelations[];
@@ -56,6 +57,7 @@ const initialState: LeisureState = {
     golfers: [],
     bottoms: [],
     caps: [],
+    "bucket-hats": [],
     uncategorised: [],
   },
   filteredProducts: {
@@ -66,6 +68,7 @@ const initialState: LeisureState = {
     golfers: [],
     bottoms: [],
     caps: [],
+    "bucket-hats": [],
     uncategorised: [],
   },
   searchQuery: "",
@@ -138,8 +141,8 @@ const useLeisureStore = create<LeisureState & LeisureActions>()((set, get) => ({
       .then(result => {
         if (result.success) {
           set({
-            leisureProducts: result.data,
-            filteredProducts: result.data,
+            leisureProducts: result.data as CategorizedProducts,
+            filteredProducts: result.data as CategorizedProducts,
             loading: false,
             hasInitiallyFetched: true,
             isInitializing: false,

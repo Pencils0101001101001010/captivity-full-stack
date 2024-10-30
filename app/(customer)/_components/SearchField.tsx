@@ -7,6 +7,10 @@ import React, { useState, useEffect } from "react";
 import { useSummerActions } from "../customer/_store/useSummerStore";
 import { useWinterActions } from "../customer/_store/useWinterStore";
 import { useFashionActions } from "../customer/_store/useFashionStore";
+import { useLeisureActions } from "../customer/_store/useLeisureStore";
+import { useSignatureActions } from "../customer/_store/useSignatureStore";
+import { useSportActions } from "../customer/_store/useSportStore";
+
 
 export default function SearchField() {
   const pathname = usePathname() || "";
@@ -14,6 +18,9 @@ export default function SearchField() {
   const { setSearchQuery: setSummerSearch } = useSummerActions();
   const { setSearchQuery: setWinterSearch } = useWinterActions();
   const { setSearchQuery: setFashionSearch } = useFashionActions();
+  const { setSearchQuery: setLeisureSearch } = useLeisureActions();
+  const { setSearchQuery: setSignatureSearch } = useSignatureActions();
+  const { setSearchQuery: setSportSearch } = useSportActions();
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -29,6 +36,12 @@ export default function SearchField() {
       setSummerSearch(query);
     } else if (pathname.includes("/winter")) {
       setWinterSearch(query);
+    } else if (pathname.includes("/leisure")) {
+      setLeisureSearch(query);
+    } else if (pathname.includes("/signature")) {
+      setSignatureSearch(query);
+    } else if (pathname.includes("/sport")) {
+      setSportSearch(query);
     }
   }
 
@@ -41,8 +54,14 @@ export default function SearchField() {
       setSummerSearch("");
     } else if (pathname.includes("/winter")) {
       setWinterSearch("");
+    } else if (pathname.includes("/leisure")) {
+      setLeisureSearch("");
+    } else if (pathname.includes("/signature")) {
+      setSignatureSearch("");
+    } else if (pathname.includes("/sport")) {
+      setSportSearch("");
     }
-  }, [pathname, setSummerSearch, setWinterSearch, setFashionSearch]);
+  }, [pathname, setSummerSearch, setWinterSearch, setFashionSearch, setLeisureSearch, setSignatureSearch, setSportSearch]);
 
   return (
     <form onSubmit={handleSubmit}>
