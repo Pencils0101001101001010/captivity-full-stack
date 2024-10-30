@@ -12,7 +12,7 @@ import {
 } from "../../../_store/useSummerStore";
 import ProductCard from "../_components/ProductsCard";
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 12;
 
 const SummerCollectionPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -63,7 +63,7 @@ const SummerCollectionPage: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
             {currentProducts.map(product => (
               <div key={product.id} className="w-full">
                 <ProductCard product={product} />
