@@ -11,6 +11,10 @@ import { useCamoActions } from "../customer/_store/useCamoStore";
 import { useAfricanActions } from "../customer/_store/useAfricanStore";
 import { useBaseballActions } from "../customer/_store/useBaseballStore";
 import { useIndustrialActions } from "../customer/_store/useIndustrialStore";
+import { useLeisureActions } from "../customer/_store/useLeisureStore";
+import { useSignatureActions } from "../customer/_store/useSignatureStore";
+import { useSportActions } from "../customer/_store/useSportStore";
+
 
 export default function SearchField() {
   const pathname = usePathname() || "";
@@ -23,6 +27,9 @@ export default function SearchField() {
   const { setSearchQuery: setAfricanSearch } = useAfricanActions();
   const { setSearchQuery: setBaseballSearch } = useBaseballActions();
   const { setSearchQuery: setIndustrialSearch } = useIndustrialActions();
+  const { setSearchQuery: setLeisureSearch } = useLeisureActions();
+  const { setSearchQuery: setSignatureSearch } = useSignatureActions();
+  const { setSearchQuery: setSportSearch } = useSportActions();
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -46,6 +53,12 @@ export default function SearchField() {
       setBaseballSearch(query);
     } else if (pathname.includes("/industrial")) {
       setIndustrialSearch(query);
+    } else if (pathname.includes("/leisure")) {
+      setLeisureSearch(query);
+    } else if (pathname.includes("/signature")) {
+      setSignatureSearch(query);
+    } else if (pathname.includes("/sport")) {
+      setSportSearch(query);
     }
   }
 
@@ -66,6 +79,12 @@ export default function SearchField() {
       setBaseballSearch("");
     } else if (pathname.includes("/industrial")) {
       setIndustrialSearch("");
+    } else if (pathname.includes("/leisure")) {
+      setLeisureSearch("");
+    } else if (pathname.includes("/signature")) {
+      setSignatureSearch("");
+    } else if (pathname.includes("/sport")) {
+      setSportSearch("");
     }
   }, [
     pathname,
@@ -75,8 +94,12 @@ export default function SearchField() {
     setCamoSearch,
     setAfricanSearch,
     setBaseballSearch,
-    setIndustrialSearch
-  ]);
+    setIndustrialSearch,
+    setLeisureSearch,
+    setSignatureSearch,
+    setSportSearch,
+  ])
+  , [pathname, setSummerSearch, setWinterSearch, setFashionSearch, setLeisureSearch, setSignatureSearch, setSportSearch];
 
   return (
     <form onSubmit={handleSubmit}>
