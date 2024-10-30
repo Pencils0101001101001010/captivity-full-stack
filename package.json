@@ -58,6 +58,7 @@
     "next": "15.0.0-rc.0",
     "next-auth": "^4.24.10",
     "next-themes": "^0.3.0",
+    "node-fetch": "^3.3.2",
     "oslo": "^1.2.1",
     "radio-group": "^0.0.2",
     "react": "19.0.0-rc-f994737d14-20240522",

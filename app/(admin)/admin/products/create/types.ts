@@ -32,7 +32,7 @@ export const productFormSchema = z.object({
       color: z.string().optional(),
       variationImageURL: z.string().optional(),
       variationImage: z.any().optional(), // For the File object
-      size: z
+      sizes: z
         .array(sizeVariationSchema)
         .min(1, "At least one size is required"),
     })
