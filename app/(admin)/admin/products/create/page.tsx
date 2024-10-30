@@ -1,11 +1,12 @@
-import React from 'react'
+import React from "react";
+import ProductForm from "./ProductForm";
 
 const CreateProductPage = () => {
   return (
-    <div className="text-center">
-      Create a product
+    <div>
+      <ProductForm />
     </div>
-  )
-}
+  );
+};
 
-export default CreateProductPage
+export default CreateProductPage;

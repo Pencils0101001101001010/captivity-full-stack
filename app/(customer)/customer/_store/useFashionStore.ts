@@ -23,13 +23,13 @@ export type Category =
   | "golfers"
   | "bottoms"
   | "caps"
+  | "trucker-caps"
+  | "flat-peaks"
   | "pre-curved-peaks"
   | "trucker-caps"
   | "uncategorised";
 
-export type CategorizedProducts = {
-  [key in Category]: ProductWithRelations[];
-};
+export type CategorizedProducts = Record<Category, ProductWithRelations[]>;
 
 interface FashionState {
   fashionProducts: CategorizedProducts;
@@ -59,6 +59,8 @@ const initialState: FashionState = {
     golfers: [],
     bottoms: [],
     caps: [],
+    "trucker-caps": [],
+    "flat-peaks": [],
     "pre-curved-peaks": [],
     "trucker-caps": [],
     uncategorised: [],
@@ -71,6 +73,8 @@ const initialState: FashionState = {
     golfers: [],
     bottoms: [],
     caps: [],
+    "trucker-caps": [],
+    "flat-peaks": [],
     "pre-curved-peaks": [],
     "trucker-caps": [],
     uncategorised: [],
@@ -102,20 +106,23 @@ const useFashionStore = create<FashionState & FashionActions>()((set, get) => ({
     }
 
     const lowercaseQuery = query.toLowerCase().trim();
-    const filtered = Object.entries(fashionProducts).reduce(
-      (acc, [category, products]) => {
-        const filteredProducts = products.filter(
-          product =>
-            product.productName.toLowerCase().includes(lowercaseQuery) ||
-            product.description?.toLowerCase().includes(lowercaseQuery) ||
-            product.variations.some(variation =>
-              variation.name.toLowerCase().includes(lowercaseQuery)
-            )
+
+    // Create a new filtered products object with all categories
+    const filtered: CategorizedProducts = Object.keys(fashionProducts).reduce(
+      (acc, category) => {
+        const categoryProducts = fashionProducts[category as Category];
+        const filteredCategoryProducts = categoryProducts.filter(product =>
+          [
+            product.productName.toLowerCase(),
+            product.description?.toLowerCase() || "",
+            ...product.variations.map(v => v.name.toLowerCase()),
+            ...product.category.map(c => c.toLowerCase()),
+          ].some(text => text.includes(lowercaseQuery))
         );
 
         return {
           ...acc,
-          [category]: filteredProducts,
+          [category]: filteredCategoryProducts,
         };
       },
       {} as CategorizedProducts
@@ -145,8 +152,8 @@ const useFashionStore = create<FashionState & FashionActions>()((set, get) => ({
       .then(result => {
         if (result.success) {
           set({
-            fashionProducts: result.data,
-            filteredProducts: result.data,
+            fashionProducts: result.data as CategorizedProducts,
+            filteredProducts: result.data as CategorizedProducts,
             loading: false,
             hasInitiallyFetched: true,
             isInitializing: false,

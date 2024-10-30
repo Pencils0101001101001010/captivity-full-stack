@@ -17,13 +17,7 @@ type ProductWithRelations = Product & {
 };
 
 type Category =
-  | "men"
-  | "women"
-  | "kids"
-  | "hats"
-  | "golfers"
-  | "bottoms"
-  | "caps"
+  | "camo-collection"
   | "uncategorised";
 
 type CategorizedProducts = {
@@ -42,7 +36,7 @@ export async function fetchCamoCollection(): Promise<FetchCamoCollectionResult> 
       throw new Error("Unauthorized. Please log in.");
     }
 
-    // Fetch summer collection products with all relations
+    // Fetch fashion collection products with all relations
     const products = await prisma.product.findMany({
       where: {
         category: {
@@ -59,14 +53,8 @@ export async function fetchCamoCollection(): Promise<FetchCamoCollectionResult> 
 
     // Categorize products
     const categorizedProducts: CategorizedProducts = {
-      men: [],
-      women: [],
-      kids: [],
-      hats: [],
-      golfers: [],
-      bottoms: [],
-      caps: [],
       uncategorised: [],
+      "camo-collection": []
     };
 
     products.forEach(product => {

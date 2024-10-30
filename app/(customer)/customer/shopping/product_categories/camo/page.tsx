@@ -1,6 +1,6 @@
-// shopping/(product_categories)/summer/page.tsx
+// shopping/(product_categories)/fashion/page.tsx
 import React from "react";
-import CamoCollectionPage from "./CamoLanding";
+import CamoCollectionPage from "./CamoLanding"
 
 export default async function CamoPage(): Promise<JSX.Element> {
   return (
@@ -11,7 +11,7 @@ export default async function CamoPage(): Promise<JSX.Element> {
             Camo Collection
           </h1>
           <p className="text-muted-foreground mt-1">
-            Discover our latest camo styles and seasonal favorites
+            Discover our latest Camo styles and seasonal favorites
           </p>
         </div>
       </div>

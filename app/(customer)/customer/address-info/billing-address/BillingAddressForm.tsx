@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, SquareArrowLeft } from "lucide-react";
 import {
   Form,
@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "../../../SessionProvider";
-import { updateBillingAddress } from "./actions";
+import { getUserDetails, updateBillingAddress } from "./actions";
 import * as z from "zod";
 import { SessionUser } from "../types";
 import Link from "next/link";
@@ -28,44 +28,62 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Header from "../../_components/Header";
-
-const billingAddressSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  companyName: z.string().min(1, "Company name is required"),
-  countryRegion: z.string().min(1, "Country/Region is required"),
-  streetAddress: z.string().min(1, "Street address is required"),
-  apartmentSuite: z.string().optional(),
-  townCity: z.string().min(1, "Town/City is required"),
-  province: z.string().min(1, "Province is required"),
-  postcode: z.string().min(1, "Postal code is required"),
-  phone: z.string().min(1, "Phone is required"),
-  email: z.string().email("Invalid email address"),
-});
-
-type FormValues = z.infer<typeof billingAddressSchema>;
+import billingAddressSchema, { FormValues } from "../validation";
 
 export default function BillingAddressForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useSession() as { user: SessionUser | null };
+  const [isLoadingPreviousOrder, setIsLoadingPreviousOrder] = useState(true);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(billingAddressSchema),
     defaultValues: {
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
-      companyName: user?.companyName || "",
-      countryRegion: user?.countryRegion || "", // Updated from country
-      streetAddress: user?.streetAddress || "",
-      apartmentSuite: user?.addressLine2 || "",
-      townCity: user?.townCity || "",
-      province: user?.suburb || "",
-      postcode: user?.postcode || "",
-      phone: user?.phoneNumber?.toString() || "",
-      email: user?.email || "",
+      firstName: "",
+      lastName: "",
+      companyName: "",
+      countryRegion: "",
+      streetAddress: "",
+      apartmentSuite: "",
+      townCity: "",
+      province: "",
+      postcode: "",
+      phone: "",
+      email: "",
     },
   });
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const result = await getUserDetails();
+
+        if (result.success && result.data) {
+          form.reset({
+            ...form.getValues(),
+            firstName: result.data.firstName || "",
+            lastName: result.data.lastName || "",
+            email: result.data.email || "",
+
+            phone: result.data.phoneNumber?.toString() || "",
+            companyName: result.data.companyName || "",
+            countryRegion: result.data.country || "",
+            streetAddress: result.data.streetAddress || "",
+            apartmentSuite: result.data.addressLine2 || "",
+            townCity: result.data.townCity || "",
+            province: result.data.suburb || "",
+            postcode: result.data.postcode || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+      } finally {
+        setIsLoadingPreviousOrder(false);
+      }
+    };
+
+    loadUserData();
+  }, [form]);
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
@@ -106,6 +124,9 @@ export default function BillingAddressForm() {
         <span>
           {" "}
           <h2 className="text-2xl font-bold ">Billing Address</h2>
+          <span>
+            {isLoadingPreviousOrder && <span>Loading previous data...</span>}
+          </span>
         </span>
         <span className="hover:bg-neutral-100 p-2">
           <Link href="/customer/address-info">
