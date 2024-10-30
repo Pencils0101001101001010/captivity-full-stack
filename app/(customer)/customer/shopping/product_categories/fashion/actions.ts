@@ -17,17 +17,7 @@ type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
-type Category =
-  | "men"
-  | "women"
-  | "kids"
-  | "hats"
-  | "golfers"
-  | "bottoms"
-  | "caps"
-  | "trucker-caps"
-  | "pre-curved-peaks"
-  | "uncategorised";
+type Category = "fashion-collection";
 
 type CategorizedProducts = {
   [key in Category]: ProductWithRelations[];
@@ -62,16 +52,7 @@ export async function fetchFashionCollection(): Promise<FetchFashionCollectionRe
 
     // Categorize products
     const categorizedProducts: CategorizedProducts = {
-      men: [],
-      women: [],
-      kids: [],
-      hats: [],
-      golfers: [],
-      bottoms: [],
-      caps: [],
-      "pre-curved-peaks": [],
-      "trucker-caps": [],
-      uncategorised: [],
+      "fashion-collection": [],
     };
 
     products.forEach(product => {

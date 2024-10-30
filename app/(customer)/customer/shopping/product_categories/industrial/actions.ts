@@ -19,16 +19,7 @@ type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
-type Category =
-  | "men"
-  | "women"
-  | "kids"
-  | "hats"
-  | "golfers"
-  | "bottoms"
-  | "caps"
-  | "pre-curved-peaks"
-  | "uncategorised";
+type Category = "industrial-collection";
 
 type CategorizedProducts = {
   [key in Category]: ProductWithRelations[];
@@ -63,16 +54,7 @@ export async function fetchIndustrialCollection(): Promise<FetchIndustrialCollec
 
     // Categorize products
     const categorizedProducts: CategorizedProducts = {
-      men: [],
-      women: [],
-      kids: [],
-      hats: [],
-      golfers: [],
-      bottoms: [],
-      "pre-curved-peaks": [],
-      caps: [],
-
-      uncategorised: [],
+      "industrial-collection": [],
     };
 
     products.forEach(product => {

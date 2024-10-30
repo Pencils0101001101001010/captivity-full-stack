@@ -10,6 +10,7 @@ import { useFashionActions } from "../customer/_store/useFashionStore";
 import { useCamoActions } from "../customer/_store/useCamoStore";
 import { useAfricanActions } from "../customer/_store/useAfricanStore";
 import { useBaseballActions } from "../customer/_store/useBaseballStore";
+import { useIndustrialActions } from "../customer/_store/useIndustrialStore";
 
 export default function SearchField() {
   const pathname = usePathname() || "";
@@ -21,6 +22,7 @@ export default function SearchField() {
   const { setSearchQuery: setCamoSearch } = useCamoActions();
   const { setSearchQuery: setAfricanSearch } = useAfricanActions();
   const { setSearchQuery: setBaseballSearch } = useBaseballActions();
+  const { setSearchQuery: setIndustrialSearch } = useIndustrialActions();
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -42,6 +44,8 @@ export default function SearchField() {
       setAfricanSearch(query);
     } else if (pathname.includes("/baseball")) {
       setBaseballSearch(query);
+    } else if (pathname.includes("/industrial")) {
+      setIndustrialSearch(query);
     }
   }
 
@@ -60,6 +64,8 @@ export default function SearchField() {
       setAfricanSearch("");
     } else if (pathname.includes("/baseball")) {
       setBaseballSearch("");
+    } else if (pathname.includes("/industrial")) {
+      setIndustrialSearch("");
     }
   }, [
     pathname,
@@ -69,6 +75,7 @@ export default function SearchField() {
     setCamoSearch,
     setAfricanSearch,
     setBaseballSearch,
+    setIndustrialSearch
   ]);
 
   return (

@@ -15,19 +15,7 @@ export type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
-export type Category =
-  | "men"
-  | "women"
-  | "kids"
-  | "hats"
-  | "golfers"
-  | "bottoms"
-  | "caps"
-  | "trucker-caps"
-  | "flat-peaks"
-  | "pre-curved-peaks"
-  | "trucker-caps"
-  | "uncategorised";
+export type Category = "fashion-collection";
 
 export type CategorizedProducts = Record<Category, ProductWithRelations[]>;
 
@@ -52,32 +40,10 @@ interface FashionActions {
 
 const initialState: FashionState = {
   fashionProducts: {
-    men: [],
-    women: [],
-    kids: [],
-    hats: [],
-    golfers: [],
-    bottoms: [],
-    caps: [],
-    "trucker-caps": [],
-    "flat-peaks": [],
-    "pre-curved-peaks": [],
-    "trucker-caps": [],
-    uncategorised: [],
+    "fashion-collection": [],
   },
   filteredProducts: {
-    men: [],
-    women: [],
-    kids: [],
-    hats: [],
-    golfers: [],
-    bottoms: [],
-    caps: [],
-    "trucker-caps": [],
-    "flat-peaks": [],
-    "pre-curved-peaks": [],
-    "trucker-caps": [],
-    uncategorised: [],
+    "fashion-collection": [],
   },
   searchQuery: "",
   loading: false,
