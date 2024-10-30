@@ -38,7 +38,7 @@ const ProductForm = () => {
           color: "",
           variationImageURL: "",
           variationImage: undefined,
-          size: [
+          sizes: [
             {
               size: "",
               quantity: 0,

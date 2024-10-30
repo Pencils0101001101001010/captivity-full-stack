@@ -27,6 +27,7 @@ import Link from "next/link";
 import { getOrder } from "./shopping/checkout/actions";
 import { useSession } from "../SessionProvider";
 import Header from "./_components/Header";
+import { logout } from "@/app/(auth)/actions";
 
 interface CustomerLandingProps {
   initialOrderId: string | null;
@@ -65,7 +66,13 @@ const CustomerLanding = ({ initialOrderId }: CustomerLandingProps) => {
             </p>
           </div>
         </div>
-        <Button variant="default" className="shadow-2xl shadow-black">
+        <Button
+          onClick={() => {
+            logout();
+          }}
+          variant="default"
+          className="shadow-2xl shadow-black"
+        >
           <LogOut className="mr-2 h-4 w-4" /> Log out
         </Button>
       </div>

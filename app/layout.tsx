@@ -1,11 +1,12 @@
+import PageTitle from "@/components/PageTitle";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "react-hot-toast";
 
-export const metadata = {
-  title: "Captivity-Headwear And Apparel",
-  description: "Headwear and Apparel",
-};
+// export const metadata = {
+//   title: "Captivity-Headwear And Apparel",
+//   description: "Headwear and Apparel",
+// };
 
 export default function RootLayout({
   children,
@@ -15,6 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="bg">
+        <PageTitle />
         <div>
           <ThemeProvider
             attribute="class"

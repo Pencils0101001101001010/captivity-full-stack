@@ -108,7 +108,6 @@ export default function AccountInfoForm() {
   };
   return (
     <section className="border p-5 rounded-md shadow-sm border-gray-700 mb-20">
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
