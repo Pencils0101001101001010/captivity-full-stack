@@ -3,8 +3,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
-  Category,
-  ProductWithRelations,
   useWinterActions,
   useWinterError,
   useWinterLoading,
@@ -12,7 +10,7 @@ import {
 } from "../../../_store/useWinterStore";
 import ProductCard from "../_components/ProductsCard";
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 12;
 
 const WinterCollectionPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,9 +21,7 @@ const WinterCollectionPage: React.FC = () => {
   const initializationRef = useRef(false);
 
   // Create flat array of products
-  const allProducts = Object.values(winterProducts)
-    .flat()
-    .filter(Boolean);
+  const allProducts = Object.values(winterProducts).flat().filter(Boolean);
 
   // Initial fetch
   useEffect(() => {
@@ -41,10 +37,14 @@ const WinterCollectionPage: React.FC = () => {
   }, [allProducts.length]);
 
   // Pagination calculations
-  const totalPages = Math.max(1, Math.ceil(allProducts.length / ITEMS_PER_PAGE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(allProducts.length / ITEMS_PER_PAGE)
+  );
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
-  const currentProducts = allProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, allProducts.length);
+  const currentProducts = allProducts.slice(startIndex, endIndex);
 
   if (loading) return <div>Loading winter collection...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -59,7 +59,7 @@ const WinterCollectionPage: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
             {currentProducts.map(product => (
               <div key={product.id} className="w-full">
                 <ProductCard product={product} />
@@ -79,26 +79,32 @@ const WinterCollectionPage: React.FC = () => {
               </button>
 
               <div className="flex gap-2">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
                     ${
                       safeCurrentPage === page
                         ? "bg-primary text-primary-foreground"
                         : "hover:bg-muted text-foreground"
                     }`}
-                    aria-label={`Page ${page}`}
-                    aria-current={safeCurrentPage === page ? "page" : undefined}
-                  >
-                    {page}
-                  </button>
-                ))}
+                      aria-label={`Page ${page}`}
+                      aria-current={
+                        safeCurrentPage === page ? "page" : undefined
+                      }
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
               </div>
 
               <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                onClick={() =>
+                  setCurrentPage(prev => Math.min(totalPages, prev + 1))
+                }
                 disabled={safeCurrentPage === totalPages}
                 className="p-2 rounded-lg border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Next page"
@@ -109,9 +115,7 @@ const WinterCollectionPage: React.FC = () => {
           )}
 
           <div className="text-sm text-muted-foreground text-center mt-4">
-            Showing {startIndex + 1}-
-            {Math.min(startIndex + ITEMS_PER_PAGE, allProducts.length)} of{" "}
-            {allProducts.length} products
+            Showing {startIndex + 1}-{endIndex} of {allProducts.length} products
           </div>
         </>
       )}
