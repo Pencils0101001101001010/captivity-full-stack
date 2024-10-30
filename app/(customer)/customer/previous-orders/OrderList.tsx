@@ -69,7 +69,9 @@ export function OrderHistory({ orders, error }: OrderHistoryProps) {
               No orders have been placed yet
             </p>
             <Button asChild>
-              <Link href="/products">Browse Products</Link>
+              <Link href="/customer/shopping/product_categories/summer">
+                Browse Products
+              </Link>
             </Button>
           </div>
         </CardContent>
