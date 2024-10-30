@@ -22,6 +22,8 @@ export type Category =
   | "golfers"
   | "bottoms"
   | "caps"
+  | "flat-peaks"
+  | "pre-curved-peaks"
   | "uncategorised";
 
 export type CategorizedProducts = {
@@ -56,6 +58,8 @@ const initialState: SignatureState = {
     golfers: [],
     bottoms: [],
     caps: [],
+    "flat-peaks": [],
+    "pre-curved-peaks": [],
     uncategorised: [],
   },
   filteredProducts: {
@@ -66,6 +70,8 @@ const initialState: SignatureState = {
     golfers: [],
     bottoms: [],
     caps: [],
+    "flat-peaks": [],
+    "pre-curved-peaks": [],
     uncategorised: [],
   },
   searchQuery: "",
@@ -138,8 +144,8 @@ const useSignatureStore = create<SignatureState & SignatureActions>()((set, get)
       .then(result => {
         if (result.success) {
           set({
-            signatureProducts: result.data,
-            filteredProducts: result.data,
+            signatureProducts: result.data as CategorizedProducts,
+            filteredProducts: result.data as CategorizedProducts,
             loading: false,
             hasInitiallyFetched: true,
             isInitializing: false,
