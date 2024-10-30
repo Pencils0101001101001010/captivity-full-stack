@@ -37,12 +37,16 @@ const ProductForm = () => {
         {
           name: "",
           color: "",
-          size: "",
-          sku: "",
-          sku2: "",
           variationImageURL: "",
-          variationImage: undefined, // Added this field
-          quantity: 0,
+          variationImage: undefined,
+          sizes: [
+            {
+              size: "",
+              quantity: 0,
+              sku: "",
+              sku2: "",
+            }
+          ],
         },
       ],
       featuredImage: {
@@ -56,10 +60,9 @@ const ProductForm = () => {
 
   const onSubmit = async (data: ProductFormData) => {
     try {
-      console.log("Form submission started with data:", {
+      console.log('Form submission started:', {
+        variations: data.variations,
         hasFeatureImage: !!data.featuredImage.file,
-        variationsCount: data.variations.length,
-        categories: data.category,
       });
 
       const formData = new FormData();
@@ -78,10 +81,9 @@ const ProductForm = () => {
       // Featured Image
       if (data.featuredImage.file instanceof File) {
         formData.append("featuredImage", data.featuredImage.file);
-        console.log("Adding featured image:", {
+        console.log('Adding featured image:', {
           fileName: data.featuredImage.file.name,
-          size: data.featuredImage.file.size,
-          type: data.featuredImage.file.type,
+          size: data.featuredImage.file.size
         });
       }
 
@@ -93,46 +95,45 @@ const ProductForm = () => {
         formData.append(`dynamicPricing.${index}.amount`, pricing.amount);
       });
 
-      // Variations with images
-      data.variations.forEach((variation, index) => {
-        formData.append(`variations.${index}.name`, variation.name);
-        formData.append(`variations.${index}.color`, variation.color || "");
-        formData.append(`variations.${index}.size`, variation.size || "");
-        formData.append(`variations.${index}.sku`, variation.sku);
-        formData.append(`variations.${index}.sku2`, variation.sku2 || "");
-        formData.append(
-          `variations.${index}.quantity`,
-          variation.quantity.toString()
-        );
+      // Variations with sizes
+      data.variations.forEach((variation, varIndex) => {
+        formData.append(`variations.${varIndex}.name`, variation.name);
+        formData.append(`variations.${varIndex}.color`, variation.color || "");
 
         // Handle variation image
         if (variation.variationImage instanceof File) {
-          formData.append(
-            `variations.${index}.image`,
-            variation.variationImage
-          );
-          console.log(`Adding variation ${index} image to form data:`, {
+          formData.append(`variations.${varIndex}.image`, variation.variationImage);
+          console.log(`Adding variation ${varIndex} image:`, {
             fileName: variation.variationImage.name,
             fileSize: variation.variationImage.size,
-            fileType: variation.variationImage.type,
+            fileType: variation.variationImage.type
           });
-        } else {
-          console.log(`No image for variation ${index}`);
         }
-      });
 
-      // Log form data before submission
-      console.log(
-        "Form data entries before submission:",
-        Array.from(formData.entries()).map(([key, value]) => ({
-          key,
-          type: value instanceof File ? "File" : typeof value,
-          fileSize:
-            value instanceof File
-              ? `${(value.size / 1024 / 1024).toFixed(2)}MB`
-              : null,
-        }))
-      );
+        // Handle sizes for each variation
+        variation.sizes.forEach((size, sizeIndex) => {
+          formData.append(
+            `variations.${varIndex}.sizes.${sizeIndex}.size`,
+            size.size
+          );
+          formData.append(
+            `variations.${varIndex}.sizes.${sizeIndex}.quantity`,
+            size.quantity.toString()
+          );
+          formData.append(
+            `variations.${varIndex}.sizes.${sizeIndex}.sku`,
+            size.sku
+          );
+          if (size.sku2) {
+            formData.append(
+              `variations.${varIndex}.sizes.${sizeIndex}.sku2`,
+              size.sku2
+            );
+          }
+        });
+
+        console.log(`Added variation ${varIndex} with ${variation.sizes.length} sizes`);
+      });
 
       const result = await createProduct(formData);
 
@@ -144,11 +145,11 @@ const ProductForm = () => {
 
         // Cleanup any object URLs before resetting
         data.variations.forEach(variation => {
-          if (variation.variationImageURL?.startsWith("blob:")) {
+          if (variation.variationImageURL?.startsWith('blob:')) {
             URL.revokeObjectURL(variation.variationImageURL);
           }
         });
-        if (data.featuredImage.thumbnail.startsWith("blob:")) {
+        if (data.featuredImage.thumbnail.startsWith('blob:')) {
           URL.revokeObjectURL(data.featuredImage.thumbnail);
           URL.revokeObjectURL(data.featuredImage.medium);
           URL.revokeObjectURL(data.featuredImage.large);
@@ -166,8 +167,7 @@ const ProductForm = () => {
       console.error("Error submitting form:", error);
       toast({
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to create product",
+        description: error instanceof Error ? error.message : "Failed to create product",
         variant: "destructive",
       });
     }
@@ -178,11 +178,11 @@ const ProductForm = () => {
     return () => {
       const formData = form.getValues();
       formData.variations.forEach(variation => {
-        if (variation.variationImageURL?.startsWith("blob:")) {
+        if (variation.variationImageURL?.startsWith('blob:')) {
           URL.revokeObjectURL(variation.variationImageURL);
         }
       });
-      if (formData.featuredImage.thumbnail.startsWith("blob:")) {
+      if (formData.featuredImage.thumbnail.startsWith('blob:')) {
         URL.revokeObjectURL(formData.featuredImage.thumbnail);
         URL.revokeObjectURL(formData.featuredImage.medium);
         URL.revokeObjectURL(formData.featuredImage.large);

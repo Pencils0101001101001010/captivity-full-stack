@@ -4,13 +4,14 @@ import prisma from "@/lib/prisma";
 import { validateRequest } from "@/auth";
 import { put } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
-import { ProductFormData, productFormSchema } from "./types";
 import { Prisma } from "@prisma/client";
 
-// Type Definitions
-export type CreateProductResult =
-  | { success: true; data: { id: string }; message: string }
-  | { success: false; error: string };
+interface CreateProductResult {
+  success: boolean;
+  data?: { id: string };
+  message?: string;
+  error?: string;
+}
 
 interface ImageUrls {
   thumbnail: string;
@@ -71,6 +72,18 @@ function validateImage(file: File): void {
   console.log("✅ Image validation passed");
 }
 
+function validateVariationData(formData: FormData, index: number) {
+  const name = formData.get(`variations.${index}.name`);
+  if (!name) throw new Error(`Variation ${index} is missing a name`);
+
+  const sizesEntries = Array.from(formData.entries()).filter(([key]) =>
+    key.startsWith(`variations.${index}.sizes.`)
+  );
+  if (sizesEntries.length === 0) {
+    throw new Error(`Variation ${index} must have at least one size`);
+  }
+}
+
 async function uploadImage(file: File, path: string): Promise<string> {
   console.log("📤 Starting image upload:", {
     fileName: file.name,
@@ -103,13 +116,7 @@ async function uploadImage(file: File, path: string): Promise<string> {
   } catch (error) {
     console.error("❌ Error uploading image:", {
       path,
-      error:
-        error instanceof Error
-          ? {
-              message: error.message,
-              stack: error.stack,
-            }
-          : "Unknown error",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
     throw error;
   }
@@ -152,6 +159,12 @@ async function uploadFeaturedImages(file: File): Promise<ImageUrls> {
   }
 }
 
+interface ImageUrls {
+  thumbnail: string;
+  medium: string;
+  large: string;
+}
+
 export async function createProduct(
   formData: FormData
 ): Promise<CreateProductResult> {
@@ -185,16 +198,6 @@ export async function createProduct(
     };
 
     const featuredImageFile = formData.get("featuredImage");
-    console.log("🖼️ Featured image file:", {
-      exists: !!featuredImageFile,
-      isFile: featuredImageFile instanceof File,
-      size:
-        featuredImageFile instanceof File
-          ? `${(featuredImageFile.size / 1024 / 1024).toFixed(2)}MB`
-          : "N/A",
-      type: featuredImageFile instanceof File ? featuredImageFile.type : "N/A",
-    });
-
     if (featuredImageFile instanceof File && featuredImageFile.size > 0) {
       featuredImageUrls = await uploadFeaturedImages(featuredImageFile);
 
@@ -203,10 +206,6 @@ export async function createProduct(
         !featuredImageUrls.medium ||
         !featuredImageUrls.large
       ) {
-        console.error(
-          "❌ Missing URLs in featuredImageUrls:",
-          featuredImageUrls
-        );
         throw new Error("Failed to get featured image URLs from blob storage");
       }
       console.log("✅ Featured image URLs received:", featuredImageUrls);
@@ -215,11 +214,6 @@ export async function createProduct(
     // Get the number of variations
     const variationEntries = Array.from(formData.entries()).filter(([key]) =>
       key.startsWith("variations")
-    );
-
-    console.log(
-      "📦 Found variation entries:",
-      variationEntries.map(([key]) => key)
     );
 
     const variationCount = variationEntries.reduce((max, [key]) => {
@@ -233,18 +227,9 @@ export async function createProduct(
     const variationImages: string[] = [];
     for (let i = 0; i < variationCount; i++) {
       console.log(`📎 Processing variation ${i}`);
-      const variationImageFile = formData.get(`variations.${i}.image`);
-      console.log(`🖼️ Variation image ${i}:`, {
-        exists: !!variationImageFile,
-        isFile: variationImageFile instanceof File,
-        size:
-          variationImageFile instanceof File
-            ? `${(variationImageFile.size / 1024 / 1024).toFixed(2)}MB`
-            : "N/A",
-        type:
-          variationImageFile instanceof File ? variationImageFile.type : "N/A",
-      });
+      validateVariationData(formData, i);
 
+      const variationImageFile = formData.get(`variations.${i}.image`);
       if (variationImageFile instanceof File && variationImageFile.size > 0) {
         try {
           const fileExt = variationImageFile.name.split(".").pop() || "jpg";
@@ -252,12 +237,8 @@ export async function createProduct(
             variationImageFile,
             `products/variations/variation_${i}_${Date.now()}.${fileExt}`
           );
-
-          if (!url) {
-            console.error(`❌ No URL received for variation ${i}`);
+          if (!url)
             throw new Error(`Failed to get URL for variation image ${i}`);
-          }
-
           variationImages[i] = url;
           console.log(`✅ Variation ${i} image uploaded:`, url);
         } catch (error) {
@@ -266,59 +247,22 @@ export async function createProduct(
         }
       } else {
         variationImages[i] = "";
-        console.log(`ℹ️ No image provided for variation ${i}`);
       }
     }
 
-    // Process form data
-    console.log("🔄 Processing form data...");
-    const processedData = {
+    // Create product in database
+    console.log("💾 Creating product in database...");
+    const createData: Prisma.ProductCreateInput = {
+      user: {
+        connect: {
+          id: user.id,
+        },
+      },
       productName: formData.get("productName") as string,
       category: formData.getAll("category[]").map(cat => cat.toString()),
       description: formData.get("description") as string,
       sellingPrice: Number(formData.get("sellingPrice")),
       isPublished: formData.get("isPublished") === "true",
-      variations: Array.from({ length: variationCount }, (_, i) => ({
-        name: formData.get(`variations.${i}.name`) as string,
-        color: (formData.get(`variations.${i}.color`) as string) || "",
-        size: (formData.get(`variations.${i}.size`) as string) || "",
-        sku: formData.get(`variations.${i}.sku`) as string,
-        sku2: (formData.get(`variations.${i}.sku2`) as string) || "",
-        variationImageURL: variationImages[i],
-        quantity: Number(formData.get(`variations.${i}.quantity`)) || 0,
-      })),
-      dynamicPricing: Array.from(
-        { length: formData.getAll("dynamicPricing.0.from").length },
-        (_, i) => ({
-          from: formData.get(`dynamicPricing.${i}.from`) as string,
-          to: formData.get(`dynamicPricing.${i}.to`) as string,
-          type: formData.get(`dynamicPricing.${i}.type`) as
-            | "fixed_price"
-            | "percentage",
-          amount: formData.get(`dynamicPricing.${i}.amount`) as string,
-        })
-      ),
-    };
-
-    console.log("📝 Processed data:", {
-      productName: processedData.productName,
-      variationCount: processedData.variations.length,
-      dynamicPricingCount: processedData.dynamicPricing.length,
-      hasImages: {
-        featured: !!featuredImageUrls.thumbnail,
-        variations: variationImages.filter(url => !!url).length,
-      },
-    });
-
-    // Create product in database
-    console.log("💾 Creating product in database...");
-    const createData = {
-      userId: user.id,
-      productName: processedData.productName,
-      category: processedData.category,
-      description: processedData.description,
-      sellingPrice: processedData.sellingPrice,
-      isPublished: processedData.isPublished,
       featuredImage: featuredImageUrls.thumbnail
         ? {
             create: {
@@ -329,23 +273,58 @@ export async function createProduct(
           }
         : undefined,
       variations: {
-        create: processedData.variations.map(variation => ({
-          name: variation.name,
-          color: variation.color,
-          size: variation.size,
-          sku: variation.sku,
-          sku2: variation.sku2,
-          variationImageURL: variation.variationImageURL,
-          quantity: variation.quantity,
-        })),
+        create: Array.from({ length: variationCount }, (_, i) => {
+          const sizesEntries = Array.from(formData.entries()).filter(([key]) =>
+            key.startsWith(`variations.${i}.sizes.`)
+          );
+
+          const sizesCount = new Set(
+            sizesEntries
+              .map(([key]) => key.match(/variations\.\d+\.sizes\.(\d+)\./)?.[1])
+              .filter(Boolean)
+          ).size;
+
+          return {
+            name: formData.get(`variations.${i}.name`) as string,
+            color: (formData.get(`variations.${i}.color`) as string) || "",
+            variationImageURL: variationImages[i] || "",
+            // These fields should be moved to the sizes relation
+            size:
+              (formData.get(`variations.${i}.sizes.0.size`) as string) || "", // Default to first size
+            sku: (formData.get(`variations.${i}.sizes.0.sku`) as string) || "", // Default to first SKU
+            sku2:
+              (formData.get(`variations.${i}.sizes.0.sku2`) as string) || "", // Default to first SKU2
+            quantity:
+              Number(formData.get(`variations.${i}.sizes.0.quantity`)) || 0, // Default to first quantity
+            sizes: {
+              create: Array.from({ length: sizesCount }, (_, j) => ({
+                size: (
+                  formData.get(`variations.${i}.sizes.${j}.size`) as string
+                ).trim(),
+                quantity:
+                  Number(formData.get(`variations.${i}.sizes.${j}.quantity`)) ||
+                  0,
+                sku: (
+                  formData.get(`variations.${i}.sizes.${j}.sku`) as string
+                ).trim(),
+                sku2: (
+                  formData.get(`variations.${i}.sizes.${j}.sku2`) as string
+                )?.trim(),
+              })),
+            },
+          };
+        }),
       },
       dynamicPricing: {
-        create: processedData.dynamicPricing.map(pricing => ({
-          from: pricing.from,
-          to: pricing.to,
-          type: pricing.type,
-          amount: pricing.amount,
-        })),
+        create: Array.from(
+          { length: formData.getAll("dynamicPricing.0.from").length },
+          (_, i) => ({
+            from: formData.get(`dynamicPricing.${i}.from`) as string,
+            to: formData.get(`dynamicPricing.${i}.to`) as string,
+            type: formData.get(`dynamicPricing.${i}.type`) as string,
+            amount: formData.get(`dynamicPricing.${i}.amount`) as string,
+          })
+        ),
       },
     };
 
@@ -355,7 +334,11 @@ export async function createProduct(
       data: createData,
       include: {
         featuredImage: true,
-        variations: true,
+        variations: {
+          include: {
+            sizes: true,
+          },
+        },
         dynamicPricing: true,
       },
     });
