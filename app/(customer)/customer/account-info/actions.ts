@@ -46,6 +46,7 @@ export async function updateAccountInfo(
         firstName: true,
         lastName: true,
         displayName: true,
+        avatarUrl: true,
       },
     });
 
@@ -126,6 +127,7 @@ export async function updateAccountInfo(
         lastName: true,
         displayName: true,
         role: true,
+        avatarUrl: true,
       },
     });
 

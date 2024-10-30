@@ -12,7 +12,6 @@ import BasicInfoTab from "./_components/BasicInfoTab";
 import DynamicPricingTab from "./_components/DynamicPricingTab";
 import VariationsTab from "./_components/VariationsTab";
 import FeaturedImageTab from "./_components/FeaturedImageTab";
-import { createProduct } from "./actions";
 
 const ProductForm = () => {
   const { toast } = useToast();
@@ -37,12 +36,16 @@ const ProductForm = () => {
         {
           name: "",
           color: "",
-          size: "",
-          sku: "",
-          sku2: "",
           variationImageURL: "",
-          variationImage: undefined, // Added this field
-          quantity: 0,
+          variationImage: undefined,
+          sizes: [
+            {
+              size: "",
+              quantity: 0,
+              sku: "",
+              sku2: "",
+            },
+          ],
         },
       ],
       featuredImage: {
@@ -55,122 +58,7 @@ const ProductForm = () => {
   });
 
   const onSubmit = async (data: ProductFormData) => {
-    try {
-      console.log("Form submission started with data:", {
-        hasFeatureImage: !!data.featuredImage.file,
-        variationsCount: data.variations.length,
-        categories: data.category,
-      });
-
-      const formData = new FormData();
-
-      // Basic fields
-      formData.append("productName", data.productName);
-      formData.append("description", data.description);
-      formData.append("sellingPrice", data.sellingPrice.toString());
-      formData.append("isPublished", data.isPublished.toString());
-
-      // Categories
-      data.category.forEach(cat => {
-        formData.append("category[]", cat);
-      });
-
-      // Featured Image
-      if (data.featuredImage.file instanceof File) {
-        formData.append("featuredImage", data.featuredImage.file);
-        console.log("Adding featured image:", {
-          fileName: data.featuredImage.file.name,
-          size: data.featuredImage.file.size,
-          type: data.featuredImage.file.type,
-        });
-      }
-
-      // Dynamic Pricing
-      data.dynamicPricing.forEach((pricing, index) => {
-        formData.append(`dynamicPricing.${index}.from`, pricing.from);
-        formData.append(`dynamicPricing.${index}.to`, pricing.to);
-        formData.append(`dynamicPricing.${index}.type`, pricing.type);
-        formData.append(`dynamicPricing.${index}.amount`, pricing.amount);
-      });
-
-      // Variations with images
-      data.variations.forEach((variation, index) => {
-        formData.append(`variations.${index}.name`, variation.name);
-        formData.append(`variations.${index}.color`, variation.color || "");
-        formData.append(`variations.${index}.size`, variation.size || "");
-        formData.append(`variations.${index}.sku`, variation.sku);
-        formData.append(`variations.${index}.sku2`, variation.sku2 || "");
-        formData.append(
-          `variations.${index}.quantity`,
-          variation.quantity.toString()
-        );
-
-        // Handle variation image
-        if (variation.variationImage instanceof File) {
-          formData.append(
-            `variations.${index}.image`,
-            variation.variationImage
-          );
-          console.log(`Adding variation ${index} image to form data:`, {
-            fileName: variation.variationImage.name,
-            fileSize: variation.variationImage.size,
-            fileType: variation.variationImage.type,
-          });
-        } else {
-          console.log(`No image for variation ${index}`);
-        }
-      });
-
-      // Log form data before submission
-      console.log(
-        "Form data entries before submission:",
-        Array.from(formData.entries()).map(([key, value]) => ({
-          key,
-          type: value instanceof File ? "File" : typeof value,
-          fileSize:
-            value instanceof File
-              ? `${(value.size / 1024 / 1024).toFixed(2)}MB`
-              : null,
-        }))
-      );
-
-      const result = await createProduct(formData);
-
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: result.message,
-        });
-
-        // Cleanup any object URLs before resetting
-        data.variations.forEach(variation => {
-          if (variation.variationImageURL?.startsWith("blob:")) {
-            URL.revokeObjectURL(variation.variationImageURL);
-          }
-        });
-        if (data.featuredImage.thumbnail.startsWith("blob:")) {
-          URL.revokeObjectURL(data.featuredImage.thumbnail);
-          URL.revokeObjectURL(data.featuredImage.medium);
-          URL.revokeObjectURL(data.featuredImage.large);
-        }
-
-        form.reset();
-      } else {
-        toast({
-          title: "Error",
-          description: result.error,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to create product",
-        variant: "destructive",
-      });
-    }
+    console.log(data);
   };
 
   // Cleanup object URLs when component unmounts

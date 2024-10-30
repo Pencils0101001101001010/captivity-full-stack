@@ -14,15 +14,7 @@ export type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
-export type Category =
-  | "men"
-  | "women"
-  | "kids"
-  | "hats"
-  | "golfers"
-  | "bottoms"
-  | "caps"
-  | "uncategorised";
+export type Category = "industrial-collection";
 
 export type CategorizedProducts = {
   [key in Category]: ProductWithRelations[];
@@ -49,24 +41,10 @@ interface IndustrialActions {
 
 const initialState: IndustrialState = {
   industrialProducts: {
-    men: [],
-    women: [],
-    kids: [],
-    hats: [],
-    golfers: [],
-    bottoms: [],
-    caps: [],
-    uncategorised: [],
+    "industrial-collection": [],
   },
   filteredProducts: {
-    men: [],
-    women: [],
-    kids: [],
-    hats: [],
-    golfers: [],
-    bottoms: [],
-    caps: [],
-    uncategorised: [],
+    "industrial-collection": [],
   },
   searchQuery: "",
   loading: false,

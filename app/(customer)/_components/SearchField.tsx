@@ -7,6 +7,10 @@ import React, { useState, useEffect } from "react";
 import { useSummerActions } from "../customer/_store/useSummerStore";
 import { useWinterActions } from "../customer/_store/useWinterStore";
 import { useFashionActions } from "../customer/_store/useFashionStore";
+import { useCamoActions } from "../customer/_store/useCamoStore";
+import { useAfricanActions } from "../customer/_store/useAfricanStore";
+import { useBaseballActions } from "../customer/_store/useBaseballStore";
+import { useIndustrialActions } from "../customer/_store/useIndustrialStore";
 import { useLeisureActions } from "../customer/_store/useLeisureStore";
 import { useSignatureActions } from "../customer/_store/useSignatureStore";
 import { useSportActions } from "../customer/_store/useSportStore";
@@ -15,9 +19,14 @@ import { useSportActions } from "../customer/_store/useSportStore";
 export default function SearchField() {
   const pathname = usePathname() || "";
   const [searchValue, setSearchValue] = useState("");
+  
   const { setSearchQuery: setSummerSearch } = useSummerActions();
   const { setSearchQuery: setWinterSearch } = useWinterActions();
   const { setSearchQuery: setFashionSearch } = useFashionActions();
+  const { setSearchQuery: setCamoSearch } = useCamoActions();
+  const { setSearchQuery: setAfricanSearch } = useAfricanActions();
+  const { setSearchQuery: setBaseballSearch } = useBaseballActions();
+  const { setSearchQuery: setIndustrialSearch } = useIndustrialActions();
   const { setSearchQuery: setLeisureSearch } = useLeisureActions();
   const { setSearchQuery: setSignatureSearch } = useSignatureActions();
   const { setSearchQuery: setSportSearch } = useSportActions();
@@ -36,6 +45,14 @@ export default function SearchField() {
       setSummerSearch(query);
     } else if (pathname.includes("/winter")) {
       setWinterSearch(query);
+    } else if (pathname.includes("/camo")) {
+      setCamoSearch(query);
+    } else if (pathname.includes("/african")) {
+      setAfricanSearch(query);
+    } else if (pathname.includes("/baseball")) {
+      setBaseballSearch(query);
+    } else if (pathname.includes("/industrial")) {
+      setIndustrialSearch(query);
     } else if (pathname.includes("/leisure")) {
       setLeisureSearch(query);
     } else if (pathname.includes("/signature")) {
@@ -54,6 +71,14 @@ export default function SearchField() {
       setSummerSearch("");
     } else if (pathname.includes("/winter")) {
       setWinterSearch("");
+    } else if (pathname.includes("/camo")) {
+      setCamoSearch("");
+    } else if (pathname.includes("/african")) {
+      setAfricanSearch("");
+    } else if (pathname.includes("/baseball")) {
+      setBaseballSearch("");
+    } else if (pathname.includes("/industrial")) {
+      setIndustrialSearch("");
     } else if (pathname.includes("/leisure")) {
       setLeisureSearch("");
     } else if (pathname.includes("/signature")) {
@@ -61,6 +86,16 @@ export default function SearchField() {
     } else if (pathname.includes("/sport")) {
       setSportSearch("");
     }
+  }, [
+    pathname,
+    setSummerSearch,
+    setWinterSearch,
+    setFashionSearch,
+    setCamoSearch,
+    setAfricanSearch,
+    setBaseballSearch,
+    setIndustrialSearch
+  ]);
   }, [pathname, setSummerSearch, setWinterSearch, setFashionSearch, setLeisureSearch, setSignatureSearch, setSportSearch]);
 
   return (

@@ -1,3 +1,4 @@
+//app/(customer)/customer/shopping/product_categories/fashion/actions.ts
 "use server";
 
 import { validateRequest } from "@/auth";
@@ -16,17 +17,7 @@ type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
-type Category =
-  | "men"
-  | "women"
-  | "kids"
-  | "hats"
-  | "golfers"
-  | "bottoms"
-  | "caps"
-  | "trucker-caps"
-  | "flat-peaks"
-  | "uncategorised";
+type Category = "fashion-collection";
 
 type CategorizedProducts = {
   [key in Category]: ProductWithRelations[];
@@ -61,16 +52,7 @@ export async function fetchFashionCollection(): Promise<FetchFashionCollectionRe
 
     // Categorize products
     const categorizedProducts: CategorizedProducts = {
-      men: [],
-      women: [],
-      kids: [],
-      hats: [],
-      golfers: [],
-      bottoms: [],
-      caps: [],
-      "trucker-caps": [],
-      "flat-peaks": [],
-      uncategorised: [],
+      "fashion-collection": [],
     };
 
     products.forEach(product => {
@@ -83,7 +65,7 @@ export async function fetchFashionCollection(): Promise<FetchFashionCollectionRe
     });
 
     // Revalidate the products page
-    revalidatePath("/customer/shopping/fashion");
+    revalidatePath("/customer/shopping/product_categories/fashion");
 
     return { success: true, data: categorizedProducts };
   } catch (error) {

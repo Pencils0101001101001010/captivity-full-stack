@@ -1,3 +1,4 @@
+//app/(customer)/customer/_store/useFashionStore.ts
 import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import {
@@ -14,17 +15,7 @@ export type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
-export type Category =
-  | "men"
-  | "women"
-  | "kids"
-  | "hats"
-  | "golfers"
-  | "bottoms"
-  | "caps"
-  | "trucker-caps"
-  | "flat-peaks"
-  | "uncategorised";
+export type Category = "fashion-collection";
 
 export type CategorizedProducts = Record<Category, ProductWithRelations[]>;
 
@@ -49,28 +40,10 @@ interface FashionActions {
 
 const initialState: FashionState = {
   fashionProducts: {
-    men: [],
-    women: [],
-    kids: [],
-    hats: [],
-    golfers: [],
-    bottoms: [],
-    caps: [],
-    "trucker-caps": [],
-    "flat-peaks": [],
-    uncategorised: [],
+    "fashion-collection": [],
   },
   filteredProducts: {
-    men: [],
-    women: [],
-    kids: [],
-    hats: [],
-    golfers: [],
-    bottoms: [],
-    caps: [],
-    "trucker-caps": [],
-    "flat-peaks": [],
-    uncategorised: [],
+    "fashion-collection": [],
   },
   searchQuery: "",
   loading: false,

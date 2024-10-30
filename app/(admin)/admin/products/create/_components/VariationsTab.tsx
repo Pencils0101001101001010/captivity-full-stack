@@ -19,7 +19,14 @@ interface VariationsTabProps {
 
 const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
   const { setValue, watch } = useFormContext<ProductFormData>();
-  const { fields, append, remove } = useFieldArray({
+
+  // Main variations field array
+  const {
+    fields: colorFields,
+    append: appendColor,
+    remove: removeColor,
+    update: updateColor,
+  } = useFieldArray({
     control,
     name: "variations",
   });
@@ -32,7 +39,6 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
     if (!file) return;
 
     try {
-      // Store both the File object and create a preview URL
       setValue(`variations.${index}.variationImage`, file);
       setValue(
         `variations.${index}.variationImageURL`,
@@ -52,27 +58,59 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
     }
   };
 
+  const addSizeToVariation = (variationIndex: number) => {
+    const variation = colorFields[variationIndex];
+    const currentSizes = variation.sizes || [];
+    const newSize = {
+      size: "",
+      quantity: 0,
+      sku: "",
+      sku2: "",
+    };
+
+    updateColor(variationIndex, {
+      ...variation,
+      sizes: [...currentSizes, newSize],
+    });
+  };
+
+  const removeSizeFromVariation = (
+    variationIndex: number,
+    sizeIndex: number
+  ) => {
+    const variation = colorFields[variationIndex];
+    const newSizes = variation.sizes.filter((_, idx) => idx !== sizeIndex);
+
+    updateColor(variationIndex, {
+      ...variation,
+      sizes: newSizes,
+    });
+  };
+
   React.useEffect(() => {
-    // Cleanup object URLs when component unmounts
     return () => {
-      fields.forEach((field, index) => {
+      colorFields.forEach((field, index) => {
         const imageUrl = watch(`variations.${index}.variationImageURL`);
         if (imageUrl && imageUrl.startsWith("blob:")) {
           URL.revokeObjectURL(imageUrl);
         }
       });
     };
-  }, [fields, watch]);
+  }, [colorFields, watch]);
+
+  const emptySize = {
+    size: "",
+    quantity: 0,
+    sku: "",
+    sku2: "",
+  };
 
   const emptyVariation = {
     name: "",
     color: "",
-    size: "",
-    sku: "",
-    sku2: "",
+    sizes: [emptySize],
     variationImageURL: "",
     variationImage: null,
-    quantity: 0,
   };
 
   return (
@@ -83,21 +121,24 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => append(emptyVariation)}
+          onClick={() => appendColor(emptyVariation)}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Variation
+          Add Color Variation
         </Button>
       </div>
 
-      {fields.map((field, index) => (
+      {colorFields.map((field, variationIndex) => (
         <div key={field.id} className="space-y-4 p-4 border rounded-lg">
-          <div className="flex justify-end">
+          <div className="flex justify-between items-center">
+            <h4 className="text-md font-medium">
+              Color Variation {variationIndex + 1}
+            </h4>
             <Button
               type="button"
               variant="destructive"
               size="icon"
-              onClick={() => remove(index)}
+              onClick={() => removeColor(variationIndex)}
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -106,7 +147,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={control}
-              name={`variations.${index}.name`}
+              name={`variations.${variationIndex}.name`}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Name</FormLabel>
@@ -120,7 +161,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
 
             <FormField
               control={control}
-              name={`variations.${index}.color`}
+              name={`variations.${variationIndex}.color`}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Color</FormLabel>
@@ -131,73 +172,11 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
                 </FormItem>
               )}
             />
-
-            <FormField
-              control={control}
-              name={`variations.${index}.size`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Size</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={control}
-              name={`variations.${index}.sku`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>SKU</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={control}
-              name={`variations.${index}.sku2`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>SKU 2</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={control}
-              name={`variations.${index}.quantity`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quantity</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={e =>
-                        field.onChange(parseInt(e.target.value) || 0)
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </div>
 
           <FormField
             control={control}
-            name={`variations.${index}.variationImageURL`}
+            name={`variations.${variationIndex}.variationImageURL`}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Variation Image</FormLabel>
@@ -206,7 +185,9 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
                     <Input
                       type="file"
                       accept="image/*"
-                      onChange={e => handleVariationImageUpload(index, e)}
+                      onChange={e =>
+                        handleVariationImageUpload(variationIndex, e)
+                      }
                       className="cursor-pointer"
                     />
                     {field.value && (
@@ -226,6 +207,90 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
               </FormItem>
             )}
           />
+
+          {/* Size Variations */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <h5 className="text-sm font-medium">Sizes</h5>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addSizeToVariation(variationIndex)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Size
+              </Button>
+            </div>
+
+            {field.sizes?.map((size, sizeIndex) => (
+              <div
+                key={sizeIndex}
+                className="grid grid-cols-4 gap-4 p-4 bg-accent/50 rounded-lg mb-2"
+              >
+                <FormField
+                  control={control}
+                  name={`variations.${variationIndex}.sizes.${sizeIndex}.size`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Size</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={control}
+                  name={`variations.${variationIndex}.sizes.${sizeIndex}.quantity`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quantity</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={e =>
+                            field.onChange(parseInt(e.target.value) || 0)
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={control}
+                  name={`variations.${variationIndex}.sizes.${sizeIndex}.sku`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>SKU</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex items-end">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    onClick={() =>
+                      removeSizeFromVariation(variationIndex, sizeIndex)
+                    }
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ))}
     </div>
