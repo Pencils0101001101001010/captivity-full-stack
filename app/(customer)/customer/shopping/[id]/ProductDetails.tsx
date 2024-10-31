@@ -2,7 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { Variation } from "@prisma/client";
-import { ProductDetailsProps } from "./types";
+import {
+  ProductDetailsProps,
+  ProductWithRelations,
+  ProductImageProps,
+} from "./types";
 import {
   ColorSelector,
   SizeSelector,
@@ -12,6 +16,26 @@ import ProductImage from "./ProductImage";
 import AddToCartButton from "./AddToCartButton";
 import Link from "next/link";
 import ViewMore from "@/app/(customer)/_components/ViewMore";
+
+// Helper function to transform product data for ProductImage component
+const transformProductForImage = (
+  product: ProductWithRelations
+): ProductImageProps["product"] => ({
+  id: product.id,
+  productName: product.productName,
+  featuredImage: product.featuredImage
+    ? {
+        thumbnail: product.featuredImage.medium, // Use medium as fallback
+        medium: product.featuredImage.medium,
+        large: product.featuredImage.medium, // Use medium as fallback
+      }
+    : null,
+  variations: product.variations.map(variation => ({
+    id: variation.id,
+    color: variation.color,
+    variationImageURL: variation.variationImageURL,
+  })),
+});
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedVariation, setSelectedVariation] = useState<Variation | null>(
@@ -67,12 +91,15 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     ? `/customer/shopping/${product.id}/${selectedVariation.id}`
     : `/customer/shopping/product/${product.id}`;
 
+  // Transform the product data for ProductImage component
+  const transformedProduct = transformProductForImage(product);
+
   return (
     <div className="max-w-4xl mx-auto p-3 bg-card my-8 shadow-lg rounded-lg border border-border">
       <div className="flex flex-col md:flex-row mb-4">
         <ProductImage
           selectedVariation={selectedVariation}
-          product={product}
+          product={transformedProduct}
           uniqueColors={uniqueColors}
           onColorSelect={handleColorSelect}
         />

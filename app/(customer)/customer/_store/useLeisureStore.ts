@@ -14,10 +14,26 @@ export type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
-export type Category = "leisure-collection";
+// Match the API's category types
+export type Category =
+  | "men"
+  | "women"
+  | "kids"
+  | "hats"
+  | "golfers"
+  | "bottoms"
+  | "caps"
+  | "uncategorised";
 
-export type CategorizedProducts = Record<Category, ProductWithRelations[]>;
+// Match the API's categorized products type
+export type CategorizedProducts = {
+  [key in Category]: ProductWithRelations[];
+};
 
+// Match the API's response type
+export type FetchLeisureCollectionResult =
+  | { success: true; data: CategorizedProducts }
+  | { success: false; error: string };
 
 interface LeisureState {
   leisureProducts: CategorizedProducts;
@@ -40,27 +56,24 @@ interface LeisureActions {
 
 const initialState: LeisureState = {
   leisureProducts: {
-    "leisure-collection": [],    // men: [],
-    // women: [],
-    // kids: [],
-    // hats: [],
-    // golfers: [],
-    // bottoms: [],
-    // caps: [],
-    // "bucket-hats": [],
-    // uncategorised: [],
+    men: [],
+    women: [],
+    kids: [],
+    hats: [],
+    golfers: [],
+    bottoms: [],
+    caps: [],
+    uncategorised: [],
   },
   filteredProducts: {
-    "leisure-collection": [],
-    // men: [],
-    // women: [],
-    // kids: [],
-    // hats: [],
-    // golfers: [],
-    // bottoms: [],
-    // caps: [],
-    // "bucket-hats": [],
-    // uncategorised: [],
+    men: [],
+    women: [],
+    kids: [],
+    hats: [],
+    golfers: [],
+    bottoms: [],
+    caps: [],
+    uncategorised: [],
   },
   searchQuery: "",
   loading: false,
@@ -89,26 +102,19 @@ const useLeisureStore = create<LeisureState & LeisureActions>()((set, get) => ({
     }
 
     const lowercaseQuery = query.toLowerCase().trim();
-    const filtered: CategorizedProducts = Object.keys(leisureProducts).reduce(
-      (acc, category) => {
-        const categoryProducts = leisureProducts[category as Category];
-        const filteredCategoryProducts = categoryProducts.filter(
-          product =>
+    const filtered: CategorizedProducts = Object.fromEntries(
+      Object.entries(leisureProducts).map(([category, products]) => [
+        category,
+        products.filter(product =>
           [
             product.productName.toLowerCase(),
             product.description?.toLowerCase() || "",
             ...product.variations.map(v => v.name.toLowerCase()),
             ...product.category.map(c => c.toLowerCase()),
           ].some(text => text.includes(lowercaseQuery))
-        );
-
-        return {
-          ...acc,
-          [category]: filteredCategoryProducts,
-        };
-      },
-      {} as CategorizedProducts
-    );
+        ),
+      ])
+    ) as CategorizedProducts;
 
     set({ filteredProducts: filtered });
   },
@@ -131,11 +137,11 @@ const useLeisureStore = create<LeisureState & LeisureActions>()((set, get) => ({
     set({ loading: true, error: null, isInitializing: true });
 
     fetchPromise = fetchLeisureCollection()
-      .then(result => {
+      .then((result: FetchLeisureCollectionResult) => {
         if (result.success) {
           set({
-            leisureProducts: result.data as CategorizedProducts,
-            filteredProducts: result.data as CategorizedProducts,
+            leisureProducts: result.data,
+            filteredProducts: result.data,
             loading: false,
             hasInitiallyFetched: true,
             isInitializing: false,
@@ -160,6 +166,7 @@ const useLeisureStore = create<LeisureState & LeisureActions>()((set, get) => ({
   },
 }));
 
+// Selector hooks with proper typing
 export const useLeisureProducts = () =>
   useLeisureStore(
     useShallow(state => ({

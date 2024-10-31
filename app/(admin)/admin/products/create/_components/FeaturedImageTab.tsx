@@ -51,17 +51,19 @@ const FeaturedImageTab: React.FC<FeaturedImageTabProps> = ({ control }) => {
     }
   };
 
+  // Watch featuredImage for cleanup
+  const featuredImage = watch("featuredImage");
+
   React.useEffect(() => {
-    // Cleanup object URLs when component unmounts
+    // Cleanup object URLs when component unmounts or when featuredImage changes
     return () => {
-      const featuredImage = watch("featuredImage");
       if (featuredImage.thumbnail) {
         URL.revokeObjectURL(featuredImage.thumbnail);
         URL.revokeObjectURL(featuredImage.medium);
         URL.revokeObjectURL(featuredImage.large);
       }
     };
-  }, []);
+  }, [featuredImage]); // Add featuredImage as dependency
 
   return (
     <div className="space-y-4">
@@ -104,12 +106,12 @@ const FeaturedImageTab: React.FC<FeaturedImageTabProps> = ({ control }) => {
 
       {/* Preview of all image sizes */}
       <div className="grid grid-cols-3 gap-4 mt-4">
-        {watch("featuredImage.thumbnail") && (
+        {featuredImage.thumbnail && (
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Thumbnail</p>
             <div className="relative aspect-square">
               <Image
-                src={watch("featuredImage.thumbnail")}
+                src={featuredImage.thumbnail}
                 alt="Thumbnail preview"
                 fill
                 className="object-cover rounded-md"
@@ -118,12 +120,12 @@ const FeaturedImageTab: React.FC<FeaturedImageTabProps> = ({ control }) => {
             </div>
           </div>
         )}
-        {watch("featuredImage.medium") && (
+        {featuredImage.medium && (
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Medium</p>
             <div className="relative aspect-square">
               <Image
-                src={watch("featuredImage.medium")}
+                src={featuredImage.medium}
                 alt="Medium preview"
                 fill
                 className="object-cover rounded-md"
@@ -132,12 +134,12 @@ const FeaturedImageTab: React.FC<FeaturedImageTabProps> = ({ control }) => {
             </div>
           </div>
         )}
-        {watch("featuredImage.large") && (
+        {featuredImage.large && (
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Large</p>
             <div className="relative aspect-square">
               <Image
-                src={watch("featuredImage.large")}
+                src={featuredImage.large}
                 alt="Large preview"
                 fill
                 className="object-cover rounded-md"
