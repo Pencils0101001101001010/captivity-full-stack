@@ -18,6 +18,7 @@ export function ProductTableHeader({
   return (
     <TableHeader>
       <TableRow>
+        <TableHead>Image</TableHead>
         <TableHead
           className="cursor-pointer"
           onClick={() => onSort("productName")}

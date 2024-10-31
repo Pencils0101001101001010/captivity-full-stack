@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
+import Image from "next/image";
 import { ProductTableHeader } from "./TableHeader";
 import { TableActions } from "./TableActions";
 import { TableFilters } from "./TableFilters";
@@ -141,7 +142,7 @@ export default function ProductTable({
         />
       </div>
 
-      <div className="border rounded-md m-8 ">
+      <div className="border rounded-md m-8">
         <Table>
           <ProductTableHeader
             sortField={sortField}
@@ -154,12 +155,26 @@ export default function ProductTable({
                 calculateTotals(product.variations);
               const isToggling = loadingToggles.has(product.id);
               const isDeleting = loadingDeletes.has(product.id);
+              const firstVariationImage =
+                product.variations[0]?.variationImageURL;
 
               return (
                 <TableRow
                   key={product.id}
                   className={isDeleting ? "opacity-50" : ""}
                 >
+                  <TableCell>
+                    {firstVariationImage && (
+                      <div className="relative w-16 h-16 rounded-md overflow-hidden">
+                        <Image
+                          src={firstVariationImage}
+                          alt={product.productName}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+                  </TableCell>
                   <TableCell className="font-medium">
                     {product.productName}
                   </TableCell>

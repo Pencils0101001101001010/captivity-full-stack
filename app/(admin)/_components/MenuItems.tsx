@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchAllRoleCounts } from "../admin/users/actions";
+import { fetchSummerCollectionTable } from "../admin/products/summer/actions";
 
 type MenuLink = {
   name: string;
@@ -15,7 +16,7 @@ type MenuItem = {
 };
 
 export function useMenuItems() {
-  const [counts, setCounts] = useState({
+  const [userCounts, setUserCounts] = useState({
     pendingApproval: 0,
     customers: 0,
     subscribers: 0,
@@ -25,11 +26,28 @@ export function useMenuItems() {
     editors: 0,
   });
 
+  const [summerCounts, setSummerCounts] = useState({
+    totalCount: 0,
+    publishedCount: 0,
+    unpublishedCount: 0,
+  });
+
   useEffect(() => {
     const loadCounts = async () => {
-      const result = await fetchAllRoleCounts();
-      if (result.success) {
-        setCounts(result.counts);
+      const [userResult, summerResult] = await Promise.all([
+        fetchAllRoleCounts(),
+        fetchSummerCollectionTable(),
+      ]);
+
+      if (userResult.success) {
+        setUserCounts(userResult.counts);
+      }
+      if (summerResult.success) {
+        setSummerCounts({
+          totalCount: summerResult.totalCount,
+          publishedCount: summerResult.publishedCount,
+          unpublishedCount: summerResult.unpublishedCount,
+        });
       }
     };
 
@@ -45,44 +63,48 @@ export function useMenuItems() {
         {
           name: "Pending Approval",
           href: "/admin/users/update/role-user",
-          count: counts.pendingApproval,
+          count: userCounts.pendingApproval,
         },
         {
           name: "Customers",
           href: "/admin/users/update/role-customer",
-          count: counts.customers,
+          count: userCounts.customers,
         },
         {
           name: "Subscribers",
           href: "/admin/users/subscribers",
-          count: counts.subscribers,
+          count: userCounts.subscribers,
         },
         {
           name: "Promo Users",
           href: "/admin/users/promo",
-          count: counts.promo,
+          count: userCounts.promo,
         },
         {
           name: "Distributors",
           href: "/admin/users/update/role-distributors",
-          count: counts.distributors,
+          count: userCounts.distributors,
         },
         {
           name: "Shop Managers",
           href: "/admin/users/shop-managers",
-          count: counts.shopManagers,
+          count: userCounts.shopManagers,
         },
         {
           name: "Editors",
           href: "/admin/users/editors",
-          count: counts.editors,
+          count: userCounts.editors,
         },
       ],
     },
     {
       title: "Products",
       links: [
-        { name: "Summer", href: "/admin/products/summer" },
+        {
+          name: "Summer",
+          href: "/admin/products/summer",
+          count: summerCounts.totalCount,
+        },
         { name: "Winter", href: "/admin/products/winter" },
         { name: "Industrial", href: "/admin/products/industrial" },
         { name: "Signature", href: "/admin/products/signature" },

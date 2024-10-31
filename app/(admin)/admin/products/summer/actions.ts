@@ -19,7 +19,13 @@ type TableProduct = {
 };
 
 type FetchSummerCollectionResult =
-  | { success: true; data: TableProduct[] }
+  | {
+      success: true;
+      data: TableProduct[];
+      totalCount: number;
+      publishedCount: number;
+      unpublishedCount: number;
+    }
   | { success: false; error: string };
 
 type TogglePublishResult =
@@ -33,6 +39,33 @@ export async function fetchSummerCollectionTable(): Promise<FetchSummerCollectio
     if (!user) {
       throw new Error("Unauthorized. Please log in.");
     }
+
+    // Get total counts
+    const totalCount = await prisma.product.count({
+      where: {
+        category: {
+          has: "summer-collection",
+        },
+      },
+    });
+
+    const publishedCount = await prisma.product.count({
+      where: {
+        category: {
+          has: "summer-collection",
+        },
+        isPublished: true,
+      },
+    });
+
+    const unpublishedCount = await prisma.product.count({
+      where: {
+        category: {
+          has: "summer-collection",
+        },
+        isPublished: false,
+      },
+    });
 
     // Only fetch necessary fields for table display
     const products = await prisma.product.findMany({
@@ -52,6 +85,7 @@ export async function fetchSummerCollectionTable(): Promise<FetchSummerCollectio
             color: true,
             size: true,
             quantity: true,
+            variationImageURL: true,
           },
         },
       },
@@ -70,7 +104,13 @@ export async function fetchSummerCollectionTable(): Promise<FetchSummerCollectio
       createdAt: product.createdAt,
     }));
 
-    return { success: true, data: tableProducts };
+    return {
+      success: true,
+      data: tableProducts,
+      totalCount,
+      publishedCount,
+      unpublishedCount,
+    };
   } catch (error) {
     console.error("Error fetching summer collection for table:", error);
     return {
