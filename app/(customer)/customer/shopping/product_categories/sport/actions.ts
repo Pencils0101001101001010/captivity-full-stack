@@ -28,17 +28,15 @@ type FetchSportCollectionResult =
 
 export async function fetchSportCollection(): Promise<FetchSportCollectionResult> {
   try {
-    // Validate user session
     const { user } = await validateRequest();
     if (!user) {
       throw new Error("Unauthorized. Please log in.");
     }
 
-    // Fetch sport collection products with all relations
     const products = await prisma.product.findMany({
       where: {
         category: {
-          has: "sport-collection", // Changed from summer to winter
+          has: "sport-collection",
         },
         isPublished: true,
       },
@@ -49,7 +47,6 @@ export async function fetchSportCollection(): Promise<FetchSportCollectionResult
       },
     });
 
-    // Categorize products
     const categorizedProducts: CategorizedProducts = {
       "sport-collection": [],
     };
@@ -57,13 +54,13 @@ export async function fetchSportCollection(): Promise<FetchSportCollectionResult
     const processedProductIds = new Set<string>();
 
     products.forEach(product => {
-     if (!processedProductIds.has(product.id)) {
-      categorizedProducts["sport-collection"].push(product);
-     } 
+      if (!processedProductIds.has(product.id)) {
+        categorizedProducts["sport-collection"].push(product);
+        processedProductIds.add(product.id);
+      }
     });
 
-    // Revalidate the products page
-    revalidatePath("/customer/shopping/product_categories/sport"); 
+    revalidatePath("/customer/shopping/product_categories/sport");
 
     return { success: true, data: categorizedProducts };
   } catch (error) {
