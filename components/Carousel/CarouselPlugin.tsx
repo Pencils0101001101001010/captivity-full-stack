@@ -4,7 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 
-const images = [
+// Define interface for carousel images
+interface CarouselImage {
+  src: string;
+  title: string;
+  link: string;
+}
+
+// Type the images array
+const images: CarouselImage[] = [
   {
     src: "/alaska-puffer.jpg",
     title: "Alaska Puffer Jacket",
@@ -29,7 +37,8 @@ const images = [
 
 export default function CarouselPlugin() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const intervalRef = useRef(null);
+  // Properly type the interval ref
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const startCarousel = () => {
     intervalRef.current = setInterval(() => {
@@ -38,7 +47,9 @@ export default function CarouselPlugin() {
   };
 
   const stopCarousel = () => {
-    clearInterval(intervalRef.current);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
   };
 
   useEffect(() => {

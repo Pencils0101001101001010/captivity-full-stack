@@ -1,11 +1,24 @@
-// components/SortDropdown.js
-import { useState } from "react";
+import { useState, ChangeEvent } from "react";
 
-const SortDropdown = ({ onSortChange }) => {
-  const [selectedOption, setSelectedOption] = useState("popularity");
+// Define the possible sort values
+type SortOption =
+  | "popularity"
+  | "rating"
+  | "latest"
+  | "priceLowToHigh"
+  | "priceHighToLow";
 
-  const handleSortChange = (e) => {
-    const sortValue = e.target.value;
+// Define props interface
+interface SortDropdownProps {
+  onSortChange: (value: SortOption) => void;
+}
+
+const SortDropdown: React.FC<SortDropdownProps> = ({ onSortChange }) => {
+  const [selectedOption, setSelectedOption] =
+    useState<SortOption>("popularity");
+
+  const handleSortChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const sortValue = e.target.value as SortOption;
     setSelectedOption(sortValue);
     onSortChange(sortValue); // Notify the parent component about the change
   };
@@ -17,7 +30,7 @@ const SortDropdown = ({ onSortChange }) => {
       </label>
       <select
         id="sort"
-        className="bg-gray-200  rounded-md p-2"
+        className="bg-gray-200 rounded-md p-2"
         value={selectedOption}
         onChange={handleSortChange}
       >
