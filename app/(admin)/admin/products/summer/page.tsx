@@ -1,5 +1,9 @@
 import React from "react";
-import { fetchSummerCollectionTable } from "./actions";
+import {
+  fetchSummerCollectionTable,
+  toggleProductPublish,
+  deleteProduct,
+} from "./actions";
 import ProductTableWrapper from "../_components/ProductTableWrapper";
 
 export default async function SummerTablePage() {
@@ -9,5 +13,13 @@ export default async function SummerTablePage() {
     return <div>Error: {result.error}</div>;
   }
 
-  return <ProductTableWrapper initialProducts={result.data} />;
+  return (
+    <div className="m-8">
+      <ProductTableWrapper
+        products={result.data}
+        onTogglePublish={toggleProductPublish}
+        onDelete={deleteProduct}
+      />
+    </div>
+  );
 }

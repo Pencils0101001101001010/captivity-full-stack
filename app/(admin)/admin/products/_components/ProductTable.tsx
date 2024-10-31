@@ -132,7 +132,7 @@ export default function ProductTable({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">{collectionName} Products</h2>
+        <h2 className="text-4xl font-bold">{collectionName} Products</h2>
         <TableFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -141,7 +141,7 @@ export default function ProductTable({
         />
       </div>
 
-      <div className="border rounded-md">
+      <div className="border rounded-md m-8 ">
         <Table>
           <ProductTableHeader
             sortField={sortField}

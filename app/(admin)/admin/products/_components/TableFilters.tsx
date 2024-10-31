@@ -35,7 +35,7 @@ export function TableFilters({
         />
       </div>
       <Select value={filterPublished} onValueChange={onFilterChange}>
-        <SelectTrigger className="w-40">
+        <SelectTrigger className="w-40 border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 focus:ring-blue-500">
           <SelectValue placeholder="Filter by status" />
         </SelectTrigger>
         <SelectContent>
