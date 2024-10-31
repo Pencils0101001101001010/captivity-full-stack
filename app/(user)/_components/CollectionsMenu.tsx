@@ -14,16 +14,16 @@ export function CollectionsMenu({ products, loading }: CollectionsMenuProps) {
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
 
   const collections = [
-    "Signature",
-    "Camo",
-    "Winter",
-    "Baseball",
-    "Fashion",
-    "Sport",
-    "Industrial",
-    "Leisure",
-    "Kids",
-    "African",
+    "Signature Collection",
+    "Baseball Collection",
+    "Fashion Collection",
+    "Leisure Collection",
+    "Sport Collection",
+    "Industrial Collection",
+    "Camo Collection",
+    "Winter Collection",
+    "Kid's Collection",
+    "African Collection",
   ];
 
   return (
@@ -32,7 +32,7 @@ export function CollectionsMenu({ products, loading }: CollectionsMenuProps) {
         onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
         className="flex items-center  cursor-pointer mb-4"
       >
-        <h2 className="text-gray-700 text-xl hidden lg:block font-bold p-[2px] ">COLLECTIONS</h2>
+        <h2 className="text-gray-700 text-xl hidden lg:block font-bold p-[2px] ">All Collections</h2>
         <ChevronDown
           className={`h-5 w-5 hidden lg:block transform transition-transform ${
             isCollectionsOpen ? "rotate-180" : ""
