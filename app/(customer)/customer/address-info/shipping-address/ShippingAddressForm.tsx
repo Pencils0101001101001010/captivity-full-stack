@@ -123,7 +123,7 @@ export default function BillingAddressForm() {
       <div className="flex items-center justify-between mb-6 ">
         <span>
           {" "}
-          <h2 className="text-2xl font-bold ">Shipping Address</h2>
+          <h2 className="text-2xl text-red-500 font-bold ">Shipping Address</h2>
           <span>
             {isLoadingPreviousOrder && <span>Loading previous data...</span>}
           </span>
@@ -348,7 +348,12 @@ export default function BillingAddressForm() {
             )}
           />
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          <Button
+            variant="destructive"
+            type="submit"
+            className="w-full"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

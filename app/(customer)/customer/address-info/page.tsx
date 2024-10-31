@@ -19,7 +19,7 @@ const AddressSelectionPage = () => {
       <div className="mx-auto max-w-4xl">
         <div className="flex items-center justify-between mb-7">
           <span>
-            <h1 className="text-2xl font-semibold text-gray-700  ">
+            <h1 className="text-2xl font-semibold text-red-500  ">
               Address Info
             </h1>
           </span>
@@ -42,7 +42,7 @@ const AddressSelectionPage = () => {
               <CardDescription>Manage your billing information</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button asChild variant="default" className="w-full">
+              <Button asChild variant="destructive" className="w-full">
                 <Link href="/customer/address-info/billing-address">
                   Add Billing Address
                 </Link>
@@ -61,7 +61,7 @@ const AddressSelectionPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button asChild variant="default" className="w-full">
+              <Button asChild variant="destructive" className="w-full">
                 <Link href="/customer/address-info/shipping-address">
                   Add Shipping Address
                 </Link>

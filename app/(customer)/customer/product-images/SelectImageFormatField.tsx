@@ -26,11 +26,11 @@ const SelectImageFormatField = () => {
       <Header />
       <CardHeader className="px-0">
         <CardTitle className="text-3xl font-bold tracking-tight">
-          <div className="flex justify-between items-center">
-            <>Product Images</>
-            <>
+          <div className="flex justify-between  items-center">
+            <span className="text-red-500">Product Images</span>
+            <span className="hover:bg-neutral-100 p-2">
               <BackToCustomerPage />
-            </>
+            </span>
           </div>
         </CardTitle>
       </CardHeader>
@@ -49,7 +49,9 @@ const SelectImageFormatField = () => {
                 <h3 className="text-xl font-semibold">{link.title}</h3>
                 <p className="text-muted-foreground">{link.description}</p>
                 <a href={link.href} target="_blank" rel="noopener noreferrer">
-                  <Button className="w-full mt-4">View Collection</Button>
+                  <Button variant="destructive" className="w-full mt-4">
+                    View Collection
+                  </Button>
                 </a>
               </div>
             </CardContent>

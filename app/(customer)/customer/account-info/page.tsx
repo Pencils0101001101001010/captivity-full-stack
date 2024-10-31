@@ -19,9 +19,9 @@ export default async function AccountPage() {
   return (
     <div className="max-w-4xl container mx-auto py-8">
       <Header />
-      <div className="flex items-center justify-between mb-7">
+      <div className="flex  items-center justify-between mb-7">
         <span>
-          <h1 className="text-2xl font-semibold text-gray-700  ">
+          <h1 className="text-2xl font-semibold text-red-500">
             Account Settings
           </h1>
         </span>
