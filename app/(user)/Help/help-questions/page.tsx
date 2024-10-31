@@ -6,14 +6,33 @@ import { FaRegWindowMinimize } from "react-icons/fa";
 import Link from "next/link";
 import Modal from "./help-modal";
 
+type QuestionId =
+  | "q1"
+  | "q2"
+  | "q3"
+  | "q4"
+  | "q5"
+  | "q6"
+  | "q7"
+  | "q8"
+  | "q9"
+  | "q10"
+  | "q11"
+  | "q12"
+  | "q13"
+  | "q14"
+  | "q15"
+  | "q16"
+  | "q17";
+
 const Questions = () => {
-  const [openQuestion, setOpenQuestion] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [openQuestion, setOpenQuestion] = useState<QuestionId | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+  const openModal = (): void => setIsModalOpen(true);
+  const closeModal = (): void => setIsModalOpen(false);
 
-  const toggleContent = (question) => {
+  const toggleContent = (question: QuestionId): void => {
     setOpenQuestion(openQuestion === question ? null : question);
   };
 

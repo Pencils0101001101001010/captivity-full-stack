@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 import Questions from "./help-questions/page";
 
+// Define interfaces for form data
 interface HelpMeItem {
   id: number;
   selectedOption: string;
@@ -18,6 +19,15 @@ interface FormData {
   generalInfo: string[];
 }
 
+// Define interface for form errors
+interface FormErrors {
+  name?: string;
+  companyName?: string;
+  email?: string;
+  assistance?: string;
+  [key: string]: string | undefined; // Allow for additional error fields
+}
+
 const Page = () => {
   const initialFormData: FormData = {
     name: "",
@@ -30,8 +40,8 @@ const Page = () => {
   };
 
   const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [errors, setErrors] = useState({});
-  const [selectedOption, setSelectedOption] = useState("");
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [selectedOption, setSelectedOption] = useState<string>("");
   const [items, setItems] = useState<HelpMeItem[]>([
     { id: 1, selectedOption: "", text: "" },
   ]);
@@ -45,7 +55,7 @@ const Page = () => {
     };
 
     setErrors(tempErrors);
-    return Object.values(tempErrors).every((error) => !error);
+    return Object.values(tempErrors).every(error => !error);
   };
 
   const handleChange = (
@@ -54,7 +64,7 @@ const Page = () => {
     >
   ) => {
     const { name, value } = e.target as { name: keyof FormData; value: string };
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -80,7 +90,7 @@ const Page = () => {
     id: number,
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
-    const newItems = items.map((item) =>
+    const newItems = items.map(item =>
       item.id === id ? { ...item, selectedOption: e.target.value } : item
     );
     setItems(newItems);
@@ -90,7 +100,7 @@ const Page = () => {
     id: number,
     e: React.ChangeEvent<HTMLTextAreaElement>
   ) => {
-    const newItems = items.map((item) =>
+    const newItems = items.map(item =>
       item.id === id ? { ...item, text: e.target.value } : item
     );
     setItems(newItems);
@@ -98,11 +108,11 @@ const Page = () => {
 
   const addItem = () => {
     const newItem = { id: items.length + 1, selectedOption: "", text: "" };
-    setItems((prev) => [...prev, newItem]);
+    setItems(prev => [...prev, newItem]);
   };
 
   const removeItem = (id: number) => {
-    const newItems = items.filter((item) => item.id !== id);
+    const newItems = items.filter(item => item.id !== id);
     setItems(newItems);
   };
 
@@ -112,11 +122,11 @@ const Page = () => {
   ) => {
     const newSuggestions = [...formData.suggestions];
     newSuggestions[index] = e.target.value;
-    setFormData((prev) => ({ ...prev, suggestions: newSuggestions }));
+    setFormData(prev => ({ ...prev, suggestions: newSuggestions }));
   };
 
   const handleAddTextarea = () => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       suggestions: [...prev.suggestions, ""],
     }));
@@ -124,7 +134,7 @@ const Page = () => {
 
   const handleRemoveTextarea = (index: number) => {
     const newSuggestions = formData.suggestions.filter((_, i) => i !== index);
-    setFormData((prev) => ({ ...prev, suggestions: newSuggestions }));
+    setFormData(prev => ({ ...prev, suggestions: newSuggestions }));
   };
 
   const handleGeneralInfoTextAreaChange = (
@@ -133,11 +143,11 @@ const Page = () => {
   ) => {
     const newGeneralInfo = [...formData.generalInfo];
     newGeneralInfo[index] = e.target.value;
-    setFormData((prev) => ({ ...prev, generalInfo: newGeneralInfo }));
+    setFormData(prev => ({ ...prev, generalInfo: newGeneralInfo }));
   };
 
   const handleAddGeneralInfoTextArea = () => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       generalInfo: [...prev.generalInfo, ""],
     }));
@@ -145,13 +155,13 @@ const Page = () => {
 
   const handleRemoveGeneralInfoTextArea = (index: number) => {
     const newGeneralInfo = formData.generalInfo.filter((_, i) => i !== index);
-    setFormData((prev) => ({ ...prev, generalInfo: newGeneralInfo }));
+    setFormData(prev => ({ ...prev, generalInfo: newGeneralInfo }));
   };
 
-  const handleSelectChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const { value } = e.target;
     setSelectedOption(value);
-    setFormData((prev) => ({ ...prev, assistance: value }));
+    setFormData(prev => ({ ...prev, assistance: value }));
   };
 
   return (
@@ -218,8 +228,7 @@ const Page = () => {
               <select
                 name="assistance"
                 value={formData.assistance}
-                onClick={handleSelectChange}
-                onChange={handleChange}
+                onChange={handleSelectChange}
                 className={`mt-1 block w-full hover:shadow-md hover:cursor-pointer transition duration-400  hover:bg-gray-300 bg-gray-200 h-10 ${errors.assistance ? "border-l-2 border-l-red-500" : "border-gray-300"}  py-2 px-3 shadow-sm focus:outline-none `}
               >
                 <option value="Suggestions">Suggestions</option>
@@ -247,7 +256,7 @@ const Page = () => {
                           <textarea
                             name={`suggestions-${index}`}
                             value={suggestion}
-                            onChange={(e) => handleTextareaChange(index, e)}
+                            onChange={e => handleTextareaChange(index, e)}
                             placeholder="e.g. feature request, improvement, other"
                             className="w-full p-4 h-32 bg-gray-200"
                           ></textarea>
@@ -275,7 +284,7 @@ const Page = () => {
 
             {selectedOption === "HelpMe" && (
               <div className="mt-5">
-                {items.map((item) => (
+                {items.map(item => (
                   <div key={item.id}>
                     <label className="text-sm text-gray-500">
                       Please help me with...
@@ -288,7 +297,7 @@ const Page = () => {
                         <select
                           className={`mt-1 block w-full hover:shadow-md hover:cursor-pointer transition duration-400 hover:bg-gray-300 bg-gray-200 h-10 ${errors.assistance ? "border-l-2 border-l-red-500" : "border-gray-300"}  py-2 px-3 shadow-sm focus:outline-none `}
                           value={item.selectedOption}
-                          onChange={(e) => handleOptionChange(item.id, e)}
+                          onChange={e => handleOptionChange(item.id, e)}
                         >
                           <option value="">Select an option</option>
                           <option value="Updating my information">
@@ -312,7 +321,7 @@ const Page = () => {
                           <textarea
                             className="w-full p-4 h-32 bg-gray-200 hover:bg-gray-300 transition duration-400"
                             value={item.text}
-                            onChange={(e) => handleTextChange(item.id, e)}
+                            onChange={e => handleTextChange(item.id, e)}
                             placeholder="Type here..."
                           ></textarea>
                         </div>
@@ -351,7 +360,7 @@ const Page = () => {
                           <textarea
                             name={`generalInfo-${index}`}
                             value={generalInfo}
-                            onChange={(e) =>
+                            onChange={e =>
                               handleGeneralInfoTextAreaChange(index, e)
                             }
                             placeholder="e.g. feature request, improvement, other"
