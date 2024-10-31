@@ -82,15 +82,21 @@ export function useMenuItems() {
     {
       title: "Products",
       links: [
-        { name: "All Products", href: "/admin/products" },
+        { name: "Summer", href: "/admin/products/summer" },
+        { name: "Winter", href: "/admin/products/winter" },
+        { name: "Industrial", href: "/admin/products/industrial" },
+        { name: "Signature", href: "/admin/products/signature" },
+        { name: "Camo", href: "/admin/products/camo" },
         { name: "Add Product", href: "/admin/products/create" },
       ],
     },
     {
       title: "Categories",
       links: [
-        { name: "All Categories", href: "/admin/categories" },
-        { name: "Add Category", href: "/admin/categories/add" },
+        { name: "Headwear", href: "/admin/categories/headwear" },
+        { name: "Apparel", href: "/admin/categories/apparel" },
+        { name: "All-Collections", href: "/admin/categories/all-collections" },
+        { name: "Un-Categorized", href: "/admin/categories/no-categories" },
       ],
     },
     {
