@@ -1,23 +1,9 @@
+// components/ProductTableWrapper.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
+import { ProductTableWrapperProps, TableProduct } from "../_types/table";
 import ProductTable from "./ProductTable";
-import { TableProduct } from "../_types/table";
-
-type TogglePublishResult =
-  | { success: true; message: string }
-  | { success: false; error: string };
-
-type DeleteResult = {
-  success: boolean;
-  message: string;
-};
-
-interface ProductTableWrapperProps {
-  products: TableProduct[];
-  onTogglePublish: (productId: string) => Promise<TogglePublishResult>;
-  onDelete: (productId: string) => Promise<DeleteResult>;
-}
 
 export default function ProductTableWrapper({
   products,

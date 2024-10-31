@@ -1,5 +1,4 @@
 "use client";
-
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import {
@@ -9,14 +8,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
 interface TableFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   filterPublished: "all" | "published" | "unpublished";
   onFilterChange: (value: "all" | "published" | "unpublished") => void;
 }
-
 export function TableFilters({
   searchTerm,
   onSearchChange,
@@ -25,25 +22,30 @@ export function TableFilters({
 }: TableFiltersProps) {
   return (
     <div className="flex items-center gap-4">
+      {" "}
       <div className="flex items-center gap-2">
-        <Search className="w-4 h-4 text-gray-500" />
+        {" "}
+        <Search className="w-4 h-4 text-gray-500" />{" "}
         <Input
           placeholder="Search products..."
           value={searchTerm}
           onChange={e => onSearchChange(e.target.value)}
           className="w-64"
-        />
-      </div>
+        />{" "}
+      </div>{" "}
       <Select value={filterPublished} onValueChange={onFilterChange}>
+        {" "}
         <SelectTrigger className="w-40 border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 focus:ring-blue-500">
-          <SelectValue placeholder="Filter by status" />
-        </SelectTrigger>
+          {" "}
+          <SelectValue placeholder="Filter by status" />{" "}
+        </SelectTrigger>{" "}
         <SelectContent>
-          <SelectItem value="all">All Products</SelectItem>
-          <SelectItem value="published">Published Only</SelectItem>
-          <SelectItem value="unpublished">Unpublished Only</SelectItem>
-        </SelectContent>
-      </Select>
+          {" "}
+          <SelectItem value="all">All Products</SelectItem>{" "}
+          <SelectItem value="published">Published Only</SelectItem>{" "}
+          <SelectItem value="unpublished">Unpublished Only</SelectItem>{" "}
+        </SelectContent>{" "}
+      </Select>{" "}
     </div>
   );
 }

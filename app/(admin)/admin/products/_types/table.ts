@@ -1,3 +1,5 @@
+// types/table.ts
+
 import {
   Product,
   DynamicPricing,
@@ -5,10 +7,9 @@ import {
   FeaturedImage,
 } from "@prisma/client";
 
-export type TableVariation = {
+// Base product variation type matching your Prisma schema
+export interface TableVariation {
   id: string;
-  productId: string;
-  productName: string; // From parent product
   name: string;
   color: string;
   size: string;
@@ -16,13 +17,22 @@ export type TableVariation = {
   sku2: string;
   variationImageURL: string;
   quantity: number;
-  sellingPrice: number; // From parent product
-  isPublished: boolean; // From parent product
-  createdAt: Date; // From parent product
-};
+  productId: string;
+}
 
+// Base product type for table display
+export interface TableProduct {
+  id: string;
+  productName: string;
+  sellingPrice: number;
+  variations: TableVariation[];
+  isPublished: boolean;
+  createdAt: Date;
+}
+
+// Props for the ProductTable component
 export interface ProductTableProps {
-  products: TableVariation[];
+  products: TableProduct[];
   collectionName: string;
   onTogglePublish: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
@@ -30,6 +40,24 @@ export interface ProductTableProps {
   onView: (id: string) => void;
 }
 
+// Props for the ProductTableWrapper component
+export interface ProductTableWrapperProps {
+  products: TableProduct[];
+  onTogglePublish: (productId: string) => Promise<TogglePublishResult>;
+  onDelete: (productId: string) => Promise<DeleteResult>;
+}
+
+// Response types for server actions
+export type TogglePublishResult =
+  | { success: true; message: string }
+  | { success: false; error: string };
+
+export type DeleteResult = {
+  success: boolean;
+  message: string;
+};
+
+// Type for a product with all its Prisma relations
 export type ProductWithRelations = Product & {
   dynamicPricing: DynamicPricing[];
   variations: Variation[];

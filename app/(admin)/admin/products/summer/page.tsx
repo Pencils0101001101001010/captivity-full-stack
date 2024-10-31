@@ -1,3 +1,4 @@
+// pages/SummerTablePage.tsx
 import React from "react";
 import {
   fetchSummerCollectionTable,
