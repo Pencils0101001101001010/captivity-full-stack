@@ -16,15 +16,7 @@ type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
-type Category =
-  | "men"
-  | "women"
-  | "kids"
-  | "hats"
-  | "golfers"
-  | "bottoms"
-  | "caps"
-  | "uncategorised";
+type Category = "sport-collection";
 
 type CategorizedProducts = {
   [key in Category]: ProductWithRelations[];
@@ -59,27 +51,19 @@ export async function fetchSportCollection(): Promise<FetchSportCollectionResult
 
     // Categorize products
     const categorizedProducts: CategorizedProducts = {
-      men: [],
-      women: [],
-      kids: [],
-      hats: [],
-      golfers: [],
-      bottoms: [],
-      caps: [],
-      uncategorised: [],
+      "sport-collection": [],
     };
 
+    const processedProductIds = new Set<string>();
+
     products.forEach(product => {
-      const categories = product.category as string[];
-      categories.forEach(category => {
-        if (category in categorizedProducts) {
-          categorizedProducts[category as Category].push(product);
-        }
-      });
+     if (!processedProductIds.has(product.id)) {
+      categorizedProducts["sport-collection"].push(product);
+     } 
     });
 
     // Revalidate the products page
-    revalidatePath("/customer/shopping/sport"); // Changed from summer to winter
+    revalidatePath("/customer/shopping/product_categories/sport"); 
 
     return { success: true, data: categorizedProducts };
   } catch (error) {

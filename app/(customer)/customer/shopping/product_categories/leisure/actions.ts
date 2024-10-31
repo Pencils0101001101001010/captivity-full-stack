@@ -16,15 +16,16 @@ type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
-type Category =
-  | "men"
-  | "women"
-  | "kids"
-  | "hats"
-  | "golfers"
-  | "bottoms"
-  | "caps"
-  | "uncategorised";
+type Category = "leisure-collection";
+
+// | "men"
+  // | "women"
+  // | "kids"
+  // | "hats"
+  // | "golfers"
+  // | "bottoms"
+  // | "caps"
+  // | "uncategorised";
 
 type CategorizedProducts = {
   [key in Category]: ProductWithRelations[];
@@ -46,7 +47,7 @@ export async function fetchLeisureCollection(): Promise<FetchLeisureCollectionRe
     const products = await prisma.product.findMany({
       where: {
         category: {
-          has: "leisure-collection", // Changed from summer to leisure
+          has: "leisure-collection",
         },
         isPublished: true,
       },
@@ -59,27 +60,28 @@ export async function fetchLeisureCollection(): Promise<FetchLeisureCollectionRe
 
     // Categorize products
     const categorizedProducts: CategorizedProducts = {
-      men: [],
-      women: [],
-      kids: [],
-      hats: [],
-      golfers: [],
-      bottoms: [],
-      caps: [],
-      uncategorised: [],
+      "leisure-collection": [],
+      // men: [],
+      // women: [],
+      // kids: [],
+      // hats: [],
+      // golfers: [],
+      // bottoms: [],
+      // caps: [],
+      // uncategorised: [],
     };
 
+    const processedProductIds = new Set<string>();
+
     products.forEach(product => {
-      const categories = product.category as string[];
-      categories.forEach(category => {
-        if (category in categorizedProducts) {
-          categorizedProducts[category as Category].push(product);
-        }
-      });
+      if (!processedProductIds.has(product.id)) {
+        categorizedProducts["leisure-collection"].push(product);
+        processedProductIds.add(product.id);
+      }
     });
 
     // Revalidate the products page
-    revalidatePath("/customer/shopping/leisure"); // Changed from summer to winter
+    revalidatePath("/customer/shopping/product_categories/leisure"); // Changed from summer to winter
 
     return { success: true, data: categorizedProducts };
   } catch (error) {

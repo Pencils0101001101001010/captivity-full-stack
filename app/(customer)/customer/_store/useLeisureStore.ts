@@ -14,20 +14,10 @@ export type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
-export type Category =
-  | "men"
-  | "women"
-  | "kids"
-  | "hats"
-  | "golfers"
-  | "bottoms"
-  | "caps"
-  | "uncategorised"
-  | "bucket-hats";
+export type Category = "leisure-collection";
 
-export type CategorizedProducts = {
-  [key in Category]: ProductWithRelations[];
-};
+export type CategorizedProducts = Record<Category, ProductWithRelations[]>;
+
 
 interface LeisureState {
   leisureProducts: CategorizedProducts;
@@ -50,26 +40,27 @@ interface LeisureActions {
 
 const initialState: LeisureState = {
   leisureProducts: {
-    men: [],
-    women: [],
-    kids: [],
-    hats: [],
-    golfers: [],
-    bottoms: [],
-    caps: [],
-    "bucket-hats": [],
-    uncategorised: [],
+    "leisure-collection": [],    // men: [],
+    // women: [],
+    // kids: [],
+    // hats: [],
+    // golfers: [],
+    // bottoms: [],
+    // caps: [],
+    // "bucket-hats": [],
+    // uncategorised: [],
   },
   filteredProducts: {
-    men: [],
-    women: [],
-    kids: [],
-    hats: [],
-    golfers: [],
-    bottoms: [],
-    caps: [],
-    "bucket-hats": [],
-    uncategorised: [],
+    "leisure-collection": [],
+    // men: [],
+    // women: [],
+    // kids: [],
+    // hats: [],
+    // golfers: [],
+    // bottoms: [],
+    // caps: [],
+    // "bucket-hats": [],
+    // uncategorised: [],
   },
   searchQuery: "",
   loading: false,
@@ -98,20 +89,22 @@ const useLeisureStore = create<LeisureState & LeisureActions>()((set, get) => ({
     }
 
     const lowercaseQuery = query.toLowerCase().trim();
-    const filtered = Object.entries(leisureProducts).reduce(
-      (acc, [category, products]) => {
-        const filteredProducts = products.filter(
+    const filtered: CategorizedProducts = Object.keys(leisureProducts).reduce(
+      (acc, category) => {
+        const categoryProducts = leisureProducts[category as Category];
+        const filteredCategoryProducts = categoryProducts.filter(
           product =>
-            product.productName.toLowerCase().includes(lowercaseQuery) ||
-            product.description?.toLowerCase().includes(lowercaseQuery) ||
-            product.variations.some(variation =>
-              variation.name.toLowerCase().includes(lowercaseQuery)
-            )
+          [
+            product.productName.toLowerCase(),
+            product.description?.toLowerCase() || "",
+            ...product.variations.map(v => v.name.toLowerCase()),
+            ...product.category.map(c => c.toLowerCase()),
+          ].some(text => text.includes(lowercaseQuery))
         );
 
         return {
           ...acc,
-          [category]: filteredProducts,
+          [category]: filteredCategoryProducts,
         };
       },
       {} as CategorizedProducts
