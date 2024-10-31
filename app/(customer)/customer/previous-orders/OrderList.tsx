@@ -62,7 +62,7 @@ const OrderHistory = ({
 }) => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [orders, setOrders] = useState<Order[]>(initialOrders || []);
-  const [loading, setLoading] = useState(false);
+  const [isLoadingPreviousOrder, setIsLoadingPreviousOrder] = useState(true);
   const [error, setError] = useState<string>();
   const [searchParams, setSearchParams] = useState<OrderSearchParams>({
     page: 1,
@@ -91,7 +91,7 @@ const OrderHistory = ({
   const fetchOrders = useCallback(async () => {
     if (!userId) return;
 
-    setLoading(true);
+    setIsLoadingPreviousOrder(true);
     setError(undefined);
 
     try {
@@ -114,7 +114,7 @@ const OrderHistory = ({
       setError("An unexpected error occurred");
       setOrders([]);
     } finally {
-      setLoading(false);
+      setIsLoadingPreviousOrder(false);
     }
   }, [userId, searchParams, dateRange]);
 
@@ -197,9 +197,9 @@ const OrderHistory = ({
       </div>
 
       {/* Orders List */}
-      {loading ? (
+      {isLoadingPreviousOrder ? (
         <div className="flex justify-center py-8">
-          <span className="loading loading-spinner loading-lg" />
+          Loading previous orders...
         </div>
       ) : orders.length === 0 ? (
         <Card>
