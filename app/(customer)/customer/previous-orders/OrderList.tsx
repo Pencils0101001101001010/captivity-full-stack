@@ -76,6 +76,8 @@ const OrderHistory = ({
   });
 
   // Debounced search function
+  //?   Without debounce: Searches for "j", then "ja", then "jav", then "java"... (6 separate searches!)
+  //? With debounce: Waits until you finish typing, then does one search for "javascript"
   const debouncedSearch = useCallback((value: string) => {
     const timeoutId = setTimeout(() => {
       setSearchParams(prev => ({
@@ -199,6 +201,7 @@ const OrderHistory = ({
       {/* Orders List */}
       {isLoadingPreviousOrder ? (
         <div className="flex justify-center py-8">
+          <span className="text-gray-700 loading loading-spinner loading-lg" />
           Loading previous orders...
         </div>
       ) : orders.length === 0 ? (
