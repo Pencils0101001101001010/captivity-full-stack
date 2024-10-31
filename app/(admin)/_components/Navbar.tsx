@@ -10,9 +10,9 @@ const Navbar = () => {
   const session = useSession();
 
   return (
-    <div>
+    <div className="sticky top-0 z-50">
       <nav className="bg-black text-white">
-        <div className="flex items-center justify-between text-xs mx-auto z-10 w-full py-6 px-8">
+        <div className="flex items-center justify-between text-xs mx-auto w-full py-6 px-8">
           <Link href="/admin" className="w-[170px] h-[10px] mb-5">
             <Image
               src="/captivity-logo-white.png"
@@ -71,7 +71,7 @@ const Navbar = () => {
       </nav>
 
       {/* Mobile search bar */}
-      <div className="md:hidden m-2">
+      <div className="md:hidden bg-white">
         <div className="flex items-center justify-center border-b-2 p-2">
           <input
             type="text"

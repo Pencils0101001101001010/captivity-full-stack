@@ -2,12 +2,12 @@
 
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ChevronUp, ChevronDown } from "lucide-react";
-import { TableProduct } from "../_types/table";
+import { TableVariation } from "../_types/table";
 
 interface TableHeaderProps {
-  sortField: keyof TableProduct;
+  sortField: keyof TableVariation;
   sortDirection: "asc" | "desc";
-  onSort: (field: keyof TableProduct) => void;
+  onSort: (field: keyof TableVariation) => void;
 }
 
 export function ProductTableHeader({
@@ -43,9 +43,25 @@ export function ProductTableHeader({
               <ChevronDown className="inline w-4 h-4" />
             ))}
         </TableHead>
-        <TableHead>Colors</TableHead>
-        <TableHead>Sizes</TableHead>
-        <TableHead>Total Stock</TableHead>
+        <TableHead className="cursor-pointer" onClick={() => onSort("color")}>
+          Color{" "}
+          {sortField === "color" &&
+            (sortDirection === "asc" ? (
+              <ChevronUp className="inline w-4 h-4" />
+            ) : (
+              <ChevronDown className="inline w-4 h-4" />
+            ))}
+        </TableHead>
+        <TableHead className="cursor-pointer" onClick={() => onSort("size")}>
+          Size{" "}
+          {sortField === "size" &&
+            (sortDirection === "asc" ? (
+              <ChevronUp className="inline w-4 h-4" />
+            ) : (
+              <ChevronDown className="inline w-4 h-4" />
+            ))}
+        </TableHead>
+        <TableHead>Stock</TableHead>
         <TableHead>Published</TableHead>
         <TableHead>Actions</TableHead>
       </TableRow>

@@ -9,12 +9,8 @@ import { ProductTableHeader } from "./TableHeader";
 import { TableActions } from "./TableActions";
 import { TableFilters } from "./TableFilters";
 import { TablePagination } from "./TablePagination";
-import { ProductTableProps, TableProduct } from "../_types/table";
-import {
-  calculateTotals,
-  filterProducts,
-  sortProducts,
-} from "../_utils/tableUtils";
+import { ProductTableProps, TableVariation } from "../_types/table";
+import { filterProducts, sortProducts } from "../_utils/tableUtils";
 
 export default function ProductTable({
   products,
@@ -25,7 +21,7 @@ export default function ProductTable({
   onView,
 }: ProductTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortField, setSortField] = useState<keyof TableProduct>("createdAt");
+  const [sortField, setSortField] = useState<keyof TableVariation>("createdAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [filterPublished, setFilterPublished] = useState<
     "all" | "published" | "unpublished"
@@ -40,24 +36,27 @@ export default function ProductTable({
   const handleTogglePublish = async (id: string) => {
     setLoadingToggles(prev => new Set([...prev, id]));
 
-    // Optimistic update
+    const productId = localProducts.find(v => v.id === id)?.productId;
+    if (!productId) return;
+
+    // Optimistic update for all variations of the same product
     setLocalProducts(prevProducts =>
-      prevProducts.map(product =>
-        product.id === id
-          ? { ...product, isPublished: !product.isPublished }
-          : product
+      prevProducts.map(variation =>
+        variation.productId === productId
+          ? { ...variation, isPublished: !variation.isPublished }
+          : variation
       )
     );
 
     try {
-      await onTogglePublish(id);
+      await onTogglePublish(productId);
     } catch (error) {
       // Revert on error
       setLocalProducts(prevProducts =>
-        prevProducts.map(product =>
-          product.id === id
-            ? { ...product, isPublished: !product.isPublished }
-            : product
+        prevProducts.map(variation =>
+          variation.productId === productId
+            ? { ...variation, isPublished: !variation.isPublished }
+            : variation
         )
       );
     } finally {
@@ -73,13 +72,16 @@ export default function ProductTable({
   const handleDelete = async (id: string) => {
     setLoadingDeletes(prev => new Set([...prev, id]));
 
-    // Optimistic update
+    const productId = localProducts.find(v => v.id === id)?.productId;
+    if (!productId) return;
+
+    // Optimistic update for all variations of the same product
     setLocalProducts(prevProducts =>
-      prevProducts.filter(product => product.id !== id)
+      prevProducts.filter(variation => variation.productId !== productId)
     );
 
     try {
-      await onDelete(id);
+      await onDelete(productId);
     } catch (error) {
       // Revert on error
       setLocalProducts(products);
@@ -92,17 +94,15 @@ export default function ProductTable({
     }
   };
 
-  // Update localProducts when products prop changes
   useEffect(() => {
     setLocalProducts(products);
   }, [products]);
 
-  // Reset to first page when search or filter changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, filterPublished]);
 
-  const handleSort = (field: keyof TableProduct) => {
+  const handleSort = (field: keyof TableVariation) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
@@ -112,11 +112,32 @@ export default function ProductTable({
     setCurrentPage(1);
   };
 
-  const filteredProducts = filterProducts(
-    localProducts,
-    searchTerm,
-    filterPublished
-  );
+  // Enhanced filter function
+  const filterLocalProducts = (products: TableVariation[]) => {
+    return products.filter(variation => {
+      if (filterPublished !== "all") {
+        const isPublishedMatch =
+          filterPublished === "published"
+            ? variation.isPublished
+            : !variation.isPublished;
+        if (!isPublishedMatch) return false;
+      }
+
+      if (!searchTerm) return true;
+
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        variation.productName.toLowerCase().includes(searchLower) ||
+        variation.name.toLowerCase().includes(searchLower) ||
+        variation.color.toLowerCase().includes(searchLower) ||
+        variation.size.toLowerCase().includes(searchLower) ||
+        variation.sku.toLowerCase().includes(searchLower) ||
+        variation.sku2.toLowerCase().includes(searchLower)
+      );
+    });
+  };
+
+  const filteredProducts = filterLocalProducts(localProducts);
   const sortedProducts = sortProducts(
     filteredProducts,
     sortField,
@@ -150,25 +171,21 @@ export default function ProductTable({
             onSort={handleSort}
           />
           <TableBody>
-            {paginatedProducts.map(product => {
-              const { totalQuantity, uniqueColors, uniqueSizes } =
-                calculateTotals(product.variations);
-              const isToggling = loadingToggles.has(product.id);
-              const isDeleting = loadingDeletes.has(product.id);
-              const firstVariationImage =
-                product.variations[0]?.variationImageURL;
+            {paginatedProducts.map(variation => {
+              const isToggling = loadingToggles.has(variation.id);
+              const isDeleting = loadingDeletes.has(variation.id);
 
               return (
                 <TableRow
-                  key={product.id}
+                  key={variation.id}
                   className={isDeleting ? "opacity-50" : ""}
                 >
                   <TableCell>
-                    {firstVariationImage && (
+                    {variation.variationImageURL && (
                       <div className="relative w-16 h-16 rounded-md overflow-hidden">
                         <Image
-                          src={firstVariationImage}
-                          alt={product.productName}
+                          src={variation.variationImageURL}
+                          alt={variation.name}
                           fill
                           className="object-cover"
                         />
@@ -176,31 +193,38 @@ export default function ProductTable({
                     )}
                   </TableCell>
                   <TableCell className="font-medium">
-                    {product.productName}
+                    <div>
+                      <div>{variation.productName}</div>
+                      <div className="text-sm text-gray-500">
+                        {variation.name}
+                      </div>
+                    </div>
                   </TableCell>
-                  <TableCell>R{product.sellingPrice.toFixed(2)}</TableCell>
-                  <TableCell>{uniqueColors}</TableCell>
-                  <TableCell>{uniqueSizes}</TableCell>
-                  <TableCell>{totalQuantity}</TableCell>
+                  <TableCell>R{variation.sellingPrice.toFixed(2)}</TableCell>
+                  <TableCell>{variation.color}</TableCell>
+                  <TableCell>{variation.size}</TableCell>
+                  <TableCell>{variation.quantity}</TableCell>
                   <TableCell>
                     {isToggling ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <Switch
-                        checked={product.isPublished}
-                        onCheckedChange={() => handleTogglePublish(product.id)}
+                        checked={variation.isPublished}
+                        onCheckedChange={() =>
+                          handleTogglePublish(variation.id)
+                        }
                         disabled={isToggling || isDeleting}
                       />
                     )}
                   </TableCell>
                   <TableCell>
                     <TableActions
-                      id={product.id}
+                      id={variation.productId}
                       isDeleting={isDeleting}
                       isToggling={isToggling}
                       onView={onView}
                       onEdit={onEdit}
-                      onDelete={handleDelete}
+                      onDelete={() => handleDelete(variation.id)}
                     />
                   </TableCell>
                 </TableRow>

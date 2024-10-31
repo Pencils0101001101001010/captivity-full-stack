@@ -1,39 +1,31 @@
-import { TableProduct } from "../_types/table";
-
-export const calculateTotals = (variations: TableProduct["variations"]) => {
-  const totalQuantity = variations.reduce(
-    (sum, var_) => sum + var_.quantity,
-    0
-  );
-  const uniqueColors = new Set(variations.map(var_ => var_.color)).size;
-  const uniqueSizes = new Set(variations.map(var_ => var_.size)).size;
-  return { totalQuantity, uniqueColors, uniqueSizes };
-};
+import { TableVariation } from "../_types/table";
 
 export const filterProducts = (
-  products: TableProduct[],
+  products: TableVariation[],
   searchTerm: string,
   filterPublished: "all" | "published" | "unpublished"
 ) => {
-  return products.filter(product => {
-    const matchesSearch = product.productName
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+  return products.filter(variation => {
+    const matchesSearch =
+      variation.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      variation.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      variation.color.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      variation.size.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesPublished =
       filterPublished === "all"
         ? true
         : filterPublished === "published"
-          ? product.isPublished
-          : !product.isPublished;
+          ? variation.isPublished
+          : !variation.isPublished;
 
     return matchesSearch && matchesPublished;
   });
 };
 
 export const sortProducts = (
-  products: TableProduct[],
-  sortField: keyof TableProduct,
+  products: TableVariation[],
+  sortField: keyof TableVariation,
   sortDirection: "asc" | "desc"
 ) => {
   return [...products].sort((a, b) => {

@@ -3,6 +3,7 @@
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { TableVariation } from "../_types/table";
 
 // Types for table display
 type TableProduct = {
@@ -24,21 +25,21 @@ type TableProduct = {
   createdAt: Date;
 };
 
+type TogglePublishResult =
+  | { success: true; message: string }
+  | { success: false; error: string };
+
+// Fetch summer collection products for table
 type FetchSummerCollectionResult =
   | {
       success: true;
-      data: TableProduct[];
+      data: TableVariation[];
       totalCount: number;
       publishedCount: number;
       unpublishedCount: number;
     }
   | { success: false; error: string };
 
-type TogglePublishResult =
-  | { success: true; message: string }
-  | { success: false; error: string };
-
-// Fetch summer collection products for table
 export async function fetchSummerCollectionTable(): Promise<FetchSummerCollectionResult> {
   try {
     const { user } = await validateRequest();
@@ -46,34 +47,7 @@ export async function fetchSummerCollectionTable(): Promise<FetchSummerCollectio
       throw new Error("Unauthorized. Please log in.");
     }
 
-    // Get total counts
-    const totalCount = await prisma.product.count({
-      where: {
-        category: {
-          has: "summer-collection",
-        },
-      },
-    });
-
-    const publishedCount = await prisma.product.count({
-      where: {
-        category: {
-          has: "summer-collection",
-        },
-        isPublished: true,
-      },
-    });
-
-    const unpublishedCount = await prisma.product.count({
-      where: {
-        category: {
-          has: "summer-collection",
-        },
-        isPublished: false,
-      },
-    });
-
-    // Only fetch necessary fields for table display
+    // Get products with their variations
     const products = await prisma.product.findMany({
       where: {
         category: {
@@ -88,9 +62,13 @@ export async function fetchSummerCollectionTable(): Promise<FetchSummerCollectio
         createdAt: true,
         variations: {
           select: {
+            id: true,
+            name: true,
             color: true,
             size: true,
             quantity: true,
+            sku: true,
+            sku2: true,
             variationImageURL: true,
           },
         },
@@ -100,28 +78,33 @@ export async function fetchSummerCollectionTable(): Promise<FetchSummerCollectio
       },
     });
 
-    const tableProducts: TableProduct[] = products.map(product => ({
-      id: product.id,
-      productName: product.productName,
-      sellingPrice: product.sellingPrice,
-      variations: product.variations.map(variation => ({
-        id: `${product.id}-${variation.color}-${variation.size}`, // Generate a unique ID
-        name: `${product.productName} - ${variation.color} ${variation.size}`, // Generate a name
+    // Transform products into flattened variations
+    const tableVariations: TableVariation[] = products.flatMap(product =>
+      product.variations.map(variation => ({
+        id: variation.id,
+        productId: product.id,
+        productName: product.productName,
+        name: variation.name,
         color: variation.color,
         size: variation.size,
-        quantity: variation.quantity,
-        sku: `${product.id}-${variation.color}-${variation.size}`, // Example SKU generation
-        sku2: `V-${product.id}-${variation.color}-${variation.size}`, // Another SKU variant
+        sku: variation.sku,
+        sku2: variation.sku2,
         variationImageURL: variation.variationImageURL,
-        productId: product.id,
-      })),
-      isPublished: product.isPublished,
-      createdAt: product.createdAt,
-    }));
+        quantity: variation.quantity,
+        sellingPrice: product.sellingPrice,
+        isPublished: product.isPublished,
+        createdAt: product.createdAt,
+      }))
+    );
+
+    // Get counts
+    const totalCount = tableVariations.length;
+    const publishedCount = tableVariations.filter(v => v.isPublished).length;
+    const unpublishedCount = totalCount - publishedCount;
 
     return {
       success: true,
-      data: tableProducts,
+      data: tableVariations,
       totalCount,
       publishedCount,
       unpublishedCount,

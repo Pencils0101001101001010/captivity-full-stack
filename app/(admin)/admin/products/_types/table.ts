@@ -5,27 +5,24 @@ import {
   FeaturedImage,
 } from "@prisma/client";
 
-export type TableProduct = {
+export type TableVariation = {
   id: string;
-  productName: string;
-  sellingPrice: number;
-  variations: {
-    id: string;
-    name: string;
-    color: string;
-    size: string;
-    sku: string;
-    sku2: string;
-    variationImageURL: string; // Matches the Prisma schema
-    quantity: number;
-    productId: string;
-  }[];
-  isPublished: boolean;
-  createdAt: Date;
+  productId: string;
+  productName: string; // From parent product
+  name: string;
+  color: string;
+  size: string;
+  sku: string;
+  sku2: string;
+  variationImageURL: string;
+  quantity: number;
+  sellingPrice: number; // From parent product
+  isPublished: boolean; // From parent product
+  createdAt: Date; // From parent product
 };
 
 export interface ProductTableProps {
-  products: TableProduct[];
+  products: TableVariation[];
   collectionName: string;
   onTogglePublish: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;

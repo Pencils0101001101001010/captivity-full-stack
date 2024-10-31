@@ -1,5 +1,5 @@
+// SearchField.tsx
 "use client";
-
 import { Input } from "@/components/ui/input";
 import { SearchIcon, XIcon } from "lucide-react";
 import { useDebouncedCallback } from "use-debounce";
@@ -18,7 +18,7 @@ export default function SearchField({
 
   const debouncedSearch = useDebouncedCallback((term: string) => {
     onSearch(term);
-  }, 200); // Reduced debounce time for better responsiveness
+  }, 200);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -32,7 +32,7 @@ export default function SearchField({
   };
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <Input
         value={value}
         onChange={handleChange}

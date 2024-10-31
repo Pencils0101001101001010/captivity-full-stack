@@ -1,3 +1,4 @@
+// layout.tsx
 import { validateRequest } from "@/auth";
 import { redirect } from "next/navigation";
 import SessionProvider from "./SessionProvider";
@@ -12,16 +13,15 @@ export default async function Layout({
   const session = await validateRequest();
 
   if (!session.user) redirect("/login");
-
   if (session.user.role !== "ADMIN") redirect("/login");
 
   return (
     <SessionProvider value={session}>
-      <div className="flex min-h-screen flex-col">
+      <div className="flex h-screen flex-col overflow-hidden">
         <Navbar />
-        <div className="flex w-full grow">
+        <div className="flex flex-1 overflow-hidden">
           <Sidebar />
-          <main className="flex-grow p-2">{children}</main>
+          <main className="flex-1 overflow-y-auto p-6">{children}</main>
         </div>
       </div>
     </SessionProvider>
