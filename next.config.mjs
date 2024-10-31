@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    // If you need to disable static optimization for certain paths
-    serverActions: true,
+    serverActions: {
+      enabled: true,
+    },
   },
   images: {
     remotePatterns: [
