@@ -3,7 +3,12 @@
 import React from "react";
 import { useState } from "react";
 
-const Dropdown = ({ title, children }) => {
+interface DropdownProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+const Dropdown: React.FC<DropdownProps> = ({ title, children }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
