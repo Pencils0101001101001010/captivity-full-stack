@@ -142,7 +142,7 @@ export default function ProductTable({
         />
       </div>
 
-      <div className="border rounded-md m-8">
+      <div className="border rounded-md m-8 shadow-2xl shadow-black">
         <Table>
           <ProductTableHeader
             sortField={sortField}
