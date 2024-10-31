@@ -19,6 +19,9 @@ import {
   ChevronUp,
   ChevronDown,
   Search,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
 } from "lucide-react";
 import {
   Select,
@@ -64,6 +67,67 @@ export default function ProductTable({
   const [filterPublished, setFilterPublished] = useState<
     "all" | "published" | "unpublished"
   >("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loadingToggles, setLoadingToggles] = useState<Set<string>>(new Set());
+  const [loadingDeletes, setLoadingDeletes] = useState<Set<string>>(new Set());
+  const [localProducts, setLocalProducts] = useState(products);
+  const itemsPerPage = 6;
+
+  // Handle toggle with loading state
+  const handleTogglePublish = async (id: string) => {
+    setLoadingToggles(prev => new Set([...prev, id]));
+
+    // Optimistic update
+    setLocalProducts(prevProducts =>
+      prevProducts.map(product =>
+        product.id === id
+          ? { ...product, isPublished: !product.isPublished }
+          : product
+      )
+    );
+
+    try {
+      await onTogglePublish(id);
+    } catch (error) {
+      // Revert on error
+      setLocalProducts(prevProducts =>
+        prevProducts.map(product =>
+          product.id === id
+            ? { ...product, isPublished: !product.isPublished }
+            : product
+        )
+      );
+    } finally {
+      setLoadingToggles(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  };
+
+  // Handle delete with loading state
+  const handleDelete = async (id: string) => {
+    setLoadingDeletes(prev => new Set([...prev, id]));
+
+    // Optimistic update
+    setLocalProducts(prevProducts =>
+      prevProducts.filter(product => product.id !== id)
+    );
+
+    try {
+      await onDelete(id);
+    } catch (error) {
+      // Revert on error
+      setLocalProducts(products);
+    } finally {
+      setLoadingDeletes(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  };
 
   // Calculate totals for each product
   const calculateTotals = (variations: TableProduct["variations"]) => {
@@ -76,8 +140,13 @@ export default function ProductTable({
     return { totalQuantity, uniqueColors, uniqueSizes };
   };
 
+  // Update localProducts when products prop changes
+  React.useEffect(() => {
+    setLocalProducts(products);
+  }, [products]);
+
   // Sort and filter products
-  const filteredProducts = products
+  const filteredProducts = localProducts
     .filter(product => {
       const matchesSearch = product.productName
         .toLowerCase()
@@ -108,6 +177,14 @@ export default function ProductTable({
         : b[sortField].toString().localeCompare(a[sortField].toString());
     });
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedProducts = filteredProducts.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
   const toggleSort = (field: keyof TableProduct) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -115,7 +192,13 @@ export default function ProductTable({
       setSortField(field);
       setSortDirection("asc");
     }
+    setCurrentPage(1);
   };
+
+  // Reset to first page when search or filter changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterPublished]);
 
   return (
     <div className="space-y-4">
@@ -185,11 +268,17 @@ export default function ProductTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredProducts.map(product => {
+            {paginatedProducts.map(product => {
               const { totalQuantity, uniqueColors, uniqueSizes } =
                 calculateTotals(product.variations);
+              const isToggling = loadingToggles.has(product.id);
+              const isDeleting = loadingDeletes.has(product.id);
+
               return (
-                <TableRow key={product.id}>
+                <TableRow
+                  key={product.id}
+                  className={isDeleting ? "opacity-50" : ""}
+                >
                   <TableCell className="font-medium">
                     {product.productName}
                   </TableCell>
@@ -198,10 +287,15 @@ export default function ProductTable({
                   <TableCell>{uniqueSizes}</TableCell>
                   <TableCell>{totalQuantity}</TableCell>
                   <TableCell>
-                    <Switch
-                      checked={product.isPublished}
-                      onCheckedChange={() => onTogglePublish(product.id)}
-                    />
+                    {isToggling ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Switch
+                        checked={product.isPublished}
+                        onCheckedChange={() => handleTogglePublish(product.id)}
+                        disabled={isToggling || isDeleting}
+                      />
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -209,6 +303,7 @@ export default function ProductTable({
                         variant="ghost"
                         size="icon"
                         onClick={() => onView(product.id)}
+                        disabled={isDeleting}
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
@@ -216,17 +311,23 @@ export default function ProductTable({
                         variant="ghost"
                         size="icon"
                         onClick={() => onEdit(product.id)}
+                        disabled={isDeleting}
                       >
                         <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDelete(product.id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {isDeleting ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(product.id)}
+                          className="text-red-500 hover:text-red-700"
+                          disabled={isToggling}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -234,6 +335,49 @@ export default function ProductTable({
             })}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-sm text-gray-500">
+          Showing {startIndex + 1} to{" "}
+          {Math.min(startIndex + itemsPerPage, filteredProducts.length)} of{" "}
+          {filteredProducts.length} products
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Previous
+          </Button>
+          <div className="flex items-center gap-2">
+            {[...Array(totalPages)].map((_, i) => (
+              <Button
+                key={i}
+                variant={currentPage === i + 1 ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentPage(i + 1)}
+              >
+                {i + 1}
+              </Button>
+            ))}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setCurrentPage(page => Math.min(totalPages, page + 1))
+            }
+            disabled={currentPage === totalPages}
+          >
+            Next
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );
