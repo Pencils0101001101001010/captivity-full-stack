@@ -151,7 +151,7 @@ const Navbar = () => {
               <Link href="/apparel/category">Apparel Collection</Link>
             </li>
             <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/collections/category">All Collections</Link>
+              <Link href="/collections/category">Collections</Link>
             </li>
             <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
               <Link href="/catalogue">Catalogue</Link>
