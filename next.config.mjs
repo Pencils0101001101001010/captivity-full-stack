@@ -1,9 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    staleTimes: {
-      dynamic: 30,
-    },
+    // If you need to disable static optimization for certain paths
+    serverActions: true,
   },
   images: {
     remotePatterns: [
@@ -30,6 +29,7 @@ const nextConfig = {
     ],
   },
   serverExternalPackages: ["@node-rs/argon2"],
+  pageExtensions: ["tsx", "ts", "jsx", "js"],
 };
 
 export default nextConfig;

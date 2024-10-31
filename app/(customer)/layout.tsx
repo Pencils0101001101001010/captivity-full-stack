@@ -4,6 +4,8 @@ import SessionProvider from "./SessionProvider";
 import Navbar from "./_components/Navbar";
 import { Toaster } from "@/components/ui/toaster";
 
+export const dynamic = "force-dynamic";
+
 export default async function CustomerLayout({
   children,
 }: {
