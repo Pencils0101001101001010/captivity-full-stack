@@ -47,7 +47,7 @@ export async function fetchKidsColl(): Promise<FetchKidsCollect> {
     const errorMessage =
       error instanceof Error ? error.message : "An unexpected error occurred";
 
-    console.error(`Error fetching industrial-collection: ${errorMessage}`);
+    console.error(`Error fetching kid's-collection: ${errorMessage}`);
 
     return { success: false, error: errorMessage };
   }

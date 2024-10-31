@@ -16,16 +16,15 @@ type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
-type Category = "leisure-collection";
-
-// | "men"
-  // | "women"
-  // | "kids"
-  // | "hats"
-  // | "golfers"
-  // | "bottoms"
-  // | "caps"
-  // | "uncategorised";
+type Category =
+  | "men"
+  | "women"
+  | "kids"
+  | "hats"
+  | "golfers"
+  | "bottoms"
+  | "caps"
+  | "uncategorised";
 
 type CategorizedProducts = {
   [key in Category]: ProductWithRelations[];
@@ -37,13 +36,11 @@ type FetchLeisureCollectionResult =
 
 export async function fetchLeisureCollection(): Promise<FetchLeisureCollectionResult> {
   try {
-    // Validate user session
     const { user } = await validateRequest();
     if (!user) {
       throw new Error("Unauthorized. Please log in.");
     }
 
-    // Fetch leisure collection products with all relations
     const products = await prisma.product.findMany({
       where: {
         category: {
@@ -58,30 +55,33 @@ export async function fetchLeisureCollection(): Promise<FetchLeisureCollectionRe
       },
     });
 
-    // Categorize products
     const categorizedProducts: CategorizedProducts = {
-      "leisure-collection": [],
-      // men: [],
-      // women: [],
-      // kids: [],
-      // hats: [],
-      // golfers: [],
-      // bottoms: [],
-      // caps: [],
-      // uncategorised: [],
+      men: [],
+      women: [],
+      kids: [],
+      hats: [],
+      golfers: [],
+      bottoms: [],
+      caps: [],
+      uncategorised: [],
     };
 
     const processedProductIds = new Set<string>();
 
     products.forEach(product => {
-      if (!processedProductIds.has(product.id)) {
-        categorizedProducts["leisure-collection"].push(product);
-        processedProductIds.add(product.id);
-      }
+      if (processedProductIds.has(product.id)) return;
+
+      const categories = product.category as string[];
+      const primaryCategory =
+        (categories.find(
+          category => category in categorizedProducts
+        ) as Category) || "uncategorised";
+
+      categorizedProducts[primaryCategory].push(product);
+      processedProductIds.add(product.id);
     });
 
-    // Revalidate the products page
-    revalidatePath("/customer/shopping/product_categories/leisure"); // Changed from summer to winter
+    revalidatePath("/customer/shopping/product_categories/leisure");
 
     return { success: true, data: categorizedProducts };
   } catch (error) {

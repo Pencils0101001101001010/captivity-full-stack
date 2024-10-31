@@ -20,7 +20,7 @@ const useChildCollect = () => {
         }
       } catch (err) {
         setError(
-          "An unexpected error occurred while fetching kids collection."
+          "An unexpected error occurred while fetching kid's collection."
         );
       } finally {
         setLoading(false);

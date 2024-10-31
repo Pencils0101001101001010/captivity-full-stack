@@ -14,6 +14,7 @@ import { useIndustrialActions } from "../customer/_store/useIndustrialStore";
 import { useLeisureActions } from "../customer/_store/useLeisureStore";
 import { useSignatureActions } from "../customer/_store/useSignatureStore";
 import { useSportActions } from "../customer/_store/useSportStore";
+import { useKidsActions } from "../customer/_store/useKidsCollectionStore";
 
 
 export default function SearchField() {
@@ -24,6 +25,7 @@ export default function SearchField() {
   const { setSearchQuery: setWinterSearch } = useWinterActions();
   const { setSearchQuery: setFashionSearch } = useFashionActions();
   const { setSearchQuery: setCamoSearch } = useCamoActions();
+  const { setSearchQuery: setKidsSearch } = useKidsActions();
   const { setSearchQuery: setAfricanSearch } = useAfricanActions();
   const { setSearchQuery: setBaseballSearch } = useBaseballActions();
   const { setSearchQuery: setIndustrialSearch } = useIndustrialActions();
@@ -47,6 +49,8 @@ export default function SearchField() {
       setWinterSearch(query);
     } else if (pathname.includes("/camo")) {
       setCamoSearch(query);
+    } else if (pathname.includes("/kids")) {
+      setKidsSearch(query);
     } else if (pathname.includes("/african")) {
       setAfricanSearch(query);
     } else if (pathname.includes("/baseball")) {
@@ -73,6 +77,8 @@ export default function SearchField() {
       setWinterSearch("");
     } else if (pathname.includes("/camo")) {
       setCamoSearch("");
+    } else if (pathname.includes("/kids")) {
+      setKidsSearch("");
     } else if (pathname.includes("/african")) {
       setAfricanSearch("");
     } else if (pathname.includes("/baseball")) {
@@ -92,6 +98,7 @@ export default function SearchField() {
     setWinterSearch,
     setFashionSearch,
     setCamoSearch,
+    setKidsSearch,
     setAfricanSearch,
     setBaseballSearch,
     setIndustrialSearch,
@@ -99,7 +106,7 @@ export default function SearchField() {
     setSignatureSearch,
     setSportSearch,
   ])
-  , [pathname, setSummerSearch, setWinterSearch, setFashionSearch, setLeisureSearch, setSignatureSearch, setSportSearch];
+  , [pathname, setSummerSearch, setWinterSearch, setFashionSearch,setCamoSearch, setKidsSearch, setLeisureSearch, setSignatureSearch, setSportSearch];
 
   return (
     <form onSubmit={handleSubmit}>
