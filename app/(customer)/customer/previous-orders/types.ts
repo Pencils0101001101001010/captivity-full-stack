@@ -1,6 +1,11 @@
 // types.ts
 import { Order as PrismaOrder, OrderStatus } from "@prisma/client";
 
+export { OrderStatus } from "@prisma/client";
+
+export interface Order extends PrismaOrder {
+  orderItems: OrderItem[];
+}
 export interface Variation {
   id: string;
   name: string;
@@ -55,4 +60,18 @@ export interface ActionResponse<T = void> {
   success: boolean;
   data?: T;
   error?: string;
+  meta?: {
+    currentPage: number;
+    totalPages: number;
+    totalOrders: number;
+  };
+}
+
+export interface OrderSearchParams {
+  page?: number;
+  limit?: number;
+  status?: OrderStatus;
+  query?: string;
+  startDate?: Date;
+  endDate?: Date;
 }

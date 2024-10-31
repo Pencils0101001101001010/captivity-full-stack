@@ -1,12 +1,13 @@
 import { validateRequest } from "@/auth";
 import { redirect } from "next/navigation";
 import { getUserOrders } from "./actions";
-import { OrderHistory } from "./OrderList";
+
 import { Button } from "@/components/ui/button";
 import { SquareArrowLeft } from "lucide-react";
 import Link from "next/link";
 import BackToCustomerPage from "../_components/BackToCustomerButton";
 import Header from "../_components/Header";
+import OrderHistory from "./OrderList";
 
 export const dynamic = "force-dynamic";
 
@@ -17,10 +18,10 @@ export default async function PreviousOrdersPage() {
     redirect("/login");
   }
 
-  const { data: orders, error } = await getUserOrders(session.user.id);
+  const { data: initialOrdersData } = await getUserOrders(session.user.id);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mb-10">
       <Header />
       <div className="flex items-center justify-between mb-7">
         <span>
@@ -33,7 +34,10 @@ export default async function PreviousOrdersPage() {
           <BackToCustomerPage />
         </span>
       </div>
-      <OrderHistory orders={orders} error={error} />
+      <OrderHistory
+        userId={session.user.id}
+        initialOrders={initialOrdersData}
+      />
     </div>
   );
 }
