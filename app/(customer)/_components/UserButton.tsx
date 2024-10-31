@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Check, LogOutIcon, Monitor, Moon, Sun, UserIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
+import { useState } from "react";
 
 import UserAvatar from "./UserAvatar";
 import { useSession } from "../SessionProvider";
@@ -20,6 +21,7 @@ import {
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { Loader2 } from "lucide-react";
 
 interface UserButtonProps {
   className?: string;
@@ -27,17 +29,34 @@ interface UserButtonProps {
 
 export default function UserButton({ className }: UserButtonProps) {
   const { user } = useSession();
-
   const { theme, setTheme } = useTheme();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      setIsLoggingOut(true);
+      // Ensure the dropdown stays open during logout
+      setIsOpen(true);
+      // Add a small delay to ensure the loading state is visible
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await logout();
+    } catch (error) {
+      console.error("Logout failed:", error);
+      setIsLoggingOut(false);
+      setIsOpen(false);
+    }
+  };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <button className={cn("flex-none rounded-full", className)}>
           <UserAvatar avatarUrl={user.avatarUrl} size={40} />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
+      <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>Logged in as {user.displayName}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <Link href={`/customer`}>
@@ -73,12 +92,26 @@ export default function UserButton({ className }: UserButtonProps) {
         </DropdownMenuSub>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => {
-            logout();
-          }}
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className={cn(
+            "flex items-center justify-between",
+            isLoggingOut && "cursor-not-allowed opacity-50"
+          )}
         >
-          <LogOutIcon className="mr-2 size-4" />
-          Logout
+          <div className="flex items-center">
+            {isLoggingOut ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <span>Logging out...</span>
+              </>
+            ) : (
+              <>
+                <LogOutIcon className="mr-2 size-4" />
+                <span>Logout</span>
+              </>
+            )}
+          </div>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

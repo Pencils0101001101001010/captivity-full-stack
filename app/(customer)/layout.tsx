@@ -2,7 +2,6 @@ import { validateRequest } from "@/auth";
 import { redirect } from "next/navigation";
 import SessionProvider from "./SessionProvider";
 import Navbar from "./_components/Navbar";
-import CategoriesDropDown from "../(user)/_components/CategoriesDropDown";
 import { Toaster } from "@/components/ui/toaster";
 
 export default async function CustomerLayout({
