@@ -10,9 +10,15 @@ type TableProduct = {
   productName: string;
   sellingPrice: number;
   variations: {
+    id: string; // New
+    name: string; // New
     color: string;
     size: string;
     quantity: number;
+    sku: string; // New
+    sku2: string; // New
+    variationImageURL: string; // This was already in your original query
+    productId: string; // New
   }[];
   isPublished: boolean;
   createdAt: Date;
@@ -94,12 +100,21 @@ export async function fetchSummerCollectionTable(): Promise<FetchSummerCollectio
       },
     });
 
-    // Process products for table display
     const tableProducts: TableProduct[] = products.map(product => ({
       id: product.id,
       productName: product.productName,
       sellingPrice: product.sellingPrice,
-      variations: product.variations,
+      variations: product.variations.map(variation => ({
+        id: `${product.id}-${variation.color}-${variation.size}`, // Generate a unique ID
+        name: `${product.productName} - ${variation.color} ${variation.size}`, // Generate a name
+        color: variation.color,
+        size: variation.size,
+        quantity: variation.quantity,
+        sku: `${product.id}-${variation.color}-${variation.size}`, // Example SKU generation
+        sku2: `V-${product.id}-${variation.color}-${variation.size}`, // Another SKU variant
+        variationImageURL: variation.variationImageURL,
+        productId: product.id,
+      })),
       isPublished: product.isPublished,
       createdAt: product.createdAt,
     }));
