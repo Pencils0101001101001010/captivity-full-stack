@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Image, FileImage } from "lucide-react";
 import BackToCustomerPage from "../_components/BackToCustomerButton";
+import Header from "../_components/Header";
 
 const SelectImageFormatField = () => {
   const imageLinks = [
@@ -21,7 +22,8 @@ const SelectImageFormatField = () => {
   ];
 
   return (
-    <section className="p-8 max-w-6xl mx-auto">
+    <section className="p-8 max-w-4xl mx-auto">
+      <Header />
       <CardHeader className="px-0">
         <CardTitle className="text-3xl font-bold tracking-tight">
           <div className="flex justify-between items-center">
