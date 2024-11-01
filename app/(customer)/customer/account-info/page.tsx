@@ -7,9 +7,13 @@ import BackToCustomerPage from "../_components/BackToCustomerButton";
 import Header from "../_components/Header";
 
 export default async function AccountPage() {
-  const { user, session } = await validateRequest();
+  const { user } = await validateRequest();
 
-  if (!user || !session) {
+  if (!user) {
+    redirect("/login");
+  }
+
+  if (user.role !== "CUSTOMER") {
     redirect("/login");
   }
 
