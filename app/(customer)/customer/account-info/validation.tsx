@@ -1,3 +1,4 @@
+// app/customer/account-info/validation.ts
 import * as z from "zod";
 
 export const accountFormSchema = z
@@ -10,7 +11,7 @@ export const accountFormSchema = z
     newPassword: z
       .string()
       .optional()
-      .transform(val => (val === "" ? undefined : val)) // Convert empty string to undefined
+      .transform(val => (val === "" ? undefined : val))
       .refine(
         val => {
           if (!val) return true; // Skip validation if no password
@@ -52,4 +53,5 @@ export const accountFormSchema = z
       path: ["confirmPassword"],
     }
   );
+
 export type FormValues = z.infer<typeof accountFormSchema>;

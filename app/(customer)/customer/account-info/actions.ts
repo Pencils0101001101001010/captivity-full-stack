@@ -1,20 +1,12 @@
+// app/customer/account-info/actions.ts
 "use server";
 
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import * as argon2 from "argon2";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
-
-const updateAccountSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  displayName: z.string().min(1, "Display name is required"),
-  email: z.string().email("Invalid email address"),
-  currentPassword: z.string().optional(),
-  newPassword: z.string().optional(),
-  confirmPassword: z.string().optional(),
-});
+import { accountFormSchema } from "./validation";
+import * as z from "zod";
 
 type ActionResponse<T> = {
   success: boolean;
@@ -23,19 +15,25 @@ type ActionResponse<T> = {
 };
 
 export async function updateAccountInfo(
-  formData: z.infer<typeof updateAccountSchema>
+  formData: z.infer<typeof accountFormSchema>
 ): Promise<ActionResponse<any>> {
   try {
     // Validate input
-    const validatedData = updateAccountSchema.parse(formData);
+    const validatedData = accountFormSchema.parse(formData);
+    console.log("Validated data:", {
+      ...validatedData,
+      currentPassword: validatedData.currentPassword ? "[REDACTED]" : undefined,
+      newPassword: validatedData.newPassword ? "[REDACTED]" : undefined,
+      confirmPassword: validatedData.confirmPassword ? "[REDACTED]" : undefined,
+    });
 
     // Get current session
     const { user } = await validateRequest();
-    if (!user || user.role !== "CUSTOMER") {
+    if (!user) {
       return { success: false, error: "Not authenticated" };
     }
 
-    // Get current user with full details including password hash
+    // Get current user with full details
     const dbUser = await prisma.user.findUnique({
       where: { id: user.id },
       select: {
@@ -132,7 +130,8 @@ export async function updateAccountInfo(
     });
 
     // Revalidate relevant paths
-    revalidatePath("/account");
+    revalidatePath("/customer/account-info");
+    revalidatePath("/customer");
     revalidatePath("/");
 
     return {
@@ -140,12 +139,23 @@ export async function updateAccountInfo(
       data: updatedUser,
     };
   } catch (error: unknown) {
+    console.error("Update account error:", error);
+
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: "Invalid form data",
+        error:
+          "Invalid form data: " + error.errors.map(e => e.message).join(", "),
       };
     }
+
+    if (error instanceof Error) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
     return {
       success: false,
       error: "Failed to update account information",
