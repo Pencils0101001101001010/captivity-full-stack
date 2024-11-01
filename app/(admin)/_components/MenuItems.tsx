@@ -6,6 +6,7 @@ import { fetchSummerCollectionTable } from "../admin/products/summer/actions";
 import { fetchFashionCollectionTable } from "../admin/products/fashion/actions";
 import { fetchIndustrialCollectionTable } from "../admin/products/industrial/actions";
 import { fetchKidsCollectionTable } from "../admin/products/kids/actions";
+import { fetchAfricanCollectionTable } from "../admin/products/african/actions";
 type MenuLink = {
   name: string;
   href: string;
@@ -52,6 +53,11 @@ export function useMenuItems() {
     unpublishedCount: 0,
   });
 
+  const [africanCounts, setAfricanCounts] = useState({
+    totalCount: 0,
+    publishedCount: 0,
+    unpublishedCount: 0,
+  });
 
   useEffect(() => {
     const loadCounts = async () => {
@@ -150,6 +156,30 @@ export function useMenuItems() {
     const interval = setInterval(loadCounts, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+  const loadCounts = async () => {
+    const [userResult, africanResult] = await Promise.all([
+      fetchAllRoleCounts(),
+      fetchAfricanCollectionTable(),
+    ]);
+
+    if (userResult.success) {
+      setUserCounts(userResult.counts);
+    }
+    if (africanResult.success) {
+      setSummerCounts({
+        totalCount: africanResult.totalCount,
+        publishedCount: africanResult.publishedCount,
+        unpublishedCount: africanResult.unpublishedCount,
+      });
+    }
+    };
+  loadCounts();
+  const interval = setInterval(loadCounts, 5 * 60 * 1000);
+  return () => clearInterval(interval);
+}, []);
+
   
   const menuItems: MenuItem[] = [
     {
@@ -195,6 +225,11 @@ export function useMenuItems() {
     {
       title: "Products",
       links: [
+        {
+          name: "African",
+          href: "/admin/products/african",
+          count: africanCounts.totalCount,
+        },
         {
           name: "Fashion",
           href: "/admin/products/fashion",
