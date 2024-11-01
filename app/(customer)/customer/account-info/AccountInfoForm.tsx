@@ -20,7 +20,6 @@ import { updateAccountInfo } from "./actions";
 import { accountFormSchema, type FormValues } from "./validation";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { ErrorToast } from "./ErrorToast";
 
 export default function AccountInfoForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,7 +61,15 @@ export default function AccountInfoForm() {
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
+      console.log("Submitting form data:", {
+        ...data,
+        currentPassword: data.currentPassword ? "[REDACTED]" : undefined,
+        newPassword: data.newPassword ? "[REDACTED]" : undefined,
+        confirmPassword: data.confirmPassword ? "[REDACTED]" : undefined,
+      });
+
       const result = await updateAccountInfo(data);
+      console.log("Server response:", result);
 
       if (result.success && result.data) {
         startTransition(() => {
@@ -83,6 +90,9 @@ export default function AccountInfoForm() {
           confirmPassword: "",
         });
       } else {
+        // Log the error details
+        console.error("Update failed:", result.error);
+
         if (result.error === "Current password is incorrect") {
           form.setError("currentPassword", {
             type: "manual",
@@ -102,10 +112,17 @@ export default function AccountInfoForm() {
         });
       }
     } catch (error: any) {
-      console.error("Form submission error:", error);
+      // Log detailed error information
+      console.error("Form submission error:", {
+        message: error.message,
+        stack: error.stack,
+        error: error,
+      });
+
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description:
+          error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
