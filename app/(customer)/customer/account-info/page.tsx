@@ -1,4 +1,3 @@
-// app/customer/account-info/page.tsx
 import { Suspense } from "react";
 import { validateRequest } from "@/auth";
 import { redirect } from "next/navigation";
@@ -40,14 +39,25 @@ export default async function AccountPage() {
     );
   } catch (error) {
     console.error("Account page error:", error);
+
+    // Return a more user-friendly error UI
     return (
       <div className="max-w-4xl container mx-auto py-8">
         <Header />
-        <div className="p-4 rounded-md bg-red-50 border border-red-200">
-          <h2 className="text-red-700 text-lg font-medium">
-            Unable to load account
+        <div className="flex flex-col items-center justify-center p-4 rounded-md bg-red-50 border border-red-200 mt-8">
+          <h2 className="text-red-700 text-lg font-medium mb-2">
+            Unable to load account information
           </h2>
-          <p className="text-red-600">Please try refreshing the page</p>
+          <p className="text-red-600 text-center mb-4">
+            There was a problem loading your account information. Please try
+            refreshing the page.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+          >
+            Refresh Page
+          </button>
         </div>
       </div>
     );
