@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 export type UserRole =
   | "USER"
   | "CUSTOMER"
@@ -7,6 +9,13 @@ export type UserRole =
   | "SHOPMANAGER"
   | "EDITOR"
   | "ADMIN";
+
+export interface ToastProps {
+  title?: string;
+  description?: string | ReactNode;
+  variant?: "default" | "destructive";
+  duration?: number;
+}
 
 export interface SessionUser {
   id: string;

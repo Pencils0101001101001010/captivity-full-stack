@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import * as argon2 from "argon2";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { accountFormSchema, FormValues } from "./validation";
 
 const updateAccountSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -22,12 +23,10 @@ type ActionResponse<T> = {
   error?: string;
 };
 
-export async function updateAccountInfo(
-  formData: z.infer<typeof updateAccountSchema>
-): Promise<ActionResponse<any>> {
+export async function updateAccountInfo(formData: FormValues) {
   try {
     // Validate input
-    const validatedData = updateAccountSchema.parse(formData);
+    const validatedData = accountFormSchema.parse(formData);
 
     // Get current session
     const { user } = await validateRequest();
@@ -35,7 +34,7 @@ export async function updateAccountInfo(
       return { success: false, error: "Not authenticated" };
     }
 
-    // Get current user with full details including password hash
+    // Get current user
     const dbUser = await prisma.user.findUnique({
       where: { id: user.id },
       select: {
@@ -46,7 +45,6 @@ export async function updateAccountInfo(
         firstName: true,
         lastName: true,
         displayName: true,
-        avatarUrl: true,
       },
     });
 
@@ -79,44 +77,22 @@ export async function updateAccountInfo(
     // Handle password update
     if (validatedData.newPassword && validatedData.currentPassword) {
       if (!dbUser.passwordHash) {
-        return {
-          success: false,
-          error: "No password set for this account",
-        };
+        return { success: false, error: "No password set for this account" };
       }
 
-      try {
-        const cleanHash = dbUser.passwordHash.trim();
+      const isValidPassword = await argon2.verify(
+        dbUser.passwordHash,
+        validatedData.currentPassword
+      );
 
-        // Verify current password
-        const isValidPassword = await argon2.verify(
-          cleanHash,
-          validatedData.currentPassword
-        );
-
-        if (!isValidPassword) {
-          return {
-            success: false,
-            error: "Current password is incorrect",
-          };
-        }
-
-        // Hash the new password
-        const hashedPassword = await argon2.hash(validatedData.newPassword, {
-          type: argon2.argon2id,
-        });
-
-        updateData.passwordHash = hashedPassword;
-      } catch (error: unknown) {
-        console.error("Password verification error:", error);
-        return {
-          success: false,
-          error: "Error verifying password",
-        };
+      if (!isValidPassword) {
+        return { success: false, error: "Current password is incorrect" };
       }
+
+      updateData.passwordHash = await argon2.hash(validatedData.newPassword);
     }
 
-    // Update user in database
+    // Update user
     const updatedUser = await prisma.user.update({
       where: { id: dbUser.id },
       data: updateData,
@@ -127,28 +103,16 @@ export async function updateAccountInfo(
         lastName: true,
         displayName: true,
         role: true,
-        avatarUrl: true,
       },
     });
 
-    // Revalidate relevant paths
     revalidatePath("/account");
-    revalidatePath("/");
-
-    return {
-      success: true,
-      data: updatedUser,
-    };
-  } catch (error: unknown) {
+    return { success: true, data: updatedUser };
+  } catch (error) {
+    console.error("Update error:", error);
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: "Invalid form data",
-      };
+      return { success: false, error: "Invalid form data" };
     }
-    return {
-      success: false,
-      error: "Failed to update account information",
-    };
+    return { success: false, error: "Failed to update account information" };
   }
 }
