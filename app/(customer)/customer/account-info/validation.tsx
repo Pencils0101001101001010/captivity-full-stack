@@ -50,5 +50,3 @@ export const accountFormSchema = z
       path: ["confirmPassword"],
     }
   );
-
-export type FormValues = z.infer<typeof accountFormSchema>;

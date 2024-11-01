@@ -9,11 +9,14 @@ import * as z from "zod";
 import { ActionResponse } from "./types";
 
 export async function updateAccountInfo(
-  formData: z.infer<typeof accountFormSchema>
+  formData: FormData
 ): Promise<ActionResponse<any>> {
   try {
+    // Convert FormData to object
+    const rawData = Object.fromEntries(formData.entries());
+
     // Validate input
-    const validatedData = accountFormSchema.parse(formData);
+    const validatedData = accountFormSchema.parse(rawData);
     console.log("Validated data:", {
       ...validatedData,
       currentPassword: validatedData.currentPassword ? "[REDACTED]" : undefined,
