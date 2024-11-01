@@ -12,13 +12,15 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "forceConsistentCasingInFileNames": true,
     "plugins": [
       {
         "name": "next"
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/prisma/*": ["./prisma/*"]
     },
     "target": "ES2017"
   },
@@ -27,7 +29,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "scripts/seed.js"
+    "scripts/seed.js",
+    "prisma/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }
