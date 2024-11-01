@@ -1,14 +1,14 @@
 // pages/IndustrialTablePage.tsx
 import React from "react";
 import {
-  fetchSummerCollectionTable,
+  fetchIndustrialCollectionTable,
   toggleProductPublish,
   deleteProduct,
 } from "./actions";
-import ProductTableWrapper from "../_components/ProductTableWrapper";
+import ProductTableWrapper from "./ProductTableWrapper";
 
 export default async function SummerTablePage() {
-  const result = await fetchSummerCollectionTable();
+  const result = await fetchIndustrialCollectionTable();
 
   if (!result.success) {
     return <div>Error: {result.error}</div>;

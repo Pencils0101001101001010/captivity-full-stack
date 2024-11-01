@@ -24,7 +24,7 @@ type TableProduct = {
   createdAt: Date;
 };
 
-type FetchSummerCollectionResult =
+type FetchKidsCollectionResult =
   | {
       success: true;
       data: TableProduct[];
@@ -38,8 +38,8 @@ type TogglePublishResult =
   | { success: true; message: string }
   | { success: false; error: string };
 
-// Fetch summer collection products for table
-export async function fetchSummerCollectionTable(): Promise<FetchSummerCollectionResult> {
+// Fetch kids collection products for table
+export async function fetchKidsCollectionTable(): Promise<FetchKidsCollectionResult> {
   try {
     const { user } = await validateRequest();
     if (!user) {
@@ -50,7 +50,7 @@ export async function fetchSummerCollectionTable(): Promise<FetchSummerCollectio
     const totalCount = await prisma.product.count({
       where: {
         category: {
-          has: "summer-collection",
+          has: "kids-collection",
         },
       },
     });
@@ -58,7 +58,7 @@ export async function fetchSummerCollectionTable(): Promise<FetchSummerCollectio
     const publishedCount = await prisma.product.count({
       where: {
         category: {
-          has: "summer-collection",
+          has: "kids-collection",
         },
         isPublished: true,
       },
@@ -67,7 +67,7 @@ export async function fetchSummerCollectionTable(): Promise<FetchSummerCollectio
     const unpublishedCount = await prisma.product.count({
       where: {
         category: {
-          has: "summer-collection",
+          has: "kids-collection",
         },
         isPublished: false,
       },
@@ -77,7 +77,7 @@ export async function fetchSummerCollectionTable(): Promise<FetchSummerCollectio
     const products = await prisma.product.findMany({
       where: {
         category: {
-          has: "summer-collection",
+          has: "kids-collection",
         },
       },
       select: {
@@ -127,7 +127,7 @@ export async function fetchSummerCollectionTable(): Promise<FetchSummerCollectio
       unpublishedCount,
     };
   } catch (error) {
-    console.error("Error fetching summer collection for table:", error);
+    console.error("Error fetching kids collection for table:", error);
     return {
       success: false,
       error:
@@ -163,8 +163,8 @@ export async function toggleProductPublish(
     });
 
     // Revalidate both admin table view and frontend collection view
-    revalidatePath("/admin/products/summer");
-    revalidatePath("/customer/shopping/product_categories/summer");
+    revalidatePath("/admin/products/kids");
+    revalidatePath("/customer/shopping/product_categories/kids");
 
     return {
       success: true,
@@ -194,8 +194,8 @@ export async function deleteProduct(
       where: { id: productId },
     });
 
-    revalidatePath("/admin/products/summer");
-    revalidatePath("/customer/shopping/product_categories/summer");
+    revalidatePath("/admin/products/kids");
+    revalidatePath("/customer/shopping/product_categories/kids");
 
     return {
       success: true,
