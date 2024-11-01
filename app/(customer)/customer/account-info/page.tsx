@@ -1,4 +1,4 @@
-// app/account/page.tsx
+// app/customer/account-info/page.tsx
 import { Suspense } from "react";
 import { validateRequest } from "@/auth";
 import { redirect } from "next/navigation";

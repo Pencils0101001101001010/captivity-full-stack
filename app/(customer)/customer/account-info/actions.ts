@@ -4,29 +4,22 @@ import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import * as argon2 from "argon2";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
-import { accountFormSchema, FormValues } from "./validation";
+import { accountFormSchema } from "./validation";
+import * as z from "zod";
+import { ActionResponse } from "./types";
 
-const updateAccountSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  displayName: z.string().min(1, "Display name is required"),
-  email: z.string().email("Invalid email address"),
-  currentPassword: z.string().optional(),
-  newPassword: z.string().optional(),
-  confirmPassword: z.string().optional(),
-});
-
-type ActionResponse<T> = {
-  success: boolean;
-  data?: T;
-  error?: string;
-};
-
-export async function updateAccountInfo(formData: FormValues) {
+export async function updateAccountInfo(
+  formData: z.infer<typeof accountFormSchema>
+): Promise<ActionResponse<any>> {
   try {
     // Validate input
     const validatedData = accountFormSchema.parse(formData);
+    console.log("Validated data:", {
+      ...validatedData,
+      currentPassword: validatedData.currentPassword ? "[REDACTED]" : undefined,
+      newPassword: validatedData.newPassword ? "[REDACTED]" : undefined,
+      confirmPassword: validatedData.confirmPassword ? "[REDACTED]" : undefined,
+    });
 
     // Get current session
     const { user } = await validateRequest();
@@ -34,7 +27,7 @@ export async function updateAccountInfo(formData: FormValues) {
       return { success: false, error: "Not authenticated" };
     }
 
-    // Get current user
+    // Get current user with full details
     const dbUser = await prisma.user.findUnique({
       where: { id: user.id },
       select: {
@@ -45,6 +38,7 @@ export async function updateAccountInfo(formData: FormValues) {
         firstName: true,
         lastName: true,
         displayName: true,
+        avatarUrl: true,
       },
     });
 
@@ -77,22 +71,44 @@ export async function updateAccountInfo(formData: FormValues) {
     // Handle password update
     if (validatedData.newPassword && validatedData.currentPassword) {
       if (!dbUser.passwordHash) {
-        return { success: false, error: "No password set for this account" };
+        return {
+          success: false,
+          error: "No password set for this account",
+        };
       }
 
-      const isValidPassword = await argon2.verify(
-        dbUser.passwordHash,
-        validatedData.currentPassword
-      );
+      try {
+        const cleanHash = dbUser.passwordHash.trim();
 
-      if (!isValidPassword) {
-        return { success: false, error: "Current password is incorrect" };
+        // Verify current password
+        const isValidPassword = await argon2.verify(
+          cleanHash,
+          validatedData.currentPassword
+        );
+
+        if (!isValidPassword) {
+          return {
+            success: false,
+            error: "Current password is incorrect",
+          };
+        }
+
+        // Hash the new password
+        const hashedPassword = await argon2.hash(validatedData.newPassword, {
+          type: argon2.argon2id,
+        });
+
+        updateData.passwordHash = hashedPassword;
+      } catch (error: unknown) {
+        console.error("Password verification error:", error);
+        return {
+          success: false,
+          error: "Error verifying password",
+        };
       }
-
-      updateData.passwordHash = await argon2.hash(validatedData.newPassword);
     }
 
-    // Update user
+    // Update user in database
     const updatedUser = await prisma.user.update({
       where: { id: dbUser.id },
       data: updateData,
@@ -103,16 +119,40 @@ export async function updateAccountInfo(formData: FormValues) {
         lastName: true,
         displayName: true,
         role: true,
+        avatarUrl: true,
       },
     });
 
-    revalidatePath("/account");
-    return { success: true, data: updatedUser };
-  } catch (error) {
-    console.error("Update error:", error);
+    // Revalidate relevant paths
+    revalidatePath("/customer/account-info");
+    revalidatePath("/customer");
+    revalidatePath("/");
+
+    return {
+      success: true,
+      data: updatedUser,
+    };
+  } catch (error: unknown) {
+    console.error("Update account error:", error);
+
     if (error instanceof z.ZodError) {
-      return { success: false, error: "Invalid form data" };
+      return {
+        success: false,
+        error:
+          "Invalid form data: " + error.errors.map(e => e.message).join(", "),
+      };
     }
-    return { success: false, error: "Failed to update account information" };
+
+    if (error instanceof Error) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    return {
+      success: false,
+      error: "Failed to update account information",
+    };
   }
 }

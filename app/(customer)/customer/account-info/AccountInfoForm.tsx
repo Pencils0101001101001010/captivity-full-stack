@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useEffect } from "react";
+import { useState, useTransition } from "react";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import {
   Form,
@@ -17,7 +17,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "../../SessionProvider";
 import { updateAccountInfo } from "./actions";
-import { accountFormSchema, FormValues } from "./validation";
+import { accountFormSchema, type FormValues } from "./validation";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { ErrorToast } from "./ErrorToast";
 
 export default function AccountInfoForm() {
@@ -25,8 +27,10 @@ export default function AccountInfoForm() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const { user } = useSession();
+  const router = useRouter();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(accountFormSchema),
@@ -58,55 +62,57 @@ export default function AccountInfoForm() {
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      const isPasswordUpdate = !!data.newPassword && !!data.currentPassword;
       const result = await updateAccountInfo(data);
 
-      if (result.success) {
+      if (result.success && result.data) {
+        startTransition(() => {
+          router.refresh();
+        });
+
         toast({
           title: "Success",
-          description: isPasswordUpdate
-            ? "Your account information and password have been updated."
-            : "Your account information has been updated.",
+          description:
+            "Your account information has been updated successfully.",
           variant: "default",
         });
 
-        form.setValue("currentPassword", "");
-        form.setValue("newPassword", "");
-        form.setValue("confirmPassword", "");
+        form.reset({
+          ...result.data,
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
       } else {
         if (result.error === "Current password is incorrect") {
           form.setError("currentPassword", {
             type: "manual",
             message: "Current password is incorrect",
           });
+        } else if (result.error === "Email already in use") {
+          form.setError("email", {
+            type: "manual",
+            message: "This email is already in use",
+          });
         }
 
         toast({
+          title: "Update Failed",
+          description: result.error || "Failed to update account information",
           variant: "destructive",
-          description: (
-            <ErrorToast
-              title="Update Failed"
-              description={
-                result.error || "Failed to update account information"
-              }
-            />
-          ),
         });
       }
     } catch (error: any) {
+      console.error("Form submission error:", error);
       toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
-        description: (
-          <ErrorToast
-            title="System Error"
-            description="Unable to process your request. Please try again later."
-          />
-        ),
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+
   return (
     <section className="border p-5 rounded-md shadow-sm border-gray-700 mb-20">
       <Form {...form}>
@@ -196,6 +202,7 @@ export default function AccountInfoForm() {
                         type={showCurrentPassword ? "text" : "password"}
                         {...field}
                         placeholder="Leave blank to leave unchanged"
+                        className="pr-10"
                       />
                       <Button
                         type="button"
@@ -231,6 +238,7 @@ export default function AccountInfoForm() {
                         type={showNewPassword ? "text" : "password"}
                         {...field}
                         placeholder="Leave blank to leave unchanged"
+                        className="pr-10"
                       />
                       <Button
                         type="button"
@@ -264,6 +272,7 @@ export default function AccountInfoForm() {
                         type={showConfirmPassword ? "text" : "password"}
                         {...field}
                         placeholder="Leave blank to leave unchanged"
+                        className="pr-10"
                       />
                       <Button
                         type="button"
@@ -292,9 +301,9 @@ export default function AccountInfoForm() {
             type="submit"
             variant="destructive"
             className="w-full"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isPending}
           >
-            {isSubmitting ? (
+            {isSubmitting || isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Saving changes...

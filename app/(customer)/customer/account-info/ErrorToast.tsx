@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { X } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
