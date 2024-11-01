@@ -140,22 +140,21 @@ export async function updateAccountInfo(
     };
   } catch (error: unknown) {
     console.error("Update account error:", error);
-
+    
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error:
-          "Invalid form data: " + error.errors.map(e => e.message).join(", "),
+        error: "Invalid form data: " + error.errors.map(e => e.message).join(", "),
       };
     }
-
+    
     if (error instanceof Error) {
       return {
         success: false,
         error: error.message,
       };
     }
-
+    
     return {
       success: false,
       error: "Failed to update account information",
