@@ -32,6 +32,13 @@ export function useMenuItems() {
     unpublishedCount: 0,
   });
 
+    const [fashionCounts, setFashionCounts] = useState({
+    totalCount: 0,
+    publishedCount: 0,
+    unpublishedCount: 0,
+  });
+
+
   useEffect(() => {
     const loadCounts = async () => {
       const [userResult, summerResult] = await Promise.all([
@@ -47,6 +54,31 @@ export function useMenuItems() {
           totalCount: summerResult.totalCount,
           publishedCount: summerResult.publishedCount,
           unpublishedCount: summerResult.unpublishedCount,
+        });
+      }
+    };
+
+    loadCounts();
+    const interval = setInterval(loadCounts, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+
+    useEffect(() => {
+    const loadCounts = async () => {
+      const [userResult, fashionResult] = await Promise.all([
+        fetchAllRoleCounts(),
+        fetchFashionCollectionTable(),
+      ]);
+
+      if (userResult.success) {
+        setUserCounts(userResult.counts);
+      }
+      if (fashionResult.success) {
+        setFashionCounts({
+          totalCount: fashionResult.totalCount,
+          publishedCount: fashionResult.publishedCount,
+          unpublishedCount: fashionResult.unpublishedCount,
         });
       }
     };
@@ -103,7 +135,7 @@ export function useMenuItems() {
         {
           name: "Fashion",
           href: "/admin/products/fashion",
-          count: summerCounts.totalCount
+          count: fashionCounts.totalCount,
        },
         {
           name: "Summer",
