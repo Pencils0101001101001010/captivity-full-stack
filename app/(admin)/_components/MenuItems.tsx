@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { fetchAllRoleCounts } from "../admin/users/actions";
 import { fetchSummerCollectionTable } from "../admin/products/summer/actions";
 import { fetchFashionCollectionTable } from "../admin/products/fashion/actions";
+import { fetchIndustrialCollectionTable } from "../admin/products/industrial/actions";
+import { fetchKidsCollectionTable } from "../admin/products/kids/actions";
 type MenuLink = {
   name: string;
   href: string;
@@ -33,6 +35,18 @@ export function useMenuItems() {
   });
 
     const [fashionCounts, setFashionCounts] = useState({
+    totalCount: 0,
+    publishedCount: 0,
+    unpublishedCount: 0,
+    });
+  
+  const [industrialCounts, setIndustrialCounts] = useState({
+    totalCount: 0,
+    publishedCount: 0,
+    unpublishedCount: 0,
+  });
+
+  const [kidsCounts, setKidsCounts] = useState({
     totalCount: 0,
     publishedCount: 0,
     unpublishedCount: 0,
@@ -83,11 +97,60 @@ export function useMenuItems() {
       }
     };
 
+      
     loadCounts();
     const interval = setInterval(loadCounts, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
+    useEffect(() => {
+    const loadCounts = async () => {
+      const [userResult, industrialResult] = await Promise.all([
+        fetchAllRoleCounts(),
+        fetchIndustrialCollectionTable(),
+      ]);
+
+      if (userResult.success) {
+        setUserCounts(userResult.counts);
+      }
+      if (industrialResult.success) {
+        setIndustrialCounts({
+          totalCount: industrialResult.totalCount,
+          publishedCount: industrialResult.publishedCount,
+          unpublishedCount: industrialResult.unpublishedCount,
+        });
+      }
+    };
+
+    loadCounts();
+    const interval = setInterval(loadCounts, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+  
+  useEffect(() => {
+    const loadCounts = async () => {
+      const [userResult, kidsResult] = await Promise.all([
+        fetchAllRoleCounts(),
+        fetchKidsCollectionTable(),
+      ]);
+
+      if (userResult.success) {
+        setUserCounts(userResult.counts);
+      }
+      if (kidsResult.success) {
+        setIndustrialCounts({
+          totalCount: kidsResult.totalCount,
+          publishedCount: kidsResult.publishedCount,
+          unpublishedCount: kidsResult.unpublishedCount,
+        });
+      }
+    };
+
+    loadCounts();
+    const interval = setInterval(loadCounts, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+  
   const menuItems: MenuItem[] = [
     {
       title: "Users",
@@ -136,16 +199,37 @@ export function useMenuItems() {
           name: "Fashion",
           href: "/admin/products/fashion",
           count: fashionCounts.totalCount,
+        },
+       {
+          name: "Industrial",
+          href: "/admin/products/industrial",
+          count: industrialCounts.totalCount,
+        },
+       {
+          name: "Kid's",
+          href: "/admin/products/kids",
+          count: kidsCounts.totalCount,
        },
         {
           name: "Summer",
           href: "/admin/products/summer",
           count: summerCounts.totalCount,
         },
-        { name: "Winter", href: "/admin/products/winter" },
-        { name: "Industrial", href: "/admin/products/industrial" },
-        { name: "Signature", href: "/admin/products/signature" },
-        { name: "Camo", href: "/admin/products/camo" },
+        {
+          name: "Winter",
+          href: "/admin/products/winter",
+
+        },
+        {
+          name: "Signature",
+          href: "/admin/products/signature",
+          
+         },
+        {
+          name: "Camo",
+          href: "/admin/products/camo"
+          
+        },
         { name: "Add Product", href: "/admin/products/create" },
       ],
     },
