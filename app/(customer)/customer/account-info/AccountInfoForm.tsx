@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSession } from "../../SessionProvider";
 import { updateAccountInfo } from "./actions";
 import { accountFormSchema, FormValues } from "./validation";
+import { ErrorToast } from "./ErrorToast";
 
 export default function AccountInfoForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,14 +68,12 @@ export default function AccountInfoForm() {
             ? "Your account information and password have been updated."
             : "Your account information has been updated.",
           variant: "default",
-          duration: 5000,
         });
 
         form.setValue("currentPassword", "");
         form.setValue("newPassword", "");
         form.setValue("confirmPassword", "");
       } else {
-        // Handle specific errors
         if (result.error === "Current password is incorrect") {
           form.setError("currentPassword", {
             type: "manual",
@@ -82,20 +81,27 @@ export default function AccountInfoForm() {
           });
         }
 
-        // Use the toast with proper structure
         toast({
-          title: "Update Failed",
-          description: result.error || "Failed to update account information.",
           variant: "destructive",
-          duration: 5000,
+          description: (
+            <ErrorToast
+              title="Update Failed"
+              description={
+                result.error || "Failed to update account information"
+              }
+            />
+          ),
         });
       }
     } catch (error: any) {
       toast({
-        title: "System Error",
-        description: "Unable to process your request. Please try again later.",
         variant: "destructive",
-        duration: 5000,
+        description: (
+          <ErrorToast
+            title="System Error"
+            description="Unable to process your request. Please try again later."
+          />
+        ),
       });
     } finally {
       setIsSubmitting(false);
