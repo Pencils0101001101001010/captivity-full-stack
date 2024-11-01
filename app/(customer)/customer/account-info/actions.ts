@@ -1,3 +1,4 @@
+// app/customer/account-info/actions.ts
 "use server";
 
 import { validateRequest } from "@/auth";
@@ -6,17 +7,19 @@ import * as argon2 from "argon2";
 import { revalidatePath } from "next/cache";
 import { accountFormSchema } from "./validation";
 import * as z from "zod";
-import { ActionResponse } from "./types";
+
+type ActionResponse<T> = {
+  success: boolean;
+  data?: T;
+  error?: string;
+};
 
 export async function updateAccountInfo(
-  formData: FormData
+  formData: z.infer<typeof accountFormSchema>
 ): Promise<ActionResponse<any>> {
   try {
-    // Convert FormData to object
-    const rawData = Object.fromEntries(formData.entries());
-
     // Validate input
-    const validatedData = accountFormSchema.parse(rawData);
+    const validatedData = accountFormSchema.parse(formData);
     console.log("Validated data:", {
       ...validatedData,
       currentPassword: validatedData.currentPassword ? "[REDACTED]" : undefined,

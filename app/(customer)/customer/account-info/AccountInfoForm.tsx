@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition } from "react";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import {
   Form,
@@ -15,11 +15,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { updateAccountInfo } from "./actions";
+import { accountFormSchema, type FormValues } from "./validation";
 import { useRouter } from "next/navigation";
-import { accountFormSchema } from "./validation";
-import type { z } from "zod";
-
-type FormValues = z.infer<typeof accountFormSchema>;
+import { useEffect } from "react";
 
 interface InitialData {
   firstName: string;
@@ -68,67 +67,62 @@ export default function AccountInfoForm({
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined) {
-        formData.append(key, value);
-      }
-    });
+    try {
+      const result = await updateAccountInfo(data);
 
-    startTransition(async () => {
-      try {
-        const response = await fetch("/update", {
-          method: "POST",
-          body: formData,
+      if (result.success && result.data) {
+        startTransition(() => {
+          router.refresh();
         });
 
-        const result = await response.json();
+        toast({
+          title: "Success",
+          description:
+            "Your account information has been updated successfully.",
+          variant: "default",
+        });
 
-        if (result.success) {
-          toast({
-            title: "Success",
-            description:
-              "Your account information has been updated successfully.",
-            variant: "default",
+        form.reset({
+          ...result.data,
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      } else {
+        if (result.error === "Current password is incorrect") {
+          form.setError("currentPassword", {
+            type: "manual",
+            message: "Current password is incorrect",
           });
-          router.refresh();
-
-          form.reset({
-            ...result.data,
-            currentPassword: "",
-            newPassword: "",
-            confirmPassword: "",
-          });
-        } else {
-          if (result.error === "Current password is incorrect") {
-            form.setError("currentPassword", {
-              type: "manual",
-              message: "Current password is incorrect",
-            });
-          } else if (result.error === "Email already in use") {
-            form.setError("email", {
-              type: "manual",
-              message: "This email is already in use",
-            });
-          }
-
-          toast({
-            title: "Error",
-            description: result.error || "Failed to update account information",
-            variant: "destructive",
+        } else if (result.error === "Email already in use") {
+          form.setError("email", {
+            type: "manual",
+            message: "This email is already in use",
           });
         }
-      } catch (error: any) {
-        console.error("Form submission error:", error);
+
         toast({
-          title: "Error",
-          description: "An unexpected error occurred",
+          title: "Update Failed",
+          description: result.error || "Failed to update account information",
           variant: "destructive",
         });
-      } finally {
-        setIsSubmitting(false);
       }
-    });
+    } catch (error: any) {
+      console.error("Form submission error:", {
+        message: error.message,
+        stack: error.stack,
+        error: error,
+      });
+
+      toast({
+        title: "Error",
+        description:
+          error.message || "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
