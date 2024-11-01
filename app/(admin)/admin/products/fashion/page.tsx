@@ -5,9 +5,9 @@ import {
   toggleProductPublish,
   deleteProduct,
 } from "./actions";
-import ProductTableWrapper from "../_components/ProductTableWrapper";
+import ProductTableWrapper from "./ProductTableWrapper";
 
-export default async function SummerTablePage() {
+export default async function FashionTablePage() {
   const result = await fetchFashionCollectionTable();
 
   if (!result.success) {
