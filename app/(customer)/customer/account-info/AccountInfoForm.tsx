@@ -96,27 +96,17 @@ export default function AccountInfoForm() {
         }
 
         toast({
+          title: "Update Failed",
+          description: result.error || "Failed to update account information",
           variant: "destructive",
-          description: (
-            <ErrorToast
-              title="Update Failed"
-              description={
-                result.error || "Failed to update account information"
-              }
-            />
-          ),
         });
       }
     } catch (error: any) {
       console.error("Form submission error:", error);
       toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
-        description: (
-          <ErrorToast
-            title="Error"
-            description="An unexpected error occurred. Please try again."
-          />
-        ),
       });
     } finally {
       setIsSubmitting(false);
