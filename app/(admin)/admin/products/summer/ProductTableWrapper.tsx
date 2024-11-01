@@ -3,7 +3,7 @@
 
 import { useRouter } from "next/navigation";
 import { ProductTableWrapperProps, TableProduct } from "../_types/table";
-import ProductTable from "./ProductTable";
+import ProductTable from "../_components/ProductTable";
 
 export default function ProductTableWrapper({
   products,
