@@ -18,7 +18,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useSession } from "../../SessionProvider";
 import { updateAccountInfo } from "./actions";
 import { accountFormSchema, FormValues } from "./validation";
-import Link from "next/link";
 
 export default function AccountInfoForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,13 +57,10 @@ export default function AccountInfoForm() {
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      // Check if password fields are filled
       const isPasswordUpdate = !!data.newPassword && !!data.currentPassword;
-
       const result = await updateAccountInfo(data);
 
       if (result.success) {
-        // Show success message
         toast({
           title: "Success",
           description: isPasswordUpdate
@@ -74,12 +70,11 @@ export default function AccountInfoForm() {
           duration: 5000,
         });
 
-        // Reset password fields after successful update
         form.setValue("currentPassword", "");
         form.setValue("newPassword", "");
         form.setValue("confirmPassword", "");
       } else {
-        // Handle specific error cases
+        // Handle specific errors
         if (result.error === "Current password is incorrect") {
           form.setError("currentPassword", {
             type: "manual",
@@ -87,9 +82,9 @@ export default function AccountInfoForm() {
           });
         }
 
-        // Show error toast
+        // Use the toast with proper structure
         toast({
-          title: "Error",
+          title: "Update Failed",
           description: result.error || "Failed to update account information.",
           variant: "destructive",
           duration: 5000,
@@ -97,8 +92,8 @@ export default function AccountInfoForm() {
       }
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "An unexpected error occurred.",
+        title: "System Error",
+        description: "Unable to process your request. Please try again later.",
         variant: "destructive",
         duration: 5000,
       });
