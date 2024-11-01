@@ -15,30 +15,38 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useSession } from "../../SessionProvider";
 import { updateAccountInfo } from "./actions";
 import { accountFormSchema, type FormValues } from "./validation";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { ErrorToast } from "./ErrorToast";
 
-export default function AccountInfoForm() {
+interface InitialData {
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  email: string;
+}
+
+export default function AccountInfoForm({
+  initialData,
+}: {
+  initialData: InitialData;
+}) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const { user } = useSession();
   const router = useRouter();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(accountFormSchema),
     defaultValues: {
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
-      displayName: user?.displayName || "",
-      email: user?.email || "",
+      firstName: initialData?.firstName || "",
+      lastName: initialData?.lastName || "",
+      displayName: initialData?.displayName || "",
+      email: initialData?.email || "",
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
@@ -46,18 +54,16 @@ export default function AccountInfoForm() {
   });
 
   useEffect(() => {
-    if (user) {
-      form.reset({
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
-        displayName: user.displayName || "",
-        email: user.email || "",
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    }
-  }, [user, form]);
+    form.reset({
+      firstName: initialData?.firstName || "",
+      lastName: initialData?.lastName || "",
+      displayName: initialData?.displayName || "",
+      email: initialData?.email || "",
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+  }, [initialData, form]);
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
@@ -102,10 +108,16 @@ export default function AccountInfoForm() {
         });
       }
     } catch (error: any) {
-      console.error("Form submission error:", error);
+      console.error("Form submission error:", {
+        message: error.message,
+        stack: error.stack,
+        error: error,
+      });
+
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description:
+          error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
