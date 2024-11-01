@@ -1,4 +1,5 @@
 "use client";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useTransition } from "react";
@@ -19,6 +20,7 @@ import { updateAccountInfo } from "./actions";
 import { accountFormSchema, type FormValues } from "./validation";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { ErrorToast } from "./ErrorToast";
 
 export default function AccountInfoForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,18 +62,9 @@ export default function AccountInfoForm() {
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      console.log("Submitting form data:", {
-        ...data,
-        currentPassword: data.currentPassword ? "[REDACTED]" : undefined,
-        newPassword: data.newPassword ? "[REDACTED]" : undefined,
-        confirmPassword: data.confirmPassword ? "[REDACTED]" : undefined,
-      });
-
       const result = await updateAccountInfo(data);
-      console.log("Update result:", result);
 
       if (result.success && result.data) {
-        // Force revalidation of the route
         startTransition(() => {
           router.refresh();
         });
@@ -83,7 +76,6 @@ export default function AccountInfoForm() {
           variant: "default",
         });
 
-        // Reset form with new data
         form.reset({
           ...result.data,
           currentPassword: "",
@@ -91,7 +83,6 @@ export default function AccountInfoForm() {
           confirmPassword: "",
         });
       } else {
-        // Handle specific errors
         if (result.error === "Current password is incorrect") {
           form.setError("currentPassword", {
             type: "manual",
@@ -106,16 +97,26 @@ export default function AccountInfoForm() {
 
         toast({
           variant: "destructive",
-          title: "Update Failed",
-          description: result.error || "Failed to update account information",
+          description: (
+            <ErrorToast
+              title="Update Failed"
+              description={
+                result.error || "Failed to update account information"
+              }
+            />
+          ),
         });
       }
     } catch (error: any) {
       console.error("Form submission error:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: (
+          <ErrorToast
+            title="Error"
+            description="An unexpected error occurred. Please try again."
+          />
+        ),
       });
     } finally {
       setIsSubmitting(false);

@@ -1,31 +1,20 @@
-import { ReactNode } from "react";
+import { z } from "zod";
+import { accountFormSchema } from "./validation";
 
-export type UserRole =
-  | "USER"
-  | "CUSTOMER"
-  | "SUBSCRIBER"
-  | "PROMO"
-  | "DISTRIBUTOR"
-  | "SHOPMANAGER"
-  | "EDITOR"
-  | "ADMIN";
+export type FormValues = z.infer<typeof accountFormSchema>;
 
-export interface ToastProps {
-  title?: string;
-  description?: string | ReactNode;
-  variant?: "default" | "destructive";
-  duration?: number;
-}
+export type ActionResponse<T> = {
+  success: boolean;
+  data?: T;
+  error?: string;
+};
 
-export interface SessionUser {
+export interface User {
   id: string;
-  captivityBranch: string;
-  username: string;
-  displayName: string;
+  email: string;
   firstName: string;
   lastName: string;
-  email: string;
+  displayName: string;
+  role: string;
   avatarUrl: string | null;
-  googleId: string | null;
-  role: UserRole;
 }

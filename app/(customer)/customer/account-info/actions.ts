@@ -1,4 +1,3 @@
-// app/customer/account-info/actions.ts
 "use server";
 
 import { validateRequest } from "@/auth";
@@ -7,12 +6,7 @@ import * as argon2 from "argon2";
 import { revalidatePath } from "next/cache";
 import { accountFormSchema } from "./validation";
 import * as z from "zod";
-
-type ActionResponse<T> = {
-  success: boolean;
-  data?: T;
-  error?: string;
-};
+import { ActionResponse } from "./types";
 
 export async function updateAccountInfo(
   formData: z.infer<typeof accountFormSchema>
@@ -140,21 +134,22 @@ export async function updateAccountInfo(
     };
   } catch (error: unknown) {
     console.error("Update account error:", error);
-    
+
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: "Invalid form data: " + error.errors.map(e => e.message).join(", "),
+        error:
+          "Invalid form data: " + error.errors.map(e => e.message).join(", "),
       };
     }
-    
+
     if (error instanceof Error) {
       return {
         success: false,
         error: error.message,
       };
     }
-    
+
     return {
       success: false,
       error: "Failed to update account information",

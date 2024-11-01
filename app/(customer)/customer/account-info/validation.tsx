@@ -1,4 +1,3 @@
-// app/customer/account-info/validation.ts
 import * as z from "zod";
 
 export const accountFormSchema = z
@@ -14,7 +13,7 @@ export const accountFormSchema = z
       .transform(val => (val === "" ? undefined : val))
       .refine(
         val => {
-          if (!val) return true; // Skip validation if no password
+          if (!val) return true;
           return (
             val.length >= 8 &&
             /[A-Z]/.test(val) &&
@@ -32,7 +31,6 @@ export const accountFormSchema = z
   })
   .refine(
     data => {
-      // Only validate if new password is provided
       if (!data.newPassword) return true;
       if (!data.currentPassword) return false;
       return true;
@@ -44,7 +42,6 @@ export const accountFormSchema = z
   )
   .refine(
     data => {
-      // Only validate passwords match if new password is provided
       if (!data.newPassword) return true;
       return data.newPassword === data.confirmPassword;
     },
