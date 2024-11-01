@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchAllRoleCounts } from "../admin/users/actions";
 import { fetchSummerCollectionTable } from "../admin/products/summer/actions";
-
+import { fetchFashionCollectionTable } from "../admin/products/fashion/actions";
 type MenuLink = {
   name: string;
   href: string;
@@ -100,6 +100,11 @@ export function useMenuItems() {
     {
       title: "Products",
       links: [
+        {
+          name: "Fashion",
+          href: "/admin/products/fashion",
+          count: summerCounts.totalCount
+       },
         {
           name: "Summer",
           href: "/admin/products/summer",
