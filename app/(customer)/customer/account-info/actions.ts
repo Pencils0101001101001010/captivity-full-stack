@@ -31,7 +31,7 @@ export async function updateAccountInfo(
 
     // Get current session
     const { user } = await validateRequest();
-    if (!user) {
+    if (!user || user.role !== "CUSTOMER") {
       return { success: false, error: "Not authenticated" };
     }
 
