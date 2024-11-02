@@ -10,6 +10,8 @@ import { fetchAfricanCollectionTable } from "../admin/products/african/actions";
 import { fetchLeisureCollectionTable } from "../admin/products/leisure/actions";
 import { fetchSignatureCollectionTable } from "../admin/products/signature/actions";
 import { fetchSportCollectionTable } from "../admin/products/sport/actions";
+import { fetchCamoCollectionTable } from "../admin/products/camo/actions";
+
 
 // Types
 type MenuLink = {
@@ -76,6 +78,8 @@ export function useMenuItems() {
     leisure: fetchLeisureCollectionTable,
     signature: fetchSignatureCollectionTable,
     sport: fetchSportCollectionTable,
+    camo: fetchCamoCollectionTable,
+    // winter: fetchWinterCollectionTable,
   }), []);
 
   useEffect(() => {
