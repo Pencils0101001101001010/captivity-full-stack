@@ -38,12 +38,12 @@ export function useMenuItems() {
     unpublishedCount: 0,
   });
 
-    const [fashionCounts, setFashionCounts] = useState({
+  const [fashionCounts, setFashionCounts] = useState({
     totalCount: 0,
     publishedCount: 0,
     unpublishedCount: 0,
-    });
-  
+  });
+
   const [industrialCounts, setIndustrialCounts] = useState({
     totalCount: 0,
     publishedCount: 0,
@@ -77,6 +77,16 @@ export function useMenuItems() {
     publishedCount: 0,
     unpublishedCount: 0,
   });
+  const [winterCounts, setWinterCounts] = useState({
+    totalCount: 0,
+    publishedCount: 0,
+    unpublishedCount: 0,
+  });
+  const [camoCounts, setCamoCounts] = useState({
+    totalCount: 0,
+    publishedCount: 0,
+    unpublishedCount: 0,
+  });
 
   useEffect(() => {
     const loadCounts = async () => {
@@ -90,7 +100,7 @@ export function useMenuItems() {
           africanResult,
           leisureResult,
           signatureResult,
-          sportResult
+          sportResult,
         ] = await Promise.all([
           fetchAllRoleCounts(),
           fetchSummerCollectionTable(),
@@ -102,7 +112,7 @@ export function useMenuItems() {
           fetchSignatureCollectionTable(),
           fetchSportCollectionTable(),
         ]);
-  
+
         if (userResult.success) {
           setUserCounts(userResult.counts);
         }
@@ -163,80 +173,7 @@ export function useMenuItems() {
           });
         }
       } catch (error) {
-        console.error('Error loading counts:', error);
-      }
-    };
-  
-    loadCounts();
-    const interval = setInterval(loadCounts, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-    useEffect(() => {
-    const loadCounts = async () => {
-      const [userResult, fashionResult] = await Promise.all([
-        fetchAllRoleCounts(),
-        fetchFashionCollectionTable(),
-      ]);
-
-      if (userResult.success) {
-        setUserCounts(userResult.counts);
-      }
-      if (fashionResult.success) {
-        setFashionCounts({
-          totalCount: fashionResult.totalCount,
-          publishedCount: fashionResult.publishedCount,
-          unpublishedCount: fashionResult.unpublishedCount,
-        });
-      }
-    };
-
-      
-    loadCounts();
-    const interval = setInterval(loadCounts, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-    useEffect(() => {
-    const loadCounts = async () => {
-      const [userResult, industrialResult] = await Promise.all([
-        fetchAllRoleCounts(),
-        fetchIndustrialCollectionTable(),
-      ]);
-
-      if (userResult.success) {
-        setUserCounts(userResult.counts);
-      }
-      if (industrialResult.success) {
-        setIndustrialCounts({
-          totalCount: industrialResult.totalCount,
-          publishedCount: industrialResult.publishedCount,
-          unpublishedCount: industrialResult.unpublishedCount,
-        });
-      }
-    };
-
-    loadCounts();
-    const interval = setInterval(loadCounts, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-  
-  useEffect(() => {
-    const loadCounts = async () => {
-      const [userResult, kidsResult] = await Promise.all([
-        fetchAllRoleCounts(),
-        fetchKidsCollectionTable(),
-      ]);
-
-      if (userResult.success) {
-        setUserCounts(userResult.counts);
-      }
-      if (kidsResult.success) {
-        setIndustrialCounts({
-          totalCount: kidsResult.totalCount,
-          publishedCount: kidsResult.publishedCount,
-          unpublishedCount: kidsResult.unpublishedCount,
-        });
+        console.error("Error loading counts:", error);
       }
     };
 
@@ -245,30 +182,108 @@ export function useMenuItems() {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-  const loadCounts = async () => {
-    const [userResult, africanResult] = await Promise.all([
-      fetchAllRoleCounts(),
-      fetchAfricanCollectionTable(),
-    ]);
+  //     useEffect(() => {
+  //     const loadCounts = async () => {
+  //       const [userResult, fashionResult] = await Promise.all([
+  //         fetchAllRoleCounts(),
+  //         fetchFashionCollectionTable(),
+  //         fetchIndustrialCollectionTable(),
+  //         fetchKidsCollectionTable(),
+  //         fetchAfricanCollectionTable(),
+  //         fetchLeisureCollectionTable(),
+  //         fetchSignatureCollectionTable(),
+  //         fetchSportCollectionTable(),
+  //         fetchSummerCollectionTable(),
+  //       ]);
 
-    if (userResult.success) {
-      setUserCounts(userResult.counts);
-    }
-    if (africanResult.success) {
-      setSummerCounts({
-        totalCount: africanResult.totalCount,
-        publishedCount: africanResult.publishedCount,
-        unpublishedCount: africanResult.unpublishedCount,
-      });
-    }
-    };
-  loadCounts();
-  const interval = setInterval(loadCounts, 5 * 60 * 1000);
-  return () => clearInterval(interval);
-}, []);
+  //       if (userResult.success) {
+  //         setUserCounts(userResult.counts);
+  //       }
+  //       if (fashionResult.success) {
+  //         setFashionCounts({
+  //           totalCount: fashionResult.totalCount,
+  //           publishedCount: fashionResult.publishedCount,
+  //           unpublishedCount: fashionResult.unpublishedCount,
+  //         });
+  //       }
+  //     };
 
-  
+  //     loadCounts();
+  //     const interval = setInterval(loadCounts, 5 * 60 * 1000);
+  //     return () => clearInterval(interval);
+  //   }, []);
+
+  //     useEffect(() => {
+  //     const loadCounts = async () => {
+  //       const [userResult, industrialResult] = await Promise.all([
+  //         fetchAllRoleCounts(),
+  //         fetchIndustrialCollectionTable(),
+  //       ]);
+
+  //       if (userResult.success) {
+  //         setUserCounts(userResult.counts);
+  //       }
+  //       if (industrialResult.success) {
+  //         setIndustrialCounts({
+  //           totalCount: industrialResult.totalCount,
+  //           publishedCount: industrialResult.publishedCount,
+  //           unpublishedCount: industrialResult.unpublishedCount,
+  //         });
+  //       }
+  //     };
+
+  //     loadCounts();
+  //     const interval = setInterval(loadCounts, 5 * 60 * 1000);
+  //     return () => clearInterval(interval);
+  //   }, []);
+
+  //   useEffect(() => {
+  //     const loadCounts = async () => {
+  //       const [userResult, kidsResult] = await Promise.all([
+  //         fetchAllRoleCounts(),
+  //         fetchKidsCollectionTable(),
+  //       ]);
+
+  //       if (userResult.success) {
+  //         setUserCounts(userResult.counts);
+  //       }
+  //       if (kidsResult.success) {
+  //         setIndustrialCounts({
+  //           totalCount: kidsResult.totalCount,
+  //           publishedCount: kidsResult.publishedCount,
+  //           unpublishedCount: kidsResult.unpublishedCount,
+  //         });
+  //       }
+  //     };
+
+  //     loadCounts();
+  //     const interval = setInterval(loadCounts, 5 * 60 * 1000);
+  //     return () => clearInterval(interval);
+  //   }, []);
+
+  //   useEffect(() => {
+  //   const loadCounts = async () => {
+  //     const [userResult, africanResult] = await Promise.all([
+  //       fetchAllRoleCounts(),
+  //       fetchAfricanCollectionTable(),
+  //     ]);
+
+  //     if (userResult.success) {
+  //       setUserCounts(userResult.counts);
+  //     }
+  //     if (africanResult.success) {
+  //       setSummerCounts({
+  //         totalCount: africanResult.totalCount,
+  //         publishedCount: africanResult.publishedCount,
+  //         unpublishedCount: africanResult.unpublishedCount,
+  //       });
+  //     }
+  //     };
+  //   loadCounts();
+  //   const interval = setInterval(loadCounts, 5 * 60 * 1000);
+  //   return () => clearInterval(interval);
+  // }, []);
+
   const menuItems: MenuItem[] = [
     {
       title: "Users",
@@ -323,16 +338,16 @@ export function useMenuItems() {
           href: "/admin/products/fashion",
           count: fashionCounts.totalCount,
         },
-       {
+        {
           name: "Industrial",
           href: "/admin/products/industrial",
           count: industrialCounts.totalCount,
         },
-       {
+        {
           name: "Kid's",
           href: "/admin/products/kids",
           count: kidsCounts.totalCount,
-       },
+        },
         {
           name: "Summer",
           href: "/admin/products/summer",
@@ -341,16 +356,26 @@ export function useMenuItems() {
         {
           name: "Winter",
           href: "/admin/products/winter",
-
+          count: winterCounts.totalCount,
         },
         {
-  name: "Signature",
-  href: "/admin/products/signature", 
-},
-{
-  name: "Camo",
-  href: "/admin/products/camo"  
-},
+          name: "Signature",
+          href: "/admin/products/signature",
+          count: signatureCounts.totalCount,
+        },
+        {
+          name: "Camo",
+          href: "/admin/products/camo",
+          count: camoCounts.totalCount,
+        },{
+          name: "leisure",
+          href: "/admin/products/leisure",
+          count: leisureCounts.totalCount,
+        },{
+          name: "Sport",
+          href: "/admin/products/sport",
+          count: sportCounts.totalCount,
+        },
         { name: "Add Product", href: "/admin/products/create" },
       ],
     },
