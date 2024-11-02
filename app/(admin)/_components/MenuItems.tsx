@@ -7,6 +7,9 @@ import { fetchFashionCollectionTable } from "../admin/products/fashion/actions";
 import { fetchIndustrialCollectionTable } from "../admin/products/industrial/actions";
 import { fetchKidsCollectionTable } from "../admin/products/kids/actions";
 import { fetchAfricanCollectionTable } from "../admin/products/african/actions";
+import { fetchLeisureCollectionTable } from "../admin/products/leisure/actions";
+import { fetchSignatureCollectionTable } from "../admin/products/signature/actions";
+import { fetchSportCollectionTable } from "../admin/products/sport/actions";
 type MenuLink = {
   name: string;
   href: string;
@@ -59,30 +62,115 @@ export function useMenuItems() {
     unpublishedCount: 0,
   });
 
+  const [leisureCounts, setLeisureCounts] = useState({
+    totalCount: 0,
+    publishedCount: 0,
+    unpublishedCount: 0,
+  });
+  const [signatureCounts, setSignatureCounts] = useState({
+    totalCount: 0,
+    publishedCount: 0,
+    unpublishedCount: 0,
+  });
+  const [sportCounts, setSportCounts] = useState({
+    totalCount: 0,
+    publishedCount: 0,
+    unpublishedCount: 0,
+  });
+
   useEffect(() => {
     const loadCounts = async () => {
-      const [userResult, summerResult] = await Promise.all([
-        fetchAllRoleCounts(),
-        fetchSummerCollectionTable(),
-      ]);
-
-      if (userResult.success) {
-        setUserCounts(userResult.counts);
-      }
-      if (summerResult.success) {
-        setSummerCounts({
-          totalCount: summerResult.totalCount,
-          publishedCount: summerResult.publishedCount,
-          unpublishedCount: summerResult.unpublishedCount,
-        });
+      try {
+        const [
+          userResult,
+          summerResult,
+          fashionResult,
+          industrialResult,
+          kidsResult,
+          africanResult,
+          leisureResult,
+          signatureResult,
+          sportResult
+        ] = await Promise.all([
+          fetchAllRoleCounts(),
+          fetchSummerCollectionTable(),
+          fetchFashionCollectionTable(),
+          fetchIndustrialCollectionTable(),
+          fetchKidsCollectionTable(),
+          fetchAfricanCollectionTable(),
+          fetchLeisureCollectionTable(),
+          fetchSignatureCollectionTable(),
+          fetchSportCollectionTable(),
+        ]);
+  
+        if (userResult.success) {
+          setUserCounts(userResult.counts);
+        }
+        if (summerResult.success) {
+          setSummerCounts({
+            totalCount: summerResult.totalCount,
+            publishedCount: summerResult.publishedCount,
+            unpublishedCount: summerResult.unpublishedCount,
+          });
+        }
+        if (fashionResult.success) {
+          setFashionCounts({
+            totalCount: fashionResult.totalCount,
+            publishedCount: fashionResult.publishedCount,
+            unpublishedCount: fashionResult.unpublishedCount,
+          });
+        }
+        if (industrialResult.success) {
+          setIndustrialCounts({
+            totalCount: industrialResult.totalCount,
+            publishedCount: industrialResult.publishedCount,
+            unpublishedCount: industrialResult.unpublishedCount,
+          });
+        }
+        if (kidsResult.success) {
+          setKidsCounts({
+            totalCount: kidsResult.totalCount,
+            publishedCount: kidsResult.publishedCount,
+            unpublishedCount: kidsResult.unpublishedCount,
+          });
+        }
+        if (africanResult.success) {
+          setAfricanCounts({
+            totalCount: africanResult.totalCount,
+            publishedCount: africanResult.publishedCount,
+            unpublishedCount: africanResult.unpublishedCount,
+          });
+        }
+        if (leisureResult.success) {
+          setLeisureCounts({
+            totalCount: leisureResult.totalCount,
+            publishedCount: leisureResult.publishedCount,
+            unpublishedCount: leisureResult.unpublishedCount,
+          });
+        }
+        if (signatureResult.success) {
+          setSignatureCounts({
+            totalCount: signatureResult.totalCount,
+            publishedCount: signatureResult.publishedCount,
+            unpublishedCount: signatureResult.unpublishedCount,
+          });
+        }
+        if (sportResult.success) {
+          setSportCounts({
+            totalCount: sportResult.totalCount,
+            publishedCount: sportResult.publishedCount,
+            unpublishedCount: sportResult.unpublishedCount,
+          });
+        }
+      } catch (error) {
+        console.error('Error loading counts:', error);
       }
     };
-
+  
     loadCounts();
     const interval = setInterval(loadCounts, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
-
 
     useEffect(() => {
     const loadCounts = async () => {
@@ -256,15 +344,13 @@ export function useMenuItems() {
 
         },
         {
-          name: "Signature",
-          href: "/admin/products/signature",
-          
-         },
-        {
-          name: "Camo",
-          href: "/admin/products/camo"
-          
-        },
+  name: "Signature",
+  href: "/admin/products/signature", 
+},
+{
+  name: "Camo",
+  href: "/admin/products/camo"  
+},
         { name: "Add Product", href: "/admin/products/create" },
       ],
     },
