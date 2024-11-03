@@ -1,14 +1,21 @@
 /* eslint-disable react/no-unescaped-entities */
 import { Card } from "@/components/ui/card";
+import { ArrowLeftSquare } from "lucide-react";
+import Link from "next/link";
 import React from "react";
 
 const Page = () => {
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100 p-4">
       <Card className="max-w-md w-full p-6 shadow-lg bg-white rounded-lg">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          Registration Pending
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">
+            Registration Pending
+          </h1>
+          <Link href="/">
+            <ArrowLeftSquare />
+          </Link>{" "}
+        </div>
         <p className="text-lg text-gray-600 mb-4">
           Thank you for registering! Your account is currently under review.
         </p>

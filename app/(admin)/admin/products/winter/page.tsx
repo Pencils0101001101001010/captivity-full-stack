@@ -5,7 +5,7 @@ import {
   toggleProductPublish,
   deleteProduct,
 } from "./actions";
-import ProductTableWrapper from "./ProductTableWrapper";
+import ProductTableWrapper from "../summer/ProductTableWrapper";
 
 export default async function KidsTablePage() {
   const result = await fetchKidsCollectionTable();
