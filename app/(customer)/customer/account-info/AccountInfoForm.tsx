@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import {
   Form,
@@ -27,12 +27,7 @@ export default function AccountInfoForm({
   userId,
   initialData,
 }: AccountInfoFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { toast } = useToast();
-
+  // Initialize form with type-safe validation
   const form = useForm<AccountFormValues>({
     resolver: zodResolver(accountFormSchema),
     defaultValues: {
@@ -64,16 +59,21 @@ export default function AccountInfoForm({
     },
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { toast } = useToast();
+
   const onSubmit = async (data: AccountFormValues) => {
     setIsSubmitting(true);
     try {
-      const isPasswordUpdate = !!data.newPassword && !!data.currentPassword;
       const result = await updateAccountInfo(userId, data);
 
       if (result.success) {
         toast({
           title: "Success",
-          description: isPasswordUpdate
+          description: data.newPassword
             ? "Your account information and password have been updated."
             : "Your account information has been updated.",
           variant: "default",

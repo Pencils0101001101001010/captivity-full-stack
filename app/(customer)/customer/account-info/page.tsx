@@ -1,12 +1,15 @@
-// page.tsx
 import { Suspense } from "react";
 import { validateRequest } from "@/auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
-import AccountInfoForm from "./AccountInfoForm";
+import dynamic from "next/dynamic";
 import BackToCustomerPage from "../_components/BackToCustomerButton";
-import { Button } from "@/components/ui/button";
 import Header from "../_components/Header";
+
+// Dynamically import the form component with no SSR
+const AccountInfoForm = dynamic(() => import("./AccountInfoForm"), {
+  ssr: false,
+});
 
 async function getUser(userId: string) {
   return await prisma.user.findUnique({
@@ -46,7 +49,6 @@ export default async function AccountPage() {
     redirect("/login");
   }
 
-  // Fetch full user data from Prisma
   const user = await getUser(sessionUser.id);
 
   if (!user) {
