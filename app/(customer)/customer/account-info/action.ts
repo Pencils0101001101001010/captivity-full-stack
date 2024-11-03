@@ -11,6 +11,7 @@ type ActionResponse<T> = {
   success: boolean;
   data?: T;
   error?: string;
+  debugInfo?: any; // Only included in development
 };
 
 export async function updateAccountInfo(
@@ -18,13 +19,24 @@ export async function updateAccountInfo(
   formData: z.infer<typeof accountFormSchema>
 ): Promise<ActionResponse<any>> {
   try {
-    // First check database connection
-    const connectionCheck = await checkDatabaseConnection();
+    // Add detailed logging for debugging
+    console.log("Starting updateAccountInfo", { userId });
+
+    // First check database connection with timeout
+    const connectionCheck = await Promise.race([
+      checkDatabaseConnection(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Database connection timeout")), 5000)
+      ),
+    ]);
+
     if (connectionCheck !== true) {
-      console.error("Database connection failed:", connectionCheck.error);
+      console.error("Database connection failed:", connectionCheck);
       return {
         success: false,
-        error: "Database connection error. Please try again later.",
+        error: "Unable to connect to database. Please try again later.",
+        debugInfo:
+          process.env.NODE_ENV === "development" ? connectionCheck : undefined,
       };
     }
 
@@ -36,115 +48,98 @@ export async function updateAccountInfo(
       console.error("Validation error:", validationError);
       return {
         success: false,
-        error:
-          "Invalid form data: " +
-          (validationError instanceof Error
-            ? validationError.message
-            : "Unknown validation error"),
+        error: "Invalid form data. Please check your inputs and try again.",
+        debugInfo:
+          process.env.NODE_ENV === "development" ? validationError : undefined,
       };
     }
 
     // Get current user with full details
-    let user;
-    try {
-      user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-          id: true,
-          passwordHash: true,
-          email: true,
-          role: true,
-        },
-      });
-    } catch (dbError) {
-      console.error("Database query error:", dbError);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        passwordHash: true,
+        email: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      console.error("User not found:", userId);
       return {
         success: false,
-        error: "Database error while fetching user",
+        error: "User not found. Please log in again.",
       };
     }
 
-    if (!user) {
-      return { success: false, error: "User not found" };
-    }
-
-    // Prepare update data
+    // Prepare update data with null checks
     const updateData: any = {
-      username: validatedData.username,
-      firstName: validatedData.firstName,
-      lastName: validatedData.lastName,
-      displayName: validatedData.displayName,
+      username: validatedData.username?.trim(),
+      firstName: validatedData.firstName?.trim(),
+      lastName: validatedData.lastName?.trim(),
+      displayName: validatedData.displayName?.trim(),
       phoneNumber: validatedData.phoneNumber,
-      streetAddress: validatedData.streetAddress,
-      addressLine2: validatedData.addressLine2 || null,
-      suburb: validatedData.suburb || null,
-      townCity: validatedData.townCity,
-      postcode: validatedData.postcode,
-      country: validatedData.country,
-      position: validatedData.position || null,
-      natureOfBusiness: validatedData.natureOfBusiness,
-      currentSupplier: validatedData.currentSupplier,
-      otherSupplier: validatedData.otherSupplier || null,
-      resellingTo: validatedData.resellingTo || null,
-      salesRep: validatedData.salesRep,
-      website: validatedData.website || null,
-      companyName: validatedData.companyName,
-      ckNumber: validatedData.ckNumber || null,
-      vatNumber: validatedData.vatNumber || null,
+      streetAddress: validatedData.streetAddress?.trim(),
+      addressLine2: validatedData.addressLine2?.trim() || null,
+      suburb: validatedData.suburb?.trim() || null,
+      townCity: validatedData.townCity?.trim(),
+      postcode: validatedData.postcode?.trim(),
+      country: validatedData.country?.trim(),
+      position: validatedData.position?.trim() || null,
+      natureOfBusiness: validatedData.natureOfBusiness?.trim(),
+      currentSupplier: validatedData.currentSupplier?.trim(),
+      otherSupplier: validatedData.otherSupplier?.trim() || null,
+      resellingTo: validatedData.resellingTo?.trim() || null,
+      salesRep: validatedData.salesRep?.trim(),
+      website: validatedData.website?.trim() || null,
+      companyName: validatedData.companyName?.trim(),
+      ckNumber: validatedData.ckNumber?.trim() || null,
+      vatNumber: validatedData.vatNumber?.trim() || null,
     };
 
-    // Handle email update
+    // Handle email update with explicit error handling
     if (validatedData.email !== user.email) {
-      try {
-        const existingUser = await prisma.user.findUnique({
-          where: {
-            email: validatedData.email,
-            NOT: { id: user.id },
-          },
-        });
+      const existingUser = await prisma.user.findUnique({
+        where: {
+          email: validatedData.email,
+          NOT: { id: user.id },
+        },
+      });
 
-        if (existingUser) {
-          return { success: false, error: "Email already in use" };
-        }
-        updateData.email = validatedData.email;
-      } catch (emailCheckError) {
-        console.error("Email check error:", emailCheckError);
+      if (existingUser) {
         return {
           success: false,
-          error: "Error checking email availability",
+          error: "This email is already in use by another account.",
         };
       }
+      updateData.email = validatedData.email?.trim();
     }
 
-    // Handle password update
+    // Handle password update with better error messages
     if (validatedData.newPassword && validatedData.currentPassword) {
       if (!user.passwordHash) {
-        return { success: false, error: "No password set for this account" };
-      }
-
-      try {
-        const isValidPassword = await argon2.verify(
-          user.passwordHash,
-          validatedData.currentPassword
-        );
-
-        if (!isValidPassword) {
-          return { success: false, error: "Current password is incorrect" };
-        }
-
-        updateData.passwordHash = await argon2.hash(validatedData.newPassword, {
-          type: argon2.argon2id,
-        });
-      } catch (passwordError) {
-        console.error("Password processing error:", passwordError);
         return {
           success: false,
-          error: "Error processing password update",
+          error: "Password authentication is not set up for this account.",
         };
       }
+
+      const isValidPassword = await argon2.verify(
+        user.passwordHash,
+        validatedData.currentPassword
+      );
+
+      if (!isValidPassword) {
+        return { success: false, error: "Current password is incorrect." };
+      }
+
+      updateData.passwordHash = await argon2.hash(validatedData.newPassword, {
+        type: argon2.argon2id,
+      });
     }
 
-    // Update user in database
+    // Update user with try-catch
     try {
       const updatedUser = await prisma.user.update({
         where: { id: user.id },
@@ -161,19 +156,25 @@ export async function updateAccountInfo(
       });
 
       revalidatePath("/account");
-      return { success: true, data: updatedUser };
+      return {
+        success: true,
+        data: updatedUser,
+      };
     } catch (updateError) {
-      console.error("User update error:", updateError);
+      console.error("Database update error:", updateError);
       return {
         success: false,
-        error: "Failed to update user information in database",
+        error: "Failed to update account information. Please try again.",
+        debugInfo:
+          process.env.NODE_ENV === "development" ? updateError : undefined,
       };
     }
   } catch (error) {
     console.error("Unexpected error in updateAccountInfo:", error);
     return {
       success: false,
-      error: "An unexpected error occurred while updating account information",
+      error: "An unexpected error occurred. Please try again later.",
+      debugInfo: process.env.NODE_ENV === "development" ? error : undefined,
     };
   }
 }
