@@ -18,20 +18,51 @@ export async function updateAccountInfo(
   formData: z.infer<typeof accountFormSchema>
 ): Promise<ActionResponse<any>> {
   try {
-    const validatedData = accountFormSchema.parse(formData);
-    console.log("Updating user:", userId);
-    console.log("Form data:", JSON.stringify(validatedData));
+    // First check database connection
+    const connectionCheck = await checkDatabaseConnection();
+    if (connectionCheck !== true) {
+      console.error("Database connection failed:", connectionCheck.error);
+      return {
+        success: false,
+        error: "Database connection error. Please try again later.",
+      };
+    }
+
+    // Validate input data
+    let validatedData;
+    try {
+      validatedData = accountFormSchema.parse(formData);
+    } catch (validationError) {
+      console.error("Validation error:", validationError);
+      return {
+        success: false,
+        error:
+          "Invalid form data: " +
+          (validationError instanceof Error
+            ? validationError.message
+            : "Unknown validation error"),
+      };
+    }
 
     // Get current user with full details
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        passwordHash: true,
-        email: true,
-        role: true,
-      },
-    });
+    let user;
+    try {
+      user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          passwordHash: true,
+          email: true,
+          role: true,
+        },
+      });
+    } catch (dbError) {
+      console.error("Database query error:", dbError);
+      return {
+        success: false,
+        error: "Database error while fetching user",
+      };
+    }
 
     if (!user) {
       return { success: false, error: "User not found" };
@@ -45,36 +76,44 @@ export async function updateAccountInfo(
       displayName: validatedData.displayName,
       phoneNumber: validatedData.phoneNumber,
       streetAddress: validatedData.streetAddress,
-      addressLine2: validatedData.addressLine2,
-      suburb: validatedData.suburb,
+      addressLine2: validatedData.addressLine2 || null,
+      suburb: validatedData.suburb || null,
       townCity: validatedData.townCity,
       postcode: validatedData.postcode,
       country: validatedData.country,
-      position: validatedData.position,
+      position: validatedData.position || null,
       natureOfBusiness: validatedData.natureOfBusiness,
       currentSupplier: validatedData.currentSupplier,
-      otherSupplier: validatedData.otherSupplier,
-      resellingTo: validatedData.resellingTo,
+      otherSupplier: validatedData.otherSupplier || null,
+      resellingTo: validatedData.resellingTo || null,
       salesRep: validatedData.salesRep,
-      website: validatedData.website,
+      website: validatedData.website || null,
       companyName: validatedData.companyName,
-      ckNumber: validatedData.ckNumber,
-      vatNumber: validatedData.vatNumber,
+      ckNumber: validatedData.ckNumber || null,
+      vatNumber: validatedData.vatNumber || null,
     };
 
     // Handle email update
     if (validatedData.email !== user.email) {
-      const existingUser = await prisma.user.findUnique({
-        where: {
-          email: validatedData.email,
-          NOT: { id: user.id },
-        },
-      });
+      try {
+        const existingUser = await prisma.user.findUnique({
+          where: {
+            email: validatedData.email,
+            NOT: { id: user.id },
+          },
+        });
 
-      if (existingUser) {
-        return { success: false, error: "Email already in use" };
+        if (existingUser) {
+          return { success: false, error: "Email already in use" };
+        }
+        updateData.email = validatedData.email;
+      } catch (emailCheckError) {
+        console.error("Email check error:", emailCheckError);
+        return {
+          success: false,
+          error: "Error checking email availability",
+        };
       }
-      updateData.email = validatedData.email;
     }
 
     // Handle password update
@@ -96,42 +135,45 @@ export async function updateAccountInfo(
         updateData.passwordHash = await argon2.hash(validatedData.newPassword, {
           type: argon2.argon2id,
         });
-      } catch (error) {
-        console.error("Password verification error:", error);
-        return { success: false, error: "Error verifying password" };
+      } catch (passwordError) {
+        console.error("Password processing error:", passwordError);
+        return {
+          success: false,
+          error: "Error processing password update",
+        };
       }
     }
 
     // Update user in database
-    const updatedUser = await prisma.user.update({
-      where: { id: user.id },
-      data: updateData,
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        firstName: true,
-        lastName: true,
-        displayName: true,
-        role: true,
-      },
-    });
+    try {
+      const updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: updateData,
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          firstName: true,
+          lastName: true,
+          displayName: true,
+          role: true,
+        },
+      });
 
-    const connectionCheck = await checkDatabaseConnection();
-    if (connectionCheck !== true) {
-      console.error("Database connection failed:", connectionCheck.error);
+      revalidatePath("/account");
+      return { success: true, data: updatedUser };
+    } catch (updateError) {
+      console.error("User update error:", updateError);
       return {
         success: false,
-        error: "Database connection error. Please try again later.",
+        error: "Failed to update user information in database",
       };
     }
-
-    revalidatePath("/account");
-    return { success: true, data: updatedUser };
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return { success: false, error: "Invalid form data" };
-    }
-    return { success: false, error: "Failed to update account information" };
+    console.error("Unexpected error in updateAccountInfo:", error);
+    return {
+      success: false,
+      error: "An unexpected error occurred while updating account information",
+    };
   }
 }
