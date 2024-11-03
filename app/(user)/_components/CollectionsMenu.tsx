@@ -14,16 +14,16 @@ export function CollectionsMenu({ products, loading }: CollectionsMenuProps) {
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
 
   const collections = [
-    "Signature",
-    "Baseball",
-    "Fashion",
-    "Leisure",
-    "Sport",
+    "Signature ",
+    "Baseball  ",
+    "Fashion   ",
+    "Leisure   ",
+    "Sport     ",
     "Industrial",
-    "Camo",
-    "Winter",
-    "Kids    ",
-    "African"
+    "Camo      ",
+    "Winter    ",
+    "Kids      ",
+    "African   "
   ];
 
   return (
