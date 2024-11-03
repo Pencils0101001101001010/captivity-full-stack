@@ -1,3 +1,4 @@
+"use server";
 import { Suspense } from "react";
 import { validateRequest } from "@/auth";
 import { redirect } from "next/navigation";
