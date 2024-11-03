@@ -1,4 +1,4 @@
-// components/ProductTableWrapper.tsx
+// ProductTableWrapper.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
