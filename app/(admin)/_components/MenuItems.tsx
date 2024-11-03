@@ -11,6 +11,7 @@ import { fetchLeisureCollectionTable } from "../admin/products/leisure/actions";
 import { fetchSignatureCollectionTable } from "../admin/products/signature/actions";
 import { fetchSportCollectionTable } from "../admin/products/sport/actions";
 import { fetchCamoCollectionTable } from "../admin/products/camo/actions";
+import { fetchBaseballCollectionTable } from "../admin/products/baseball/actions";
 
 
 // Types
@@ -67,6 +68,7 @@ export function useMenuItems() {
     sport: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
     winter: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
     camo: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
+    baseball: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
   });
 
   const collectionFetchers = useCallback(() => ({
@@ -79,6 +81,7 @@ export function useMenuItems() {
     signature: fetchSignatureCollectionTable,
     sport: fetchSportCollectionTable,
     camo: fetchCamoCollectionTable,
+    baseball: fetchBaseballCollectionTable,
     // winter: fetchWinterCollectionTable,
   }), []);
 
@@ -228,6 +231,11 @@ export function useMenuItems() {
           name: "Sport",
           href: "/admin/products/sport",
           count: collections.sport.totalCount,
+        },
+        {
+          name: "Baseball",
+          href: "/admin/products/baseball",
+          count: collections.baseball.totalCount,
         },
         { name: "Add Product", href: "/admin/products/create" },
       ],
