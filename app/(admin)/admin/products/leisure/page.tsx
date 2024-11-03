@@ -1,14 +1,14 @@
 // pages/KidsTablePage.tsx
 import React from "react";
 import {
-  fetchKidsCollectionTable,
+  fetchLeisureCollectionTable,
   toggleProductPublish,
   deleteProduct,
 } from "./actions";
-import ProductTableWrapper from "../summer/ProductTableWrapper";
+import ProductTableWrapper from "./ProductTableWrapper";
 
-export default async function KidsTablePage() {
-  const result = await fetchKidsCollectionTable();
+export default async function LeisureTablePage() {
+  const result = await fetchLeisureCollectionTable();
 
   if (!result.success) {
     return <div>Error: {result.error}</div>;
