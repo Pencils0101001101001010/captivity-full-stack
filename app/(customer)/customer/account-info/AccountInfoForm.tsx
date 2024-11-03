@@ -69,7 +69,7 @@ export default function AccountInfoForm({
     setIsSubmitting(true);
     try {
       const result = await updateAccountInfo(userId, data);
-
+      console.log("Form submission result:", result);
       if (result.success) {
         toast({
           title: "Success",
@@ -91,6 +91,7 @@ export default function AccountInfoForm({
             message: "Current password is incorrect",
           });
         }
+        console.error("Form submission error:", result.error);
 
         toast({
           title: "Error",
@@ -100,6 +101,7 @@ export default function AccountInfoForm({
         });
       }
     } catch (error: any) {
+      console.error("Form submission caught error:", error);
       toast({
         title: "Error",
         description: error.message || "An unexpected error occurred.",
