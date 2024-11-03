@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import * as argon2 from "argon2";
 import { revalidatePath } from "next/cache";
 import { accountFormSchema } from "./types";
+import { checkDatabaseConnection } from "@/lib/db-utils";
 
 type ActionResponse<T> = {
   success: boolean;
@@ -18,6 +19,8 @@ export async function updateAccountInfo(
 ): Promise<ActionResponse<any>> {
   try {
     const validatedData = accountFormSchema.parse(formData);
+    console.log("Updating user:", userId);
+    console.log("Form data:", JSON.stringify(validatedData));
 
     // Get current user with full details
     const user = await prisma.user.findUnique({
@@ -113,6 +116,15 @@ export async function updateAccountInfo(
         role: true,
       },
     });
+
+    const connectionCheck = await checkDatabaseConnection();
+    if (connectionCheck !== true) {
+      console.error("Database connection failed:", connectionCheck.error);
+      return {
+        success: false,
+        error: "Database connection error. Please try again later.",
+      };
+    }
 
     revalidatePath("/account");
     return { success: true, data: updatedUser };
