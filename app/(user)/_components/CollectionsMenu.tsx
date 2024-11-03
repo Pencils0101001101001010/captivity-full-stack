@@ -14,16 +14,16 @@ export function CollectionsMenu({ products, loading }: CollectionsMenuProps) {
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
 
   const collections = [
-    "Signature Collection",
-    "Baseball Collection",
-    "Fashion Collection",
-    "Leisure Collection",
-    "Sport Collection",
-    "Industrial Collection",
-    "Camo Collection",
-    "Winter Collection",
-    "Kid's Collection",
-    "African Collection",
+    "Signature",
+    "Baseball",
+    "Fashion",
+    "Leisure",
+    "Sport",
+    "Industrial",
+    "Camo",
+    "Winter",
+    "Kids    ",
+    "African"
   ];
 
   return (
@@ -49,10 +49,10 @@ export function CollectionsMenu({ products, loading }: CollectionsMenuProps) {
           {collections.map(item => (
             <li key={item}>
               <Link
-                href={`/products/all-collections/${item.toLowerCase()}-collection`}
+                href={`/products/all-collections/${item.toLowerCase().trim()}-collection`}
                 className="text-gray-600 hover:text-gray-900 transition-colors duration-200"
               >
-                {item}
+                {item} Collection
               </Link>
             </li>
           ))}

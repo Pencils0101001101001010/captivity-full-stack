@@ -51,7 +51,7 @@ const FashionProductList: React.FC = () => {
 
   return (
     <section className="container mx-auto my-8">
-      <HeroSection featuredImage={featuredImage} categoryName="Fashion-COLLECTION" />
+      <HeroSection featuredImage={featuredImage} categoryName="FASHION-COLLECTION" />
 
       <div className="flex flex-col md:flex-row gap-6 relative">
         <aside className="md:w-1/4 lg:w-1/4 hidden md:block">
