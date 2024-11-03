@@ -49,7 +49,7 @@ export function CollectionsMenu({ products, loading }: CollectionsMenuProps) {
           {collections.map(item => (
             <li key={item}>
               <Link
-                href={`/products/all-collections/${item.toLowerCase()}-collection`}
+                href={`/products/all-collections/${item.toLowerCase()}`}
                 className="text-gray-600 hover:text-gray-900 transition-colors duration-200"
               >
                 {item}
