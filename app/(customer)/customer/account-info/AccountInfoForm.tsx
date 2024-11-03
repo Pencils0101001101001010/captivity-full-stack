@@ -79,7 +79,7 @@ export default function AccountInfoForm({
           variant: "default",
           duration: 5000,
         });
-
+        //
         // Reset password fields
         form.setValue("currentPassword", "");
         form.setValue("newPassword", "");
