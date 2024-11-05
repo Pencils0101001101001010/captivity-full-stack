@@ -22,8 +22,10 @@ export const PersonalInfoSection = ({
   onSubmit,
 }: PersonalInfoSectionProps) => {
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-6">Personal Information</h2>
+    <div className="bg-background text-foreground">
+      <h2 className="text-xl font-semibold mb-6 text-foreground">
+        Personal Information
+      </h2>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
@@ -31,11 +33,11 @@ export const PersonalInfoSection = ({
             name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First Name</FormLabel>
+                <FormLabel className="text-foreground">First Name</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} className="bg-background border-input" />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-destructive" />
               </FormItem>
             )}
           />
@@ -45,11 +47,11 @@ export const PersonalInfoSection = ({
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last Name</FormLabel>
+                <FormLabel className="text-foreground">Last Name</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} className="bg-background border-input" />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-destructive" />
               </FormItem>
             )}
           />
@@ -59,11 +61,11 @@ export const PersonalInfoSection = ({
             name="displayName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Display Name</FormLabel>
+                <FormLabel className="text-foreground">Display Name</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} className="bg-background border-input" />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-destructive" />
               </FormItem>
             )}
           />
@@ -73,11 +75,15 @@ export const PersonalInfoSection = ({
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel className="text-foreground">Email</FormLabel>
                 <FormControl>
-                  <Input type="email" {...field} />
+                  <Input
+                    type="email"
+                    {...field}
+                    className="bg-background border-input"
+                  />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-destructive" />
               </FormItem>
             )}
           />
@@ -87,20 +93,25 @@ export const PersonalInfoSection = ({
             name="phoneNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Phone Number</FormLabel>
+                <FormLabel className="text-foreground">Phone Number</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
                     {...field}
                     onChange={e => field.onChange(parseInt(e.target.value))}
+                    className="bg-background border-input [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-destructive" />
               </FormItem>
             )}
           />
 
-          <Button type="submit" disabled={form.formState.isSubmitting}>
+          <Button
+            type="submit"
+            disabled={form.formState.isSubmitting}
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
             {form.formState.isSubmitting
               ? "Updating..."
               : "Update Personal Information"}

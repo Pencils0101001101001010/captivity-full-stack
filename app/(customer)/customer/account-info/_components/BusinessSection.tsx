@@ -26,8 +26,10 @@ interface BusinessSectionProps {
 
 export const BusinessSection = ({ form, onSubmit }: BusinessSectionProps) => {
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-6">Business Information</h2>
+    <div className="bg-background text-foreground">
+      <h2 className="text-xl font-semibold mb-6 text-foreground">
+        Business Information
+      </h2>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
@@ -35,11 +37,11 @@ export const BusinessSection = ({ form, onSubmit }: BusinessSectionProps) => {
             name="companyName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Company Name</FormLabel>
+                <FormLabel className="text-foreground">Company Name</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} className="bg-background border-input" />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-destructive" />
               </FormItem>
             )}
           />
@@ -49,17 +51,22 @@ export const BusinessSection = ({ form, onSubmit }: BusinessSectionProps) => {
             name="natureOfBusiness"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nature of Business</FormLabel>
+                <FormLabel className="text-foreground">
+                  Nature of Business
+                </FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select nature of business" />
+                    <SelectTrigger className="bg-background border-input">
+                      <SelectValue
+                        placeholder="Select nature of business"
+                        className="text-muted-foreground"
+                      />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="bg-background border-input">
                     <SelectItem value="distributors">Distributors</SelectItem>
                     <SelectItem value="retailer">Retailer</SelectItem>
                     <SelectItem value="manufacturer">Manufacturer</SelectItem>
@@ -67,7 +74,7 @@ export const BusinessSection = ({ form, onSubmit }: BusinessSectionProps) => {
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormMessage />
+                <FormMessage className="text-destructive" />
               </FormItem>
             )}
           />
@@ -77,17 +84,22 @@ export const BusinessSection = ({ form, onSubmit }: BusinessSectionProps) => {
             name="currentSupplier"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Current Supplier</FormLabel>
+                <FormLabel className="text-foreground">
+                  Current Supplier
+                </FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select current supplier" />
+                    <SelectTrigger className="bg-background border-input">
+                      <SelectValue
+                        placeholder="Select current supplier"
+                        className="text-muted-foreground"
+                      />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="bg-background border-input">
                     <SelectItem value="none">None</SelectItem>
                     <SelectItem value="supplier1">Supplier 1</SelectItem>
                     <SelectItem value="supplier2">Supplier 2</SelectItem>
@@ -95,7 +107,7 @@ export const BusinessSection = ({ form, onSubmit }: BusinessSectionProps) => {
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormMessage />
+                <FormMessage className="text-destructive" />
               </FormItem>
             )}
           />
@@ -106,17 +118,23 @@ export const BusinessSection = ({ form, onSubmit }: BusinessSectionProps) => {
               name="otherSupplier"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Other Supplier</FormLabel>
+                  <FormLabel className="text-foreground">
+                    Other Supplier
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} className="bg-background border-input" />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-destructive" />
                 </FormItem>
               )}
             />
           )}
 
-          <Button type="submit" disabled={form.formState.isSubmitting}>
+          <Button
+            type="submit"
+            disabled={form.formState.isSubmitting}
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
             {form.formState.isSubmitting
               ? "Updating..."
               : "Update Business Information"}

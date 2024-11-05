@@ -121,24 +121,34 @@ const UpdateUserForm = ({ user }: UpdateUserFormProps) => {
   };
 
   return (
-    <div className="space-y-12 max-w-2xl mx-auto py-8">
-      <PersonalInfoSection form={personalForm} onSubmit={onSubmitPersonal} />
+    <div className="relative space-y-12 max-w-2xl mx-auto py-8 bg-background text-foreground">
+      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+        <PersonalInfoSection form={personalForm} onSubmit={onSubmitPersonal} />
+      </div>
 
-      <AddressSection form={addressForm} onSubmit={onSubmitAddress} />
+      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+        <AddressSection form={addressForm} onSubmit={onSubmitAddress} />
+      </div>
 
-      <BusinessSection form={businessForm} onSubmit={onSubmitBusiness} />
+      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+        <BusinessSection form={businessForm} onSubmit={onSubmitBusiness} />
+      </div>
 
-      <PasswordSection
-        form={passwordForm}
-        onSubmit={onSubmitPassword}
-        showPasswordUpdate={showPasswordUpdate}
-        setShowPasswordUpdate={setShowPasswordUpdate}
-      />
+      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+        <PasswordSection
+          form={passwordForm}
+          onSubmit={onSubmitPassword}
+          showPasswordUpdate={showPasswordUpdate}
+          setShowPasswordUpdate={setShowPasswordUpdate}
+        />
+      </div>
 
-      <StatusMessage
-        success={updateStatus.success}
-        error={updateStatus.error}
-      />
+      <div className="fixed bottom-4 right-4 z-50">
+        <StatusMessage
+          success={updateStatus.success}
+          error={updateStatus.error}
+        />
+      </div>
     </div>
   );
 };

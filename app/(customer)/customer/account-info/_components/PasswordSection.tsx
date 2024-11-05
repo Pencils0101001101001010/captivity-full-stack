@@ -26,12 +26,13 @@ export const PasswordSection = ({
   setShowPasswordUpdate,
 }: PasswordSectionProps) => {
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
+    <div className="bg-background text-foreground">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Password</h2>
+        <h2 className="text-xl font-semibold text-foreground">Password</h2>
         <Button
           variant="outline"
           onClick={() => setShowPasswordUpdate(!showPasswordUpdate)}
+          className="border-border bg-background hover:bg-accent hover:text-accent-foreground"
         >
           {showPasswordUpdate ? "Cancel" : "Change Password"}
         </Button>
@@ -45,11 +46,17 @@ export const PasswordSection = ({
               name="currentPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Current Password</FormLabel>
+                  <FormLabel className="text-foreground">
+                    Current Password
+                  </FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} />
+                    <Input
+                      type="password"
+                      {...field}
+                      className="bg-background border-input"
+                    />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-destructive" />
                 </FormItem>
               )}
             />
@@ -59,11 +66,17 @@ export const PasswordSection = ({
               name="newPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>New Password</FormLabel>
+                  <FormLabel className="text-foreground">
+                    New Password
+                  </FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} />
+                    <Input
+                      type="password"
+                      {...field}
+                      className="bg-background border-input"
+                    />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-destructive" />
                 </FormItem>
               )}
             />
@@ -73,11 +86,17 @@ export const PasswordSection = ({
               name="confirmNewPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirm New Password</FormLabel>
+                  <FormLabel className="text-foreground">
+                    Confirm New Password
+                  </FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} />
+                    <Input
+                      type="password"
+                      {...field}
+                      className="bg-background border-input"
+                    />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-destructive" />
                 </FormItem>
               )}
             />
@@ -85,7 +104,7 @@ export const PasswordSection = ({
             <Button
               type="submit"
               disabled={form.formState.isSubmitting}
-              className="w-full"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               {form.formState.isSubmitting
                 ? "Updating Password..."
