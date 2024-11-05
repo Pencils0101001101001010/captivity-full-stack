@@ -95,7 +95,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const transformedProduct = transformProductForImage(product);
 
   return (
-    <div className="max-w-4xl mx-auto p-3 bg-card my-8 shadow-lg rounded-lg border border-border">
+    <div className="max-w-4xl mx-auto p-3 bg-card my-8 shadow-lg rounded-lg border border-border mb-20">
       <div className="flex flex-col md:flex-row mb-4">
         <ProductImage
           selectedVariation={selectedVariation}
