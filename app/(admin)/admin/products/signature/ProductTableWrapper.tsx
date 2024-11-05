@@ -1,4 +1,4 @@
-// ProductTableWrapper.tsx
+// components/ProductTableWrapper.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -25,7 +25,7 @@ export default function ProductTableWrapper({
   return (
     <ProductTable
       products={products}
-      collectionName="Summer"
+      collectionName="Signature"
       onTogglePublish={handleTogglePublish}
       onDelete={handleDelete}
       onEdit={id => router.push(`/admin/products/edit/${id}`)}

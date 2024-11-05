@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { fetchAllRoleCounts } from "../admin/users/actions";
 import { fetchSummerCollectionTable } from "../admin/products/summer/actions";
 import { fetchFashionCollectionTable } from "../admin/products/fashion/actions";
 import { fetchIndustrialCollectionTable } from "../admin/products/industrial/actions";
 import { fetchKidsCollectionTable } from "../admin/products/kids/actions";
 import { fetchAfricanCollectionTable } from "../admin/products/african/actions";
+import { fetchLeisureCollectionTable } from "../admin/products/leisure/actions";
+import { fetchSignatureCollectionTable } from "../admin/products/signature/actions";
+import { fetchSportCollectionTable } from "../admin/products/sport/actions";
+import { fetchCamoCollectionTable } from "../admin/products/camo/actions";
+import { fetchBaseballCollectionTable } from "../admin/products/baseball/actions";
+
+
+// Types
 type MenuLink = {
   name: string;
   href: string;
@@ -18,8 +26,28 @@ type MenuItem = {
   links: MenuLink[];
 };
 
+type UserCounts = {
+  pendingApproval: number;
+  customers: number;
+  subscribers: number;
+  promo: number;
+  distributors: number;
+  shopManagers: number;
+  editors: number;
+};
+
+type CollectionCounts = {
+  totalCount: number;
+  publishedCount: number;
+  unpublishedCount: number;
+};
+
+type Collections = {
+  [key: string]: CollectionCounts;
+};
+
 export function useMenuItems() {
-  const [userCounts, setUserCounts] = useState({
+  const [userCounts, setUserCounts] = useState<UserCounts>({
     pendingApproval: 0,
     customers: 0,
     subscribers: 0,
@@ -29,158 +57,87 @@ export function useMenuItems() {
     editors: 0,
   });
 
-  const [summerCounts, setSummerCounts] = useState({
-    totalCount: 0,
-    publishedCount: 0,
-    unpublishedCount: 0,
+  const [collections, setCollections] = useState<Collections>({
+    summer: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
+    fashion: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
+    industrial: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
+    kids: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
+    african: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
+    leisure: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
+    signature: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
+    sport: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
+    winter: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
+    camo: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
+    baseball: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
   });
 
-    const [fashionCounts, setFashionCounts] = useState({
-    totalCount: 0,
-    publishedCount: 0,
-    unpublishedCount: 0,
-    });
-  
-  const [industrialCounts, setIndustrialCounts] = useState({
-    totalCount: 0,
-    publishedCount: 0,
-    unpublishedCount: 0,
-  });
-
-  const [kidsCounts, setKidsCounts] = useState({
-    totalCount: 0,
-    publishedCount: 0,
-    unpublishedCount: 0,
-  });
-
-  const [africanCounts, setAfricanCounts] = useState({
-    totalCount: 0,
-    publishedCount: 0,
-    unpublishedCount: 0,
-  });
+  const collectionFetchers = useCallback(() => ({
+    summer: fetchSummerCollectionTable,
+    fashion: fetchFashionCollectionTable,
+    industrial: fetchIndustrialCollectionTable,
+    kids: fetchKidsCollectionTable,
+    african: fetchAfricanCollectionTable,
+    leisure: fetchLeisureCollectionTable,
+    signature: fetchSignatureCollectionTable,
+    sport: fetchSportCollectionTable,
+    camo: fetchCamoCollectionTable,
+    baseball: fetchBaseballCollectionTable,
+    // winter: fetchWinterCollectionTable,
+  }), []);
 
   useEffect(() => {
     const loadCounts = async () => {
-      const [userResult, summerResult] = await Promise.all([
-        fetchAllRoleCounts(),
-        fetchSummerCollectionTable(),
-      ]);
+      try {
+        const userResult = await fetchAllRoleCounts();
+        if (userResult.success) {
+          setUserCounts(userResult.counts);
+        }
 
-      if (userResult.success) {
-        setUserCounts(userResult.counts);
-      }
-      if (summerResult.success) {
-        setSummerCounts({
-          totalCount: summerResult.totalCount,
-          publishedCount: summerResult.publishedCount,
-          unpublishedCount: summerResult.unpublishedCount,
+        const fetchers = collectionFetchers();
+        const fetchPromises = Object.entries(fetchers).map(
+          async ([key, fetchFn]) => {
+            try {
+              const result = await fetchFn();
+              if (result.success) {
+                return [
+                  key,
+                  {
+                    totalCount: result.totalCount,
+                    publishedCount: result.publishedCount,
+                    unpublishedCount: result.unpublishedCount,
+                  },
+                ] as const;
+              }
+            } catch (error) {
+              console.error(`Error fetching ${key} collection:`, error);
+            }
+            return null;
+          }
+        );
+
+        const results = await Promise.all(fetchPromises);
+
+        setCollections(prev => {
+          const newCollections = { ...prev };
+          results.forEach(result => {
+            if (result) {
+              const [key, counts] = result;
+              newCollections[key] = counts;
+            }
+          });
+          return newCollections;
         });
+      } catch (error) {
+        console.error("Error loading counts:", error);
       }
     };
 
     loadCounts();
     const interval = setInterval(loadCounts, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [collectionFetchers]);
 
-
-    useEffect(() => {
-    const loadCounts = async () => {
-      const [userResult, fashionResult] = await Promise.all([
-        fetchAllRoleCounts(),
-        fetchFashionCollectionTable(),
-      ]);
-
-      if (userResult.success) {
-        setUserCounts(userResult.counts);
-      }
-      if (fashionResult.success) {
-        setFashionCounts({
-          totalCount: fashionResult.totalCount,
-          publishedCount: fashionResult.publishedCount,
-          unpublishedCount: fashionResult.unpublishedCount,
-        });
-      }
-    };
-
-      
-    loadCounts();
-    const interval = setInterval(loadCounts, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-    useEffect(() => {
-    const loadCounts = async () => {
-      const [userResult, industrialResult] = await Promise.all([
-        fetchAllRoleCounts(),
-        fetchIndustrialCollectionTable(),
-      ]);
-
-      if (userResult.success) {
-        setUserCounts(userResult.counts);
-      }
-      if (industrialResult.success) {
-        setIndustrialCounts({
-          totalCount: industrialResult.totalCount,
-          publishedCount: industrialResult.publishedCount,
-          unpublishedCount: industrialResult.unpublishedCount,
-        });
-      }
-    };
-
-    loadCounts();
-    const interval = setInterval(loadCounts, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-  
-  useEffect(() => {
-    const loadCounts = async () => {
-      const [userResult, kidsResult] = await Promise.all([
-        fetchAllRoleCounts(),
-        fetchKidsCollectionTable(),
-      ]);
-
-      if (userResult.success) {
-        setUserCounts(userResult.counts);
-      }
-      if (kidsResult.success) {
-        setIndustrialCounts({
-          totalCount: kidsResult.totalCount,
-          publishedCount: kidsResult.publishedCount,
-          unpublishedCount: kidsResult.unpublishedCount,
-        });
-      }
-    };
-
-    loadCounts();
-    const interval = setInterval(loadCounts, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-  const loadCounts = async () => {
-    const [userResult, africanResult] = await Promise.all([
-      fetchAllRoleCounts(),
-      fetchAfricanCollectionTable(),
-    ]);
-
-    if (userResult.success) {
-      setUserCounts(userResult.counts);
-    }
-    if (africanResult.success) {
-      setSummerCounts({
-        totalCount: africanResult.totalCount,
-        publishedCount: africanResult.publishedCount,
-        unpublishedCount: africanResult.unpublishedCount,
-      });
-    }
-    };
-  loadCounts();
-  const interval = setInterval(loadCounts, 5 * 60 * 1000);
-  return () => clearInterval(interval);
-}, []);
-
-  
+  // Generate menuItems based on current state
   const menuItems: MenuItem[] = [
     {
       title: "Users",
@@ -228,42 +185,57 @@ export function useMenuItems() {
         {
           name: "African",
           href: "/admin/products/african",
-          count: africanCounts.totalCount,
+          count: collections.african.totalCount,
         },
         {
           name: "Fashion",
           href: "/admin/products/fashion",
-          count: fashionCounts.totalCount,
+          count: collections.fashion.totalCount,
         },
-       {
+        {
           name: "Industrial",
           href: "/admin/products/industrial",
-          count: industrialCounts.totalCount,
+          count: collections.industrial.totalCount,
         },
-       {
+        {
           name: "Kid's",
           href: "/admin/products/kids",
-          count: kidsCounts.totalCount,
-       },
+          count: collections.kids.totalCount,
+        },
         {
           name: "Summer",
           href: "/admin/products/summer",
-          count: summerCounts.totalCount,
+          count: collections.summer.totalCount,
         },
         {
           name: "Winter",
           href: "/admin/products/winter",
-
+          count: collections.winter.totalCount,
         },
         {
           name: "Signature",
           href: "/admin/products/signature",
-          
-         },
+          count: collections.signature.totalCount,
+        },
         {
           name: "Camo",
-          href: "/admin/products/camo"
-          
+          href: "/admin/products/camo",
+          count: collections.camo.totalCount,
+        },
+        {
+          name: "Leisure",
+          href: "/admin/products/leisure",
+          count: collections.leisure.totalCount,
+        },
+        {
+          name: "Sport",
+          href: "/admin/products/sport",
+          count: collections.sport.totalCount,
+        },
+        {
+          name: "Baseball",
+          href: "/admin/products/baseball",
+          count: collections.baseball.totalCount,
         },
         { name: "Add Product", href: "/admin/products/create" },
       ],
