@@ -1,17 +1,17 @@
 "use client";
 
 import { useCallback } from "react";
-import { fetchAllRoleCounts } from "../admin/users/actions";
-import { fetchSummerCollectionTable } from "../admin/products/summer/actions";
-import { fetchFashionCollectionTable } from "../admin/products/fashion/actions";
-import { fetchIndustrialCollectionTable } from "../admin/products/industrial/actions";
-import { fetchKidsCollectionTable } from "../admin/products/kids/actions";
-import { fetchAfricanCollectionTable } from "../admin/products/african/actions";
-import { fetchLeisureCollectionTable } from "../admin/products/leisure/actions";
-import { fetchSignatureCollectionTable } from "../admin/products/signature/actions";
-import { fetchSportCollectionTable } from "../admin/products/sport/actions";
-import { fetchCamoCollectionTable } from "../admin/products/camo/actions";
-import { fetchBaseballCollectionTable } from "../admin/products/baseball/actions";
+import { fetchAllRoleCounts } from "../../admin/users/actions";
+import { fetchSummerCollectionTable } from "../../admin/products/summer/actions";
+import { fetchFashionCollectionTable } from "../../admin/products/fashion/actions";
+import { fetchIndustrialCollectionTable } from "../../admin/products/industrial/actions";
+import { fetchKidsCollectionTable } from "../../admin/products/kids/actions";
+import { fetchAfricanCollectionTable } from "../../admin/products/african/actions";
+import { fetchLeisureCollectionTable } from "../../admin/products/leisure/actions";
+import { fetchSignatureCollectionTable } from "../../admin/products/signature/actions";
+import { fetchSportCollectionTable } from "../../admin/products/sport/actions";
+import { fetchCamoCollectionTable } from "../../admin/products/camo/actions";
+import { fetchBaseballCollectionTable } from "../../admin/products/baseball/actions";
 import { Collections, UserCounts } from "./counts";
 
 // Add proper type for the API responses

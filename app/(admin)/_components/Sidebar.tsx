@@ -9,7 +9,7 @@ import {
 import { useSession } from "../SessionProvider";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMenuItems } from "./useMenuItems";
+import { useMenuItems } from "./_types/useMenuItems";
 
 // Keep the types here since they're used only for type annotations
 type MenuLink = {
