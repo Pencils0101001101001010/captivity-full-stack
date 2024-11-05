@@ -122,19 +122,19 @@ const UpdateUserForm = ({ user }: UpdateUserFormProps) => {
 
   return (
     <div className="relative space-y-12 max-w-2xl mx-auto py-8 bg-background text-foreground">
-      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+      <div className="rounded-lg shadow-2xl shadow-black border border-border bg-card p-6">
         <PersonalInfoSection form={personalForm} onSubmit={onSubmitPersonal} />
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+      <div className="rounded-lg border border-border bg-card p-6 shadow-2xl shadow-black">
         <AddressSection form={addressForm} onSubmit={onSubmitAddress} />
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+      <div className="rounded-lg border border-border bg-card p-6 shadow-2xl shadow-black">
         <BusinessSection form={businessForm} onSubmit={onSubmitBusiness} />
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+      <div className="rounded-lg border border-border bg-card p-6 shadow-2xl shadow-black">
         <PasswordSection
           form={passwordForm}
           onSubmit={onSubmitPassword}

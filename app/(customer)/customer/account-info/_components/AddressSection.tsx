@@ -26,7 +26,7 @@ interface AddressSectionProps {
 
 export const AddressSection = ({ form, onSubmit }: AddressSectionProps) => {
   return (
-    <div className="bg-background text-foreground">
+    <div className="bg-background text-foreground ">
       <h2 className="text-xl font-semibold mb-6 text-foreground">
         Address Information
       </h2>
