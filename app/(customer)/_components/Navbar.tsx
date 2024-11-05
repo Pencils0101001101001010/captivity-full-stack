@@ -28,165 +28,121 @@ const Navbar = () => {
   }, []);
 
   return (
-    <div>
-      <nav className="bg-black text-white">
-        <div className="flex items-center justify-between text-xs mx-auto z-10 w-full py-6 px-8">
-          <div className="md:hidden">
-            <button onClick={() => setIsOpen(!isOpen)}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-7 w-7"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16m-7 6h7"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <Link href="/customer" className="w-[170px] h-[10px] mb-5">
-            <Image
-              src="/captivity-logo-white.png"
-              alt="captivityLogo"
-              width={331}
-              height={54}
-              className="h-auto border border-white hover:opacity-80 hover:border-2"
-              priority
-            />
-          </Link>
-
-          <div className="hidden md:flex items-center space-x-6">
-            <Link href="/help" className="hover:text-gray-300">
-              <span>Help</span>
-            </Link>
-            <div className="flex">
-              <input
-                type="text"
-                placeholder="Search for product"
-                className="px-2 w-[150px] py-2 rounded-l-sm bg-white text-black"
+    <>
+      {/* Fixed top navbar */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <nav className="bg-black text-white shadow-lg">
+          <div className="flex items-center justify-between text-xs mx-auto w-full py-6 px-8">
+            <Link href="/customer" className="w-[170px] h-[10px] mb-5">
+              <Image
+                src="/captivity-logo-white.png"
+                alt="captivityLogo"
+                width={331}
+                height={54}
+                className="h-auto border border-white hover:opacity-80 hover:border-2"
+                priority
               />
-              <button className="bg-red-600 text-sm rounded-r-sm text-white px-2 py-2 hover:bg-red-500">
-                SEARCH
-              </button>
-            </div>
-            {session?.user ? (
-              <div className="flex items-center space-x-4">
-                <UserButton className="text-lg" />
-                <button
-                  onClick={() => setIsCartOpen(true)}
-                  className="relative"
-                >
-                  <ShoppingCart size={24} />
-                  {cartItemCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                      {cartItemCount}
-                    </span>
-                  )}
+            </Link>
+
+            <div className="hidden md:flex items-center space-x-6">
+              <Link href="/help" className="hover:text-gray-300">
+                <span>Help</span>
+              </Link>
+              <div className="flex">
+                <input
+                  type="text"
+                  placeholder="Search for product"
+                  className="px-2 w-[150px] py-2 rounded-l-sm bg-white text-black"
+                />
+                <button className="bg-red-600 text-sm rounded-r-sm text-white px-2 py-2 hover:bg-red-500">
+                  SEARCH
                 </button>
               </div>
-            ) : (
-              <>
-                <Link href="/login" className="hover:text-gray-300">
+              {session?.user ? (
+                <div className="flex items-center space-x-4">
+                  <UserButton className="text-lg" />
+                  <button
+                    onClick={() => setIsCartOpen(true)}
+                    className="relative"
+                  >
+                    <ShoppingCart size={24} />
+                    {cartItemCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                        {cartItemCount}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <Link href="/login" className="hover:text-gray-300">
+                    Login
+                  </Link>
+                  <RxDividerVertical />
+                  <Link href="/signup" className="hover:text-gray-300">
+                    Register
+                  </Link>
+                  <button
+                    onClick={() => setIsCartOpen(true)}
+                    className="relative"
+                  >
+                    <ShoppingCart size={24} />
+                    {cartItemCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                        {cartItemCount}
+                      </span>
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
+
+            <div className="md:hidden flex items-center">
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className="relative mr-4"
+              >
+                <ShoppingCart size={24} />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                    {cartItemCount}
+                  </span>
+                )}
+              </button>
+              {session?.user ? (
+                <UserButton className="text-lg" />
+              ) : (
+                <Link
+                  href="/login"
+                  className="font-bold text-lg hover:text-gray-300"
+                >
                   Login
                 </Link>
-                <RxDividerVertical />
-                <Link href="/signup" className="hover:text-gray-300">
-                  Register
-                </Link>
-                <button
-                  onClick={() => setIsCartOpen(true)}
-                  className="relative"
-                >
-                  <ShoppingCart size={24} />
-                  {cartItemCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                      {cartItemCount}
-                    </span>
-                  )}
-                </button>
-              </>
-            )}
-          </div>
-
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsCartOpen(true)}
-              className="relative mr-4"
-            >
-              <ShoppingCart size={24} />
-              {cartItemCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                  {cartItemCount}
-                </span>
               )}
-            </button>
-            {session?.user ? (
-              <UserButton className="text-lg" />
-            ) : (
-              <Link
-                href="/login"
-                className="font-bold text-lg hover:text-gray-300"
-              >
-                Login
-              </Link>
-            )}
+            </div>
           </div>
-        </div>
-      </nav>
+        </nav>
 
-      {/* Mobile Menu */}
-      {isOpen && (
-        <div className="md:hidden bg-white text-black shadow-xl z-10">
-          <ul>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/headwear/category">Headwear Collection</Link>
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/apparel/category">Apparel Collection</Link>
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/all-collections/category">All Collections</Link>
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/catalogue">Catalogue</Link>
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/clearance">CLEARANCE</Link>
-            </li>
-            <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-              <Link href="/Help">Help</Link>
-            </li>
-            {!session?.user && (
-              <li className="px-4 py-2 hover:bg-gray-200 hover:text-red-500">
-                <Link href="/signup">Register</Link>
-              </li>
-            )}
-          </ul>
-        </div>
-      )}
-
-      {/* Mobile search bar */}
-      <div className="md:hidden m-2">
-        <div className="flex items-center justify-center border-b-2 p-2">
-          <input
-            type="text"
-            placeholder="Search for product"
-            className="px-2 w-[150px] py-2 bg-white rounded-l-sm text-black border-2"
-          />
-          <button className="bg-red-600 hover:bg-red-500 rounded-r-sm text-white px-2 py-2">
-            SEARCH
-          </button>
+        {/* Mobile search bar - now part of fixed header */}
+        <div className="md:hidden bg-white">
+          <div className="flex items-center justify-center border-b-2 p-2">
+            <input
+              type="text"
+              placeholder="Search for product"
+              className="px-2 w-[150px] py-2 bg-white rounded-l-sm text-black border-2"
+            />
+            <button className="bg-red-600 hover:bg-red-500 rounded-r-sm text-white px-2 py-2">
+              SEARCH
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* Spacer to prevent content from going under fixed navbar */}
+      <div className="h-[120px] md:h-[88px]"></div>
+
       {/* Mobile bottom Nav */}
-      <div className="md:hidden fixed inset-x-0 bottom-0 bg-white shadow-xl shadow-gray-400 border-t-2 border-t-gray-400 border-2 ml-5 mr-5 z-10">
+      <div className="md:hidden fixed inset-x-0 bottom-0 bg-white shadow-xl shadow-gray-400 border-t-2 border-t-gray-400 border-2 ml-5 mr-5 mb-2 z-50 rounded-xl">
         <div className="flex justify-around text-gray-500 m-auto">
           <Link
             href="/"
@@ -233,7 +189,7 @@ const Navbar = () => {
 
       {/* Slide-in Cart */}
       <SlideInCart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-    </div>
+    </>
   );
 };
 
