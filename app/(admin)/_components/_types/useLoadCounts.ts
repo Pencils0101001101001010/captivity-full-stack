@@ -29,7 +29,7 @@ type CollectionResponse =
     };
 
 const CACHE_KEY = "admin-menu-cache";
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 60 * 60 * 1000;
 
 let fetchPromise: Promise<void> | null = null;
 
