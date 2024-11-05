@@ -8,4 +8,4 @@
 
 [] Short out the way the new added on sizes and quanities is being passed to each color, currently not allowing the passing of more added options
 
-[] Types error on create actions functions, and...
+[] Types error on create actions functions.
