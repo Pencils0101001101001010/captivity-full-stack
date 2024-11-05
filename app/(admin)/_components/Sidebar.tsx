@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,7 +12,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMenuItems } from "./_types/useMenuItems";
 
-// Keep the types here since they're used only for type annotations
 type MenuLink = {
   name: string;
   href: string;
@@ -23,7 +23,15 @@ type MenuItem = {
   links: MenuLink[];
 };
 
-const CollapsibleSidebar = () => {
+const CACHE_KEY = "admin-menu-cache";
+
+type CollapsibleSidebarProps = {
+  loadCounts?: (forceRefresh?: boolean) => void;
+};
+
+const CollapsibleSidebar: React.FC<CollapsibleSidebarProps> = ({
+  loadCounts = () => {},
+}) => {
   const [isOpen, setIsOpen] = useState(true);
   const [openDropdowns, setOpenDropdowns] = useState<number[]>([]);
   const { user } = useSession();
@@ -38,6 +46,12 @@ const CollapsibleSidebar = () => {
       return [...prev, index];
     });
   };
+
+  useEffect(() => {
+    // Invalidate cache and force re-render of menuItems
+    localStorage.removeItem(CACHE_KEY);
+    loadCounts(true);
+  }, [pathname, loadCounts]);
 
   return (
     <div className="relative h-full flex">

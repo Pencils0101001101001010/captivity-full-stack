@@ -76,7 +76,7 @@ export function useMenuItems() {
   );
   const [isLoading, setIsLoading] = useState(initialState.isLoading);
 
-  const loadCounts = useLoadCounts(
+  const loadCounts: (forceRefresh?: boolean) => void = useLoadCounts(
     setUserCounts,
     newCollections => setCollections(ensureCollections(newCollections)),
     setIsLoading
@@ -90,8 +90,7 @@ export function useMenuItems() {
     return () => clearInterval(interval);
   }, [loadCounts, initialState.isLoading]);
 
-  // Ensure collections are safe before creating menu items
-  const safeCollections = useMemo(
+  const safeCollections: Collections = useMemo(
     () => ensureCollections(collections),
     [collections]
   );
@@ -250,5 +249,5 @@ export function useMenuItems() {
     [userCounts, safeCollections]
   );
 
-  return { menuItems, isLoading };
+  return { menuItems, isLoading, loadCounts };
 }
