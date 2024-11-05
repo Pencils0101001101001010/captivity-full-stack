@@ -14,32 +14,26 @@ import { fetchCamoCollectionTable } from "../admin/products/camo/actions";
 import { fetchBaseballCollectionTable } from "../admin/products/baseball/actions";
 import { Collections, UserCounts } from "./counts";
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-const CACHE_KEY = "admin-menu-cache";
-
-// Global promise to track ongoing fetches
-let currentFetchPromise: Promise<void> | null = null;
-
-// Load cache from localStorage
-const loadCacheFromStorage = () => {
-  try {
-    const stored = localStorage.getItem(CACHE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (Date.now() - parsed.lastFetched < CACHE_DURATION) {
-        return parsed;
-      }
+// Add proper type for the API responses
+type CollectionResponse =
+  | {
+      success: true;
+      data: any[];
+      totalCount: number;
+      publishedCount: number;
+      unpublishedCount: number;
     }
-  } catch (error) {
-    console.error("Error loading cache:", error);
-  }
-  return { data: null, lastFetched: 0 };
-};
+  | {
+      success: false;
+      error?: string;
+    };
 
-// Shared cache with persistence
-const cache = loadCacheFromStorage();
+const CACHE_KEY = "admin-menu-cache";
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-const collectionFetchers = {
+let fetchPromise: Promise<void> | null = null;
+
+const collectionFetchers: Record<string, () => Promise<CollectionResponse>> = {
   summer: fetchSummerCollectionTable,
   fashion: fetchFashionCollectionTable,
   industrial: fetchIndustrialCollectionTable,
@@ -52,6 +46,38 @@ const collectionFetchers = {
   baseball: fetchBaseballCollectionTable,
 };
 
+const loadFromCache = () => {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const parsedCache = JSON.parse(cached);
+      if (Date.now() - parsedCache.timestamp < CACHE_DURATION) {
+        return parsedCache.data;
+      }
+    }
+  } catch (error) {
+    console.error("Error loading from cache:", error);
+  }
+  return null;
+};
+
+const saveToCache = (data: {
+  userCounts: UserCounts;
+  collections: Collections;
+}) => {
+  try {
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({
+        data,
+        timestamp: Date.now(),
+      })
+    );
+  } catch (error) {
+    console.error("Error saving to cache:", error);
+  }
+};
+
 export function useLoadCounts(
   setUserCounts: (counts: UserCounts) => void,
   setCollections: (collections: Collections) => void,
@@ -59,76 +85,75 @@ export function useLoadCounts(
 ) {
   return useCallback(
     async (force = false) => {
-      const now = Date.now();
-
-      // Check cache first
-      if (!force && cache.data && now - cache.lastFetched < CACHE_DURATION) {
-        setUserCounts(cache.data.userCounts);
-        setCollections(cache.data.collections);
-        setIsLoading(false);
-        return;
+      // Try to load from cache first
+      if (!force) {
+        const cachedData = loadFromCache();
+        if (cachedData) {
+          setUserCounts(cachedData.userCounts);
+          setCollections(cachedData.collections);
+          setIsLoading(false);
+          return;
+        }
       }
 
-      // If there's already a fetch in progress, wait for it
-      if (currentFetchPromise) {
-        await currentFetchPromise;
-        if (cache.data) {
-          setUserCounts(cache.data.userCounts);
-          setCollections(cache.data.collections);
-        }
-        setIsLoading(false);
+      // If a fetch is already in progress, wait for it
+      if (fetchPromise) {
+        await fetchPromise;
         return;
       }
 
       setIsLoading(true);
 
-      // Create new fetch promise
-      currentFetchPromise = (async () => {
+      // Create the fetch promise
+      fetchPromise = (async () => {
         try {
-          // Fetch all data in parallel
-          const [userResult, ...collectionResults] = await Promise.all([
+          // Batch all fetches together
+          const results = await Promise.all([
             fetchAllRoleCounts(),
-            ...Object.values(collectionFetchers).map(fetch => fetch()),
+            ...Object.entries(collectionFetchers).map(([key, fetcher]) =>
+              fetcher().catch(error => {
+                console.error(`Error fetching ${key}:`, error);
+                return { success: false } as CollectionResponse;
+              })
+            ),
           ]);
 
-          const newCollections: Collections = {};
-          const collectionKeys = Object.keys(collectionFetchers);
+          const [userResult, ...collectionResults] = results;
 
-          // Process collection results
-          collectionResults.forEach((result, index) => {
-            if (result?.success) {
-              const key = collectionKeys[index];
-              newCollections[key] = {
-                totalCount: result.totalCount,
-                publishedCount: result.publishedCount,
-                unpublishedCount: result.unpublishedCount,
-              };
-            }
+          if (!userResult.success) {
+            throw new Error("Failed to fetch user counts");
+          }
+
+          const newCollections: Collections = {};
+          Object.keys(collectionFetchers).forEach((key, index) => {
+            const result = collectionResults[index] as CollectionResponse;
+            newCollections[key] = {
+              totalCount: result.success ? result.totalCount : 0,
+              publishedCount: result.success ? result.publishedCount : 0,
+              unpublishedCount: result.success ? result.unpublishedCount : 0,
+            };
           });
 
-          // Update cache and state only if fetch was successful
-          if (userResult.success) {
-            cache.data = {
-              userCounts: userResult.counts,
-              collections: newCollections,
-            };
-            cache.lastFetched = now;
+          const data = {
+            userCounts: userResult.counts,
+            collections: newCollections,
+          };
 
-            // Save to localStorage
-            localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+          // Save to cache
+          saveToCache(data);
 
-            setUserCounts(userResult.counts);
-            setCollections(newCollections);
-          }
+          // Update state
+          setUserCounts(data.userCounts);
+          setCollections(data.collections);
         } catch (error) {
-          console.error("Error loading counts:", error);
+          console.error("Error fetching data:", error);
         } finally {
-          currentFetchPromise = null;
           setIsLoading(false);
+          fetchPromise = null;
         }
       })();
 
-      await currentFetchPromise;
+      await fetchPromise;
     },
     [setUserCounts, setCollections, setIsLoading]
   );
