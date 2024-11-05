@@ -51,7 +51,7 @@ export default async function ProfilePage() {
   const user = await getCurrentUser();
 
   return (
-    <div className="container mx-auto">
+    <div className="container mx-auto mb-12">
       <h1 className="text-2xl font-bold mb-8">Update Profile</h1>
       <UpdateUserForm user={user} />
     </div>
