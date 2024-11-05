@@ -13,7 +13,7 @@ export default function Page() {
     <main className="flex h-screen items-center justify-center p-5">
       <div className="flex h-full max-h-[40rem] w-full max-w-[64rem] overflow-hidden rounded-2xl bg-card shadow-2xl">
         {/* Left side: Login form */}
-        <div className="flex w-1/2 flex-col space-y-10 overflow-y-auto p-10">
+        <div className="flex w-full md:w-1/2 flex-col space-y-10 overflow-y-auto p-10">
           <h1 className="text-center text-3xl font-bold">Login to Captivity</h1>
           <div className="space-y-5">
             <div className="flex items-center gap-3">
@@ -27,12 +27,13 @@ export default function Page() {
             </Link>
           </div>
         </div>
-        {/* Right side: Adding the image */}
-        <div className="flex w-1/2 items-center justify-center">
+        {/* Right side: Image (hidden on mobile, shown on md and up) */}
+        <div className="hidden md:flex w-1/2 items-center justify-center">
           <Image
             src={loginImage}
-            alt=" Image"
+            alt="Login Image"
             className="object-cover w-full h-full"
+            priority
           />
         </div>
       </div>
