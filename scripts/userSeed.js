@@ -58,9 +58,11 @@ async function main() {
       // Generate a secure hash from the WordPress password hash
       const securePassword = await hashPassword(user.password);
 
+      // Format phone number as string, removing any non-digit characters
+      // If no phone number, use empty string as default
       const phoneNumber = user.user_registration_phone_number
         ? user.user_registration_phone_number.replace(/\D/g, "")
-        : null;
+        : ""; // Changed from null to empty string
 
       await prisma.user.create({
         data: {
@@ -73,7 +75,7 @@ async function main() {
           email: user.email,
           passwordHash: securePassword, // Store the Argon2 hashed password
           vatNumber: user.vat_number || null,
-          phoneNumber: phoneNumber,
+          phoneNumber, // Will now be empty string if no phone number exists
           streetAddress: streetAddress,
           addressLine2: user.address.billing_address_2 || null,
           suburb: addressLine2 || null,
