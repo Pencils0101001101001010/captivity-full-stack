@@ -1,6 +1,7 @@
 import { PrismaClient, Prisma } from "@prisma/client";
 import fetch from "node-fetch";
 import * as argon2 from "argon2";
+import { v4 as uuidv4 } from "uuid";
 
 const prisma = new PrismaClient();
 
@@ -19,13 +20,17 @@ function mapWordPressRoleToPrisma(wpRole) {
   return roleMapping[wpRole.toLowerCase()] || "USER";
 }
 
-// Function to validate and parse date
-function getValidDate(dateString) {
-  const parsedDate = new Date(dateString);
-  return isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+// Function to generate 16-character ID matching your schema format
+function generateId() {
+  const charset = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < 16; i++) {
+    result += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+  return result;
 }
 
-// Function to hash password using Argon2
+// Rest of your functions...
 async function hashPassword(password) {
   try {
     return await argon2.hash(password, {
@@ -39,6 +44,11 @@ async function hashPassword(password) {
     console.error("Error hashing password:", error);
     throw error;
   }
+}
+
+function getValidDate(dateString) {
+  const parsedDate = new Date(dateString);
+  return isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
 }
 
 async function main() {
@@ -55,11 +65,11 @@ async function main() {
 
     for (const user of users) {
       const role = mapWordPressRoleToPrisma(user.roles[0]);
-      const [streetAddress, addressLine2] = (
-        user.address.billing_address_1 || ""
-      )
+
+      const billingAddress = user.address?.billing_address_1 || "";
+      const [streetAddress, addressLine2] = billingAddress
         .split(",")
-        .map(s => s.trim());
+        .map(s => s?.trim() || "");
 
       const securePassword = await hashPassword(user.password);
 
@@ -67,15 +77,13 @@ async function main() {
         ? user.user_registration_phone_number.replace(/\D/g, "")
         : "";
 
-      // Validate dates
       const createdAt = getValidDate(user.user_registered);
       const currentDate = new Date();
 
       try {
-        // Let Prisma handle the UUID generation
         await prisma.user.create({
           data: {
-            // Remove the manual id generation and let Prisma handle it
+            id: generateId(), // Now generates exact 16-character format
             wpId: String(user.id),
             username: user.username,
             firstName: user.first_name,
@@ -85,12 +93,12 @@ async function main() {
             passwordHash: securePassword,
             vatNumber: user.vat_number || null,
             phoneNumber,
-            streetAddress: streetAddress || null,
-            addressLine2: user.address.billing_address_2 || null,
+            streetAddress: streetAddress || "",
+            addressLine2: user.address?.billing_address_2 || null,
             suburb: addressLine2 || null,
-            townCity: user.address.billing_city,
-            postcode: user.address.billing_postcode,
-            country: user.address.billing_country,
+            townCity: user.address?.billing_city || "",
+            postcode: user.address?.billing_postcode || "",
+            country: user.address?.billing_country || "",
             position: user.position || null,
             natureOfBusiness: user.nature_of_business || "Not specified",
             currentSupplier: user.current_supplier || "Not specified",
@@ -114,11 +122,7 @@ async function main() {
         );
       } catch (error) {
         console.error(`Error creating user ${user.username}:`, error);
-        console.log("Problematic user data:", {
-          username: user.username,
-          createdAt: user.user_registered,
-          parsedCreatedAt: createdAt,
-        });
+        throw error;
       }
     }
 
