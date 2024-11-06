@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { fetchAllRoleCounts } from "../admin/users/actions";
+import { useCollectionsStore } from "../admin/products/useCollectionsStore";
 
 // Types
 type MenuLink = {
@@ -25,6 +26,20 @@ type UserCounts = {
   editors: number;
 };
 
+type CollectionCounts = {
+  winter: number;
+  summer: number;
+  camo: number;
+  baseball: number;
+  kids: number;
+  signature: number;
+  fashion: number;
+  leisure: number;
+  sport: number;
+  african: number;
+  industrial: number;
+};
+
 const INITIAL_USER_COUNTS: UserCounts = {
   pendingApproval: 0,
   customers: 0,
@@ -33,6 +48,20 @@ const INITIAL_USER_COUNTS: UserCounts = {
   distributors: 0,
   shopManagers: 0,
   editors: 0,
+};
+
+const INITIAL_COLLECTION_COUNTS: CollectionCounts = {
+  winter: 0,
+  summer: 0,
+  camo: 0,
+  baseball: 0,
+  kids: 0,
+  signature: 0,
+  fashion: 0,
+  leisure: 0,
+  sport: 0,
+  african: 0,
+  industrial: 0,
 };
 
 // Constants outside component to prevent recreation
@@ -45,37 +74,47 @@ export function useMenuItems() {
   const isMounted = useRef(true);
   const fetchPromiseRef = useRef<Promise<void> | null>(null);
 
-  const loadCounts = useCallback(async (forceRefresh = false) => {
-    const now = Date.now();
-    const timeSinceLastFetch = now - lastFetchTime.current;
+  // Get collections state from Zustand store
+  const { counts: collectionCounts, fetchCollections } = useCollectionsStore();
 
-    if (
-      fetchPromiseRef.current ||
-      !isMounted.current ||
-      (!forceRefresh && timeSinceLastFetch < MINIMUM_FETCH_INTERVAL)
-    ) {
-      return;
-    }
+  const loadCounts = useCallback(
+    async (forceRefresh = false) => {
+      const now = Date.now();
+      const timeSinceLastFetch = now - lastFetchTime.current;
 
-    lastFetchTime.current = now;
-
-    try {
-      const userResult = await fetchAllRoleCounts();
-      if (!isMounted.current) return;
-
-      if (userResult.success) {
-        setUserCounts(prev =>
-          JSON.stringify(prev) !== JSON.stringify(userResult.counts)
-            ? userResult.counts
-            : prev
-        );
+      if (
+        fetchPromiseRef.current ||
+        !isMounted.current ||
+        (!forceRefresh && timeSinceLastFetch < MINIMUM_FETCH_INTERVAL)
+      ) {
+        return;
       }
-    } catch (error) {
-      console.error("Error loading counts:", error);
-    } finally {
-      fetchPromiseRef.current = null;
-    }
-  }, []);
+
+      lastFetchTime.current = now;
+
+      try {
+        const [userResult] = await Promise.all([
+          fetchAllRoleCounts(),
+          fetchCollections(),
+        ]);
+
+        if (!isMounted.current) return;
+
+        if (userResult.success) {
+          setUserCounts(prev =>
+            JSON.stringify(prev) !== JSON.stringify(userResult.counts)
+              ? userResult.counts
+              : prev
+          );
+        }
+      } catch (error) {
+        console.error("Error loading counts:", error);
+      } finally {
+        fetchPromiseRef.current = null;
+      }
+    },
+    [fetchCollections]
+  );
 
   useEffect(() => {
     isMounted.current = true;
@@ -136,17 +175,72 @@ export function useMenuItems() {
         ],
       },
       {
-        title: "Products",
+        title: "Collections",
         links: [
           {
-            name: "African",
-            href: "/admin/products/african",
+            name: "Winter Collection",
+            href: "/admin/collections/winter",
+            count: collectionCounts.winter,
           },
           {
-            name: "Winter",
-            href: "/admin/products/winter",
+            name: "Summer Collection",
+            href: "/admin/collections/summer",
+            count: collectionCounts.summer,
           },
+          {
+            name: "Camo Collection",
+            href: "/admin/collections/camo",
+            count: collectionCounts.camo,
+          },
+          {
+            name: "Baseball Collection",
+            href: "/admin/collections/baseball",
+            count: collectionCounts.baseball,
+          },
+          {
+            name: "Kids Collection",
+            href: "/admin/collections/kids",
+            count: collectionCounts.kids,
+          },
+          {
+            name: "Signature Collection",
+            href: "/admin/collections/signature",
+            count: collectionCounts.signature,
+          },
+          {
+            name: "Fashion Collection",
+            href: "/admin/collections/fashion",
+            count: collectionCounts.fashion,
+          },
+          {
+            name: "Leisure Collection",
+            href: "/admin/collections/leisure",
+            count: collectionCounts.leisure,
+          },
+          {
+            name: "Sport Collection",
+            href: "/admin/collections/sport",
+            count: collectionCounts.sport,
+          },
+          {
+            name: "African Collection",
+            href: "/admin/collections/african",
+            count: collectionCounts.african,
+          },
+          {
+            name: "Industrial Collection",
+            href: "/admin/collections/industrial",
+            count: collectionCounts.industrial,
+          },
+        ],
+      },
+      {
+        title: "Products",
+        links: [
+          { name: "All Products", href: "/admin/products" },
           { name: "Add Product", href: "/admin/products/create" },
+          { name: "Categories", href: "/admin/products/categories" },
+          { name: "Inventory", href: "/admin/products/inventory" },
         ],
       },
       {
@@ -225,7 +319,7 @@ export function useMenuItems() {
         ],
       },
     ],
-    [userCounts]
+    [userCounts, collectionCounts]
   );
 }
 
