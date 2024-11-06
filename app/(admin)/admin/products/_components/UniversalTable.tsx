@@ -63,26 +63,20 @@ export function ProductTable({
   >("all");
   const { toggleProductStatus } = useCollectionsStore();
 
-  // Items per page
   const ITEMS_PER_PAGE = 8;
 
-  // Enhanced search function that checks all searchable fields
+  // Enhanced search function
   const searchProduct = (product: Product, query: string) => {
     const searchTerm = query.toLowerCase().trim();
-
-    // If search is empty, return true to show all products
     if (!searchTerm) return true;
 
-    // Array of all searchable values
     const searchableValues = [
       product.productName,
       product.id,
       product.sellingPrice.toString(),
       product.isPublished ? "published" : "unpublished",
-      // Add any additional fields you want to search through
     ];
 
-    // Return true if any value includes the search term
     return searchableValues.some(value =>
       value.toLowerCase().includes(searchTerm)
     );
@@ -127,17 +121,22 @@ export function ProductTable({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* Search Input */}
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search all fields..."
-            value={searchQuery}
-            onChange={e => handleSearchChange(e.target.value)}
-            className="pl-8"
-          />
+        <div className="flex items-center gap-4">
+          <h1 className="text-4xl font-bold tracking-tight">
+            Search Collection
+          </h1>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search all fields..."
+              value={searchQuery}
+              onChange={e => handleSearchChange(e.target.value)}
+              className="pl-8 bg-background border-2 border-blue-500 dark:border-border focus-visible:ring-2 focus-visible:ring-blue-500 dark:focus-visible:ring-ring"
+            />
+          </div>
         </div>
 
         {/* Publish Filter */}
@@ -147,7 +146,7 @@ export function ProductTable({
             setPublishFilter(value)
           }
         >
-          <SelectTrigger className="w-full sm:w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px] bg-blue-500 dark:bg-background text-white dark:text-foreground border-border hover:bg-blue-700 dark:hover:bg-background transition-colors">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -159,16 +158,16 @@ export function ProductTable({
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="rounded-md border border-border">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Image</TableHead>
-              <TableHead>Product Name</TableHead>
-              <TableHead>Product Id</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+            <TableRow className="border-border">
+              <TableHead className="bg-muted">Image</TableHead>
+              <TableHead className="bg-muted">Product Name</TableHead>
+              <TableHead className="bg-muted">Product Id</TableHead>
+              <TableHead className="bg-muted">Price</TableHead>
+              <TableHead className="bg-muted">Status</TableHead>
+              <TableHead className="bg-muted text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -186,7 +185,7 @@ export function ProductTable({
               </TableRow>
             ) : (
               paginatedProducts.map(product => (
-                <TableRow key={product.id}>
+                <TableRow key={product.id} className="border-border">
                   <TableCell>
                     {product.featuredImage &&
                     product.featuredImage.thumbnail ? (
@@ -214,8 +213,8 @@ export function ProductTable({
                       className={cn(
                         "rounded-full px-2 py-1 text-xs font-semibold",
                         product.isPublished
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
+                          ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                          : "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300"
                       )}
                     >
                       {product.isPublished ? "Published" : "Unpublished"}
@@ -235,18 +234,16 @@ export function ProductTable({
         </Table>
       </div>
 
-      {/* Pagination */}
+      {/* Enhanced Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Page {currentPage} of {totalPages}
-          </p>
+        <div className="flex flex-col items-center justify-center space-y-4 py-4">
           <div className="flex items-center space-x-2">
             <Button
               variant="outline"
               size="icon"
               onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
+              className="h-8 w-8 border-blue-500 dark:border-border hover:bg-blue-500 hover:text-white dark:hover:bg-background"
             >
               <ChevronsLeft className="h-4 w-4" />
             </Button>
@@ -255,14 +252,36 @@ export function ProductTable({
               size="icon"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
+              className="h-8 w-8 border-blue-500 dark:border-border hover:bg-blue-500 hover:text-white dark:hover:bg-background"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
+
+            <div className="flex items-center gap-2">
+              {[...Array(totalPages)].map((_, idx) => (
+                <Button
+                  key={idx + 1}
+                  variant={currentPage === idx + 1 ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => handlePageChange(idx + 1)}
+                  className={cn(
+                    "h-8 w-8 border-blue-500 dark:border-border",
+                    currentPage === idx + 1
+                      ? "bg-blue-500 text-white dark:bg-background dark:text-foreground"
+                      : "hover:bg-blue-500 hover:text-white dark:hover:bg-background"
+                  )}
+                >
+                  {idx + 1}
+                </Button>
+              ))}
+            </div>
+
             <Button
               variant="outline"
               size="icon"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
+              className="h-8 w-8 border-blue-500 dark:border-border hover:bg-blue-500 hover:text-white dark:hover:bg-background"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -271,10 +290,14 @@ export function ProductTable({
               size="icon"
               onClick={() => handlePageChange(totalPages)}
               disabled={currentPage === totalPages}
+              className="h-8 w-8 border-blue-500 dark:border-border hover:bg-blue-500 hover:text-white dark:hover:bg-background"
             >
               <ChevronsRight className="h-4 w-4" />
             </Button>
           </div>
+          <p className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </p>
         </div>
       )}
     </div>

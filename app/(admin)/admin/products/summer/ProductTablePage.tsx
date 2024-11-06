@@ -1,18 +1,32 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ProductTable } from "../_components/UniversalTable";
 import { useCollectionsStore } from "../useCollectionsStore";
 
 export default function ProductsPage() {
   const { collections, isLoading, fetchCollections } = useCollectionsStore();
+  const initRef = useRef(false);
 
   useEffect(() => {
-    fetchCollections();
+    // Skip repeated effect calls in development/strict mode
+    if (initRef.current) return;
+    initRef.current = true;
+
+    const loadData = async () => {
+      await fetchCollections();
+    };
+
+    loadData();
+
+    // Cleanup function to handle component unmount
+    return () => {
+      initRef.current = false;
+    };
   }, [fetchCollections]);
 
   return (
-    <div className="container py-6 ">
+    <div className="container py-6">
       <ProductTable products={collections.summer || []} isLoading={isLoading} />
     </div>
   );

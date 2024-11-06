@@ -5,6 +5,7 @@ import {
   toggleProductPublishStatus,
   type FetchCollectionsResult,
 } from "./actions";
+import { type CollectionCounts } from "./types";
 
 interface FeaturedImage {
   thumbnail: string;
@@ -24,33 +25,15 @@ interface Product {
   featuredImage?: FeaturedImage | null;
 }
 
+type CollectionNames = keyof CollectionCounts;
+
+type Collections = {
+  [K in CollectionNames]: Product[];
+};
+
 interface CollectionsState {
-  collections: {
-    winter: Product[];
-    summer: Product[];
-    camo: Product[];
-    baseball: Product[];
-    kids: Product[];
-    signature: Product[];
-    fashion: Product[];
-    leisure: Product[];
-    sport: Product[];
-    african: Product[];
-    industrial: Product[];
-  };
-  counts: {
-    winter: number;
-    summer: number;
-    camo: number;
-    baseball: number;
-    kids: number;
-    signature: number;
-    fashion: number;
-    leisure: number;
-    sport: number;
-    african: number;
-    industrial: number;
-  };
+  collections: Collections;
+  counts: CollectionCounts;
   isLoading: boolean;
   error: string | null;
   lastFetched: number | null;
@@ -59,73 +42,115 @@ interface CollectionsState {
   updateProductInCollections: (productId: string, isPublished: boolean) => void;
 }
 
+type PersistedState = Pick<
+  CollectionsState,
+  "collections" | "counts" | "lastFetched"
+>;
+
 const FETCH_COOLDOWN = 60000; // 1 minute cooldown
+
+// Request tracking outside of store to persist across re-renders
+const requestTracker = {
+  currentRequest: null as Promise<void> | null,
+  lastFetchTimestamp: 0,
+  isFetching: false,
+};
+
+const DEFAULT_COLLECTIONS: Collections = {
+  winter: [],
+  summer: [],
+  camo: [],
+  baseball: [],
+  signature: [],
+  fashion: [],
+  leisure: [],
+  sport: [],
+  african: [],
+  industrial: [],
+};
+
+const DEFAULT_COUNTS: CollectionCounts = {
+  winter: 0,
+  summer: 0,
+  camo: 0,
+  baseball: 0,
+  signature: 0,
+  fashion: 0,
+  leisure: 0,
+  sport: 0,
+  african: 0,
+  industrial: 0,
+};
 
 export const useCollectionsStore = create<CollectionsState>()(
   devtools(
     persist(
       (set, get) => ({
-        collections: {
-          winter: [],
-          summer: [],
-          camo: [],
-          baseball: [],
-          kids: [],
-          signature: [],
-          fashion: [],
-          leisure: [],
-          sport: [],
-          african: [],
-          industrial: [],
-        },
-        counts: {
-          winter: 0,
-          summer: 0,
-          camo: 0,
-          baseball: 0,
-          kids: 0,
-          signature: 0,
-          fashion: 0,
-          leisure: 0,
-          sport: 0,
-          african: 0,
-          industrial: 0,
-        },
+        collections: DEFAULT_COLLECTIONS,
+        counts: DEFAULT_COUNTS,
         isLoading: false,
         error: null,
         lastFetched: null,
 
         fetchCollections: async () => {
           const now = Date.now();
-          const lastFetched = get().lastFetched;
 
-          // If data was fetched recently, don't fetch again
-          if (lastFetched && now - lastFetched < FETCH_COOLDOWN) {
+          // Return existing request if one is in progress
+          if (requestTracker.currentRequest) {
+            return requestTracker.currentRequest;
+          }
+
+          // Check if we have data and if it's fresh enough
+          const hasData = Object.values(get().collections).some(
+            collection => collection.length > 0
+          );
+          const isFreshEnough =
+            now - requestTracker.lastFetchTimestamp < FETCH_COOLDOWN;
+
+          if (hasData && isFreshEnough && !requestTracker.isFetching) {
             return;
           }
 
-          set({ isLoading: true, error: null });
-          try {
-            const response = await fetchAllCollections();
-            if (response.success) {
-              set({
-                collections: response.collections,
-                counts: response.counts,
-                isLoading: false,
-                lastFetched: now,
-              });
-            } else {
-              set({ error: response.error, isLoading: false });
-            }
-          } catch (error) {
-            set({
-              error:
-                error instanceof Error
-                  ? error.message
-                  : "An unexpected error occurred",
-              isLoading: false,
-            });
+          // Prevent concurrent requests
+          if (requestTracker.isFetching) {
+            return;
           }
+
+          requestTracker.isFetching = true;
+
+          // Create new request
+          requestTracker.currentRequest = (async () => {
+            set({ isLoading: true, error: null });
+
+            try {
+              const response = await fetchAllCollections();
+
+              if (response.success) {
+                set({
+                  collections: response.collections as Collections,
+                  counts: response.counts as CollectionCounts,
+                  isLoading: false,
+                  lastFetched: now,
+                });
+                requestTracker.lastFetchTimestamp = now;
+              } else {
+                set({ error: response.error, isLoading: false });
+              }
+            } catch (error) {
+              set({
+                error:
+                  error instanceof Error
+                    ? error.message
+                    : "An unexpected error occurred",
+                isLoading: false,
+              });
+            } finally {
+              requestTracker.currentRequest = null;
+              requestTracker.isFetching = false;
+            }
+          })();
+
+          return requestTracker.currentRequest;
         },
 
         toggleProductStatus: async (productId: string) => {
@@ -152,42 +177,72 @@ export const useCollectionsStore = create<CollectionsState>()(
           productId: string,
           isPublished: boolean
         ) => {
-          set(state => {
+          set((state: CollectionsState) => {
             const newCollections = { ...state.collections };
-            Object.keys(newCollections).forEach(key => {
-              newCollections[key as keyof typeof newCollections] =
-                newCollections[key as keyof typeof newCollections].map(
-                  product =>
-                    product.id === productId
-                      ? { ...product, isPublished }
-                      : product
-                );
+            let updated = false;
+
+            (Object.keys(newCollections) as CollectionNames[]).forEach(key => {
+              const collection = newCollections[key];
+              const productIndex = collection.findIndex(
+                p => p.id === productId
+              );
+
+              if (productIndex !== -1) {
+                updated = true;
+                newCollections[key] = [
+                  ...collection.slice(0, productIndex),
+                  { ...collection[productIndex], isPublished },
+                  ...collection.slice(productIndex + 1),
+                ];
+              }
             });
 
+            if (!updated) return state;
+
+            const newCounts = Object.entries(newCollections).reduce(
+              (acc, [key, products]) => ({
+                ...acc,
+                [key]: products.length,
+              }),
+              {} as CollectionCounts
+            );
+
             return {
+              ...state,
               collections: newCollections,
-              counts: Object.entries(newCollections).reduce(
-                (acc, [key, products]) => ({
-                  ...acc,
-                  [key]: products.length,
-                }),
-                {} as CollectionsState["counts"]
-              ),
+              counts: newCounts,
             };
           });
         },
       }),
       {
         name: "collections-store",
-        partialize: state => ({
+        partialize: (state: CollectionsState): PersistedState => ({
           collections: state.collections,
           counts: state.counts,
           lastFetched: state.lastFetched,
         }),
+        merge: (
+          persistedState: unknown,
+          currentState: CollectionsState
+        ): CollectionsState => {
+          const typedPersistedState = persistedState as Partial<PersistedState>;
+
+          return {
+            ...currentState,
+            collections:
+              typedPersistedState?.collections ?? DEFAULT_COLLECTIONS,
+            counts: typedPersistedState?.counts ?? DEFAULT_COUNTS,
+            lastFetched: typedPersistedState?.lastFetched ?? null,
+            isLoading: false,
+            error: null,
+          };
+        },
       }
     ),
     {
       name: "collections-store",
+      enabled: process.env.NODE_ENV === "development",
     }
   )
 );
