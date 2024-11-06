@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "node --experimental-json-modules scripts/seed.js",
+    "user": "node --experimental-json-modules scripts/userSeed.js",
     "postinstall": "prisma generate",
     "vercel-build": "prisma generate && next build"
   },

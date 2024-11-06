@@ -39,7 +39,7 @@ model User {
   email            String    @unique
   passwordHash     String
   vatNumber        String?
-  phoneNumber      Int
+  phoneNumber      String    @default("")
   streetAddress    String
   addressLine2     String?
   suburb           String?

@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 ////////////// Register Validation   /////////////////
-const requiredInt = z.number().int().min(1, "Must be greater than 0");
 
 export const registrationSchema = z
   .object({
@@ -13,7 +12,7 @@ export const registrationSchema = z
     email: z.string().email("Invalid email address"),
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
-    phoneNumber: requiredInt,
+    phoneNumber: z.string().min(10, "Phone nr must be 10 numbers or more"),
     natureOfBusiness: z.enum([
       "distributors",
       "retailer",
@@ -48,13 +47,13 @@ export const registrationSchema = z
     agreeTerms: z
       .boolean()
       .refine(
-        (val) => val === true,
-        "You must agree to the terms and conditions",
+        val => val === true,
+        "You must agree to the terms and conditions"
       ),
     displayName: z.string().optional(), // Add this line
   })
   .refine(
-    (data) => {
+    data => {
       if (data.currentSupplier === "other" && !data.otherSupplier) {
         return false;
       }
@@ -63,7 +62,7 @@ export const registrationSchema = z
     {
       message: "Please specify the other supplier",
       path: ["otherSupplier"],
-    },
+    }
   );
 
 export type RegistrationFormData = z.infer<typeof registrationSchema>;
@@ -76,7 +75,7 @@ export const signUpSchema = z.object({
   email: requiredString.email("Invalid email address"),
   username: requiredString.regex(
     /^[a-zA-Z0-9_-]+$/,
-    "Only letters, numbers, - and _ allowed",
+    "Only letters, numbers, - and _ allowed"
   ),
   password: requiredString.min(8, "Must be at least 8 characters"),
   role: z
