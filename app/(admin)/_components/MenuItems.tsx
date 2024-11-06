@@ -1,17 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { fetchAllRoleCounts } from "../admin/users/actions";
-import { fetchSummerCollectionTable } from "../admin/products/summer/actions";
-import { fetchFashionCollectionTable } from "../admin/products/fashion/actions";
-import { fetchIndustrialCollectionTable } from "../admin/products/industrial/actions";
-import { fetchKidsCollectionTable } from "../admin/products/kids/actions";
 import { fetchAfricanCollectionTable } from "../admin/products/african/actions";
-import { fetchLeisureCollectionTable } from "../admin/products/leisure/actions";
-import { fetchSignatureCollectionTable } from "../admin/products/signature/actions";
-import { fetchSportCollectionTable } from "../admin/products/sport/actions";
-import { fetchCamoCollectionTable } from "../admin/products/camo/actions";
-import { fetchBaseballCollectionTable } from "../admin/products/baseball/actions";
 
 // Types
 type MenuLink = {
@@ -42,7 +33,7 @@ type CollectionCounts = {
 };
 
 type Collections = {
-  [key: string]: CollectionCounts;
+  african: CollectionCounts;
 };
 
 const INITIAL_USER_COUNTS: UserCounts = {
@@ -56,96 +47,108 @@ const INITIAL_USER_COUNTS: UserCounts = {
 };
 
 const INITIAL_COLLECTIONS: Collections = {
-  summer: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
-  fashion: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
-  industrial: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
-  kids: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
   african: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
-  leisure: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
-  signature: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
-  sport: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
-  winter: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
-  camo: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
-  baseball: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
 };
+
+// Constants outside component to prevent recreation
+const TWO_HOURS = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+const MINIMUM_FETCH_INTERVAL = 10000; // 10 seconds minimum between manual refreshes
 
 export function useMenuItems() {
   const [userCounts, setUserCounts] = useState<UserCounts>(INITIAL_USER_COUNTS);
   const [collections, setCollections] =
     useState<Collections>(INITIAL_COLLECTIONS);
+  const lastFetchTime = useRef<number>(0);
+  const isMounted = useRef(true);
+  const fetchPromiseRef = useRef<Promise<void> | null>(null);
+  const hasInitialized = useRef(false);
 
-  // Memoize the collection fetchers object
-  const collectionFetchers = useMemo(
-    () => ({
-      summer: fetchSummerCollectionTable,
-      fashion: fetchFashionCollectionTable,
-      industrial: fetchIndustrialCollectionTable,
-      kids: fetchKidsCollectionTable,
-      african: fetchAfricanCollectionTable,
-      leisure: fetchLeisureCollectionTable,
-      signature: fetchSignatureCollectionTable,
-      sport: fetchSportCollectionTable,
-      camo: fetchCamoCollectionTable,
-      baseball: fetchBaseballCollectionTable,
-    }),
-    []
-  );
+  const loadCounts = useCallback(async (forceRefresh = false) => {
+    const now = Date.now();
+    const timeSinceLastFetch = now - lastFetchTime.current;
 
-  // Memoize the loadCounts function
-  const loadCounts = useCallback(async () => {
+    // Skip if:
+    // 1. Already fetching
+    // 2. Not mounted
+    // 3. Not enough time has passed and not forcing refresh
+    if (
+      fetchPromiseRef.current ||
+      !isMounted.current ||
+      (!forceRefresh && timeSinceLastFetch < MINIMUM_FETCH_INTERVAL)
+    ) {
+      return;
+    }
+
+    lastFetchTime.current = now;
+
     try {
+      // Fetch user counts
       const userResult = await fetchAllRoleCounts();
+      if (!isMounted.current) return;
+
       if (userResult.success) {
-        setUserCounts(userResult.counts);
+        setUserCounts(prev =>
+          JSON.stringify(prev) !== JSON.stringify(userResult.counts)
+            ? userResult.counts
+            : prev
+        );
       }
 
-      const fetchPromises = Object.entries(collectionFetchers).map(
-        async ([key, fetchFn]) => {
-          try {
-            const result = await fetchFn();
-            if (result.success) {
-              return [
-                key,
-                {
-                  totalCount: result.totalCount,
-                  publishedCount: result.publishedCount,
-                  unpublishedCount: result.unpublishedCount,
-                },
-              ] as const;
+      // Only fetch African collection if it hasn't been initialized or forcing refresh
+      if (!hasInitialized.current || forceRefresh) {
+        const africanResult = await fetchAfricanCollectionTable();
+        if (!isMounted.current) return;
+
+        if (africanResult.success) {
+          setCollections(prev => {
+            const newCounts = {
+              totalCount: africanResult.totalCount,
+              publishedCount: africanResult.publishedCount,
+              unpublishedCount: africanResult.unpublishedCount,
+            };
+
+            if (JSON.stringify(prev.african) !== JSON.stringify(newCounts)) {
+              return {
+                ...prev,
+                african: newCounts,
+              };
             }
-          } catch (error) {
-            console.error(`Error fetching ${key} collection:`, error);
-          }
-          return null;
+            return prev;
+          });
         }
-      );
-
-      const results = await Promise.all(fetchPromises);
-
-      setCollections(prev => {
-        const newCollections = { ...prev };
-        results.forEach(result => {
-          if (result) {
-            const [key, counts] = result;
-            newCollections[key] = counts;
-          }
-        });
-        return newCollections;
-      });
+        hasInitialized.current = true;
+      }
     } catch (error) {
       console.error("Error loading counts:", error);
+    } finally {
+      fetchPromiseRef.current = null;
     }
-  }, [collectionFetchers]);
+  }, []); // Empty dependency array since all used values are refs or constants
 
-  // Set up the interval effect
+  // Effect for initial load and interval setup
   useEffect(() => {
-    loadCounts();
-    const interval = setInterval(loadCounts, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [loadCounts]);
+    // Reset mounted state
+    isMounted.current = true;
+    hasInitialized.current = false;
 
-  // Memoize the menuItems array
-  const menuItems = useMemo<MenuItem[]>(
+    // Initial load
+    loadCounts(true);
+
+    // Set up interval for refreshes
+    const intervalId = setInterval(() => {
+      loadCounts(true);
+    }, TWO_HOURS);
+
+    // Cleanup function
+    return () => {
+      isMounted.current = false;
+      clearInterval(intervalId);
+      fetchPromiseRef.current = null;
+    };
+  }, [loadCounts]); // loadCounts is stable and won't change
+
+  // Memoized menu items
+  return useMemo<MenuItem[]>(
     () => [
       {
         title: "Users",
@@ -195,56 +198,6 @@ export function useMenuItems() {
             href: "/admin/products/african",
             count: collections.african.totalCount,
           },
-          {
-            name: "Fashion",
-            href: "/admin/products/fashion",
-            count: collections.fashion.totalCount,
-          },
-          {
-            name: "Industrial",
-            href: "/admin/products/industrial",
-            count: collections.industrial.totalCount,
-          },
-          {
-            name: "Kid's",
-            href: "/admin/products/kids",
-            count: collections.kids.totalCount,
-          },
-          {
-            name: "Summer",
-            href: "/admin/products/summer",
-            count: collections.summer.totalCount,
-          },
-          {
-            name: "Winter",
-            href: "/admin/products/winter",
-            count: collections.winter.totalCount,
-          },
-          {
-            name: "Signature",
-            href: "/admin/products/signature",
-            count: collections.signature.totalCount,
-          },
-          {
-            name: "Camo",
-            href: "/admin/products/camo",
-            count: collections.camo.totalCount,
-          },
-          {
-            name: "Leisure",
-            href: "/admin/products/leisure",
-            count: collections.leisure.totalCount,
-          },
-          {
-            name: "Sport",
-            href: "/admin/products/sport",
-            count: collections.sport.totalCount,
-          },
-          {
-            name: "Baseball",
-            href: "/admin/products/baseball",
-            count: collections.baseball.totalCount,
-          },
           { name: "Add Product", href: "/admin/products/create" },
         ],
       },
@@ -265,6 +218,10 @@ export function useMenuItems() {
         links: [
           { name: "All Orders", href: "/admin/orders" },
           { name: "Pending Orders", href: "/admin/orders/pending" },
+          { name: "Processing Orders", href: "/admin/orders/processing" },
+          { name: "Completed Orders", href: "/admin/orders/completed" },
+          { name: "Cancelled Orders", href: "/admin/orders/cancelled" },
+          { name: "Returns", href: "/admin/orders/returns" },
         ],
       },
       {
@@ -272,6 +229,8 @@ export function useMenuItems() {
         links: [
           { name: "All Customers", href: "/admin/customers" },
           { name: "Customer Groups", href: "/admin/customers/groups" },
+          { name: "Customer Reviews", href: "/admin/customers/reviews" },
+          { name: "Loyalty Program", href: "/admin/customers/loyalty" },
         ],
       },
       {
@@ -279,6 +238,10 @@ export function useMenuItems() {
         links: [
           { name: "Promotions", href: "/admin/marketing/promotions" },
           { name: "Discounts", href: "/admin/marketing/discounts" },
+          { name: "Coupons", href: "/admin/marketing/coupons" },
+          { name: "Email Campaigns", href: "/admin/marketing/email" },
+          { name: "Social Media", href: "/admin/marketing/social" },
+          { name: "Analytics", href: "/admin/marketing/analytics" },
         ],
       },
       {
@@ -286,6 +249,11 @@ export function useMenuItems() {
         links: [
           { name: "General", href: "/admin/settings" },
           { name: "Security", href: "/admin/settings/security" },
+          { name: "Shipping", href: "/admin/settings/shipping" },
+          { name: "Payment", href: "/admin/settings/payment" },
+          { name: "Taxes", href: "/admin/settings/taxes" },
+          { name: "Notifications", href: "/admin/settings/notifications" },
+          { name: "API", href: "/admin/settings/api" },
         ],
       },
       {
@@ -293,13 +261,24 @@ export function useMenuItems() {
         links: [
           { name: "Sales Report", href: "/admin/reports/sales" },
           { name: "Inventory Report", href: "/admin/reports/inventory" },
+          { name: "Customer Report", href: "/admin/reports/customers" },
+          { name: "Financial Report", href: "/admin/reports/financial" },
+          { name: "Marketing Report", href: "/admin/reports/marketing" },
+          { name: "Export Data", href: "/admin/reports/export" },
+        ],
+      },
+      {
+        title: "Help & Support",
+        links: [
+          { name: "Documentation", href: "/admin/help/docs" },
+          { name: "FAQs", href: "/admin/help/faqs" },
+          { name: "Contact Support", href: "/admin/help/support" },
+          { name: "System Status", href: "/admin/help/status" },
         ],
       },
     ],
-    [userCounts, collections] // Only recreate when these dependencies change
+    [userCounts, collections]
   );
-
-  return menuItems;
 }
 
 export type { MenuItem, MenuLink };

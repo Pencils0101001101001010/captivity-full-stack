@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -27,24 +27,46 @@ const CollapsibleSidebar = () => {
   const [openDropdowns, setOpenDropdowns] = useState<number[]>([]);
   const { user } = useSession();
   const pathname = usePathname();
-  const menuItems = useMenuItems();
+  const menuItems = useMenuItems(); // Call hook directly
 
-  const toggleDropdown = (index: number) => {
+  const toggleDropdown = useCallback((index: number) => {
     setOpenDropdowns(prev => {
       if (prev.includes(index)) {
         return prev.filter(i => i !== index);
       }
       return [...prev, index];
     });
-  };
+  }, []);
+
+  const toggleSidebar = useCallback(() => {
+    setIsOpen(prev => !prev);
+  }, []);
+
+  const getDropdownClasses = useCallback((isDropdownOpen: boolean) => {
+    return `transition-all duration-200 ease-in-out bg-gray-800 ${
+      isDropdownOpen ? "" : "h-0"
+    } overflow-hidden`;
+  }, []);
+
+  // If sidebar is closed, return minimal component
+  if (!isOpen) {
+    return (
+      <div className="relative h-full flex">
+        <div className="w-0 overflow-hidden flex flex-col bg-gray-900" />
+        <button
+          onClick={toggleSidebar}
+          className="absolute top-4 -right-10 bg-gray-900 text-white p-2 rounded-r hover:bg-gray-800 transition-colors duration-200 focus:outline-none"
+          aria-label="Open sidebar"
+        >
+          <ChevronRight size={20} />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-full flex">
-      <div
-        className={`bg-gray-900 text-white transition-all duration-300 ${
-          isOpen ? "w-[300px]" : "w-0"
-        } overflow-hidden flex flex-col`}
-      >
+      <div className="w-[300px] bg-gray-900 text-white flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto">
           <div className="p-4">
             {/* User Welcome Section */}
@@ -59,75 +81,76 @@ const CollapsibleSidebar = () => {
             <div className="h-px bg-gray-700 my-4" />
 
             <nav className="space-y-1">
-              {menuItems.map((item, index) => (
-                <div key={index}>
-                  <div className="rounded-md">
-                    <button
-                      onClick={() => toggleDropdown(index)}
-                      className={`w-full p-3 flex items-center justify-between hover:bg-gray-800 transition-colors duration-200 ${
-                        openDropdowns.includes(index) ? "bg-gray-800" : ""
-                      }`}
-                    >
-                      <span className="font-medium text-gray-200">
-                        {item.title}
-                      </span>
-                      <div className="text-gray-400">
-                        {openDropdowns.includes(index) ? (
-                          <ChevronUp size={18} />
-                        ) : (
-                          <ChevronDown size={18} />
-                        )}
-                      </div>
-                    </button>
+              {menuItems.map((item, index) => {
+                const isDropdownOpen = openDropdowns.includes(index);
 
-                    {/* Dropdown container */}
-                    <div
-                      className={`transition-all duration-200 ease-in-out bg-gray-800 ${
-                        openDropdowns.includes(index) ? "" : "h-0"
-                      } overflow-hidden`}
-                    >
-                      {/* Scrollable content */}
-                      <div className="max-h-48 overflow-y-auto">
-                        {item.links.map((link, linkIndex) => (
-                          <Link
-                            key={linkIndex}
-                            href={link.href}
-                            className={`block px-6 py-2 text-sm transition-colors duration-200 relative ${
-                              pathname === link.href
-                                ? "bg-gray-700 text-white border-l-4 border-blue-500"
-                                : "text-gray-400 hover:text-white hover:bg-gray-700"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span>{link.name}</span>
-                              {typeof link.count !== "undefined" && (
-                                <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] text-center">
-                                  {link.count}
-                                </span>
-                              )}
-                            </div>
-                          </Link>
-                        ))}
+                return (
+                  <div key={item.title + index}>
+                    <div className="rounded-md">
+                      <button
+                        onClick={() => toggleDropdown(index)}
+                        className={`w-full p-3 flex items-center justify-between hover:bg-gray-800 transition-colors duration-200 ${
+                          isDropdownOpen ? "bg-gray-800" : ""
+                        }`}
+                      >
+                        <span className="font-medium text-gray-200">
+                          {item.title}
+                        </span>
+                        <div className="text-gray-400">
+                          {isDropdownOpen ? (
+                            <ChevronUp size={18} />
+                          ) : (
+                            <ChevronDown size={18} />
+                          )}
+                        </div>
+                      </button>
+
+                      <div className={getDropdownClasses(isDropdownOpen)}>
+                        <div className="max-h-48 overflow-y-auto">
+                          {item.links.map(link => {
+                            const isActive = pathname === link.href;
+
+                            return (
+                              <Link
+                                key={link.href}
+                                href={link.href}
+                                className={`block px-6 py-2 text-sm transition-colors duration-200 relative ${
+                                  isActive
+                                    ? "bg-gray-700 text-white border-l-4 border-blue-500"
+                                    : "text-gray-400 hover:text-white hover:bg-gray-700"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span>{link.name}</span>
+                                  {typeof link.count !== "undefined" && (
+                                    <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                                      {link.count}
+                                    </span>
+                                  )}
+                                </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
+                    {index < menuItems.length - 1 && (
+                      <div className="h-px bg-gray-700 my-1" />
+                    )}
                   </div>
-                  {/* Divider after each section except the last one */}
-                  {index < menuItems.length - 1 && (
-                    <div className="h-px bg-gray-700 my-1" />
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </nav>
           </div>
         </div>
       </div>
 
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggleSidebar}
         className="absolute top-4 -right-10 bg-gray-900 text-white p-2 rounded-r hover:bg-gray-800 transition-colors duration-200 focus:outline-none"
-        aria-label={isOpen ? "Close sidebar" : "Open sidebar"}
+        aria-label="Close sidebar"
       >
-        {isOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+        <ChevronLeft size={20} />
       </button>
     </div>
   );

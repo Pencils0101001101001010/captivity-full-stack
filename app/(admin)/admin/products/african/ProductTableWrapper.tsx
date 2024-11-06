@@ -1,9 +1,9 @@
-// components/ProductTableWrapper.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ProductTableWrapperProps, TableProduct } from "../_types/table";
+import { ProductTableWrapperProps } from "../_types/table";
 import ProductTable from "../_components/ProductTable";
+import { useCallback } from "react";
 
 export default function ProductTableWrapper({
   products,
@@ -12,15 +12,35 @@ export default function ProductTableWrapper({
 }: ProductTableWrapperProps) {
   const router = useRouter();
 
-  const handleTogglePublish = async (id: string) => {
-    await onTogglePublish(id);
-    router.refresh();
-  };
+  const handleTogglePublish = useCallback(
+    async (id: string) => {
+      const result = await onTogglePublish(id);
+      // Don't refresh at all since the server action handles revalidation
+    },
+    [onTogglePublish]
+  );
 
-  const handleDelete = async (id: string) => {
-    await onDelete(id);
-    router.refresh();
-  };
+  const handleDelete = useCallback(
+    async (id: string) => {
+      const result = await onDelete(id);
+      // Don't refresh at all since the server action handles revalidation
+    },
+    [onDelete]
+  );
+
+  const handleEdit = useCallback(
+    (id: string) => {
+      router.push(`/admin/products/edit/${id}`);
+    },
+    [router]
+  );
+
+  const handleView = useCallback(
+    (id: string) => {
+      router.push(`/admin/products/view/${id}`);
+    },
+    [router]
+  );
 
   return (
     <ProductTable
@@ -28,8 +48,8 @@ export default function ProductTableWrapper({
       collectionName="African"
       onTogglePublish={handleTogglePublish}
       onDelete={handleDelete}
-      onEdit={id => router.push(`/admin/products/edit/${id}`)}
-      onView={id => router.push(`/admin/products/view/${id}`)}
+      onEdit={handleEdit}
+      onView={handleView}
     />
   );
 }
