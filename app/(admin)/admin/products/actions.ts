@@ -13,6 +13,13 @@ type Product = {
   isPublished: boolean;
   createdAt: Date;
   updatedAt: Date;
+  featuredImage?: {
+    id: string;
+    thumbnail: string;
+    medium: string;
+    large: string;
+    productId: string;
+  } | null;
 };
 
 export type FetchCollectionsResult =
@@ -35,15 +42,8 @@ export async function fetchProductsByCategory(
           has: category,
         },
       },
-      select: {
-        id: true,
-        productName: true,
-        category: true,
-        description: true,
-        sellingPrice: true,
-        isPublished: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        featuredImage: true,
       },
     });
 
@@ -161,34 +161,69 @@ export async function fetchAllCollections(): Promise<
     ] = await Promise.all([
       prisma.product.findMany({
         where: { category: { has: "kids-collection" } },
+        include: {
+          featuredImage: true,
+        },
       }),
       prisma.product.findMany({
         where: { category: { has: "summer-collection" } },
+        include: {
+          featuredImage: true,
+        },
       }),
       prisma.product.findMany({
         where: { category: { has: "camo-collection" } },
+        include: {
+          featuredImage: true,
+        },
       }),
       prisma.product.findMany({
         where: { category: { has: "baseball-collection" } },
+        include: {
+          featuredImage: true,
+        },
       }),
-      prisma.product.findMany({ where: { category: { has: "winter" } } }),
+      prisma.product.findMany({
+        where: { category: { has: "winter" } },
+        include: {
+          featuredImage: true,
+        },
+      }),
       prisma.product.findMany({
         where: { category: { has: "signature-collection" } },
+        include: {
+          featuredImage: true,
+        },
       }),
       prisma.product.findMany({
         where: { category: { has: "fashion-collection" } },
+        include: {
+          featuredImage: true,
+        },
       }),
       prisma.product.findMany({
         where: { category: { has: "leisure-collection" } },
+        include: {
+          featuredImage: true,
+        },
       }),
       prisma.product.findMany({
         where: { category: { has: "sport-collection" } },
+        include: {
+          featuredImage: true,
+        },
       }),
       prisma.product.findMany({
         where: { category: { has: "african-collection" } },
+        include: {
+          featuredImage: true,
+        },
       }),
       prisma.product.findMany({
         where: { category: { has: "industrial-collection" } },
+        include: {
+          featuredImage: true,
+        },
       }),
     ]);
 

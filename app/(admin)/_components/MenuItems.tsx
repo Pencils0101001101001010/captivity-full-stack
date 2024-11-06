@@ -148,52 +148,52 @@ export function useMenuItems() {
         links: [
           {
             name: "Winter Collection",
-            href: "/admin/collections/winter",
+            href: "/admin/products/winter",
             count: collectionCounts.winter,
           },
           {
             name: "Summer Collection",
-            href: "/admin/collections/summer",
+            href: "/admin/products/summer",
             count: collectionCounts.summer,
           },
           {
             name: "Camo Collection",
-            href: "/admin/collections/camo",
+            href: "/admin/products/camo",
             count: collectionCounts.camo,
           },
           {
             name: "Baseball Collection",
-            href: "/admin/collections/baseball",
+            href: "/admin/products/baseball",
             count: collectionCounts.baseball,
           },
           {
             name: "Signature Collection",
-            href: "/admin/collections/signature",
+            href: "/admin/products/signature",
             count: collectionCounts.signature,
           },
           {
             name: "Fashion Collection",
-            href: "/admin/collections/fashion",
+            href: "/admin/products/fashion",
             count: collectionCounts.fashion,
           },
           {
             name: "Leisure Collection",
-            href: "/admin/collections/leisure",
+            href: "/admin/products/leisure",
             count: collectionCounts.leisure,
           },
           {
             name: "Sport Collection",
-            href: "/admin/collections/sport",
+            href: "/admin/products/sport",
             count: collectionCounts.sport,
           },
           {
             name: "African Collection",
-            href: "/admin/collections/african",
+            href: "/admin/products/african",
             count: collectionCounts.african,
           },
           {
             name: "Industrial Collection",
-            href: "/admin/collections/industrial",
+            href: "/admin/products/industrial",
             count: collectionCounts.industrial,
           },
         ],
