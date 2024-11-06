@@ -20,14 +20,19 @@ function mapWordPressRoleToPrisma(wpRole) {
   return roleMapping[wpRole.toLowerCase()] || "USER";
 }
 
+// Function to validate and parse date
+function getValidDate(dateString) {
+  const parsedDate = new Date(dateString);
+  return isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+}
+
 // Function to hash password using Argon2
 async function hashPassword(password) {
   try {
-    // Using Argon2 with recommended settings
     return await argon2.hash(password, {
       type: argon2.argon2id,
-      memoryCost: 65536, // 64MB
-      timeCost: 3, // Number of iterations
+      memoryCost: 65536,
+      timeCost: 3,
       parallelism: 4,
       saltLength: 16,
     });
@@ -51,56 +56,70 @@ async function main() {
 
     for (const user of users) {
       const role = mapWordPressRoleToPrisma(user.roles[0]);
-      const [streetAddress, addressLine2] = user.address.billing_address_1
+      const [streetAddress, addressLine2] = (
+        user.address.billing_address_1 || ""
+      )
         .split(",")
         .map(s => s.trim());
 
-      // Generate a secure hash from the WordPress password hash
       const securePassword = await hashPassword(user.password);
 
-      // Format phone number as string, removing any non-digit characters
-      // If no phone number, use empty string as default
       const phoneNumber = user.user_registration_phone_number
         ? user.user_registration_phone_number.replace(/\D/g, "")
-        : ""; // Changed from null to empty string
+        : "";
 
-      await prisma.user.create({
-        data: {
-          id: uuidv4(), // Generate a new UUID v4 without hyphens
-          wpId: String(user.id), // Store original WordPress ID
+      // Validate dates
+      const createdAt = getValidDate(user.user_registered);
+      const currentDate = new Date();
+
+      try {
+        await prisma.user.create({
+          data: {
+            id: uuidv4(),
+            wpId: String(user.id),
+            username: user.username,
+            firstName: user.first_name,
+            lastName: user.last_name,
+            displayName: user.display_name,
+            email: user.email,
+            passwordHash: securePassword,
+            vatNumber: user.vat_number || null,
+            phoneNumber,
+            streetAddress: streetAddress || null,
+            addressLine2: user.address.billing_address_2 || null,
+            suburb: addressLine2 || null,
+            townCity: user.address.billing_city,
+            postcode: user.address.billing_postcode,
+            country: user.address.billing_country,
+            position: user.position || null,
+            natureOfBusiness: user.nature_of_business || "Not specified",
+            currentSupplier: user.current_supplier || "Not specified",
+            otherSupplier: null,
+            resellingTo: null,
+            salesRep: user.billing_salesrep || "Not assigned",
+            website: user.website || null,
+            companyName: user.user_registration_company_name || "Not specified",
+            ckNumber: user.ck_number || null,
+            avatarUrl: null,
+            bio: null,
+            agreeTerms: true,
+            role: role,
+            createdAt, // Using validated date
+            updatedAt: currentDate,
+          },
+        });
+
+        console.log(
+          `Created user: ${user.username} (WordPress ID: ${user.id})`
+        );
+      } catch (error) {
+        console.error(`Error creating user ${user.username}:`, error);
+        console.log("Problematic user data:", {
           username: user.username,
-          firstName: user.first_name,
-          lastName: user.last_name,
-          displayName: user.display_name,
-          email: user.email,
-          passwordHash: securePassword, // Store the Argon2 hashed password
-          vatNumber: user.vat_number || null,
-          phoneNumber, // Will now be empty string if no phone number exists
-          streetAddress: streetAddress,
-          addressLine2: user.address.billing_address_2 || null,
-          suburb: addressLine2 || null,
-          townCity: user.address.billing_city,
-          postcode: user.address.billing_postcode,
-          country: user.address.billing_country,
-          position: user.position || null,
-          natureOfBusiness: user.nature_of_business || "Not specified",
-          currentSupplier: user.current_supplier || "Not specified",
-          otherSupplier: null,
-          resellingTo: null,
-          salesRep: user.billing_salesrep || "Not assigned",
-          website: user.website || null,
-          companyName: user.user_registration_company_name || "Not specified",
-          ckNumber: user.ck_number || null,
-          avatarUrl: null,
-          bio: null,
-          agreeTerms: true,
-          role: role,
-          createdAt: new Date(user.user_registered),
-          updatedAt: new Date(),
-        },
-      });
-
-      console.log(`Created user: ${user.username} (WordPress ID: ${user.id})`);
+          createdAt: user.user_registered,
+          parsedCreatedAt: createdAt,
+        });
+      }
     }
 
     console.log("Seed completed successfully");
