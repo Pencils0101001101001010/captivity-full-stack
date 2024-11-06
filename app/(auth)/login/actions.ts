@@ -7,7 +7,7 @@ import { hash, verify } from "@node-rs/argon2";
 import { isRedirectError } from "next/dist/client/components/redirect";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { User } from "@prisma/client"; // Import the User type from Prisma
+import { User } from "@prisma/client";
 import { sendEmail } from "./email";
 import { z } from "zod";
 import { randomBytes } from "crypto";
@@ -40,14 +40,14 @@ export async function login(
   try {
     const { username, password } = loginSchema.parse(credentials);
 
-    const existingUser = (await prisma.user.findFirst({
+    const existingUser = await prisma.user.findFirst({
       where: {
         username: {
           equals: username,
           mode: "insensitive",
         },
       },
-    })) as User | null; // Explicitly type the result
+    });
 
     if (!existingUser || !existingUser.passwordHash) {
       return {
@@ -71,10 +71,8 @@ export async function login(
     const userRole = existingUser.role as UserRole;
 
     if (userRole === UserRole.USER) {
-      // For USER role, don't create a session, just redirect
       return redirect("/register-pending-message");
     } else {
-      // For all other roles, create a session and redirect
       const session = await lucia.createSession(existingUser.id, {});
       const sessionCookie = lucia.createSessionCookie(session.id);
       cookies().set(
@@ -95,26 +93,24 @@ export async function login(
   }
 }
 
-// Validation schemas
 const forgotPasswordSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email("Please enter a valid email address"),
 });
 
 const resetPasswordSchema = z.object({
   token: z.string(),
-  newPassword: z.string().min(8),
+  newPassword: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
-// Function to initiate password reset
 export async function initiatePasswordReset(
   values: ForgotPasswordValues
 ): Promise<{ success?: boolean; error?: string }> {
   try {
     const { email } = forgotPasswordSchema.parse(values);
-    console.log("Looking up user with email:", email);
+    console.log("Attempting password reset for:", email);
 
     const user = await prisma.user.findFirst({
       where: {
@@ -126,54 +122,76 @@ export async function initiatePasswordReset(
     });
 
     if (!user) {
-      // Return success even if user not found to prevent email enumeration
+      console.log("No user found with email:", email);
       return { success: true };
     }
 
-    // Generate reset token
     const resetToken = randomBytes(32).toString("hex");
-    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
-    // Store reset token in database
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        resetToken,
-        resetTokenExpiry,
-      },
-    });
+    try {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
 
-    // Create reset link
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const resetLink = `${appUrl}/reset-password?token=${resetToken}`;
+      await sendEmail({
+        to: user.email,
+        subject: "Reset Your Password",
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .button { 
+                  background-color: #0070f3;
+                  color: white;
+                  padding: 12px 24px;
+                  text-decoration: none;
+                  border-radius: 5px;
+                  display: inline-block;
+                  margin: 20px 0;
+                }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>Reset Your Password</h1>
+                <p>We received a request to reset your password. Click the button below to proceed:</p>
+                <a href="${resetLink}" class="button">Reset Password</a>
+                <p>Or copy this link to your browser:</p>
+                <p>${resetLink}</p>
+                <p>This link will expire in 1 hour.</p>
+                <p>If you didn't request this, please ignore this email.</p>
+              </div>
+            </body>
+          </html>
+        `,
+      });
 
-    // Send email
-    await sendEmail({
-      to: user.email, // This will be overridden in development to use your verified email
-      subject: "Password Reset Request",
-      html: `
-        <h1>Password Reset Request</h1>
-        ${
-          process.env.NODE_ENV === "development"
-            ? `<p style="color: red;"><strong>Development Mode Notice:</strong> This email was originally intended for ${email}</p>`
-            : ""
-        }
-        <p>Click the link below to reset your password. This link will expire in 1 hour.</p>
-        <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background-color: #0070f3; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a>
-        <p>Or copy this link: ${resetLink}</p>
-        <p>This link will expire in 1 hour.</p>
-        <p>If you didn't request this, please ignore this email.</p>
-      `,
-    });
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          resetToken,
+          resetTokenExpiry,
+        },
+      });
 
-    return { success: true };
+      return { success: true };
+    } catch (emailError) {
+      console.error("Failed to send reset email:", emailError);
+      return {
+        error:
+          "Failed to send reset email. Please try again or contact support.",
+      };
+    }
   } catch (error) {
     console.error("Password reset initiation error:", error);
     return { error: "Failed to process password reset request" };
   }
 }
 
-// Function to validate reset token
 export async function validateResetToken(
   token: string
 ): Promise<{ valid: boolean; error?: string }> {
@@ -194,14 +212,13 @@ export async function validateResetToken(
   }
 }
 
-// Function to reset password
 export async function resetPassword({
   token,
   newPassword,
 }: {
   token: string;
   newPassword: string;
-}): Promise<{ success?: boolean; error?: string }> {
+}): Promise<{ success?: boolean; error?: string; redirectTo?: string }> {
   if (!token) {
     return { error: "Reset token is required" };
   }
@@ -220,7 +237,6 @@ export async function resetPassword({
       return { error: "Invalid or expired reset token" };
     }
 
-    // Hash new password
     const passwordHash = await hash(newPassword, {
       memoryCost: 19456,
       timeCost: 2,
@@ -228,7 +244,6 @@ export async function resetPassword({
       parallelism: 1,
     });
 
-    // Update user password and clear reset token
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -238,7 +253,6 @@ export async function resetPassword({
       },
     });
 
-    // Create new session
     const session = await lucia.createSession(user.id, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
     cookies().set(
@@ -249,9 +263,15 @@ export async function resetPassword({
 
     const userRole = user.role as UserRole;
     const redirectPath = roleRoutes[userRole] || "/";
-    redirect(redirectPath);
+
+    return {
+      success: true,
+      redirectTo: redirectPath,
+    };
   } catch (error) {
-    console.error("Password reset error:", error);
+    if (!isRedirectError(error)) {
+      console.error("Password reset error:", error);
+    }
     return { error: "Failed to reset password" };
   }
 }

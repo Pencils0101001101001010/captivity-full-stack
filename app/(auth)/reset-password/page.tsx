@@ -1,11 +1,11 @@
 // app/reset-password/page.tsx
 "use client";
 
-import { z } from "zod";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { z } from "zod";
 import {
   Form,
   FormControl,
@@ -17,14 +17,13 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PasswordInput } from "@/components/PasswordInput";
 import LoadingButton from "@/components/LoadingButton";
-import { redirect } from "next/navigation";
 import { resetPassword } from "../login/actions";
 
 const resetPasswordSchema = z
   .object({
     newPassword: z
       .string()
-      .min(8, "Password must be at least 8 characters long")
+      .min(8, "Password must be at least 8 characters")
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
         "Password must contain at least one uppercase letter, one lowercase letter, and one number"
@@ -32,21 +31,20 @@ const resetPasswordSchema = z
     confirmPassword: z.string(),
   })
   .refine(data => data.newPassword === data.confirmPassword, {
-    message: "Passwords do not match",
+    message: "Passwords don't match",
     path: ["confirmPassword"],
   });
 
-type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
+type FormValues = z.infer<typeof resetPasswordSchema>;
 
 export default function ResetPasswordPage() {
   const [error, setError] = useState<string>();
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const searchParams = useSearchParams();
-
-  // Get token from URL
   const token = searchParams?.get("token");
 
-  const form = useForm<ResetPasswordValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
       newPassword: "",
@@ -54,19 +52,19 @@ export default function ResetPasswordPage() {
     },
   });
 
-  // If no token is present, show error
-  if (!token) {
+  // Early return if no token or searchParams
+  if (!searchParams || !token) {
     return (
       <div className="max-w-md mx-auto p-6">
         <Alert variant="destructive">
-          <AlertDescription>Invalid or expired reset link.</AlertDescription>
+          <AlertDescription>Invalid password reset link.</AlertDescription>
         </Alert>
       </div>
     );
   }
 
-  async function onSubmit(values: ResetPasswordValues) {
-    // Since we've checked for token existence above, we know it's a string here
+  async function onSubmit(values: FormValues) {
+    // We know token exists here because of the early return above
     const resetToken = token as string;
 
     setError(undefined);
@@ -77,11 +75,13 @@ export default function ResetPasswordPage() {
           newPassword: values.newPassword,
         });
 
-        if (result?.error) {
+        if (result.error) {
           setError(result.error);
+        } else if (result.success && result.redirectTo) {
+          router.push(result.redirectTo);
         }
       } catch (err) {
-        setError("An error occurred while resetting your password");
+        setError("Failed to reset password");
       }
     });
   }
@@ -94,7 +94,7 @@ export default function ResetPasswordPage() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
@@ -132,8 +132,8 @@ export default function ResetPasswordPage() {
             )}
           />
 
-          <LoadingButton loading={isPending} type="submit" className="w-full">
-            Set New Password
+          <LoadingButton type="submit" loading={isPending} className="w-full">
+            Reset Password
           </LoadingButton>
         </form>
       </Form>

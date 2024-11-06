@@ -17,6 +17,12 @@ import { login, initiatePasswordReset } from "./actions";
 import LoadingButton from "@/components/LoadingButton";
 import { PasswordInput } from "@/components/PasswordInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { z } from "zod";
+
+// Email validation schema
+const emailSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
 
 export default function LoginForm() {
   const [error, setError] = useState<string>();
@@ -24,6 +30,7 @@ export default function LoginForm() {
   const [resetSuccess, setResetSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -45,7 +52,17 @@ export default function LoginForm() {
 
   async function handlePasswordReset(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!email) return;
+    setEmailError("");
+
+    // Validate email
+    try {
+      emailSchema.parse({ email });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        setEmailError(err.errors[0]?.message || "Invalid email");
+        return;
+      }
+    }
 
     setError(undefined);
     setResetSuccess(false);
@@ -78,7 +95,11 @@ export default function LoginForm() {
                 <FormItem>
                   <FormLabel>Username</FormLabel>
                   <FormControl>
-                    <Input placeholder="Username" {...field} />
+                    <Input
+                      placeholder="Username"
+                      autoComplete="username"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -91,7 +112,11 @@ export default function LoginForm() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <PasswordInput placeholder="Password" {...field} />
+                    <PasswordInput
+                      placeholder="Password"
+                      autoComplete="current-password"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -133,9 +158,17 @@ export default function LoginForm() {
               id="email"
               type="email"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={e => {
+                setEmail(e.target.value);
+                setEmailError("");
+              }}
               placeholder="Enter your email address"
+              autoComplete="email"
+              className={emailError ? "border-destructive" : ""}
             />
+            {emailError && (
+              <p className="text-sm text-destructive">{emailError}</p>
+            )}
           </div>
           <LoadingButton loading={isPending} type="submit" className="w-full">
             Reset Password
@@ -147,6 +180,7 @@ export default function LoginForm() {
               setError(undefined);
               setResetSuccess(false);
               setEmail("");
+              setEmailError("");
             }}
             className="w-full text-sm text-muted-foreground hover:text-primary mt-2"
           >
