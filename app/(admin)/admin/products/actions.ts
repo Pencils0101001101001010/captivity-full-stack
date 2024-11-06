@@ -64,7 +64,7 @@ export async function fetchProductsByCategory(
 
 // Collection-specific fetch functions
 export async function fetchWinterCollection(): Promise<FetchCollectionsResult> {
-  return fetchProductsByCategory("kids");
+  return fetchProductsByCategory("kids-collection");
 }
 
 export async function fetchKidsCollection(): Promise<FetchCollectionsResult> {
@@ -159,7 +159,9 @@ export async function fetchAllCollections(): Promise<
       african,
       industrial,
     ] = await Promise.all([
-      prisma.product.findMany({ where: { category: { has: "kids" } } }),
+      prisma.product.findMany({
+        where: { category: { has: "kids-collection" } },
+      }),
       prisma.product.findMany({
         where: { category: { has: "summer-collection" } },
       }),

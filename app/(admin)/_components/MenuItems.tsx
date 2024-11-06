@@ -3,42 +3,12 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { fetchAllRoleCounts } from "../admin/users/actions";
 import { useCollectionsStore } from "../admin/products/useCollectionsStore";
-
-// Types
-type MenuLink = {
-  name: string;
-  href: string;
-  count?: number;
-};
-
-type MenuItem = {
-  title: string;
-  links: MenuLink[];
-};
-
-type UserCounts = {
-  pendingApproval: number;
-  customers: number;
-  subscribers: number;
-  promo: number;
-  distributors: number;
-  shopManagers: number;
-  editors: number;
-};
-
-type CollectionCounts = {
-  winter: number;
-  summer: number;
-  camo: number;
-  baseball: number;
-  kids: number;
-  signature: number;
-  fashion: number;
-  leisure: number;
-  sport: number;
-  african: number;
-  industrial: number;
-};
+import {
+  CollectionCounts,
+  MenuItem,
+  MenuLink,
+  UserCounts,
+} from "../admin/products/types";
 
 const INITIAL_USER_COUNTS: UserCounts = {
   pendingApproval: 0,
@@ -55,7 +25,6 @@ const INITIAL_COLLECTION_COUNTS: CollectionCounts = {
   summer: 0,
   camo: 0,
   baseball: 0,
-  kids: 0,
   signature: 0,
   fashion: 0,
   leisure: 0,
@@ -196,11 +165,6 @@ export function useMenuItems() {
             name: "Baseball Collection",
             href: "/admin/collections/baseball",
             count: collectionCounts.baseball,
-          },
-          {
-            name: "Kids Collection",
-            href: "/admin/collections/kids",
-            count: collectionCounts.kids,
           },
           {
             name: "Signature Collection",
