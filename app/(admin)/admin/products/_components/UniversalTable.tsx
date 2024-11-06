@@ -66,15 +66,32 @@ export function ProductTable({
   // Items per page
   const ITEMS_PER_PAGE = 8;
 
+  // Enhanced search function that checks all searchable fields
+  const searchProduct = (product: Product, query: string) => {
+    const searchTerm = query.toLowerCase().trim();
+
+    // If search is empty, return true to show all products
+    if (!searchTerm) return true;
+
+    // Array of all searchable values
+    const searchableValues = [
+      product.productName,
+      product.id,
+      product.sellingPrice.toString(),
+      product.isPublished ? "published" : "unpublished",
+      // Add any additional fields you want to search through
+    ];
+
+    // Return true if any value includes the search term
+    return searchableValues.some(value =>
+      value.toLowerCase().includes(searchTerm)
+    );
+  };
+
   // Filter products based on search query and publish status
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
-      const matchesSearch =
-        product.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.some(cat =>
-          cat.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+      const matchesSearch = searchProduct(product, searchQuery);
 
       const matchesPublishFilter =
         publishFilter === "all" ||
@@ -93,6 +110,12 @@ export function ProductTable({
     startIndex + ITEMS_PER_PAGE
   );
 
+  // Reset to first page when search query changes
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
   // Handle page change
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -110,9 +133,9 @@ export function ProductTable({
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search products..."
+            placeholder="Search all fields..."
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            onChange={e => handleSearchChange(e.target.value)}
             className="pl-8"
           />
         </div>
@@ -142,7 +165,7 @@ export function ProductTable({
             <TableRow>
               <TableHead>Image</TableHead>
               <TableHead>Product Name</TableHead>
-              <TableHead>Category</TableHead>
+              <TableHead>Product Id</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
