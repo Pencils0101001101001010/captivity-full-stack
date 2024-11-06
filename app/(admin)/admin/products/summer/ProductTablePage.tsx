@@ -4,7 +4,18 @@ import { useEffect, useRef } from "react";
 import { ProductTable } from "../_components/UniversalTable";
 import { useCollectionsStore } from "../useCollectionsStore";
 
-export default function ProductsPage() {
+interface ThemeColors {
+  primary: string;
+  hover: string;
+  text?: string;
+  accent?: string;
+}
+
+interface ProductsPageProps {
+  themeColors?: ThemeColors;
+}
+
+export default function ProductsPage({ themeColors }: ProductsPageProps) {
   const { collections, isLoading, fetchCollections } = useCollectionsStore();
   const initRef = useRef(false);
 
@@ -27,7 +38,11 @@ export default function ProductsPage() {
 
   return (
     <div className="container py-6">
-      <ProductTable products={collections.summer || []} isLoading={isLoading} />
+      <ProductTable
+        products={collections.summer || []}
+        isLoading={isLoading}
+        themeColors={themeColors}
+      />
     </div>
   );
 }
