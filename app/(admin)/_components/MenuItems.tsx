@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { fetchAllRoleCounts } from "../admin/users/actions";
-import { fetchAfricanCollectionTable } from "../admin/products/african/actions";
 
 // Types
 type MenuLink = {
@@ -26,16 +25,6 @@ type UserCounts = {
   editors: number;
 };
 
-type CollectionCounts = {
-  totalCount: number;
-  publishedCount: number;
-  unpublishedCount: number;
-};
-
-type Collections = {
-  african: CollectionCounts;
-};
-
 const INITIAL_USER_COUNTS: UserCounts = {
   pendingApproval: 0,
   customers: 0,
@@ -46,31 +35,20 @@ const INITIAL_USER_COUNTS: UserCounts = {
   editors: 0,
 };
 
-const INITIAL_COLLECTIONS: Collections = {
-  african: { totalCount: 0, publishedCount: 0, unpublishedCount: 0 },
-};
-
 // Constants outside component to prevent recreation
-const TWO_HOURS = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
-const MINIMUM_FETCH_INTERVAL = 10000; // 10 seconds minimum between manual refreshes
+const TWO_HOURS = 2 * 60 * 60 * 1000;
+const MINIMUM_FETCH_INTERVAL = 10000;
 
 export function useMenuItems() {
   const [userCounts, setUserCounts] = useState<UserCounts>(INITIAL_USER_COUNTS);
-  const [collections, setCollections] =
-    useState<Collections>(INITIAL_COLLECTIONS);
   const lastFetchTime = useRef<number>(0);
   const isMounted = useRef(true);
   const fetchPromiseRef = useRef<Promise<void> | null>(null);
-  const hasInitialized = useRef(false);
 
   const loadCounts = useCallback(async (forceRefresh = false) => {
     const now = Date.now();
     const timeSinceLastFetch = now - lastFetchTime.current;
 
-    // Skip if:
-    // 1. Already fetching
-    // 2. Not mounted
-    // 3. Not enough time has passed and not forcing refresh
     if (
       fetchPromiseRef.current ||
       !isMounted.current ||
@@ -82,7 +60,6 @@ export function useMenuItems() {
     lastFetchTime.current = now;
 
     try {
-      // Fetch user counts
       const userResult = await fetchAllRoleCounts();
       if (!isMounted.current) return;
 
@@ -93,61 +70,29 @@ export function useMenuItems() {
             : prev
         );
       }
-
-      // Only fetch African collection if it hasn't been initialized or forcing refresh
-      if (!hasInitialized.current || forceRefresh) {
-        const africanResult = await fetchAfricanCollectionTable();
-        if (!isMounted.current) return;
-
-        if (africanResult.success) {
-          setCollections(prev => {
-            const newCounts = {
-              totalCount: africanResult.totalCount,
-              publishedCount: africanResult.publishedCount,
-              unpublishedCount: africanResult.unpublishedCount,
-            };
-
-            if (JSON.stringify(prev.african) !== JSON.stringify(newCounts)) {
-              return {
-                ...prev,
-                african: newCounts,
-              };
-            }
-            return prev;
-          });
-        }
-        hasInitialized.current = true;
-      }
     } catch (error) {
       console.error("Error loading counts:", error);
     } finally {
       fetchPromiseRef.current = null;
     }
-  }, []); // Empty dependency array since all used values are refs or constants
+  }, []);
 
-  // Effect for initial load and interval setup
   useEffect(() => {
-    // Reset mounted state
     isMounted.current = true;
-    hasInitialized.current = false;
 
-    // Initial load
     loadCounts(true);
 
-    // Set up interval for refreshes
     const intervalId = setInterval(() => {
       loadCounts(true);
     }, TWO_HOURS);
 
-    // Cleanup function
     return () => {
       isMounted.current = false;
       clearInterval(intervalId);
       fetchPromiseRef.current = null;
     };
-  }, [loadCounts]); // loadCounts is stable and won't change
+  }, [loadCounts]);
 
-  // Memoized menu items
   return useMemo<MenuItem[]>(
     () => [
       {
@@ -196,7 +141,10 @@ export function useMenuItems() {
           {
             name: "African",
             href: "/admin/products/african",
-            count: collections.african.totalCount,
+          },
+          {
+            name: "Winter",
+            href: "/admin/products/winter",
           },
           { name: "Add Product", href: "/admin/products/create" },
         ],
@@ -277,7 +225,7 @@ export function useMenuItems() {
         ],
       },
     ],
-    [userCounts, collections]
+    [userCounts]
   );
 }
 
