@@ -32,6 +32,8 @@ enum OrderStatus {
 model User {
   id               String    @id @default(uuid())
   wpId             String?   @unique
+  resetToken       String?
+  resetTokenExpiry DateTime?
   username         String    @unique
   firstName        String
   lastName         String
