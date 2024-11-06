@@ -3,6 +3,16 @@
 import { Shield, Target, Crosshair } from "lucide-react";
 import ProductsPage from "./ProductTablePage";
 
+const camoTheme = {
+  primary: "[#4D5139]",
+  hover: "[#2A3326]",
+  text: "[#E6E8D4]",
+  accent: "[#B5B89E]",
+  gradientFrom: "[#4D5139]",
+  gradientTo: "[#2B2B1B]",
+  gradientVia: "[#3C4B37]",
+};
+
 const CamoTablePage = () => {
   return (
     <div className="min-h-screen">
@@ -60,17 +70,7 @@ const CamoTablePage = () => {
 
         {/* Products Table */}
         <div className="rounded-xl bg-card p-6 shadow-2xl shadow-black">
-          <ProductsPage
-            themeColors={{
-              primary: "[#4D5139]",
-              hover: "[#2A3326]",
-              text: "[#E6E8D4]",
-              accent: "[#B5B89E]",
-              gradientFrom: "[#4D5139]",
-              gradientTo: "[#2B2B1B]",
-              gradientVia: "[#3C4B37]",
-            }}
-          />
+          <ProductsPage themeColors={camoTheme} />
         </div>
       </div>
     </div>
