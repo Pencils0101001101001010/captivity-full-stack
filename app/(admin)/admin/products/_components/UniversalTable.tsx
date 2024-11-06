@@ -80,7 +80,7 @@ export function ProductTable({
   >("all");
   const { toggleProductStatus } = useCollectionsStore();
 
-  const ITEMS_PER_PAGE = 8;
+  const ITEMS_PER_PAGE = 6;
 
   const buttonStyle = {
     borderColor: getColor(themeColors.primary),
