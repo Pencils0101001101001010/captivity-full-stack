@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { ProductTable } from "../_components/UniversalTable";
-import { useCollectionsStore } from "../useCollectionsStore";
+import { useCollectionsStore } from "../_store/useCollectionsStore";
 
 export default function ProductsPage() {
   const { collections, isLoading, fetchCollections } = useCollectionsStore();

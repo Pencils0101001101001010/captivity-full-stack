@@ -4,8 +4,8 @@ import {
   fetchAllCollections,
   toggleProductPublishStatus,
   type FetchCollectionsResult,
-} from "./actions";
-import { type CollectionCounts } from "./types";
+} from "../actions";
+import { type CollectionCounts } from "../types";
 
 interface FeaturedImage {
   thumbnail: string;

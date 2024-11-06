@@ -29,7 +29,7 @@ import {
   ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCollectionsStore } from "../useCollectionsStore";
+import { useCollectionsStore } from "../_store/useCollectionsStore";
 
 interface FeaturedImage {
   thumbnail: string;

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { fetchAllRoleCounts } from "../admin/users/actions";
-import { useCollectionsStore } from "../admin/products/useCollectionsStore";
+import { useCollectionsStore } from "../admin/products/_store/useCollectionsStore";
 import {
   CollectionCounts,
   MenuItem,
