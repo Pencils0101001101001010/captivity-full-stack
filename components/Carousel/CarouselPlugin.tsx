@@ -16,22 +16,22 @@ const images: CarouselImage[] = [
   {
     src: "/alaska-puffer.jpg",
     title: "Alaska Puffer Jacket",
-    link: "/products/puffer-jacket",
+    link: "/products/apparel/161054",
   },
   {
     src: "/Banner-Web.jpg",
     title: "Long Sleeve Golfer",
-    link: "/products/long-sleeve-golfer",
+    link: "/products/apparel/190904",
   },
   {
     src: "/Web-banner-(1).jpg",
     title: "Ice Beanie",
-    link: "/products/ice-beanie",
+    link: "/products/headwear/186134",
   },
   {
     src: "/web-banner.jpg",
     title: "Basic Crew Neck",
-    link: "/products/basic-sweater",
+    link: "/products/apparel/113791",
   },
 ];
 

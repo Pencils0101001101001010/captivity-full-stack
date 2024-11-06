@@ -17,7 +17,7 @@ const CustomContainer = () => {
           />
           <Link
             // href="/products/classic-t-shirts"
-            href="/shirts"
+            href="/products/apparel/t-shirts"
             className="absolute bottom-14 right-20 transition-transform duration-300 ease-in-out group-hover:translate-x-10 group-hover:scale-125 bg-red-700 text-white px-7 py-3 rounded font-bold"
           >
             Classic T-Shirts
@@ -34,7 +34,7 @@ const CustomContainer = () => {
           />
           <Link
             // href="/products/camper-cap"
-            href="/headwear/headwear-collection"
+            href="/products/headwear/109979"
             className="absolute bottom-14 right-20 transition-transform duration-300 ease-in-out group-hover:translate-x-10 group-hover:scale-125 bg-red-700 text-white px-7 py-3 rounded font-bold"
           >
             Camper Cap

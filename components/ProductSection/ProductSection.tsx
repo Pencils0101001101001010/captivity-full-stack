@@ -16,7 +16,7 @@ const ProductSection = () => {
         <div className="flex flex-nowrap items-center justify-center max-w-[950px] ">
           <div className="w-full sm:w-1/2 md:w-1/4 p-2 ">
             <div className="relative group rounded-lg overflow-hidden ">
-              <Link href="/headwear/HeadwearCollection">
+              <Link href="/products/headwear/new-in-headwear">
                 <Image
                   src="https://captivity.co.za/wp-content/uploads/2023/05/Headwear-cat-btn.svg"
                   alt="Headwear"
@@ -41,7 +41,7 @@ const ProductSection = () => {
           </div>
           <div className="w-full sm:w-1/2 md:w-1/4 p-2">
             <div className="relative group rounded-lg overflow-hidden">
-              <Link href="/apparel/apparel-collection">
+              <Link href="/products/apparel/new-in-apparel">
                 <Image
                   src="https://captivity.co.za/wp-content/uploads/2023/09/Apparel-cat-btn-2.svg"
                   alt="Apparel"
@@ -66,7 +66,7 @@ const ProductSection = () => {
           </div>
           <div className="w-full sm:w-1/2 md:w-1/4 p-2">
             <div className="relative group rounded-lg overflow-hidden">
-              <Link href="/shirts">
+              <Link href="/products/apparel/t-shirts">
                 <Image
                   src="https://captivity.co.za/wp-content/uploads/2023/09/T-Shirts-cat-btn.svg"
                   alt="T-Shirts"
@@ -91,7 +91,7 @@ const ProductSection = () => {
           </div>
           <div className="w-full sm:w-1/2 md:w-1/4 p-2">
             <div className="relative group rounded-lg overflow-hidden">
-              <Link href="/collections/kids-collection">
+              <Link href="/products/apparel/kids">
                 <Image
                   src="https://captivity.co.za/wp-content/uploads/2023/05/Kids-cat-btn.svg"
                   alt="Kids"

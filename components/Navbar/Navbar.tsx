@@ -76,13 +76,13 @@ const Navbar: React.FC = () => {
             </SheetTrigger>
             <SheetContent side="left" className="w-[300px] sm:w-[400px]">
               <nav className="flex flex-col gap-4">
-                <MobileMenuItem href="/headwear/category">
+                <MobileMenuItem href="/products/headwear/new-in-headwear">
                   Headwear Collection
                 </MobileMenuItem>
-                <MobileMenuItem href="/apparel/category">
+                <MobileMenuItem href="/products/apparel/new-in-apparel">
                   Apparel Collection
                 </MobileMenuItem>
-                <MobileMenuItem href="/collections/category">
+                <MobileMenuItem href="/products/all-collections/signature-collection">
                   All Collections
                 </MobileMenuItem>
                 <MobileMenuItem href="/catalogue">Catalogue</MobileMenuItem>
