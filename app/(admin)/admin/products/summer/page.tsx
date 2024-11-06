@@ -23,11 +23,6 @@ const SummerTablePage = () => {
             <Waves className="h-8 w-8 text-blue-400" />
           </div>
 
-          {/* Subtitle */}
-          <p className="text-center text-lg text-muted-foreground">
-            Discover our vibrant selection of seasonal products
-          </p>
-
           {/* Stats */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-lg bg-card p-4 shadow-2xl shadow-black">

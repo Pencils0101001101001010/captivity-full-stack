@@ -28,11 +28,6 @@ const CamoTablePage = () => {
             <Target className="h-8 w-8 text-[#B5B89E]" />
           </div>
 
-          {/* Subtitle */}
-          <p className="text-center text-lg text-[#CED0B9]">
-            Discover our tactical and urban camouflage designs
-          </p>
-
           {/* Stats */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-lg bg-gradient-to-br from-[#4D5139] to-[#2A3326] p-4 shadow-2xl shadow-black">

@@ -18,11 +18,6 @@ const WinterTablePage = () => {
             <Moon className="h-8 w-8 text-blue-200" />
           </div>
 
-          {/* Subtitle */}
-          <p className="text-center text-lg text-muted-foreground">
-            Explore our cozy selection of winter essentials
-          </p>
-
           {/* Stats */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-lg bg-card p-4 shadow-2xl shadow-black">
