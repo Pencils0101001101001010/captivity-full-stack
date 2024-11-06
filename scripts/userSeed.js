@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import fetch from "node-fetch";
 import * as argon2 from "argon2";
 import { v4 as uuidv4 } from "uuid";
@@ -56,12 +56,15 @@ async function main() {
         .map(s => s.trim());
 
       // Generate a secure hash from the WordPress password hash
-      // Since the WP password is already hashed, we'll create a new secure hash
       const securePassword = await hashPassword(user.password);
+
+      const phoneNumber = user.user_registration_phone_number
+        ? user.user_registration_phone_number.replace(/\D/g, "")
+        : null;
 
       await prisma.user.create({
         data: {
-          id: uuidv4(), // Generate new UUID
+          id: uuidv4(), // Generate a new UUID v4 without hyphens
           wpId: String(user.id), // Store original WordPress ID
           username: user.username,
           firstName: user.first_name,
@@ -70,7 +73,7 @@ async function main() {
           email: user.email,
           passwordHash: securePassword, // Store the Argon2 hashed password
           vatNumber: user.vat_number || null,
-          phoneNumber: parseInt(user.user_registration_phone_number) || 0,
+          phoneNumber: phoneNumber,
           streetAddress: streetAddress,
           addressLine2: user.address.billing_address_2 || null,
           suburb: addressLine2 || null,
