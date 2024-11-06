@@ -8,61 +8,61 @@ const images = [
     src: "/Savannah-Hat-model.jpg",
     title: "Savannah Hat",
     rating: 5,
-    link: "/headwear/hats",
+    link: "/products/headwear/160433",
   },
   {
     src: "/Alaska-Puffer-Jacket-Black.jpg",
     title: "Alaska Puffer Jacket Black",
     rating: 4,
-    link: "/headwear/flat-peaks",
+    link: "/products/apparel/161054",
   },
   {
     src: "/model1.jpg",
     title: "FWRD short 240gm",
     rating: 4.5,
-    link: "/headwear/trucker-caps",
+    link: "/products/apparel/175503",
   },
   {
     src: "/Supafit-new-model.jpg",
     title: "Supafit NEW",
     rating: 4.5,
-    link: "/headwear/hats",
+    link: "/products/headwear/153329",
   },
   {
     src: "/Harlem-Bucket-model.jpg",
     title: "Harlem Bucket",
     rating: 4.5,
-    link: "/headwear/hats",
+    link: "/products/headwear/153169",
   },
   {
     src: "/Venture-Hat-model-scaled.webp",
     title: "Venture Hat",
     rating: 4.5,
-    link: "/headwear/hats",
+    link: "/products/headwear/161394",
   },
   {
     src: "/Frost-Beanie-model.jpg",
     title: "Frost Beanie",
     rating: 4.5,
-    link: "/headwear/beanies",
+    link: "/products/headwear/159723",
   },
   {
     src: "/Arctic-Body-Warmer-model-scaled.webp",
     title: "Arctic Body Warmer model scaled",
     rating: 4.5,
-    link: "/headwear/hats",
+    link: "/products/apparel/161071",
   },
   {
     src: "/Drawstrings-Orange.jpg",
     title: "Drawstrings Orange",
     rating: 4.5,
-    link: "/headwear/hats",
+    link: "/products/apparel/159706",
   },
   {
     src: "/Glacier-Ribbed-model2.jpg",
     title: "Glacier Ribbed",
     rating: 4.5,
-    link: "/headwear/beanies",
+    link: "/products/headwear/159788",
   },
 ];
 
@@ -71,7 +71,7 @@ export default function Carousel() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+      setCurrentIndex(prevIndex => (prevIndex + 1) % images.length);
     }, 4000); // Rotate every 4 seconds
 
     return () => clearInterval(interval);
