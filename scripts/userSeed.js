@@ -1,7 +1,6 @@
 import { PrismaClient, Prisma } from "@prisma/client";
 import fetch from "node-fetch";
 import * as argon2 from "argon2";
-import { v4 as uuidv4 } from "uuid";
 
 const prisma = new PrismaClient();
 
@@ -73,9 +72,10 @@ async function main() {
       const currentDate = new Date();
 
       try {
+        // Let Prisma handle the UUID generation
         await prisma.user.create({
           data: {
-            id: uuidv4(),
+            // Remove the manual id generation and let Prisma handle it
             wpId: String(user.id),
             username: user.username,
             firstName: user.first_name,
@@ -104,7 +104,7 @@ async function main() {
             bio: null,
             agreeTerms: true,
             role: role,
-            createdAt, // Using validated date
+            createdAt,
             updatedAt: currentDate,
           },
         });
