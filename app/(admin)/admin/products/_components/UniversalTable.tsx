@@ -47,14 +47,31 @@ interface Product {
   featuredImage?: FeaturedImage | null;
 }
 
+interface ThemeColors {
+  primary: string;
+  hover: string;
+  text?: string;
+  accent?: string;
+  gradientFrom?: string;
+  gradientTo?: string;
+  gradientVia?: string;
+}
+
 type ProductTableProps = {
   products: Product[];
   isLoading?: boolean;
+  themeColors?: ThemeColors;
 };
+
+const getColor = (color: string) => color.replace("[", "").replace("]", "");
 
 export function ProductTable({
   products,
   isLoading = false,
+  themeColors = {
+    primary: "#3b82f6",
+    hover: "#2563eb",
+  },
 }: ProductTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -65,7 +82,17 @@ export function ProductTable({
 
   const ITEMS_PER_PAGE = 8;
 
-  // Enhanced search function
+  const buttonStyle = {
+    borderColor: getColor(themeColors.primary),
+    "--hover-bg": getColor(themeColors.hover),
+  } as React.CSSProperties;
+
+  const activeButtonStyle = {
+    backgroundColor: getColor(themeColors.primary),
+    borderColor: getColor(themeColors.primary),
+    color: "white",
+  } as React.CSSProperties;
+
   const searchProduct = (product: Product, query: string) => {
     const searchTerm = query.toLowerCase().trim();
     if (!searchTerm) return true;
@@ -82,7 +109,6 @@ export function ProductTable({
     );
   };
 
-  // Filter products based on search query and publish status
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
       const matchesSearch = searchProduct(product, searchQuery);
@@ -96,7 +122,6 @@ export function ProductTable({
     });
   }, [products, searchQuery, publishFilter]);
 
-  // Calculate pagination
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedProducts = filteredProducts.slice(
@@ -104,18 +129,15 @@ export function ProductTable({
     startIndex + ITEMS_PER_PAGE
   );
 
-  // Reset to first page when search query changes
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     setCurrentPage(1);
   };
 
-  // Handle page change
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  // Handle publish toggle
   const handlePublishToggle = async (productId: string) => {
     await toggleProductStatus(productId);
   };
@@ -123,7 +145,6 @@ export function ProductTable({
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {/* Search Input */}
         <div className="flex items-center gap-4">
           <h1 className="text-4xl font-bold tracking-tight">
             Search Collection
@@ -134,19 +155,22 @@ export function ProductTable({
               placeholder="Search all fields..."
               value={searchQuery}
               onChange={e => handleSearchChange(e.target.value)}
-              className="pl-8 bg-background border-2 border-blue-500 dark:border-border focus-visible:ring-2 focus-visible:ring-blue-500 dark:focus-visible:ring-ring"
+              className="pl-8 bg-background border-2 dark:border-border focus-visible:ring-2 dark:focus-visible:ring-ring"
+              style={{ borderColor: getColor(themeColors.primary) }}
             />
           </div>
         </div>
 
-        {/* Publish Filter */}
         <Select
           value={publishFilter}
           onValueChange={(value: "all" | "published" | "unpublished") =>
             setPublishFilter(value)
           }
         >
-          <SelectTrigger className="w-full sm:w-[180px] bg-blue-500 dark:bg-background text-white dark:text-foreground border-border hover:bg-blue-700 dark:hover:bg-background transition-colors">
+          <SelectTrigger
+            className="w-full sm:w-[180px] text-white dark:text-foreground border-border transition-colors dark:bg-background"
+            style={{ backgroundColor: getColor(themeColors.primary) }}
+          >
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -157,7 +181,6 @@ export function ProductTable({
         </Select>
       </div>
 
-      {/* Table */}
       <div className="rounded-md border border-border">
         <Table>
           <TableHeader>
@@ -187,8 +210,7 @@ export function ProductTable({
               paginatedProducts.map(product => (
                 <TableRow key={product.id} className="border-border">
                   <TableCell>
-                    {product.featuredImage &&
-                    product.featuredImage.thumbnail ? (
+                    {product.featuredImage?.thumbnail ? (
                       <div className="relative h-12 w-12">
                         <Image
                           src={product.featuredImage.thumbnail}
@@ -234,7 +256,6 @@ export function ProductTable({
         </Table>
       </div>
 
-      {/* Enhanced Pagination */}
       {totalPages > 1 && (
         <div className="flex flex-col items-center justify-center space-y-4 py-4">
           <div className="flex items-center space-x-2">
@@ -243,7 +264,8 @@ export function ProductTable({
               size="icon"
               onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
-              className="h-8 w-8 border-blue-500 dark:border-border hover:bg-blue-500 hover:text-white dark:hover:bg-background"
+              className="h-8 w-8 dark:border-border hover:text-white dark:hover:bg-background"
+              style={buttonStyle}
             >
               <ChevronsLeft className="h-4 w-4" />
             </Button>
@@ -252,7 +274,8 @@ export function ProductTable({
               size="icon"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="h-8 w-8 border-blue-500 dark:border-border hover:bg-blue-500 hover:text-white dark:hover:bg-background"
+              className="h-8 w-8 dark:border-border hover:text-white dark:hover:bg-background"
+              style={buttonStyle}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -264,12 +287,10 @@ export function ProductTable({
                   variant={currentPage === idx + 1 ? "default" : "outline"}
                   size="icon"
                   onClick={() => handlePageChange(idx + 1)}
-                  className={cn(
-                    "h-8 w-8 border-blue-500 dark:border-border",
-                    currentPage === idx + 1
-                      ? "bg-blue-500 text-white dark:bg-background dark:text-foreground"
-                      : "hover:bg-blue-500 hover:text-white dark:hover:bg-background"
-                  )}
+                  className="h-8 w-8 dark:border-border hover:text-white dark:hover:bg-background"
+                  style={
+                    currentPage === idx + 1 ? activeButtonStyle : buttonStyle
+                  }
                 >
                   {idx + 1}
                 </Button>
@@ -281,7 +302,8 @@ export function ProductTable({
               size="icon"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="h-8 w-8 border-blue-500 dark:border-border hover:bg-blue-500 hover:text-white dark:hover:bg-background"
+              className="h-8 w-8 dark:border-border hover:text-white dark:hover:bg-background"
+              style={buttonStyle}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -290,7 +312,8 @@ export function ProductTable({
               size="icon"
               onClick={() => handlePageChange(totalPages)}
               disabled={currentPage === totalPages}
-              className="h-8 w-8 border-blue-500 dark:border-border hover:bg-blue-500 hover:text-white dark:hover:bg-background"
+              className="h-8 w-8 dark:border-border hover:text-white dark:hover:bg-background"
+              style={buttonStyle}
             >
               <ChevronsRight className="h-4 w-4" />
             </Button>
