@@ -43,7 +43,7 @@ export interface User {
   displayName: string;
   email: string;
   vatNumber?: string;
-  phoneNumber: number;
+  phoneNumber: string;
   streetAddress: string;
   addressLine2?: string;
   suburb?: string;

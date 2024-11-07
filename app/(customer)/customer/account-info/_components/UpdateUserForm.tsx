@@ -33,6 +33,9 @@ const UpdateUserForm = ({ user }: UpdateUserFormProps) => {
     error?: string;
   }>({});
 
+  // Convert phone number to string if it's a number
+  const phoneNumberString = user.phoneNumber?.toString() || "";
+
   const personalForm = useForm<UpdatePersonalInfoValues>({
     resolver: zodResolver(updatePersonalInfoSchema),
     defaultValues: {
@@ -40,7 +43,7 @@ const UpdateUserForm = ({ user }: UpdateUserFormProps) => {
       lastName: user.lastName,
       displayName: user.displayName,
       email: user.email,
-      phoneNumber: user.phoneNumber,
+      phoneNumber: phoneNumberString,
       website: user.website || "",
       bio: user.bio || "",
     },

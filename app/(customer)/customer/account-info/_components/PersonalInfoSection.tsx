@@ -93,16 +93,18 @@ export const PersonalInfoSection = ({
             name="phoneNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-foreground">Phone Number</FormLabel>
+                <FormLabel className="flex items-center text-gray-700">
+                  Phone Number
+                </FormLabel>
                 <FormControl>
                   <Input
-                    type="number"
+                    type="text"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                     {...field}
-                    onChange={e => field.onChange(parseInt(e.target.value))}
-                    className="bg-background border-input [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    onChange={e => field.onChange(e.target.value)}
                   />
                 </FormControl>
-                <FormMessage className="text-destructive" />
+                <FormMessage />
               </FormItem>
             )}
           />

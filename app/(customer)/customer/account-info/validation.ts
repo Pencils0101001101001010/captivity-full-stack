@@ -10,7 +10,7 @@ export const updatePersonalInfoSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   displayName: z.string().min(1, "Display name is required"),
   email: z.string().email("Invalid email address"),
-  phoneNumber: requiredInt,
+  phoneNumber: z.string().min(10, "Phone nr must be 10 numbers or more"),
   website: z.string().url("Invalid URL").optional().or(z.literal("")),
   bio: z.string().optional(),
   avatarUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
