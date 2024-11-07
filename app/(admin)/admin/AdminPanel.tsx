@@ -49,7 +49,7 @@ const AdminPanel = () => {
           <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 bg-gradient-to-br from-blue-500 to-cyan-500 text-white rounded-t-lg">
               <CardTitle className="text-sm font-medium">
-                Total Orders
+                Pending Registrations
               </CardTitle>
               <ShoppingCart className="w-4 h-4 text-white/80" />
             </CardHeader>
@@ -62,7 +62,7 @@ const AdminPanel = () => {
           <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 bg-gradient-to-br from-emerald-500 to-teal-500 text-white rounded-t-lg">
               <CardTitle className="text-sm font-medium">
-                Active Projects
+                Active Customers
               </CardTitle>
               <Box className="w-4 h-4 text-white/80" />
             </CardHeader>
@@ -74,7 +74,9 @@ const AdminPanel = () => {
 
           <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-t-lg">
-              <CardTitle className="text-sm font-medium">Issues</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                New Customers
+              </CardTitle>
               <AlertCircle className="w-4 h-4 text-white/80" />
             </CardHeader>
             <CardContent className="pt-4">

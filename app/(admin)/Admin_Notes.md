@@ -10,4 +10,6 @@
 
 [] Types error on create actions functions.
 
-[] The admin page has an infinite re-rendering post loop.
+[x] The admin page has an infinite re-rendering post loop.
+
+[] When a role gets updated on the yser tables, the whole screen goes blank for loading and then reloads the adim user table. Aviod hard page refresh.
