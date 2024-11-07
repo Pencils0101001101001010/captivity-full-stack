@@ -118,12 +118,12 @@ export function useMenuItems() {
           },
           {
             name: "Subscribers",
-            href: "/admin/users/subscribers",
+            href: "/admin/users/update/role-subscriber",
             count: userCounts.subscribers,
           },
           {
             name: "Promo Users",
-            href: "/admin/users/promo",
+            href: "/admin/users/update/role-promo",
             count: userCounts.promo,
           },
           {
@@ -133,12 +133,12 @@ export function useMenuItems() {
           },
           {
             name: "Shop Managers",
-            href: "/admin/users/shop-managers",
+            href: "/admin/users/update/role-shop_manager",
             count: userCounts.shopManagers,
           },
           {
             name: "Editors",
-            href: "/admin/users/editors",
+            href: "/admin/users/update/role-editor",
             count: userCounts.editors,
           },
         ],

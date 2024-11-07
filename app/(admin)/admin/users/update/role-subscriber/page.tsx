@@ -3,7 +3,7 @@ import { fetchUsersByRole } from "../../actions";
 import UserTable from "../../_components/UserTable";
 
 export default async function Page() {
-  const result = await fetchUsersByRole(UserRole.DISTRIBUTOR);
+  const result = await fetchUsersByRole(UserRole.SUBSCRIBER);
 
   if (!result.success) {
     return (
@@ -15,7 +15,7 @@ export default async function Page() {
 
   return (
     <div className="p-6">
-      <UserTable users={result.data} title="Distributor" />
+      <UserTable users={result.data} title="Subscriber" />
     </div>
   );
 }
