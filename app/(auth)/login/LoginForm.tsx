@@ -9,6 +9,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button"; // Make sure to import Button
 import { loginSchema, LoginValues } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useTransition } from "react";
@@ -19,7 +20,7 @@ import { PasswordInput } from "@/components/PasswordInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { z } from "zod";
 
-// Email validation schema
+// Email validation schema remains the same
 const emailSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
 });
@@ -32,6 +33,7 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
 
+  // Form setup and handlers remain the same
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -54,7 +56,6 @@ export default function LoginForm() {
     e.preventDefault();
     setEmailError("");
 
-    // Validate email
     try {
       emailSchema.parse({ email });
     } catch (err) {
@@ -87,7 +88,12 @@ export default function LoginForm() {
         // Regular Login Form
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            {error && <p className="text-center text-destructive">{error}</p>}
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <FormField
               control={form.control}
               name="username"
@@ -105,6 +111,7 @@ export default function LoginForm() {
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="password"
@@ -122,26 +129,36 @@ export default function LoginForm() {
                 </FormItem>
               )}
             />
-            <LoadingButton loading={isPending} type="submit" className="w-full">
-              Log in
-            </LoadingButton>
-            <button
-              type="button"
-              onClick={() => setShowForgotPassword(true)}
-              className="w-full text-sm text-muted-foreground hover:text-primary mt-2"
-            >
-              Forgot password?
-            </button>
+
+            <div className="space-y-2">
+              <LoadingButton
+                loading={isPending}
+                type="submit"
+                className="w-full"
+              >
+                Log in
+              </LoadingButton>
+
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setShowForgotPassword(true)}
+                className="w-full text-sm"
+              >
+                Forgot password?
+              </Button>
+            </div>
           </form>
         </Form>
       ) : (
-        // Simplified Forgot Password Form
+        // Forgot Password Form
         <form onSubmit={handlePasswordReset} className="space-y-3">
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+
           {resetSuccess && (
             <Alert>
               <AlertDescription>
@@ -150,10 +167,9 @@ export default function LoginForm() {
               </AlertDescription>
             </Alert>
           )}
+
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              Email
-            </label>
+            <FormLabel htmlFor="email">Email</FormLabel>
             <Input
               id="email"
               type="email"
@@ -170,22 +186,27 @@ export default function LoginForm() {
               <p className="text-sm text-destructive">{emailError}</p>
             )}
           </div>
-          <LoadingButton loading={isPending} type="submit" className="w-full">
-            Reset Password
-          </LoadingButton>
-          <button
-            type="button"
-            onClick={() => {
-              setShowForgotPassword(false);
-              setError(undefined);
-              setResetSuccess(false);
-              setEmail("");
-              setEmailError("");
-            }}
-            className="w-full text-sm text-muted-foreground hover:text-primary mt-2"
-          >
-            Back to login
-          </button>
+
+          <div className="space-y-2">
+            <LoadingButton loading={isPending} type="submit" className="w-full">
+              Reset Password
+            </LoadingButton>
+
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setShowForgotPassword(false);
+                setError(undefined);
+                setResetSuccess(false);
+                setEmail("");
+                setEmailError("");
+              }}
+              className="w-full text-sm"
+            >
+              Back to login
+            </Button>
+          </div>
         </form>
       )}
     </div>
