@@ -65,6 +65,7 @@
     "next-auth": "^4.24.10",
     "next-themes": "^0.3.0",
     "node-fetch": "^3.3.2",
+    "nodemailer": "^6.9.16",
     "oslo": "^1.2.1",
     "radio-group": "^0.0.2",
     "react": "^18.2.0",
@@ -104,6 +105,7 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
+    "@types/nodemailer": "^6.4.16",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/react-html-parser": "^2.0.6",
