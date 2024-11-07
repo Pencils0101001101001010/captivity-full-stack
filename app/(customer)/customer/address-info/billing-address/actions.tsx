@@ -35,7 +35,7 @@ export async function updateBillingAddress(
         townCity: validatedData.townCity,
         suburb: validatedData.province,
         postcode: validatedData.postcode,
-        phoneNumber: parseInt(validatedData.phone),
+        phoneNumber: validatedData.phone,
         email: validatedData.email,
       },
     });

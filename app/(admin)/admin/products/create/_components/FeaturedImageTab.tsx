@@ -61,7 +61,7 @@ const FeaturedImageTab: React.FC<FeaturedImageTabProps> = ({ control }) => {
         URL.revokeObjectURL(featuredImage.large);
       }
     };
-  }, []);
+  }, [watch]);
 
   return (
     <div className="space-y-4">

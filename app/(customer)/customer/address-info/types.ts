@@ -12,7 +12,7 @@ export interface SessionUser {
   townCity?: string;
   suburb?: string;
   postcode?: string;
-  phoneNumber?: number;
+  phoneNumber?: string;
   companyName?: string;
   role: UserRole;
   isLoading?: boolean;
