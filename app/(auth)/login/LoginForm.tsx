@@ -9,21 +9,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { loginSchema, LoginValues } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { login, initiatePasswordReset } from "./actions";
+import { login } from "./actions";
 import LoadingButton from "@/components/LoadingButton";
 import { PasswordInput } from "@/components/PasswordInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { z } from "zod";
-import Link from "next/link";
-
-const emailSchema = z.object({
-  email: z.string().email("Please enter a valid email address").trim(),
-});
+import Link from "next/link"; // Make sure to import Link
 
 export default function LoginForm() {
   const [error, setError] = useState<string>();
@@ -99,17 +93,18 @@ export default function LoginForm() {
           )}
         />
 
-        <div className="space-y-2">
+        <div className="space-y-4">
           <LoadingButton loading={isPending} type="submit" className="w-full">
             Log in
           </LoadingButton>
 
-          <div className="text-center mt-4">
+          {/* Fixed Forgot Password Link */}
+          <div className="text-center">
             <Link
               href="/forgot-password"
-              className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+              className="inline-block px-4 py-2 text-sm text-blue-500 hover:text-blue-700 hover:underline"
             >
-              Forgot your password?
+              Forgot password?
             </Link>
           </div>
         </div>
