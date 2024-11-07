@@ -252,9 +252,7 @@ export async function resetPassword({
         resetTokenExpiry: null,
       },
     });
-
-    const userRole = user.role as UserRole;
-    const redirectPath = roleRoutes[userRole] || "/";
+    const redirectPath = "/login";
 
     return {
       success: true,
