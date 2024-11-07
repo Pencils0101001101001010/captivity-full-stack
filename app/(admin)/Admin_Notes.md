@@ -13,3 +13,5 @@
 [x] The admin page has an infinite re-rendering post loop.
 
 [] When a role gets updated on the yser tables, the whole screen goes blank for loading and then reloads the adim user table. Aviod hard page refresh.
+
+[] The icons on the names product collection tables, must be corresponding to its name. Currently its a baseball for most of the collection names in the header of each table.
