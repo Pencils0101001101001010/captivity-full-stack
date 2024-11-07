@@ -1,9 +1,38 @@
-import { PrismaClient, Prisma } from "@prisma/client";
-import fetch from "node-fetch";
+import { PrismaClient } from "@prisma/client";
 import * as argon2 from "argon2";
-import { v4 as uuidv4 } from "uuid";
 
 const prisma = new PrismaClient();
+
+// Sample user data
+const userData = [
+  {
+    id: 1,
+    username: "admin2020",
+    password: "$P$Bub/avWDE/XTGNtebRoSiruU4EFx5g.",
+    display_name: "admin2020",
+    email: "stanton@assetflow.co.za",
+    user_registered: "2016-02-03 12:38:11",
+    first_name: "Stanton",
+    last_name: "Hermanus",
+    user_registration_phone_number: "",
+    user_registration_company_name: "",
+    vat_number: "",
+    ck_number: "",
+    nature_of_business: "",
+    current_supplier: "",
+    website: "",
+    position: "",
+    address: {
+      billing_address_1: "42 Ernest Esau street",
+      billing_address_2: "Ravensmead",
+      billing_city: "Cape Town",
+      billing_postcode: "7493",
+      billing_country: "ZA",
+    },
+    billing_salesrep: "",
+    roles: ["administrator"],
+  },
+];
 
 function mapWordPressRoleToPrisma(wpRole) {
   const roleMapping = {
@@ -20,7 +49,6 @@ function mapWordPressRoleToPrisma(wpRole) {
   return roleMapping[wpRole.toLowerCase()] || "USER";
 }
 
-// Function to generate 16-character ID matching your schema format
 function generateId() {
   const charset = "abcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
@@ -30,7 +58,6 @@ function generateId() {
   return result;
 }
 
-// Rest of your functions...
 async function hashPassword(password) {
   try {
     return await argon2.hash(password, {
@@ -53,17 +80,7 @@ function getValidDate(dateString) {
 
 async function main() {
   try {
-    const response = await fetch(
-      "https://captivity.co.za/wp-json/wp-users-api/v2/all-users"
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch data: ${response.statusText}`);
-    }
-
-    const users = await response.json();
-
-    for (const user of users) {
+    for (const user of userData) {
       const role = mapWordPressRoleToPrisma(user.roles[0]);
 
       const billingAddress = user.address?.billing_address_1 || "";
@@ -83,7 +100,7 @@ async function main() {
       try {
         await prisma.user.create({
           data: {
-            id: generateId(), // Now generates exact 16-character format
+            id: generateId(),
             wpId: String(user.id),
             username: user.username,
             firstName: user.first_name,
