@@ -1,8 +1,6 @@
 import { z } from "zod";
 
 // Base validators
-const requiredString = z.string().trim().min(1, "Required");
-const requiredInt = z.number().int().min(1, "Must be greater than 0");
 
 // Personal Information Update Schema
 export const updatePersonalInfoSchema = z.object({
@@ -10,7 +8,7 @@ export const updatePersonalInfoSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   displayName: z.string().min(1, "Display name is required"),
   email: z.string().email("Invalid email address"),
-  phoneNumber: requiredInt,
+  phoneNumber: z.string().min(10, "phone no is required to be 10 numbers"),
   website: z.string().url("Invalid URL").optional().or(z.literal("")),
   bio: z.string().optional(),
   avatarUrl: z.string().url("Invalid URL").optional().or(z.literal("")),

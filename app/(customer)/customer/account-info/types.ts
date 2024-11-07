@@ -43,7 +43,7 @@ export interface User {
   displayName: string;
   email: string;
   vatNumber?: string;
-  phoneNumber: number;
+  phoneNumber: string;
   streetAddress: string;
   addressLine2?: string;
   suburb?: string;
@@ -74,7 +74,7 @@ export interface UserData {
   lastName: string;
   displayName: string;
   email: string;
-  phoneNumber: number;
+  phoneNumber: string;
   website?: string;
   bio?: string;
   streetAddress: string;
