@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+
 import {
   Form,
   FormControl,
@@ -18,24 +18,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PasswordInput } from "@/components/PasswordInput";
 import LoadingButton from "@/components/LoadingButton";
 import { resetPassword } from "../login/actions";
-
-const resetPasswordSchema = z
-  .object({
-    newPassword: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-      ),
-    confirmPassword: z.string(),
-  })
-  .refine(data => data.newPassword === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
-
-type FormValues = z.infer<typeof resetPasswordSchema>;
+import { FormValues, resetPasswordSchema } from "./validation";
 
 export default function ResetPasswordPage() {
   const [error, setError] = useState<string>();
