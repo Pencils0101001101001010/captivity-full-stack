@@ -1,4 +1,3 @@
-// userStatsStore.ts
 import { create } from "zustand";
 import { fetchUserStatistics } from "./actions";
 
@@ -20,9 +19,9 @@ interface UserStatsState {
   clearError: () => void;
 }
 
-// Track initialization status outside of store
 let isInitializing = false;
 let refreshInterval: NodeJS.Timeout | null = null;
+let currentFetchPromise: Promise<void> | null = null;
 
 export const useUserStatsStore = create<UserStatsState>((set, get) => ({
   stats: null,
@@ -32,19 +31,20 @@ export const useUserStatsStore = create<UserStatsState>((set, get) => ({
   isInitialized: false,
 
   initializeStats: async () => {
-    // Prevent multiple initialization attempts
     if (get().isInitialized || isInitializing) return;
-
     isInitializing = true;
 
     try {
       await get().fetchStats();
 
-      // Set up refresh interval only once
+      // Set up refresh interval only if not already set
       if (!refreshInterval) {
         refreshInterval = setInterval(
           () => {
-            get().fetchStats();
+            // Only fetch if there's no ongoing fetch
+            if (!currentFetchPromise) {
+              get().fetchStats();
+            }
           },
           5 * 60 * 1000
         ); // 5 minutes
@@ -57,40 +57,41 @@ export const useUserStatsStore = create<UserStatsState>((set, get) => ({
   },
 
   fetchStats: async () => {
-    const lastFetched = get().lastFetched;
-    const now = new Date();
+    // If there's an ongoing fetch, return that promise
+    if (currentFetchPromise) return currentFetchPromise;
 
-    // Prevent fetching if done recently (within last 10 seconds)
-    if (lastFetched && now.getTime() - lastFetched.getTime() < 10000) {
-      return;
-    }
-
+    // If already loading, don't start another fetch
     if (get().isLoading) return;
 
     set({ isLoading: true });
 
-    try {
-      const result = await fetchUserStatistics();
+    currentFetchPromise = (async () => {
+      try {
+        const result = await fetchUserStatistics();
 
-      if (result.success) {
+        if (result.success) {
+          set({
+            stats: result.data,
+            error: null,
+            lastFetched: new Date(),
+          });
+        } else {
+          set({ error: result.error });
+        }
+      } catch (error) {
         set({
-          stats: result.data,
-          error: null,
-          lastFetched: new Date(),
+          error:
+            error instanceof Error
+              ? error.message
+              : "An unexpected error occurred",
         });
-      } else {
-        set({ error: result.error });
+      } finally {
+        set({ isLoading: false });
+        currentFetchPromise = null;
       }
-    } catch (error) {
-      set({
-        error:
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred",
-      });
-    } finally {
-      set({ isLoading: false });
-    }
+    })();
+
+    return currentFetchPromise;
   },
 
   clearError: () => set({ error: null }),
