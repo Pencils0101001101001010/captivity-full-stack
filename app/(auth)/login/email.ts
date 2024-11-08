@@ -1,5 +1,7 @@
 import nodemailer from "nodemailer";
 import { z } from "zod";
+import type { TransportOptions, Transporter } from "nodemailer";
+import type SMTPTransport from "nodemailer/lib/smtp-transport";
 
 // Define error types
 interface SmtpError extends Error {
@@ -7,6 +9,13 @@ interface SmtpError extends Error {
   responseCode?: number;
   command?: string;
 }
+
+// Validate email parameters
+const emailParamsSchema = z.object({
+  to: z.string().email("Invalid recipient email address"),
+  subject: z.string().min(1, "Subject is required"),
+  html: z.string().min(1, "Email content is required"),
+});
 
 // Validate SMTP configuration
 const smtpConfigSchema = z.object({
@@ -16,13 +25,6 @@ const smtpConfigSchema = z.object({
   user: z.string().min(1, "SMTP user is required"),
   password: z.string().min(1, "SMTP password is required"),
   fromEmail: z.string().email().optional(),
-});
-
-// Validate email parameters
-const emailParamsSchema = z.object({
-  to: z.string().email("Invalid recipient email address"),
-  subject: z.string().min(1, "Subject is required"),
-  html: z.string().min(1, "Email content is required"),
 });
 
 interface EmailProps {
@@ -62,17 +64,14 @@ function validateSmtpConfig(): SmtpConfig {
   }
 }
 
-// Create transporter with validation
-function createTransporter() {
+function createTransporter(): Transporter<SMTPTransport.SentMessageInfo> {
   const config = validateSmtpConfig();
 
-  console.log("Initializing SMTP transport with config:", {
+  console.log("Creating SMTP transport with config:", {
     host: config.host,
     port: config.port,
     secure: config.secure,
     user: config.user,
-    // Mask credentials in logs
-    hasPassword: !!config.password,
   });
 
   return nodemailer.createTransport({
@@ -83,12 +82,17 @@ function createTransporter() {
       user: config.user,
       pass: config.password,
     },
-    // Add debug option in development
-    ...(process.env.NODE_ENV === "development" && { debug: true }),
-  });
+    tls: {
+      rejectUnauthorized: false,
+      minVersion: "TLSv1",
+    },
+    pool: true,
+    maxConnections: 1,
+    maxMessages: 3,
+  } as SMTPTransport.Options);
 }
 
-let transporter: nodemailer.Transporter | null = null;
+let transporter: Transporter<SMTPTransport.SentMessageInfo> | null = null;
 
 export async function sendEmail({ to, subject, html }: EmailProps) {
   try {
@@ -98,17 +102,19 @@ export async function sendEmail({ to, subject, html }: EmailProps) {
     const config = validateSmtpConfig();
     const fromEmail = config.fromEmail || config.user;
 
-    console.log("Attempting to send email:", {
+    console.log("Starting email send attempt:", {
       to: validatedParams.to,
       from: fromEmail,
       subject: validatedParams.subject,
       timestamp: new Date().toISOString(),
     });
 
+    // Create new transporter for each send
     transporter = createTransporter();
 
-    // Verify SMTP connection before sending
+    console.log("Testing SMTP connection...");
     await transporter.verify();
+    console.log("SMTP connection verified successfully");
 
     const info = await transporter.sendMail({
       from: fromEmail,
@@ -121,7 +127,6 @@ export async function sendEmail({ to, subject, html }: EmailProps) {
       messageId: info.messageId,
       response: info.response,
       envelope: info.envelope,
-      timestamp: new Date().toISOString(),
     });
 
     return {
@@ -143,23 +148,12 @@ export async function sendEmail({ to, subject, html }: EmailProps) {
       errorCode: (error as SmtpError).code,
       responseCode: (error as SmtpError).responseCode,
       command: (error as SmtpError).command,
-      // Include stack trace in development only
-      ...(process.env.NODE_ENV === "development" && {
-        stack: error instanceof Error ? error.stack : undefined,
-      }),
+      stack: error instanceof Error ? error.stack : undefined,
     };
 
-    console.error("Failed to send email. Details:", errorDetails);
-
-    // Throw a sanitized error for production
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("Failed to send email. Please try again later.");
-    }
-
-    // In development, throw the original error for debugging
+    console.error("Detailed email sending error:", errorDetails);
     throw error;
   } finally {
-    // Clean up resources
     if (transporter) {
       transporter.close();
       transporter = null;
@@ -167,7 +161,7 @@ export async function sendEmail({ to, subject, html }: EmailProps) {
   }
 }
 
-// Optional: Add a test function for verifying SMTP configuration
+// Test connection function
 export async function testSmtpConnection(): Promise<{
   success: boolean;
   message: string;
@@ -176,13 +170,15 @@ export async function testSmtpConnection(): Promise<{
   try {
     const transporter = createTransporter();
     await transporter.verify();
-    return { success: true, message: "SMTP connection successful" };
+    return {
+      success: true,
+      message: "SMTP connection successful",
+    };
   } catch (error: unknown) {
     return {
       success: false,
       message: "SMTP connection failed",
-      error:
-        error instanceof Error ? error.message : "An unknown error occurred",
+      error: error instanceof Error ? error.message : "Unknown error occurred",
     };
   }
 }
