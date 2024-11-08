@@ -26,13 +26,18 @@ export type FetchCollectionsResult =
   | { success: true; data: Product[]; count: number }
   | { success: false; error: string };
 
+// Helper function to check if user has admin privileges
+function hasAdminPrivileges(role: string): boolean {
+  return role === "ADMIN" || role === "SUPERADMIN";
+}
+
 // Function to fetch products by category
 export async function fetchProductsByCategory(
   category: string
 ): Promise<FetchCollectionsResult> {
   try {
     const { user } = await validateRequest();
-    if (!user) {
+    if (!user || !hasAdminPrivileges(user.role)) {
       throw new Error("Authentication required to fetch products.");
     }
 
@@ -62,7 +67,7 @@ export async function fetchProductsByCategory(
   }
 }
 
-// Collection-specific fetch functions
+// Collection-specific fetch functions remain the same as they use fetchProductsByCategory
 export async function fetchWinterCollection(): Promise<FetchCollectionsResult> {
   return fetchProductsByCategory("kids-collection");
 }
@@ -142,7 +147,7 @@ export async function fetchAllCollections(): Promise<
 > {
   try {
     const { user } = await validateRequest();
-    if (!user) {
+    if (!user || !hasAdminPrivileges(user.role)) {
       throw new Error("Authentication required to fetch collections.");
     }
 
@@ -161,69 +166,47 @@ export async function fetchAllCollections(): Promise<
     ] = await Promise.all([
       prisma.product.findMany({
         where: { category: { has: "kids-collection" } },
-        include: {
-          featuredImage: true,
-        },
+        include: { featuredImage: true },
       }),
       prisma.product.findMany({
         where: { category: { has: "summer-collection" } },
-        include: {
-          featuredImage: true,
-        },
+        include: { featuredImage: true },
       }),
       prisma.product.findMany({
         where: { category: { has: "camo-collection" } },
-        include: {
-          featuredImage: true,
-        },
+        include: { featuredImage: true },
       }),
       prisma.product.findMany({
         where: { category: { has: "baseball-collection" } },
-        include: {
-          featuredImage: true,
-        },
+        include: { featuredImage: true },
       }),
       prisma.product.findMany({
         where: { category: { has: "winter" } },
-        include: {
-          featuredImage: true,
-        },
+        include: { featuredImage: true },
       }),
       prisma.product.findMany({
         where: { category: { has: "signature-collection" } },
-        include: {
-          featuredImage: true,
-        },
+        include: { featuredImage: true },
       }),
       prisma.product.findMany({
         where: { category: { has: "fashion-collection" } },
-        include: {
-          featuredImage: true,
-        },
+        include: { featuredImage: true },
       }),
       prisma.product.findMany({
         where: { category: { has: "leisure-collection" } },
-        include: {
-          featuredImage: true,
-        },
+        include: { featuredImage: true },
       }),
       prisma.product.findMany({
         where: { category: { has: "sport-collection" } },
-        include: {
-          featuredImage: true,
-        },
+        include: { featuredImage: true },
       }),
       prisma.product.findMany({
         where: { category: { has: "african-collection" } },
-        include: {
-          featuredImage: true,
-        },
+        include: { featuredImage: true },
       }),
       prisma.product.findMany({
         where: { category: { has: "industrial-collection" } },
-        include: {
-          featuredImage: true,
-        },
+        include: { featuredImage: true },
       }),
     ]);
 
@@ -274,7 +257,7 @@ export async function toggleProductPublishStatus(
 > {
   try {
     const { user } = await validateRequest();
-    if (!user) {
+    if (!user || !hasAdminPrivileges(user.role)) {
       throw new Error("Authentication required to update product status.");
     }
 

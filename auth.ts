@@ -24,7 +24,8 @@ interface DatabaseUserAttributes {
     | "DISTRIBUTOR"
     | "SHOPMANAGER"
     | "EDITOR"
-    | "ADMIN";
+    | "ADMIN"
+    | "SUPERADMIN";
 }
 
 export const lucia = new Lucia(adapter, {
@@ -73,7 +74,8 @@ interface DatabaseUserAttributes {
     | "DISTRIBUTOR"
     | "SHOPMANAGER"
     | "EDITOR"
-    | "ADMIN";
+    | "ADMIN"
+    | "SUPERADMIN";
 }
 
 export const google = new Google(
@@ -133,6 +135,7 @@ export const hasRole = (
     "SHOPMANAGER",
     "EDITOR",
     "ADMIN",
+    "SUPERADMIN",
   ];
   return (
     roleHierarchy.indexOf(user.role) >= roleHierarchy.indexOf(requiredRole)

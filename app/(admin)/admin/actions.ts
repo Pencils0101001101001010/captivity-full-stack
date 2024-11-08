@@ -15,10 +15,15 @@ export type FetchUserStatsResult =
   | { success: true; data: UserStats }
   | { success: false; error: string };
 
+// Helper function to check if user has admin privileges
+function hasAdminPrivileges(role: string): boolean {
+  return role === UserRole.ADMIN || role === UserRole.SUPERADMIN;
+}
+
 export async function fetchUserStatistics(): Promise<FetchUserStatsResult> {
   try {
     const { user } = await validateRequest();
-    if (!user || user.role !== UserRole.ADMIN) {
+    if (!user || !hasAdminPrivileges(user.role)) {
       throw new Error("Unauthorized. Only admins can fetch user statistics.");
     }
 
@@ -107,7 +112,7 @@ export async function fetchNewlyUpgradedCustomerDetails(
 > {
   try {
     const { user } = await validateRequest();
-    if (!user || user.role !== UserRole.ADMIN) {
+    if (!user || !hasAdminPrivileges(user.role)) {
       throw new Error("Unauthorized. Only admins can fetch customer details.");
     }
 

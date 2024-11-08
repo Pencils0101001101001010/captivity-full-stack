@@ -15,7 +15,9 @@ export default async function Layout({
   const session = await validateRequest();
 
   if (!session.user) redirect("/login");
-  if (session.user.role !== "ADMIN") redirect("/login");
+  if (session.user.role !== "ADMIN" && session.user.role !== "SUPERADMIN") {
+    redirect("/login");
+  }
 
   return (
     <SessionProvider value={session}>

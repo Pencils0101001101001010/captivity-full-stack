@@ -21,6 +21,7 @@ enum UserRole {
   SHOPMANAGER = "SHOPMANAGER",
   EDITOR = "EDITOR",
   ADMIN = "ADMIN",
+  SUPERADMIN = "SUPERADMIN",
 }
 
 const roleRoutes: Record<UserRole, string> = {
@@ -32,18 +33,20 @@ const roleRoutes: Record<UserRole, string> = {
   [UserRole.SHOPMANAGER]: "/shop",
   [UserRole.EDITOR]: "/editor",
   [UserRole.ADMIN]: "/admin",
+  [UserRole.SUPERADMIN]: "/select-panel", // New route for panel selection
 };
 
 export async function login(
-  credentials: LoginValues
+  credentials: LoginValues & { targetPanel?: string }
 ): Promise<{ error: string } | void> {
   try {
-    const { username, password } = loginSchema.parse(credentials);
+    const { username, password, targetPanel } = credentials;
+    const validatedCreds = loginSchema.parse({ username, password });
 
     const existingUser = await prisma.user.findFirst({
       where: {
         username: {
-          equals: username,
+          equals: validatedCreds.username,
           mode: "insensitive",
         },
       },
@@ -68,19 +71,31 @@ export async function login(
       };
     }
 
+    const session = await lucia.createSession(existingUser.id, {});
+    const sessionCookie = lucia.createSessionCookie(session.id);
+    cookies().set(
+      sessionCookie.name,
+      sessionCookie.value,
+      sessionCookie.attributes
+    );
+
     const userRole = existingUser.role as UserRole;
 
+    // Handle SUPERADMIN with target panel
+    if (userRole === UserRole.SUPERADMIN && targetPanel) {
+      // Validate that the target panel is a valid route
+      const targetRole = Object.keys(roleRoutes).find(
+        role => roleRoutes[role as UserRole] === `/${targetPanel}`
+      );
+      if (targetRole) {
+        return redirect(`/${targetPanel}`);
+      }
+    }
+
+    // Default routing based on role
     if (userRole === UserRole.USER) {
       return redirect("/register-pending-message");
     } else {
-      const session = await lucia.createSession(existingUser.id, {});
-      const sessionCookie = lucia.createSessionCookie(session.id);
-      cookies().set(
-        sessionCookie.name,
-        sessionCookie.value,
-        sessionCookie.attributes
-      );
-
       const redirectPath = roleRoutes[userRole] || "/";
       return redirect(redirectPath);
     }
