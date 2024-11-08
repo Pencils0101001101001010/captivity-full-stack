@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 import { z } from "zod";
-import type { TransportOptions, Transporter } from "nodemailer";
+import type { Transporter } from "nodemailer";
 import type SMTPTransport from "nodemailer/lib/smtp-transport";
 
 // Define error types
@@ -42,39 +42,69 @@ interface SmtpConfig {
   fromEmail?: string;
 }
 
+function checkEnvVariables() {
+  const requiredVars = [
+    "SMTP_HOST",
+    "SMTP_PORT",
+    "SMTP_USER",
+    "SMTP_PASSWORD",
+    "SMTP_FROM_EMAIL",
+  ];
+
+  const missing = requiredVars.filter(varName => !process.env[varName]);
+
+  console.log("Environment variables check:", {
+    SMTP_HOST: process.env.SMTP_HOST || "NOT_SET",
+    SMTP_PORT: process.env.SMTP_PORT || "NOT_SET",
+    SMTP_USER: process.env.SMTP_USER || "NOT_SET",
+    SMTP_FROM_EMAIL: process.env.SMTP_FROM_EMAIL || "NOT_SET",
+    SMTP_SECURE: process.env.SMTP_SECURE || "NOT_SET",
+    // Don't log the actual password
+    SMTP_PASSWORD: process.env.SMTP_PASSWORD ? "SET" : "NOT_SET",
+  });
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required environment variables: ${missing.join(", ")}`
+    );
+  }
+}
+
 function validateSmtpConfig(): SmtpConfig {
+  // First check if env vars exist
+  checkEnvVariables();
+
   try {
     const config = smtpConfigSchema.parse({
-      host: process.env.SMTP_HOST,
+      host: process.env.SMTP_HOST!,
       port: parseInt(process.env.SMTP_PORT || "587"),
       secure: process.env.SMTP_SECURE === "true",
-      user: process.env.SMTP_USER,
-      password: process.env.SMTP_PASSWORD,
+      user: process.env.SMTP_USER!,
+      password: process.env.SMTP_PASSWORD!,
       fromEmail: process.env.SMTP_FROM_EMAIL,
     });
+
+    console.log("SMTP Config validation successful:", {
+      host: config.host,
+      port: config.port,
+      secure: config.secure,
+      user: config.user,
+      fromEmail: config.fromEmail,
+    });
+
     return config;
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      const issues = error.issues
-        .map(issue => `${issue.path}: ${issue.message}`)
-        .join(", ");
-      throw new Error(`Invalid SMTP configuration: ${issues}`);
-    }
+    console.error("SMTP Config validation failed:", error);
     throw error;
   }
 }
 
 function createTransporter(): Transporter<SMTPTransport.SentMessageInfo> {
+  console.log("Starting transporter creation...");
+
   const config = validateSmtpConfig();
 
-  console.log("Creating SMTP transport with config:", {
-    host: config.host,
-    port: config.port,
-    secure: config.secure,
-    user: config.user,
-  });
-
-  return nodemailer.createTransport({
+  const transporterConfig = {
     host: config.host,
     port: config.port,
     secure: config.secure,
@@ -84,25 +114,30 @@ function createTransporter(): Transporter<SMTPTransport.SentMessageInfo> {
     },
     tls: {
       rejectUnauthorized: false,
-      minVersion: "TLSv1",
     },
-    pool: true,
-    maxConnections: 1,
-    maxMessages: 3,
-  } as SMTPTransport.Options);
+  } as SMTPTransport.Options;
+
+  console.log("Creating transporter with config:", {
+    ...transporterConfig,
+    auth: { ...transporterConfig.auth, pass: "[REDACTED]" },
+  });
+
+  return nodemailer.createTransport(transporterConfig);
 }
 
 let transporter: Transporter<SMTPTransport.SentMessageInfo> | null = null;
 
 export async function sendEmail({ to, subject, html }: EmailProps) {
   try {
+    console.log("Starting email send process...");
+
     // Validate email parameters
     const validatedParams = emailParamsSchema.parse({ to, subject, html });
 
     const config = validateSmtpConfig();
     const fromEmail = config.fromEmail || config.user;
 
-    console.log("Starting email send attempt:", {
+    console.log("Email parameters validated:", {
       to: validatedParams.to,
       from: fromEmail,
       subject: validatedParams.subject,
@@ -168,6 +203,7 @@ export async function testSmtpConnection(): Promise<{
   error?: string;
 }> {
   try {
+    console.log("Testing SMTP connection...");
     const transporter = createTransporter();
     await transporter.verify();
     return {
@@ -175,6 +211,7 @@ export async function testSmtpConnection(): Promise<{
       message: "SMTP connection successful",
     };
   } catch (error: unknown) {
+    console.error("SMTP connection test failed:", error);
     return {
       success: false,
       message: "SMTP connection failed",
