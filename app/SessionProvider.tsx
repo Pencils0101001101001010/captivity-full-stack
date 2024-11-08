@@ -13,7 +13,8 @@ interface SessionContext {
       | "DISTRIBUTOR"
       | "SHOPMANAGER"
       | "EDITOR"
-      | "ADMIN";
+      | "ADMIN"
+      | "SUPERADMIN";
   };
   session: Session;
 }
