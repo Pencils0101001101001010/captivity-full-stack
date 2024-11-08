@@ -109,6 +109,32 @@ export async function initiatePasswordReset(
   values: ForgotPasswordValues
 ): Promise<{ success?: boolean; error?: string }> {
   try {
+    // Check environment variables at the start
+    const requiredEnvVars = {
+      SMTP_HOST: process.env.SMTP_HOST,
+      SMTP_PORT: process.env.SMTP_PORT,
+      SMTP_USER: process.env.SMTP_USER,
+      SMTP_PASSWORD: process.env.SMTP_PASSWORD,
+      SMTP_FROM_EMAIL: process.env.SMTP_FROM_EMAIL,
+      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    };
+
+    console.log("Environment variables state:", {
+      ...requiredEnvVars,
+      SMTP_PASSWORD: requiredEnvVars.SMTP_PASSWORD ? "[SET]" : "[NOT SET]",
+    });
+
+    // Validate all required environment variables
+    const missingVars = Object.entries(requiredEnvVars)
+      .filter(([key, value]) => !value)
+      .map(([key]) => key);
+
+    if (missingVars.length > 0) {
+      throw new Error(
+        `Missing required environment variables: ${missingVars.join(", ")}`
+      );
+    }
+
     const { email } = forgotPasswordSchema.parse(values);
     console.log("Attempting password reset for:", email);
 
@@ -130,18 +156,22 @@ export async function initiatePasswordReset(
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
     try {
-      // Dynamic base URL based on environment
+      // Get base URL with fallback
       const baseUrl =
-        process.env.NODE_ENV === "production"
-          ? process.env.NEXT_PUBLIC_APP_URL // Production URL from env
-          : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"; // Development fallback
+        process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || // Remove trailing slash if present
+        (process.env.NODE_ENV === "development"
+          ? "http://localhost:3000"
+          : undefined);
+
+      if (!baseUrl) {
+        throw new Error("Application URL is not configured");
+      }
 
       console.log("Using base URL:", baseUrl);
-
       const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
       console.log("Generated reset link:", resetLink);
 
-      // Save the token first before sending email
+      // Save the token first
       await prisma.user.update({
         where: { id: user.id },
         data: {
@@ -151,9 +181,8 @@ export async function initiatePasswordReset(
       });
       console.log("Reset token saved to database");
 
-      // Attempt to send email
-      console.log("Attempting to send reset email to:", user.email);
-      const emailResult = await sendEmail({
+      // Send email
+      await sendEmail({
         to: user.email,
         subject: "Reset Your Password",
         html: `
@@ -189,7 +218,6 @@ export async function initiatePasswordReset(
         `,
       });
 
-      console.log("Email send result:", emailResult);
       return { success: true };
     } catch (emailError) {
       console.error("Detailed email error:", {
@@ -197,11 +225,9 @@ export async function initiatePasswordReset(
         stack: emailError instanceof Error ? emailError.stack : undefined,
         message:
           emailError instanceof Error ? emailError.message : "Unknown error",
-        email: user.email,
-        timestamp: new Date().toISOString(),
       });
 
-      // Clean up the token if email fails
+      // Clean up token if email fails
       await prisma.user.update({
         where: { id: user.id },
         data: {
@@ -210,29 +236,19 @@ export async function initiatePasswordReset(
         },
       });
 
-      if (emailError instanceof Error) {
-        return {
-          error: `Failed to send reset email: ${emailError.message}. Please try again or contact support.`,
-        };
-      }
-
-      return {
-        error:
-          "Failed to send reset email. Please try again or contact support.",
-      };
+      throw emailError;
     }
   } catch (error) {
-    console.error("Password reset initiation error:", {
+    console.error("Password reset error:", {
       error,
-      stack: error instanceof Error ? error.stack : undefined,
       message: error instanceof Error ? error.message : "Unknown error",
-      timestamp: new Date().toISOString(),
+      stack: error instanceof Error ? error.stack : undefined,
     });
 
     return {
       error:
         error instanceof Error
-          ? `Failed to process password reset request: ${error.message}`
+          ? error.message
           : "Failed to process password reset request",
     };
   }
