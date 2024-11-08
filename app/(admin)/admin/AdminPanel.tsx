@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Activity,
   Users,
@@ -10,8 +10,94 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { fetchUserStatistics } from "./actions";
+
+type UserStats = {
+  totalCustomers: number;
+  pendingRegistrations: number;
+  activeUserSessions: number;
+  newlyUpgradedCustomers: number;
+  loading: boolean;
+  error: string | null;
+};
 
 const AdminPanel = () => {
+  const [stats, setStats] = useState<UserStats>({
+    totalCustomers: 0,
+    pendingRegistrations: 0,
+    activeUserSessions: 0,
+    newlyUpgradedCustomers: 0,
+    loading: true,
+    error: null,
+  });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const result = await fetchUserStatistics();
+        if (result.success) {
+          setStats({
+            ...result.data,
+            loading: false,
+            error: null,
+          });
+        } else {
+          setStats(prev => ({
+            ...prev,
+            loading: false,
+            error: result.error,
+          }));
+        }
+      } catch (error) {
+        setStats(prev => ({
+          ...prev,
+          loading: false,
+          error: "Failed to fetch statistics",
+        }));
+      }
+    };
+
+    loadStats();
+    const interval = setInterval(loadStats, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const StatCard = ({
+    title,
+    value,
+    icon: Icon,
+    gradient,
+  }: {
+    title: string;
+    value: number | string;
+    icon: React.ElementType;
+    gradient: string;
+  }) => (
+    <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
+      <CardHeader
+        className={`flex flex-row items-center justify-between pb-2 space-y-0 ${gradient} text-white rounded-t-lg`}
+      >
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <Icon className="w-4 h-4 text-white/80" />
+      </CardHeader>
+      <CardContent>
+        <div className="pt-4 flex flex-col">
+          <span className="text-3xl font-bold tracking-tight">
+            {stats.loading ? (
+              <span className="text-gray-400">Loading...</span>
+            ) : stats.error ? (
+              <span className="text-red-500 text-sm">Error loading data</span>
+            ) : typeof value === "number" ? (
+              value.toLocaleString()
+            ) : (
+              value
+            )}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
@@ -35,55 +121,30 @@ const AdminPanel = () => {
       <main className="px-4 py-6 mx-auto max-w-7xl">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 bg-gradient-to-br from-purple-500 to-indigo-500 text-white rounded-t-lg">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="w-4 h-4 text-white/80" />
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-purple-600">14,532</div>
-              <p className="text-xs text-green-600">+2.5% from last month</p>
-            </CardContent>
-          </Card>
-
-          <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 bg-gradient-to-br from-blue-500 to-cyan-500 text-white rounded-t-lg">
-              <CardTitle className="text-sm font-medium">
-                Pending Registrations
-              </CardTitle>
-              <ShoppingCart className="w-4 h-4 text-white/80" />
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-blue-600">1,245</div>
-              <p className="text-xs text-green-600">+12.3% from last month</p>
-            </CardContent>
-          </Card>
-
-          <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 bg-gradient-to-br from-emerald-500 to-teal-500 text-white rounded-t-lg">
-              <CardTitle className="text-sm font-medium">
-                Active Customers
-              </CardTitle>
-              <Box className="w-4 h-4 text-white/80" />
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-emerald-600">24</div>
-              <p className="text-xs text-red-600">-1 from last month</p>
-            </CardContent>
-          </Card>
-
-          <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-t-lg">
-              <CardTitle className="text-sm font-medium">
-                New Customers
-              </CardTitle>
-              <AlertCircle className="w-4 h-4 text-white/80" />
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-orange-600">6</div>
-              <p className="text-xs text-green-600">-2 from last month</p>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Total Customers"
+            value={stats.totalCustomers}
+            icon={Users}
+            gradient="bg-gradient-to-br from-violet-500 to-violet-700"
+          />
+          <StatCard
+            title="Pending Registrations"
+            value={stats.pendingRegistrations}
+            icon={ShoppingCart}
+            gradient="bg-gradient-to-br from-blue-500 to-blue-700"
+          />
+          <StatCard
+            title="Active Sessions"
+            value={stats.activeUserSessions}
+            icon={Box}
+            gradient="bg-gradient-to-br from-emerald-500 to-emerald-700"
+          />
+          <StatCard
+            title="New Customers"
+            value={stats.newlyUpgradedCustomers}
+            icon={AlertCircle}
+            gradient="bg-gradient-to-br from-orange-500 to-orange-700"
+          />
         </div>
 
         {/* Quick Actions */}
@@ -117,7 +178,7 @@ const AdminPanel = () => {
                   Generate Report
                 </h3>
                 <p className="text-sm text-emerald-600/80">
-                  Report to the Distirbutor
+                  Report to the Distributor
                 </p>
               </button>
             </div>
