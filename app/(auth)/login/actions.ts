@@ -130,11 +130,30 @@ export async function initiatePasswordReset(
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
     try {
+      // Dynamic base URL based on environment
       const baseUrl =
-        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-      const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
+        process.env.NODE_ENV === "production"
+          ? process.env.NEXT_PUBLIC_APP_URL // Production URL from env
+          : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"; // Development fallback
 
-      await sendEmail({
+      console.log("Using base URL:", baseUrl);
+
+      const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
+      console.log("Generated reset link:", resetLink);
+
+      // Save the token first before sending email
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          resetToken,
+          resetTokenExpiry,
+        },
+      });
+      console.log("Reset token saved to database");
+
+      // Attempt to send email
+      console.log("Attempting to send reset email to:", user.email);
+      const emailResult = await sendEmail({
         to: user.email,
         subject: "Reset Your Password",
         html: `
@@ -170,25 +189,52 @@ export async function initiatePasswordReset(
         `,
       });
 
+      console.log("Email send result:", emailResult);
+      return { success: true };
+    } catch (emailError) {
+      console.error("Detailed email error:", {
+        error: emailError,
+        stack: emailError instanceof Error ? emailError.stack : undefined,
+        message:
+          emailError instanceof Error ? emailError.message : "Unknown error",
+        email: user.email,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Clean up the token if email fails
       await prisma.user.update({
         where: { id: user.id },
         data: {
-          resetToken,
-          resetTokenExpiry,
+          resetToken: null,
+          resetTokenExpiry: null,
         },
       });
 
-      return { success: true };
-    } catch (emailError) {
-      console.error("Failed to send reset email:", emailError);
+      if (emailError instanceof Error) {
+        return {
+          error: `Failed to send reset email: ${emailError.message}. Please try again or contact support.`,
+        };
+      }
+
       return {
         error:
           "Failed to send reset email. Please try again or contact support.",
       };
     }
   } catch (error) {
-    console.error("Password reset initiation error:", error);
-    return { error: "Failed to process password reset request" };
+    console.error("Password reset initiation error:", {
+      error,
+      stack: error instanceof Error ? error.stack : undefined,
+      message: error instanceof Error ? error.message : "Unknown error",
+      timestamp: new Date().toISOString(),
+    });
+
+    return {
+      error:
+        error instanceof Error
+          ? `Failed to process password reset request: ${error.message}`
+          : "Failed to process password reset request",
+    };
   }
 }
 
