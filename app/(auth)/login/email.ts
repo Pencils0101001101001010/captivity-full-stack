@@ -71,14 +71,15 @@ function checkEnvVariables() {
 }
 
 function validateSmtpConfig(): SmtpConfig {
-  // First check if env vars exist
   checkEnvVariables();
 
   try {
+    const port = parseInt(process.env.SMTP_PORT || "587");
     const config = smtpConfigSchema.parse({
       host: process.env.SMTP_HOST!,
-      port: parseInt(process.env.SMTP_PORT || "587"),
-      secure: process.env.SMTP_SECURE === "false",
+      port,
+      // For port 587, secure should be false. For port 465, secure should be true
+      secure: port === 465,
       user: process.env.SMTP_USER!,
       password: process.env.SMTP_PASSWORD!,
       fromEmail: process.env.SMTP_FROM_EMAIL,
@@ -107,13 +108,14 @@ function createTransporter(): Transporter<SMTPTransport.SentMessageInfo> {
   const transporterConfig = {
     host: config.host,
     port: config.port,
-    secure: config.secure,
+    secure: config.port === 465, // true for 465, false for other ports
     auth: {
       user: config.user,
       pass: config.password,
     },
     tls: {
       rejectUnauthorized: false,
+      minVersion: "TLSv1.2",
     },
   } as SMTPTransport.Options;
 
@@ -196,7 +198,6 @@ export async function sendEmail({ to, subject, html }: EmailProps) {
   }
 }
 
-// Test connection function
 export async function testSmtpConnection(): Promise<{
   success: boolean;
   message: string;
