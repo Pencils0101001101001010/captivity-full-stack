@@ -201,7 +201,6 @@ export function useMenuItems() {
       {
         title: "Products",
         links: [
-          { name: "All Products", href: "/admin/products" },
           { name: "Add Product", href: "/admin/products/create" },
           { name: "Categories", href: "/admin/products/categories" },
           { name: "Inventory", href: "/admin/products/inventory" },
