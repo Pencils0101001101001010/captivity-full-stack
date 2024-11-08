@@ -3,7 +3,7 @@ import WinterCollectionPage from "./WinterLanding";
 
 export default async function WinterPage(): Promise<JSX.Element> {
   return (
-    <div className="bg-cyan-300">
+    <div>
       <div className="bg-muted border-b border-border mb-6">
         <div className="container mx-auto px-4 py-6 shadow-2xl shadow-black">
           <h1 className="text-3xl font-bold text-foreground text-cyan-400">
