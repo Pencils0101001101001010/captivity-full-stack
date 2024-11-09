@@ -8,7 +8,6 @@ import {
   useBaseballLoading,
   useBaseballProducts,
 } from "../../../_store/useBaseballStore";
-import ProductCard from "../_components/ProductsCard";
 import ColorPicker from "../_components/ColorPicker";
 import { Variation } from "@prisma/client";
 import ProductCardColorPicker from "../_components/ProductCardColorPicker";
@@ -78,7 +77,7 @@ const BaseballCollectionPage: React.FC = () => {
 
   return (
     <>
-      {/* Sidebar */}
+      {/* COLOR PICKER */}
       <div className="mb-8">
         <ColorPicker
           colors={getUniqueColors(allProducts.flatMap(p => p.variations))}
