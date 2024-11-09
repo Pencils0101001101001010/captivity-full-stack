@@ -9,6 +9,9 @@ import {
   useBaseballProducts,
 } from "../../../_store/useBaseballStore";
 import ProductCard from "../_components/ProductsCard";
+import ColorPicker from "../_components/ColorPicker";
+import { Variation } from "@prisma/client";
+import ProductCardColorPicker from "../_components/ProductCardColorPicker";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -20,9 +23,30 @@ const BaseballCollectionPage: React.FC = () => {
   const error = useBaseballError();
   const { fetchBaseballCollection } = useBaseballActions();
   const initializationRef = useRef(false);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
   // Create flat array of products
   const allProducts = Object.values(baseballProducts).flat().filter(Boolean);
+
+  //color picker
+  const filteredProducts = selectedColor
+    ? allProducts.filter(product =>
+        product.variations.some(
+          variation =>
+            variation.color?.toLowerCase() === selectedColor.toLowerCase()
+        )
+      )
+    : allProducts;
+  // Get unique colors from products
+  const getUniqueColors = (variations: Variation[]): string[] => {
+    const colorSet = new Set<string>();
+    variations.forEach(variation => {
+      if (typeof variation.color === "string") {
+        colorSet.add(variation.color);
+      }
+    });
+    return Array.from(colorSet);
+  };
 
   // Initial fetch
   useEffect(() => {
@@ -40,11 +64,11 @@ const BaseballCollectionPage: React.FC = () => {
   // Pagination calculations
   const totalPages = Math.max(
     1,
-    Math.ceil(allProducts.length / ITEMS_PER_PAGE)
+    Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
   );
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
-  const currentProducts = allProducts.slice(
+  const currentProducts = filteredProducts.slice(
     startIndex,
     startIndex + ITEMS_PER_PAGE
   );
@@ -54,7 +78,17 @@ const BaseballCollectionPage: React.FC = () => {
 
   return (
     <>
-      {allProducts.length === 0 ? (
+      {/* Sidebar */}
+      <div className="mb-8">
+        <ColorPicker
+          colors={getUniqueColors(allProducts.flatMap(p => p.variations))}
+          selectedColor={selectedColor}
+          onColorChange={setSelectedColor}
+        />
+      </div>
+
+      {/* Product Grid */}
+      {filteredProducts.length === 0 ? (
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-foreground">
             No products found in the baseball collection.
@@ -65,7 +99,14 @@ const BaseballCollectionPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
             {currentProducts.map(product => (
               <div key={product.id} className="w-full">
-                <ProductCard product={product} />
+                <ProductCardColorPicker
+                  product={product}
+                  selectedColor={selectedColor}
+                  colors={[]}
+                  onColorChange={function (color: string): void {
+                    throw new Error("Function not implemented.");
+                  }}
+                />
               </div>
             ))}
           </div>

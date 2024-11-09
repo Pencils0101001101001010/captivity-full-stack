@@ -8,7 +8,9 @@ import {
   useAfricanLoading,
   useAfricanProducts,
 } from "../../../_store/useAfricanStore";
-import ProductCard from "../_components/ProductsCard";
+import { ProductWithRelations } from "./actions";
+import FilterProductCard from "../_components/FilterProductCard";
+import { Variation } from "@prisma/client";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -20,11 +22,9 @@ const AfricanCollectionPage: React.FC = () => {
   const error = useAfricanError();
   const { fetchAfricanCollection } = useAfricanActions();
   const initializationRef = useRef(false);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
-  // Create flat array of products
-  const allProducts = Object.values(africanProducts).flat().filter(Boolean);
-
-  // Initial fetch
+  // Single useEffect for initialization
   useEffect(() => {
     if (!hasInitiallyFetched && !initializationRef.current) {
       initializationRef.current = true;
@@ -32,7 +32,21 @@ const AfricanCollectionPage: React.FC = () => {
     }
   }, [hasInitiallyFetched, fetchAfricanCollection]);
 
-  // Reset to first page whenever products array changes (including search)
+  // Create flat array of products
+  const allProducts = Object.values(africanProducts).flat().filter(Boolean);
+
+  // Extract colors per product
+  const getUniqueColors = (variations: Variation[]): string[] => {
+    const colorSet = new Set<string>();
+    variations.forEach(variation => {
+      if (typeof variation.color === "string") {
+        colorSet.add(variation.color);
+      }
+    });
+    return Array.from(colorSet);
+  };
+
+  // Reset to first page whenever products array changes
   useEffect(() => {
     setCurrentPage(1);
   }, [allProducts.length]);
@@ -44,17 +58,22 @@ const AfricanCollectionPage: React.FC = () => {
   );
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
-  const currentProducts = allProducts.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE
-  );
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentProducts = allProducts.slice(startIndex, endIndex);
+
+  // Filter products by color if selected
+  const filteredProducts = selectedColor
+    ? allProducts.filter(product =>
+        product.variations.some(variation => variation.color === selectedColor)
+      )
+    : allProducts;
 
   if (loading) return <div>Loading african collection...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
     <>
-      {allProducts.length === 0 ? (
+      {filteredProducts.length === 0 ? (
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-foreground">
             No products found in the african collection.
@@ -63,11 +82,18 @@ const AfricanCollectionPage: React.FC = () => {
       ) : (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-            {currentProducts.map(product => (
-              <div key={product.id} className="w-full">
-                <ProductCard product={product} />
-              </div>
-            ))}
+            {currentProducts.map(product => {
+              const colors = getUniqueColors(product.variations);
+              return (
+                <FilterProductCard
+                  key={product.id}
+                  product={product}
+                  colors={colors}
+                  selectedColor={selectedColor}
+                  onColorChange={setSelectedColor}
+                />
+              );
+            })}
           </div>
 
           {totalPages > 1 && (
@@ -119,8 +145,8 @@ const AfricanCollectionPage: React.FC = () => {
 
           <div className="text-sm text-muted-foreground text-center mt-4">
             Showing {startIndex + 1}-
-            {Math.min(startIndex + ITEMS_PER_PAGE, allProducts.length)} of{" "}
-            {allProducts.length} products
+            {Math.min(endIndex, filteredProducts.length)} of{" "}
+            {filteredProducts.length} products
           </div>
         </>
       )}

@@ -10,12 +10,6 @@ import {
   FeaturedImage,
 } from "@prisma/client";
 
-type ProductWithRelations = Product & {
-  dynamicPricing: DynamicPricing[];
-  variations: Variation[];
-  featuredImage: FeaturedImage | null;
-};
-
 type Category =
   | "men"
   | "women"
@@ -35,6 +29,12 @@ type FetchAfricanCollectionResult =
   | { success: true; data: CategorizedProducts }
   | { success: false; error: string };
 
+export type ProductWithRelations = Product & {
+  dynamicPricing: DynamicPricing[];
+  variations: Variation[];
+  featuredImage: FeaturedImage | null;
+};
+
 export async function fetchAfricanCollection(): Promise<FetchAfricanCollectionResult> {
   try {
     const { user } = await validateRequest();
@@ -45,7 +45,7 @@ export async function fetchAfricanCollection(): Promise<FetchAfricanCollectionRe
     const products = await prisma.product.findMany({
       where: {
         category: {
-          has: "african-collection",
+          has: "summer-collection",
         },
         isPublished: true,
       },
@@ -72,19 +72,16 @@ export async function fetchAfricanCollection(): Promise<FetchAfricanCollectionRe
 
     products.forEach(product => {
       if (processedProductIds.has(product.id)) return;
-
       const categories = product.category as string[];
       const primaryCategory =
         (categories.find(
           category => category in categorizedProducts
         ) as Category) || "uncategorised";
-
       categorizedProducts[primaryCategory].push(product);
       processedProductIds.add(product.id);
     });
 
     revalidatePath("/customer/shopping/african");
-
     return { success: true, data: categorizedProducts };
   } catch (error) {
     console.error("Error fetching african collection:", error);
