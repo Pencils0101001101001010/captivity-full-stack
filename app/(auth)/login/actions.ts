@@ -21,6 +21,7 @@ enum UserRole {
   SHOPMANAGER = "SHOPMANAGER",
   EDITOR = "EDITOR",
   ADMIN = "ADMIN",
+  SUPERADMIN = "SUPERADMIN",
 }
 
 const roleRoutes: Record<UserRole, string> = {
@@ -32,18 +33,20 @@ const roleRoutes: Record<UserRole, string> = {
   [UserRole.SHOPMANAGER]: "/shop",
   [UserRole.EDITOR]: "/editor",
   [UserRole.ADMIN]: "/admin",
+  [UserRole.SUPERADMIN]: "/select-panel", // New route for panel selection
 };
 
 export async function login(
-  credentials: LoginValues
+  credentials: LoginValues & { targetPanel?: string }
 ): Promise<{ error: string } | void> {
   try {
-    const { username, password } = loginSchema.parse(credentials);
+    const { username, password, targetPanel } = credentials;
+    const validatedCreds = loginSchema.parse({ username, password });
 
     const existingUser = await prisma.user.findFirst({
       where: {
         username: {
-          equals: username,
+          equals: validatedCreds.username,
           mode: "insensitive",
         },
       },
@@ -68,19 +71,31 @@ export async function login(
       };
     }
 
+    const session = await lucia.createSession(existingUser.id, {});
+    const sessionCookie = lucia.createSessionCookie(session.id);
+    cookies().set(
+      sessionCookie.name,
+      sessionCookie.value,
+      sessionCookie.attributes
+    );
+
     const userRole = existingUser.role as UserRole;
 
+    // Handle SUPERADMIN with target panel
+    if (userRole === UserRole.SUPERADMIN && targetPanel) {
+      // Validate that the target panel is a valid route
+      const targetRole = Object.keys(roleRoutes).find(
+        role => roleRoutes[role as UserRole] === `/${targetPanel}`
+      );
+      if (targetRole) {
+        return redirect(`/${targetPanel}`);
+      }
+    }
+
+    // Default routing based on role
     if (userRole === UserRole.USER) {
       return redirect("/register-pending-message");
     } else {
-      const session = await lucia.createSession(existingUser.id, {});
-      const sessionCookie = lucia.createSessionCookie(session.id);
-      cookies().set(
-        sessionCookie.name,
-        sessionCookie.value,
-        sessionCookie.attributes
-      );
-
       const redirectPath = roleRoutes[userRole] || "/";
       return redirect(redirectPath);
     }
@@ -109,6 +124,32 @@ export async function initiatePasswordReset(
   values: ForgotPasswordValues
 ): Promise<{ success?: boolean; error?: string }> {
   try {
+    // Check environment variables at the start
+    const requiredEnvVars = {
+      SMTP_HOST: process.env.SMTP_HOST,
+      SMTP_PORT: process.env.SMTP_PORT,
+      SMTP_USER: process.env.SMTP_USER,
+      SMTP_PASSWORD: process.env.SMTP_PASSWORD,
+      SMTP_FROM_EMAIL: process.env.SMTP_FROM_EMAIL,
+      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    };
+
+    console.log("Environment variables state:", {
+      ...requiredEnvVars,
+      SMTP_PASSWORD: requiredEnvVars.SMTP_PASSWORD ? "[SET]" : "[NOT SET]",
+    });
+
+    // Validate all required environment variables
+    const missingVars = Object.entries(requiredEnvVars)
+      .filter(([key, value]) => !value)
+      .map(([key]) => key);
+
+    if (missingVars.length > 0) {
+      throw new Error(
+        `Missing required environment variables: ${missingVars.join(", ")}`
+      );
+    }
+
     const { email } = forgotPasswordSchema.parse(values);
     console.log("Attempting password reset for:", email);
 
@@ -130,10 +171,32 @@ export async function initiatePasswordReset(
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
     try {
+      // Get base URL with fallback
       const baseUrl =
-        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-      const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
+        process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || // Remove trailing slash if present
+        (process.env.NODE_ENV === "development"
+          ? "http://localhost:3000"
+          : undefined);
 
+      if (!baseUrl) {
+        throw new Error("Application URL is not configured");
+      }
+
+      console.log("Using base URL:", baseUrl);
+      const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
+      console.log("Generated reset link:", resetLink);
+
+      // Save the token first
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          resetToken,
+          resetTokenExpiry,
+        },
+      });
+      console.log("Reset token saved to database");
+
+      // Send email
       await sendEmail({
         to: user.email,
         subject: "Reset Your Password",
@@ -170,25 +233,39 @@ export async function initiatePasswordReset(
         `,
       });
 
+      return { success: true };
+    } catch (emailError) {
+      console.error("Detailed email error:", {
+        error: emailError,
+        stack: emailError instanceof Error ? emailError.stack : undefined,
+        message:
+          emailError instanceof Error ? emailError.message : "Unknown error",
+      });
+
+      // Clean up token if email fails
       await prisma.user.update({
         where: { id: user.id },
         data: {
-          resetToken,
-          resetTokenExpiry,
+          resetToken: null,
+          resetTokenExpiry: null,
         },
       });
 
-      return { success: true };
-    } catch (emailError) {
-      console.error("Failed to send reset email:", emailError);
-      return {
-        error:
-          "Failed to send reset email. Please try again or contact support.",
-      };
+      throw emailError;
     }
   } catch (error) {
-    console.error("Password reset initiation error:", error);
-    return { error: "Failed to process password reset request" };
+    console.error("Password reset error:", {
+      error,
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to process password reset request",
+    };
   }
 }
 

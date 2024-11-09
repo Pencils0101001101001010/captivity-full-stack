@@ -21,13 +21,18 @@ export type FetchUsersResult =
   | { success: true; data: User[]; count: number }
   | { success: false; error: string };
 
+// Helper function to check if user has admin privileges
+function hasAdminPrivileges(role: UserRole): boolean {
+  return role === UserRole.ADMIN || role === UserRole.SUPERADMIN;
+}
+
 // Function to fetch users by role
 export async function fetchUsersByRole(
   role: UserRole
 ): Promise<FetchUsersResult> {
   try {
     const { user } = await validateRequest();
-    if (!user || user.role !== UserRole.ADMIN) {
+    if (!user || !hasAdminPrivileges(user.role)) {
       throw new Error("Unauthorized. Only admins can fetch users.");
     }
 
@@ -103,13 +108,15 @@ export async function fetchAllRoleCounts(): Promise<
         distributors: number;
         shopManagers: number;
         editors: number;
+        admins: number;
+        superadmins: number;
       };
     }
   | { success: false; error: string }
 > {
   try {
     const { user } = await validateRequest();
-    if (!user || user.role !== UserRole.ADMIN) {
+    if (!user || !hasAdminPrivileges(user.role)) {
       throw new Error("Unauthorized. Only admins can fetch user counts.");
     }
 
@@ -121,6 +128,8 @@ export async function fetchAllRoleCounts(): Promise<
       distributors,
       shopManagers,
       editors,
+      admins,
+      superadmins,
     ] = await Promise.all([
       prisma.user.count({ where: { role: UserRole.USER } }),
       prisma.user.count({ where: { role: UserRole.CUSTOMER } }),
@@ -129,6 +138,8 @@ export async function fetchAllRoleCounts(): Promise<
       prisma.user.count({ where: { role: UserRole.DISTRIBUTOR } }),
       prisma.user.count({ where: { role: UserRole.SHOPMANAGER } }),
       prisma.user.count({ where: { role: UserRole.EDITOR } }),
+      prisma.user.count({ where: { role: UserRole.ADMIN } }),
+      prisma.user.count({ where: { role: UserRole.SUPERADMIN } }),
     ]);
 
     return {
@@ -141,6 +152,8 @@ export async function fetchAllRoleCounts(): Promise<
         distributors,
         shopManagers,
         editors,
+        admins,
+        superadmins,
       },
     };
   } catch (error) {
@@ -161,8 +174,24 @@ export async function updateUserRole(
 > {
   try {
     const { user } = await validateRequest();
-    if (!user || user.role !== UserRole.ADMIN) {
+    if (!user || !hasAdminPrivileges(user.role)) {
       throw new Error("Unauthorized. Only admins can update user roles.");
+    }
+
+    // Additional check: Only SUPERADMIN can create/modify ADMIN and SUPERADMIN roles
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+
+    if (
+      (newRole === UserRole.ADMIN ||
+        newRole === UserRole.SUPERADMIN ||
+        targetUser?.role === UserRole.ADMIN ||
+        targetUser?.role === UserRole.SUPERADMIN) &&
+      user.role !== UserRole.SUPERADMIN
+    ) {
+      throw new Error("Only SUPERADMIN can modify ADMIN and SUPERADMIN roles.");
     }
 
     await prisma.user.update({

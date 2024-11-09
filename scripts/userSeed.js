@@ -1,7 +1,7 @@
 import { PrismaClient, Prisma } from "@prisma/client";
-import fetch from "node-fetch";
 import * as argon2 from "argon2";
-import { v4 as uuidv4 } from "uuid";
+import fs from "fs/promises";
+import path from "path";
 
 const prisma = new PrismaClient();
 
@@ -20,7 +20,6 @@ function mapWordPressRoleToPrisma(wpRole) {
   return roleMapping[wpRole.toLowerCase()] || "USER";
 }
 
-// Function to generate 16-character ID matching your schema format
 function generateId() {
   const charset = "abcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
@@ -30,7 +29,6 @@ function generateId() {
   return result;
 }
 
-// Rest of your functions...
 async function hashPassword(password) {
   try {
     return await argon2.hash(password, {
@@ -53,23 +51,23 @@ function getValidDate(dateString) {
 
 async function main() {
   try {
-    const response = await fetch(
-      "https://captivity.co.za/wp-json/wp-users-api/v2/all-users"
-    );
+    // Read the user-data.json file
+    const jsonPath = path.join(process.cwd(), "scripts", "user-data.json");
+    const jsonData = await fs.readFile(jsonPath, "utf8");
+    const users = JSON.parse(jsonData);
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch data: ${response.statusText}`);
-    }
+    console.log(`Found ${users.length} users in user-data.json`);
 
-    const users = await response.json();
+    let successCount = 0;
+    let errorCount = 0;
 
     for (const user of users) {
-      const role = mapWordPressRoleToPrisma(user.roles[0]);
+      const role = mapWordPressRoleToPrisma(user.roles?.[0] || "customer");
 
-      const billingAddress = user.address?.billing_address_1 || "";
-      const [streetAddress, addressLine2] = billingAddress
-        .split(",")
-        .map(s => s?.trim() || "");
+      const streetAddress =
+        user.street_address_1 || user.address?.billing_address_1 || "";
+      const addressLine2 =
+        user.street_address_2 || user.address?.billing_address_2 || null;
 
       const securePassword = await hashPassword(user.password);
 
@@ -80,53 +78,67 @@ async function main() {
       const createdAt = getValidDate(user.user_registered);
       const currentDate = new Date();
 
+      const userData = {
+        id: generateId(),
+        wpId: String(user.id),
+        username: user.username,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        displayName: user.display_name,
+        email: user.email,
+        passwordHash: securePassword,
+        vatNumber: user.user_registration_vat_number || null,
+        phoneNumber,
+        streetAddress,
+        addressLine2,
+        suburb: user.suburb || null,
+        townCity: user.city || user.address?.billing_city || "",
+        postcode: user.postcode || user.address?.billing_postcode || "",
+        country: user.province || user.address?.billing_country || "",
+        position: user.position || null,
+        natureOfBusiness:
+          user.user_registration_Type_of_industry || "Not specified",
+        currentSupplier: user.current_suppliers || "Not specified",
+        otherSupplier: user.other_suppliers || null,
+        resellingTo: user.reselling_to || null,
+        salesRep: user.salesrep || "Not assigned",
+        website: user.website || null,
+        companyName: user.user_registration_company_name || "Not specified",
+        ckNumber: user.user_registration_ck_number || null,
+        avatarUrl: null,
+        bio: null,
+        agreeTerms: true,
+        role: role,
+        createdAt,
+        updatedAt: currentDate,
+      };
+
       try {
-        await prisma.user.create({
-          data: {
-            id: generateId(), // Now generates exact 16-character format
-            wpId: String(user.id),
+        await prisma.user.upsert({
+          where: {
             username: user.username,
-            firstName: user.first_name,
-            lastName: user.last_name,
-            displayName: user.display_name,
-            email: user.email,
-            passwordHash: securePassword,
-            vatNumber: user.vat_number || null,
-            phoneNumber,
-            streetAddress: streetAddress || "",
-            addressLine2: user.address?.billing_address_2 || null,
-            suburb: addressLine2 || null,
-            townCity: user.address?.billing_city || "",
-            postcode: user.address?.billing_postcode || "",
-            country: user.address?.billing_country || "",
-            position: user.position || null,
-            natureOfBusiness: user.nature_of_business || "Not specified",
-            currentSupplier: user.current_supplier || "Not specified",
-            otherSupplier: null,
-            resellingTo: null,
-            salesRep: user.billing_salesrep || "Not assigned",
-            website: user.website || null,
-            companyName: user.user_registration_company_name || "Not specified",
-            ckNumber: user.ck_number || null,
-            avatarUrl: null,
-            bio: null,
-            agreeTerms: true,
-            role: role,
-            createdAt,
-            updatedAt: currentDate,
           },
+          update: {
+            ...userData,
+            id: undefined, // Don't update the ID if user exists
+          },
+          create: userData,
         });
 
-        console.log(
-          `Created user: ${user.username} (WordPress ID: ${user.id})`
-        );
+        successCount++;
+        if (successCount % 100 === 0) {
+          console.log(`Processed ${successCount} users successfully...`);
+        }
       } catch (error) {
-        console.error(`Error creating user ${user.username}:`, error);
-        throw error;
+        console.error(`Error processing user ${user.username}:`, error.message);
+        errorCount++;
+        continue;
       }
     }
 
-    console.log("Seed completed successfully");
+    console.log("\nSeed completed:");
+    console.log(`Successfully processed: ${successCount} users`);
+    console.log(`Errors encountered: ${errorCount} users`);
   } catch (error) {
     console.error("Error seeding users:", error);
     throw error;

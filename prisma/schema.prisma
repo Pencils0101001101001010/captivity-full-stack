@@ -18,6 +18,7 @@ enum UserRole {
   SHOPMANAGER
   EDITOR
   ADMIN
+  SUPERADMIN
 }
 
 enum OrderStatus {

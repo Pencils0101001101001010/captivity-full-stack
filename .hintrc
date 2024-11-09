@@ -17,6 +17,7 @@
         "list": "off",
         "listitem": "off"
       }
-    ]
+    ],
+    "button-type": "off"
   }
 }

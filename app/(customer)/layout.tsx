@@ -13,7 +13,12 @@ export default async function CustomerLayout({
 }) {
   const session = await validateRequest();
 
-  if (!session.user || session.user.role !== "CUSTOMER") redirect("/login");
+  if (
+    !session.user ||
+    (session.user.role !== "CUSTOMER" && session.user.role !== "SUPERADMIN")
+  ) {
+    redirect("/login");
+  }
 
   return (
     <SessionProvider value={session}>

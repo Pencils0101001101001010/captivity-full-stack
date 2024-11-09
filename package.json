@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "node --experimental-json-modules scripts/seed.js",
+    "product": "node --experimental-json-modules scripts/seed.js",
     "user": "node --experimental-json-modules scripts/userSeed.js",
     "postinstall": "prisma generate",
     "vercel-build": "prisma generate && next build"
@@ -104,6 +104,7 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/lodash": "^4.17.13",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.16",
     "@types/react": "^18",
