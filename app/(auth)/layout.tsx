@@ -14,6 +14,7 @@ enum UserRole {
   ADMIN = "ADMIN",
   SUPERADMIN = "SUPERADMIN",
   VENDOR = "VENDOR",
+  VENDORCUSTOMER = "VENDORCUSTOMER",
 }
 
 // Define the routes for each role
@@ -28,6 +29,7 @@ const roleRoutes: Record<UserRole, string> = {
   [UserRole.ADMIN]: "/admin",
   [UserRole.SUPERADMIN]: "/select-panel",
   [UserRole.VENDOR]: "/vendor_admin",
+  [UserRole.VENDORCUSTOMER]: "/vendor_admin",
 };
 
 // Function to safely convert string to UserRole
