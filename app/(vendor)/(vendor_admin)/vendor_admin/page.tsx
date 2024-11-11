@@ -1,7 +1,7 @@
 import React from "react";
 
 const VendorAdminPage = () => {
-  return <div>VendorAdminPage</div>;
+  return <div>Vendor</div>;
 };
 
 export default VendorAdminPage;
