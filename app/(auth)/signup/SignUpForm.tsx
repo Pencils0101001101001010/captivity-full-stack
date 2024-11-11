@@ -25,6 +25,7 @@ import { registrationSchema, RegistrationFormData } from "@/lib/validation";
 import { signUp } from "./actions";
 import { Scale } from "lucide-react";
 import { isRedirectError } from "next/dist/client/components/redirect";
+import { countries } from "@/lib/CountrySelect";
 
 type SignUpResult = {
   error?: string;
@@ -420,23 +421,34 @@ const RegistrationForm = () => {
             control={form.control}
             name="country"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-full">
                 <FormLabel>Country</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select country" />
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a country">
+                        {countries.find(
+                          country => country.code.toLowerCase() === field.value
+                        )?.name || "Select a country"}
+                      </SelectValue>
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="southAfrica">South Africa</SelectItem>
-                    <SelectItem value="namibia">Namibia</SelectItem>
-                    <SelectItem value="botswana">Botswana</SelectItem>
-                    <SelectItem value="zimbabwe">Zimbabwe</SelectItem>
-                    <SelectItem value="mozambique">Mozambique</SelectItem>
+                  <SelectContent
+                    side="bottom"
+                    position="popper"
+                    className="w-[--radix-select-trigger-width]"
+                  >
+                    <div className="h-[var(--cmdk-list-height)] overflow-y-auto">
+                      {countries.map(country => (
+                        <SelectItem
+                          key={country.code}
+                          value={country.code.toLowerCase()}
+                          className="cursor-pointer"
+                        >
+                          {country.name}
+                        </SelectItem>
+                      ))}
+                    </div>
                   </SelectContent>
                 </Select>
                 <FormMessage />
