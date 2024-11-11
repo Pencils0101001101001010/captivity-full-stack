@@ -3,10 +3,11 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { RxDividerVertical } from "react-icons/rx";
-import { Trash2 } from "lucide-react";
+import { ShoppingBag, Trash2 } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
 import { uploadLogo, removeLogo, getLogo } from "../actions";
+import CartSidebar from "./CartSidebar";
 
 const Navbar = () => {
   const session = useSession();
@@ -14,6 +15,7 @@ const Navbar = () => {
   const [uploading, setUploading] = useState(false);
   const [showRemoveButton, setShowRemoveButton] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const isVendor = session?.user?.role === "VENDOR";
 
@@ -149,68 +151,100 @@ const Navbar = () => {
   );
 
   return (
-    <div className="sticky top-0 z-50">
-      <nav className="bg-black text-white">
-        <div className="flex items-center justify-between text-xs mx-auto w-full py-6 px-8">
-          {logoSection}
+    <>
+      <div className="sticky top-0 z-50">
+        <nav className="bg-black text-white">
+          <div className="flex items-center justify-between text-xs mx-auto w-full py-6 px-8">
+            {logoSection}
 
-          <div className="hidden md:flex items-center space-x-6">
-            <div className="flex">
-              <input
-                type="text"
-                placeholder="Search for product"
-                className="px-2 w-[150px] py-2 rounded-l-sm bg-white text-black"
-              />
-              <button className="bg-red-600 text-sm rounded-r-sm text-white px-2 py-2 hover:bg-red-500">
-                SEARCH
-              </button>
-            </div>
-            {session?.user ? (
-              <div className="flex items-center space-x-4">
-                <UserButton className="text-lg" />
+            <div className="hidden md:flex items-center space-x-6">
+              <div className="flex">
+                <input
+                  type="text"
+                  placeholder="Search for product"
+                  className="px-2 w-[150px] py-2 rounded-l-sm bg-white text-black"
+                />
+                <button className="bg-red-600 text-sm rounded-r-sm text-white px-2 py-2 hover:bg-red-500">
+                  SEARCH
+                </button>
               </div>
-            ) : (
-              <>
-                <Link href="/login" className="hover:text-gray-300">
+              {session?.user ? (
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={() => setIsCartOpen(true)}
+                    className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
+                  >
+                    <ShoppingBag className="w-6 h-6" />
+                    {/* Optional: Add cart items count badge */}
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      0
+                    </span>
+                  </button>
+                  <UserButton className="text-lg" />
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setIsCartOpen(true)}
+                    className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
+                  >
+                    <ShoppingBag className="w-6 h-6" />
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      0
+                    </span>
+                  </button>
+                  <Link href="/login" className="hover:text-gray-300">
+                    Login
+                  </Link>
+                  <RxDividerVertical />
+                  <Link href="/signup" className="hover:text-gray-300">
+                    Register
+                  </Link>
+                </>
+              )}
+            </div>
+
+            <div className="md:hidden flex items-center space-x-4">
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
+              >
+                <ShoppingBag className="w-6 h-6" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  0
+                </span>
+              </button>
+              {session?.user ? (
+                <UserButton className="text-lg" />
+              ) : (
+                <Link
+                  href="/login"
+                  className="font-bold text-lg hover:text-gray-300"
+                >
                   Login
                 </Link>
-                <RxDividerVertical />
-                <Link href="/signup" className="hover:text-gray-300">
-                  Register
-                </Link>
-              </>
-            )}
+              )}
+            </div>
           </div>
+        </nav>
 
-          <div className="md:hidden flex items-center">
-            {session?.user ? (
-              <UserButton className="text-lg" />
-            ) : (
-              <Link
-                href="/login"
-                className="font-bold text-lg hover:text-gray-300"
-              >
-                Login
-              </Link>
-            )}
+        {/* Mobile search bar */}
+        <div className="md:hidden bg-white">
+          <div className="flex items-center justify-center border-b-2 p-2">
+            <input
+              type="text"
+              placeholder="Search for product"
+              className="px-2 w-[150px] py-2 bg-white rounded-l-sm text-black border-2"
+            />
+            <button className="bg-red-600 hover:bg-red-500 rounded-r-sm text-white px-2 py-2">
+              SEARCH
+            </button>
           </div>
-        </div>
-      </nav>
-
-      {/* Mobile search bar */}
-      <div className="md:hidden bg-white">
-        <div className="flex items-center justify-center border-b-2 p-2">
-          <input
-            type="text"
-            placeholder="Search for product"
-            className="px-2 w-[150px] py-2 bg-white rounded-l-sm text-black border-2"
-          />
-          <button className="bg-red-600 hover:bg-red-500 rounded-r-sm text-white px-2 py-2">
-            SEARCH
-          </button>
         </div>
       </div>
-    </div>
+
+      <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+    </>
   );
 };
 
