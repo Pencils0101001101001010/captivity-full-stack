@@ -25,9 +25,6 @@ const Navbar = () => {
           </Link>
 
           <div className="hidden md:flex items-center space-x-6">
-            <Link href="/help" className="hover:text-gray-300">
-              <span>Help</span>
-            </Link>
             <div className="flex">
               <input
                 type="text"
