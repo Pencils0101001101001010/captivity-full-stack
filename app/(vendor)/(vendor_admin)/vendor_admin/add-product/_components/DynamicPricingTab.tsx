@@ -10,10 +10,17 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ProductFormData } from "../types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { VendorProductFormData } from "../types";
 
 interface DynamicPricingTabProps {
-  control: Control<ProductFormData>;
+  control: Control<VendorProductFormData>;
 }
 
 const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
@@ -51,9 +58,9 @@ const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
             name={`dynamicPricing.${index}.from`}
             render={({ field }) => (
               <FormItem className="flex-1">
-                <FormLabel>From</FormLabel>
+                <FormLabel>From (Quantity)</FormLabel>
                 <FormControl>
-                  <Input {...field} type="number" min="0" />
+                  <Input {...field} type="number" min="0" placeholder="0" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -65,10 +72,35 @@ const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
             name={`dynamicPricing.${index}.to`}
             render={({ field }) => (
               <FormItem className="flex-1">
-                <FormLabel>To</FormLabel>
+                <FormLabel>To (Quantity)</FormLabel>
                 <FormControl>
-                  <Input {...field} type="number" min="0" />
+                  <Input {...field} type="number" min="0" placeholder="0" />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={control}
+            name={`dynamicPricing.${index}.type`}
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormLabel>Type</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="fixed_price">Fixed Price</SelectItem>
+                    <SelectItem value="percentage">Percentage</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -81,7 +113,7 @@ const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
               <FormItem className="flex-1">
                 <FormLabel>Amount</FormLabel>
                 <FormControl>
-                  <Input {...field} type="number" step="0.01" min="0" />
+                  <Input {...field} type="number" step="0.01" min="0" placeholder="0.00" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

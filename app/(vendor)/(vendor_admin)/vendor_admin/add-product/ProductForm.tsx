@@ -8,19 +8,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { ProductFormData, productFormSchema } from "./types";
+import { VendorProductFormData, vendorProductFormSchema } from "./types";
 import BasicInfoTab from "./_components/BasicInfoTab";
 import DynamicPricingTab from "./_components/DynamicPricingTab";
 import VariationsTab from "./_components/VariationsTab";
 import FeaturedImageTab from "./_components/FeaturedImageTab";
-import { createProduct } from "./actions";
+import { createVendorProduct } from "./actions";
 
-const ProductForm = () => {
+const VendorProductForm = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const form = useForm<ProductFormData>({
-    resolver: zodResolver(productFormSchema),
+  const form = useForm<VendorProductFormData>({
+    resolver: zodResolver(vendorProductFormSchema),
     defaultValues: {
       productName: "",
       category: [],
@@ -60,7 +60,7 @@ const ProductForm = () => {
     },
   });
 
-  const onSubmit = async (data: ProductFormData) => {
+  const onSubmit = async (data: VendorProductFormData) => {
     try {
       setIsSubmitting(true);
       const formData = new FormData();
@@ -96,7 +96,6 @@ const ProductForm = () => {
           );
         }
 
-        // Add all sizes for this variation
         variation.sizes.forEach((size, sIndex) => {
           formData.append(
             `variations.${vIndex}.sizes.${sIndex}.size`,
@@ -116,7 +115,7 @@ const ProductForm = () => {
         });
       });
 
-      const result = await createProduct(formData);
+      const result = await createVendorProduct(formData);
 
       if (result.success) {
         toast({
@@ -146,7 +145,6 @@ const ProductForm = () => {
     }
   };
 
-  // Cleanup object URLs when component unmounts
   React.useEffect(() => {
     return () => {
       const formData = form.getValues();
@@ -166,7 +164,7 @@ const ProductForm = () => {
   return (
     <Card className="w-full max-w-3xl mx-auto shadow-2xl shadow-black">
       <CardHeader>
-        <CardTitle>Create New Product</CardTitle>
+        <CardTitle>Create New Vendor Product</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -216,7 +214,6 @@ const ProductForm = () => {
                 variant="outline"
                 disabled={isSubmitting}
                 onClick={() => {
-                  // Clean up any existing object URLs before reset
                   const formData = form.getValues();
                   formData.variations.forEach(variation => {
                     if (variation.variationImageURL?.startsWith("blob:")) {
@@ -241,4 +238,4 @@ const ProductForm = () => {
   );
 };
 
-export default ProductForm;
+export default VendorProductForm;

@@ -1,10 +1,10 @@
 import React from "react";
-import ProductForm from "./ProductForm";
+import VendorProductForm from "./ProductForm";
 
 const CreateProductPage = () => {
   return (
     <div>
-      <ProductForm />
+      <VendorProductForm />
     </div>
   );
 };

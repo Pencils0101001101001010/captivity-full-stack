@@ -6,20 +6,12 @@ import { put } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 
-interface CreateProductResult {
-  success: boolean;
-  data?: { id: string };
-  message?: string;
-  error?: string;
-}
-
 interface ImageUrls {
   thumbnail: string;
   medium: string;
   large: string;
 }
 
-// Define allowed image types
 const ALLOWED_IMAGE_TYPES = [
   "image/jpeg",
   "image/png",
@@ -32,7 +24,6 @@ const ALLOWED_IMAGE_TYPES = [
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 
-// Validate image file
 function validateImage(file: File): void {
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
     throw new Error(
@@ -50,16 +41,11 @@ function validateImage(file: File): void {
 async function uploadImage(file: File, path: string): Promise<string> {
   try {
     validateImage(file);
-
     const blob = await put(path, file, {
       access: "public",
       addRandomSuffix: false,
     });
-
-    if (!blob.url) {
-      throw new Error("Failed to get URL from blob storage");
-    }
-
+    if (!blob.url) throw new Error("Failed to get URL from blob storage");
     return blob.url;
   } catch (error) {
     throw error;
@@ -72,28 +58,38 @@ async function uploadFeaturedImages(file: File): Promise<ImageUrls> {
 
   try {
     const [thumbnail, medium, large] = await Promise.all([
-      uploadImage(file, `products/featured/thumbnail_${timestamp}.${fileExt}`),
-      uploadImage(file, `products/featured/medium_${timestamp}.${fileExt}`),
-      uploadImage(file, `products/featured/large_${timestamp}.${fileExt}`),
+      uploadImage(
+        file,
+        `vendor-products/featured/thumbnail_${timestamp}.${fileExt}`
+      ),
+      uploadImage(
+        file,
+        `vendor-products/featured/medium_${timestamp}.${fileExt}`
+      ),
+      uploadImage(
+        file,
+        `vendor-products/featured/large_${timestamp}.${fileExt}`
+      ),
     ]);
 
     return { thumbnail, medium, large };
   } catch (error) {
     throw new Error(
-      `Failed to upload featured images: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Failed to upload featured images: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
     );
   }
 }
 
-export async function createProduct(
-  formData: FormData
-): Promise<CreateProductResult> {
+export async function createVendorProduct(formData: FormData) {
   try {
     const { user } = await validateRequest();
-    if (!user) {
-      throw new Error("Unauthorized access");
+    if (!user || user.role !== "VENDOR") {
+      throw new Error("Unauthorized: Only vendors can create products");
     }
 
+    // Handle featured image
     let featuredImageUrls: ImageUrls = {
       thumbnail: "",
       medium: "",
@@ -105,12 +101,11 @@ export async function createProduct(
       featuredImageUrls = await uploadFeaturedImages(featuredImageFile);
     }
 
-    // Get all variation entries
+    // Process variations and their images
     const variationEntries = Array.from(formData.entries()).filter(([key]) =>
       key.startsWith("variations")
     );
 
-    // Get the maximum variation index
     const variationCount = variationEntries.reduce((max, [key]) => {
       const match = key.match(/variations\.(\d+)\./);
       return match ? Math.max(max, parseInt(match[1]) + 1) : max;
@@ -125,17 +120,42 @@ export async function createProduct(
           const fileExt = variationImageFile.name.split(".").pop() || "jpg";
           const url = await uploadImage(
             variationImageFile,
-            `products/variations/variation_${i}_${Date.now()}.${fileExt}`
+            `vendor-products/variations/variation_${i}_${Date.now()}.${fileExt}`
           );
           variationImages[i] = url;
         } catch (error) {
+          console.error(`Error uploading variation image ${i}:`, error);
           throw error;
         }
       }
     }
 
-    // Create variations array matching Prisma schema
-    const variations: Prisma.VariationCreateInput[] = [];
+    // Create product first
+    const product = await prisma.vendorProduct.create({
+      data: {
+        user: {
+          connect: {
+            id: user.id,
+          },
+        },
+        productName: formData.get("productName") as string,
+        category: formData.getAll("category[]").map(cat => cat.toString()),
+        description: formData.get("description") as string,
+        sellingPrice: Number(formData.get("sellingPrice")),
+        isPublished: formData.get("isPublished") === "true",
+        featuredImage: featuredImageUrls.thumbnail
+          ? {
+              create: {
+                thumbnail: featuredImageUrls.thumbnail,
+                medium: featuredImageUrls.medium,
+                large: featuredImageUrls.large,
+              },
+            }
+          : undefined,
+      },
+    });
+
+    // Process and create variations
     for (let i = 0; i < variationCount; i++) {
       const sizesEntries = Array.from(formData.entries()).filter(([key]) =>
         key.startsWith(`variations.${i}.sizes.`)
@@ -150,72 +170,62 @@ export async function createProduct(
           .filter((index): index is number => index !== null)
       );
 
-      // Create a variation for each size
       for (const sizeIndex of sizeIndices) {
-        variations.push({
-          name: formData.get(`variations.${i}.name`) as string,
-          color: (formData.get(`variations.${i}.color`) as string) || "",
-          variationImageURL: variationImages[i] || "",
-          size:
-            (
-              formData.get(`variations.${i}.sizes.${sizeIndex}.size`) as string
-            )?.trim() || "",
-          quantity:
-            Number(
-              formData.get(`variations.${i}.sizes.${sizeIndex}.quantity`)
-            ) || 0,
-          sku:
-            (
-              formData.get(`variations.${i}.sizes.${sizeIndex}.sku`) as string
-            )?.trim() || "",
-          sku2:
-            (
-              formData.get(`variations.${i}.sizes.${sizeIndex}.sku2`) as string
-            )?.trim() || "",
-          product: {}, // Will be connected in the create
+        await prisma.vendorVariation.create({
+          data: {
+            name: formData.get(`variations.${i}.name`) as string,
+            color: (formData.get(`variations.${i}.color`) as string) || "",
+            variationImageURL: variationImages[i] || "",
+            size:
+              (
+                formData.get(
+                  `variations.${i}.sizes.${sizeIndex}.size`
+                ) as string
+              )?.trim() || "",
+            quantity:
+              Number(
+                formData.get(`variations.${i}.sizes.${sizeIndex}.quantity`)
+              ) || 0,
+            sku:
+              (
+                formData.get(`variations.${i}.sizes.${sizeIndex}.sku`) as string
+              )?.trim() || "",
+            sku2:
+              (
+                formData.get(
+                  `variations.${i}.sizes.${sizeIndex}.sku2`
+                ) as string
+              )?.trim() || "",
+            vendorProduct: {
+              connect: {
+                id: product.id,
+              },
+            },
+          },
         });
       }
     }
 
-    // Create the product with all its relations
-    const createData: Prisma.ProductCreateInput = {
-      user: {
-        connect: {
-          id: user.id,
-        },
-      },
-      productName: formData.get("productName") as string,
-      category: formData.getAll("category[]").map(cat => cat.toString()),
-      description: formData.get("description") as string,
-      sellingPrice: Number(formData.get("sellingPrice")),
-      isPublished: formData.get("isPublished") === "true",
-      featuredImage: featuredImageUrls.thumbnail
-        ? {
-            create: {
-              thumbnail: featuredImageUrls.thumbnail,
-              medium: featuredImageUrls.medium,
-              large: featuredImageUrls.large,
+    // Create dynamic pricing
+    for (let i = 0; i < formData.getAll("dynamicPricing.0.from").length; i++) {
+      await prisma.vendorDynamicPricing.create({
+        data: {
+          from: formData.get(`dynamicPricing.${i}.from`) as string,
+          to: formData.get(`dynamicPricing.${i}.to`) as string,
+          type: formData.get(`dynamicPricing.${i}.type`) as string,
+          amount: formData.get(`dynamicPricing.${i}.amount`) as string,
+          vendorProduct: {
+            connect: {
+              id: product.id,
             },
-          }
-        : undefined,
-      variations: {
-        create: variations,
-      },
-      dynamicPricing: {
-        create: Array.from(
-          { length: formData.getAll("dynamicPricing.0.from").length },
-          (_, i) => ({
-            from: formData.get(`dynamicPricing.${i}.from`) as string,
-            to: formData.get(`dynamicPricing.${i}.to`) as string,
-            type: formData.get(`dynamicPricing.${i}.type`) as string,
-            amount: formData.get(`dynamicPricing.${i}.amount`) as string,
-          })
-        ),
-      },
-    };
+          },
+        },
+      });
+    }
 
-    const product = await prisma.product.create({
-      data: createData,
+    // Get the complete product with all relations
+    const completeProduct = await prisma.vendorProduct.findUnique({
+      where: { id: product.id },
       include: {
         featuredImage: true,
         variations: true,
@@ -223,8 +233,7 @@ export async function createProduct(
       },
     });
 
-    revalidatePath("/products");
-    revalidatePath("/admin/products");
+    revalidatePath("/vendor/products");
 
     return {
       success: true,
@@ -232,7 +241,7 @@ export async function createProduct(
       message: "Product created successfully",
     };
   } catch (error) {
-    console.error("Error creating product:", error);
+    console.error("Error creating vendor product:", error);
     return {
       success: false,
       error:

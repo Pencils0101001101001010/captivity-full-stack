@@ -11,11 +11,25 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { ProductFormData } from "../types";
+import { VendorProductFormData } from "../types";
+import { MultiSelect } from "./MultiSelect";
 
 interface BasicInfoTabProps {
-  control: Control<ProductFormData>;
+  control: Control<VendorProductFormData>;
 }
+
+const PRODUCT_CATEGORIES = [
+  "summer-collection",
+  "winter-collection",
+  "Accessories",
+  "Home & Garden",
+  "Sports",
+  "Beauty",
+  "Books",
+  "Toys",
+  "Food & Beverage",
+  "Other",
+];
 
 const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ control }) => {
   return (
@@ -27,7 +41,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ control }) => {
           <FormItem>
             <FormLabel>Product Name</FormLabel>
             <FormControl>
-              <Input {...field} />
+              <Input {...field} placeholder="Enter product name" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -41,12 +55,15 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ control }) => {
           <FormItem>
             <FormLabel>Categories</FormLabel>
             <FormControl>
-              <Input
-                {...field}
-                onChange={e => field.onChange(e.target.value.split(","))}
-                placeholder="Enter categories separated by commas"
+              <MultiSelect
+                options={PRODUCT_CATEGORIES}
+                value={field.value || []} // Ensure we always pass an array
+                onChange={field.onChange}
               />
             </FormControl>
+            <FormDescription>
+              Select one or more categories for your product
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -59,8 +76,16 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ control }) => {
           <FormItem>
             <FormLabel>Description</FormLabel>
             <FormControl>
-              <Textarea {...field} />
+              <Textarea
+                {...field}
+                placeholder="Enter a detailed description of your product"
+                className="min-h-[120px] resize-y"
+              />
             </FormControl>
+            <FormDescription>
+              Provide a comprehensive description of your product including key
+              features, materials, and specifications
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -76,10 +101,17 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ control }) => {
               <Input
                 type="number"
                 step="0.01"
+                min="0"
                 {...field}
-                onChange={e => field.onChange(parseFloat(e.target.value))}
+                onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                placeholder="0.00"
+                className="w-full"
               />
             </FormControl>
+            <FormDescription>
+              Set your product&apos;s base selling price (before any dynamic
+              pricing rules)
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -89,19 +121,33 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ control }) => {
         control={control}
         name="isPublished"
         render={({ field }) => (
-          <FormItem className="flex items-center justify-between rounded-lg border p-4">
+          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
-              <FormLabel className="text-base">Published</FormLabel>
+              <FormLabel className="text-base">Published Status</FormLabel>
               <FormDescription>
-                Make this product visible in the store
+                Toggle whether this product should be visible in your store. You
+                can change this later.
               </FormDescription>
             </div>
             <FormControl>
-              <Switch checked={field.value} onCheckedChange={field.onChange} />
+              <Switch
+                checked={field.value}
+                onCheckedChange={field.onChange}
+                aria-label="Published status"
+                className="data-[state=checked]:bg-green-500"
+              />
             </FormControl>
           </FormItem>
         )}
       />
+
+      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mt-6">
+        <p className="text-sm text-yellow-800">
+          <strong>Note:</strong> Make sure to fill out all required fields
+          before proceeding to the next sections. You can save your product as a
+          draft by toggling the Published Status off.
+        </p>
+      </div>
     </div>
   );
 };

@@ -11,14 +11,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ProductFormData } from "../types";
+import { VendorProductFormData } from "../types";
 
 interface FeaturedImageTabProps {
-  control: Control<ProductFormData>;
+  control: Control<VendorProductFormData>;
 }
 
 const FeaturedImageTab: React.FC<FeaturedImageTabProps> = ({ control }) => {
-  const { watch, setValue } = useFormContext<ProductFormData>();
+  const { watch, setValue } = useFormContext<VendorProductFormData>();
 
   const handleFeatureImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,7 +31,7 @@ const FeaturedImageTab: React.FC<FeaturedImageTabProps> = ({ control }) => {
       setValue(
         "featuredImage",
         {
-          file: file, // Store the actual file
+          file: file,
           thumbnail: previewUrl,
           medium: previewUrl,
           large: previewUrl,
@@ -52,7 +52,6 @@ const FeaturedImageTab: React.FC<FeaturedImageTabProps> = ({ control }) => {
   };
 
   React.useEffect(() => {
-    // Cleanup object URLs when component unmounts
     return () => {
       const featuredImage = watch("featuredImage");
       if (featuredImage.thumbnail) {

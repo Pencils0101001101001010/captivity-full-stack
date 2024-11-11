@@ -11,16 +11,15 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ProductFormData } from "../types";
+import { VendorProductFormData } from "../types";
 
 interface VariationsTabProps {
-  control: Control<ProductFormData>;
+  control: Control<VendorProductFormData>;
 }
 
 const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
-  const { setValue, watch } = useFormContext<ProductFormData>();
+  const { setValue, watch } = useFormContext<VendorProductFormData>();
 
-  // Main variations field array
   const {
     fields: colorFields,
     append: appendColor,
@@ -124,7 +123,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
           onClick={() => appendColor(emptyVariation)}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Color Variation
+          Add Variation
         </Button>
       </div>
 
@@ -132,7 +131,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
         <div key={field.id} className="space-y-4 p-4 border rounded-lg">
           <div className="flex justify-between items-center">
             <h4 className="text-md font-medium">
-              Color Variation {variationIndex + 1}
+              Variation {variationIndex + 1}
             </h4>
             <Button
               type="button"
@@ -152,7 +151,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="Variation name" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -166,7 +165,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
                 <FormItem>
                   <FormLabel>Color</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="Color (optional)" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -235,7 +234,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
                     <FormItem>
                       <FormLabel>Size</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} placeholder="Size name" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -255,6 +254,8 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
                           onChange={e =>
                             field.onChange(parseInt(e.target.value) || 0)
                           }
+                          min="0"
+                          placeholder="0"
                         />
                       </FormControl>
                       <FormMessage />
@@ -269,7 +270,7 @@ const VariationsTab: React.FC<VariationsTabProps> = ({ control }) => {
                     <FormItem>
                       <FormLabel>SKU</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} placeholder="Enter SKU" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
