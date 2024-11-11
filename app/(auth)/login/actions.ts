@@ -37,7 +37,7 @@ const roleRoutes: Record<UserRole, string> = {
   [UserRole.ADMIN]: "/admin",
   [UserRole.SUPERADMIN]: "/select-panel",
   [UserRole.VENDOR]: "/vendor_admin",
-  [UserRole.VENDORCUSTOMER]: "/vendor_admin",
+  [UserRole.VENDORCUSTOMER]: "/vendor_customer",
 };
 
 export async function login(
