@@ -16,33 +16,66 @@ const ProductImage: React.FC<ProductImageProps> = ({
   onColorSelect,
 }) => {
   // Get the main display image
-  const mainImage =
-    selectedVariation?.variationImageURL ||
-    product.featuredImage?.medium ||
-    "/placeholder-image.jpg";
+  const mainImage = React.useMemo(() => {
+    // If a variation is selected and has an image, show it
+    if (selectedVariation?.variationImageURL) {
+      const url = selectedVariation.variationImageURL;
+      // Support both URL patterns
+      if (
+        url.includes("captivity.co.za") ||
+        url.includes("vercel-storage.com")
+      ) {
+        return url;
+      }
+    }
+
+    // Otherwise, show the featured image
+    if (product.featuredImage?.medium) {
+      const url = product.featuredImage.medium;
+      // Support both URL patterns
+      if (
+        url.includes("captivity.co.za") ||
+        url.includes("vercel-storage.com")
+      ) {
+        return url;
+      }
+    }
+
+    return "/placeholder-image.jpg";
+  }, [selectedVariation, product.featuredImage]);
 
   // Create array of only variation thumbnails
-  const thumbnails: Thumbnail[] = [];
-  const addedImageUrls = new Set<string>();
+  const thumbnails: Thumbnail[] = React.useMemo(() => {
+    const thumbs: Thumbnail[] = [];
+    const addedImageUrls = new Set<string>();
 
-  // Add one variation thumbnail per unique color
-  uniqueColors.forEach(color => {
-    const variation = product.variations.find(
-      v => v.color === color && v.variationImageURL
-    );
-    if (
-      variation?.variationImageURL &&
-      !addedImageUrls.has(variation.variationImageURL)
-    ) {
-      thumbnails.push({
-        id: variation.id,
-        imageUrl: variation.variationImageURL,
-        color: variation.color,
-        isSelected: selectedVariation?.id === variation.id,
-      });
-      addedImageUrls.add(variation.variationImageURL);
-    }
-  });
+    // Add one variation thumbnail per unique color
+    uniqueColors.forEach(color => {
+      const variation = product.variations.find(
+        v => v.color === color && v.variationImageURL
+      );
+
+      if (variation?.variationImageURL) {
+        const url = variation.variationImageURL;
+        // Support both URL patterns
+        if (
+          (url.includes("captivity.co.za") ||
+            url.includes("vercel-storage.com")) &&
+          !addedImageUrls.has(url)
+        ) {
+          thumbs.push({
+            id: variation.id,
+            imageUrl: url,
+            color: variation.color,
+            isSelected: selectedVariation?.id === variation.id,
+          });
+          addedImageUrls.add(url);
+        }
+      }
+    });
+
+    return thumbs;
+  }, [uniqueColors, product.variations, selectedVariation]);
 
   return (
     <div className="w-full md:w-1/2 pr-0 md:pr-6 mb-4 md:mb-0">
