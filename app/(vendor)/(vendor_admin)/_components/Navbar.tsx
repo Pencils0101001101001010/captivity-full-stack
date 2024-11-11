@@ -15,6 +15,8 @@ const Navbar = () => {
   const [showRemoveButton, setShowRemoveButton] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const isVendor = session?.user?.role === "VENDOR";
+
   useEffect(() => {
     const fetchLogo = async () => {
       const result = await getLogo();
@@ -31,6 +33,8 @@ const Navbar = () => {
   const handleLogoUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
+    if (!isVendor) return;
+
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -54,6 +58,8 @@ const Navbar = () => {
   };
 
   const handleRemoveLogo = async () => {
+    if (!isVendor) return;
+
     if (window.confirm("Are you sure you want to remove your logo?")) {
       try {
         setUploading(true);
@@ -75,8 +81,8 @@ const Navbar = () => {
 
   const logoSection = session?.user ? (
     <div
-      className="relative w-[170px] h-[54px] group"
-      onMouseEnter={() => logoUrl && setShowRemoveButton(true)}
+      className={`relative w-[170px] h-[54px] group ${isVendor ? "cursor-pointer" : ""}`}
+      onMouseEnter={() => isVendor && logoUrl && setShowRemoveButton(true)}
       onMouseLeave={() => setShowRemoveButton(false)}
     >
       {logoUrl ? (
@@ -85,10 +91,10 @@ const Navbar = () => {
             src={logoUrl}
             alt="Company Logo"
             fill
-            className="object-contain hover:opacity-80 cursor-pointer"
-            onClick={() => fileInputRef.current?.click()}
+            className={`object-contain ${isVendor ? "hover:opacity-80" : ""}`}
+            onClick={() => isVendor && fileInputRef.current?.click()}
           />
-          {showRemoveButton && !uploading && (
+          {isVendor && showRemoveButton && !uploading && (
             <button
               onClick={handleRemoveLogo}
               className="absolute top-0 right-0 bg-red-500 p-1 rounded-bl-md hover:bg-red-600 transition-colors"
@@ -98,7 +104,7 @@ const Navbar = () => {
             </button>
           )}
         </>
-      ) : (
+      ) : isVendor ? (
         <div
           className="w-full h-full border-2 border-dashed border-white flex items-center justify-center cursor-pointer hover:border-gray-300"
           onClick={() => fileInputRef.current?.click()}
@@ -107,15 +113,27 @@ const Navbar = () => {
             {uploading ? "Uploading..." : "Click to upload logo"}
           </span>
         </div>
+      ) : (
+        // If not vendor and no logo, show default logo
+        <Image
+          src="/captivity-logo-white.png"
+          alt="captivityLogo"
+          width={331}
+          height={54}
+          className="h-auto border border-white"
+          priority
+        />
       )}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleLogoUpload}
-        disabled={uploading}
-      />
+      {isVendor && (
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleLogoUpload}
+          disabled={uploading}
+        />
+      )}
     </div>
   ) : (
     <Link href="/vendor_admin" className="w-[170px] h-[54px]">

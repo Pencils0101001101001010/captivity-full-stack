@@ -11,6 +11,11 @@ export async function uploadLogo(formData: FormData) {
       throw new Error("Unauthorized access");
     }
 
+    // Check if user is a VENDOR
+    if (user.role !== "VENDOR") {
+      throw new Error("Only vendors can manage logos");
+    }
+
     const file = formData.get("logo") as File;
     if (!file || !file.size) {
       throw new Error("No file provided");
@@ -86,6 +91,11 @@ export async function removeLogo() {
       throw new Error("Unauthorized access");
     }
 
+    // Check if user is a VENDOR
+    if (user.role !== "VENDOR") {
+      throw new Error("Only vendors can manage logos");
+    }
+
     // Get the current logo URL
     const settings = await prisma.userSettings.findUnique({
       where: { userId: user.id },
@@ -124,6 +134,7 @@ export async function getLogo() {
       return { success: false, error: "Unauthorized access" };
     }
 
+    // For getLogo, we want to allow both VENDOR and VENDORCUSTOMER to fetch the logo
     const settings = await prisma.userSettings.findUnique({
       where: { userId: user.id },
       select: { logoUrl: true },
@@ -141,4 +152,11 @@ export async function getLogo() {
         error instanceof Error ? error.message : "An unexpected error occurred",
     };
   }
+}
+
+// Helper type for the return values
+export interface LogoActionResult {
+  success: boolean;
+  url?: string;
+  error?: string;
 }
