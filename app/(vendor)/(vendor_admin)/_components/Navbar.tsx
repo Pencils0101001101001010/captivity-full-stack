@@ -3,7 +3,15 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { RxDividerVertical } from "react-icons/rx";
-import { ShoppingCart, Trash2 } from "lucide-react";
+import {
+  ShoppingCart,
+  Trash2,
+  Package,
+  Users,
+  ClipboardList,
+  PlusCircle,
+  Menu,
+} from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
 import { uploadLogo, removeLogo, getLogo } from "../actions";
@@ -16,9 +24,11 @@ const Navbar = () => {
   const [showRemoveButton, setShowRemoveButton] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isVendor = session?.user?.role === "VENDOR";
 
+  // Keep all existing functions (handleLogoUpload, handleRemoveLogo, etc.)
   useEffect(() => {
     const fetchLogo = async () => {
       const result = await getLogo();
@@ -116,7 +126,6 @@ const Navbar = () => {
           </span>
         </div>
       ) : (
-        // If not vendor and no logo, show default logo
         <Image
           src="/captivity-logo-white.png"
           alt="captivityLogo"
@@ -150,6 +159,38 @@ const Navbar = () => {
     </Link>
   );
 
+  const VendorNavItems = () => {
+    if (!isVendor) return null;
+
+    return (
+      <div
+        className={`${isMobileMenuOpen ? "flex flex-col space-y-4" : "hidden md:flex"} items-center space-x-6 mr-6`}
+      >
+        <Link
+          href="/vendor/add-product"
+          className="flex items-center space-x-2 hover:text-gray-300"
+        >
+          <PlusCircle size={18} />
+          <span>Add Product</span>
+        </Link>
+        <Link
+          href="/vendor/users"
+          className="flex items-center space-x-2 hover:text-gray-300"
+        >
+          <Users size={18} />
+          <span>Users</span>
+        </Link>
+        <Link
+          href="/vendor/orders"
+          className="flex items-center space-x-2 hover:text-gray-300"
+        >
+          <ClipboardList size={18} />
+          <span>Orders</span>
+        </Link>
+      </div>
+    );
+  };
+
   return (
     <>
       <div className="sticky top-0 z-50">
@@ -157,53 +198,67 @@ const Navbar = () => {
           <div className="flex items-center justify-between text-xs mx-auto w-full py-6 px-8">
             {logoSection}
 
-            <div className="hidden md:flex items-center space-x-6">
-              <div className="flex">
-                <input
-                  type="text"
-                  placeholder="Search for product"
-                  className="px-2 w-[150px] py-2 rounded-l-sm bg-white text-black"
-                />
-                <button className="bg-red-600 text-sm rounded-r-sm text-white px-2 py-2 hover:bg-red-500">
-                  SEARCH
-                </button>
-              </div>
-              {session?.user ? (
-                <div className="flex items-center space-x-4">
-                  <UserButton className="text-lg" />
-                  <button
-                    onClick={() => setIsCartOpen(true)}
-                    className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
-                  >
-                    <ShoppingCart className="w-6 h-6" />
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      0
-                    </span>
+            <div className="hidden md:flex items-center justify-between flex-1 ml-6">
+              {/* Vendor Navigation Items */}
+              {isVendor && <VendorNavItems />}
+
+              <div className="flex items-center space-x-6">
+                <div className="flex">
+                  <input
+                    type="text"
+                    placeholder="Search for product"
+                    className="px-2 w-[150px] py-2 rounded-l-sm bg-white text-black"
+                  />
+                  <button className="bg-red-600 text-sm rounded-r-sm text-white px-2 py-2 hover:bg-red-500">
+                    SEARCH
                   </button>
                 </div>
-              ) : (
-                <>
-                  <Link href="/login" className="hover:text-gray-300">
-                    Login
-                  </Link>
-                  <RxDividerVertical />
-                  <Link href="/signup" className="hover:text-gray-300">
-                    Register
-                  </Link>
-                  <button
-                    onClick={() => setIsCartOpen(true)}
-                    className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
-                  >
-                    <ShoppingCart className="w-6 h-6" />
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      0
-                    </span>
-                  </button>
-                </>
-              )}
+                {session?.user ? (
+                  <div className="flex items-center space-x-4">
+                    <UserButton className="text-lg" />
+                    <button
+                      onClick={() => setIsCartOpen(true)}
+                      className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
+                    >
+                      <ShoppingCart className="w-6 h-6" />
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        0
+                      </span>
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <Link href="/login" className="hover:text-gray-300">
+                      Login
+                    </Link>
+                    <RxDividerVertical />
+                    <Link href="/signup" className="hover:text-gray-300">
+                      Register
+                    </Link>
+                    <button
+                      onClick={() => setIsCartOpen(true)}
+                      className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
+                    >
+                      <ShoppingCart className="w-6 h-6" />
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        0
+                      </span>
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
+            {/* Mobile Menu */}
             <div className="md:hidden flex items-center space-x-4">
+              {isVendor && (
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+                >
+                  <Menu size={24} />
+                </button>
+              )}
               {session?.user ? (
                 <>
                   <UserButton className="text-lg" />
@@ -238,6 +293,13 @@ const Navbar = () => {
               )}
             </div>
           </div>
+
+          {/* Mobile Vendor Menu */}
+          {isMobileMenuOpen && isVendor && (
+            <div className="md:hidden bg-black border-t border-gray-800 px-8 py-4">
+              <VendorNavItems />
+            </div>
+          )}
         </nav>
 
         {/* Mobile search bar */}
