@@ -14,7 +14,9 @@ interface SessionContext {
       | "SHOPMANAGER"
       | "EDITOR"
       | "ADMIN"
-      | "SUPERADMIN";
+      | "SUPERADMIN"
+      | "VENDOR"
+      | "VENDORCUSTOMER";
     isLoading?: boolean;
   };
   session: Session;
