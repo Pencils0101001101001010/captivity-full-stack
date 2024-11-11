@@ -167,7 +167,7 @@ const Navbar = () => {
         className={`${isMobileMenuOpen ? "flex flex-col space-y-4" : "hidden md:flex"} items-center space-x-6 mr-6`}
       >
         <Link
-          href="/vendor/add-product"
+          href="/vendor_admin/add-product"
           className="flex items-center space-x-2 hover:text-gray-300"
         >
           <PlusCircle size={18} />

@@ -33,18 +33,18 @@ enum OrderStatus {
 }
 
 model User {
-  id               String        @id @default(uuid())
-  wpId             String?       @unique
+  id               String    @id @default(uuid())
+  wpId             String?   @unique
   resetToken       String?
   resetTokenExpiry DateTime?
-  username         String        @unique
+  username         String    @unique
   firstName        String
   lastName         String
   displayName      String
-  email            String        @unique
+  email            String    @unique
   passwordHash     String
   vatNumber        String?
-  phoneNumber      String        @default("")
+  phoneNumber      String    @default("")
   streetAddress    String
   addressLine2     String?
   suburb           String?
@@ -62,15 +62,22 @@ model User {
   ckNumber         String?
   avatarUrl        String?
   bio              String?
-  agreeTerms       Boolean       @default(false)
-  role             UserRole      @default(USER)
-  sessions         Session[]
-  products         Product[]
-  cart             Cart?
-  orders           Order[]
-  UserSettings     UserSettings?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  agreeTerms       Boolean   @default(false)
+  role             UserRole  @default(USER)
+
+  // Regular user relations
+  sessions     Session[]
+  products     Product[]
+  cart         Cart?
+  orders       Order[]
+  UserSettings UserSettings?
+
+  // Vendor specific relations (only used when role is VENDOR)
+  vendorProducts VendorProduct[]
+  vendorOrders   VendorOrder[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("users")
 }
@@ -218,4 +225,109 @@ model UserSettings {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Vendor-specific models
+model VendorProduct {
+  id             String                 @id @default(uuid())
+  userId         String // Changed from vendorId
+  productName    String                 @map("product_name")
+  category       String[]
+  description    String
+  sellingPrice   Float                  @map("selling_price")
+  isPublished    Boolean                @default(true)
+  dynamicPricing VendorDynamicPricing[]
+  variations     VendorVariation[]
+  featuredImage  VendorFeaturedImage?
+  user           User                   @relation(fields: [userId], references: [id], onDelete: Cascade) // Changed from vendor
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  @@map("vendor_products")
+}
+
+model VendorDynamicPricing {
+  id              String        @id @default(uuid())
+  from            String
+  to              String
+  type            String
+  amount          String
+  vendorProduct   VendorProduct @relation(fields: [vendorProductId], references: [id], onDelete: Cascade)
+  vendorProductId String
+
+  @@map("vendor_dynamic_pricing")
+}
+
+model VendorVariation {
+  id                String            @id @default(uuid())
+  name              String
+  color             String
+  size              String
+  sku               String
+  sku2              String
+  variationImageURL String            @map("variation_image_URL")
+  quantity          Int
+  vendorProduct     VendorProduct     @relation(fields: [vendorProductId], references: [id], onDelete: Cascade)
+  vendorProductId   String
+  vendorOrderItems  VendorOrderItem[]
+
+  @@map("vendor_variations")
+}
+
+model VendorFeaturedImage {
+  id              String        @id @default(uuid())
+  thumbnail       String
+  medium          String
+  large           String
+  vendorProduct   VendorProduct @relation(fields: [vendorProductId], references: [id], onDelete: Cascade)
+  vendorProductId String        @unique
+
+  @@map("vendor_featured_images")
+}
+
+model VendorOrder {
+  id     String @id @default(uuid())
+  userId String // Changed from vendorId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade) // Changed from vendor
+
+  captivityBranch    String
+  methodOfCollection String
+  salesRep           String?
+  referenceNumber    String?
+  firstName          String
+  lastName           String
+  companyName        String
+  countryRegion      String
+  streetAddress      String
+  apartmentSuite     String?
+  townCity           String
+  province           String
+  postcode           String
+  phone              String
+  email              String
+  orderNotes         String?
+
+  vendorOrderItems VendorOrderItem[]
+  status           OrderStatus       @default(PENDING)
+
+  totalAmount         Float
+  agreeTerms          Boolean  @default(false)
+  receiveEmailReviews Boolean? @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("vendor_orders")
+}
+
+model VendorOrderItem {
+  id                String          @id @default(uuid())
+  vendorOrderId     String
+  vendorVariationId String
+  quantity          Int
+  price             Float
+  vendorOrder       VendorOrder     @relation(fields: [vendorOrderId], references: [id], onDelete: Cascade)
+  vendorVariation   VendorVariation @relation(fields: [vendorVariationId], references: [id], onDelete: Cascade)
+
+  @@map("vendor_order_items")
 }
