@@ -25,7 +25,6 @@ import { registrationSchema, RegistrationFormData } from "@/lib/validation";
 import { signUp } from "./actions";
 import { Scale } from "lucide-react";
 import { isRedirectError } from "next/dist/client/components/redirect";
-import { countries } from "@/lib/CountrySelect";
 
 type SignUpResult = {
   error?: string;
@@ -421,34 +420,23 @@ const RegistrationForm = () => {
             control={form.control}
             name="country"
             render={({ field }) => (
-              <FormItem className="w-full">
+              <FormItem>
                 <FormLabel>Country</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a country">
-                        {countries.find(
-                          country => country.code.toLowerCase() === field.value
-                        )?.name || "Select a country"}
-                      </SelectValue>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select country" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent
-                    side="bottom"
-                    position="popper"
-                    className="w-[--radix-select-trigger-width]"
-                  >
-                    <div className="h-[var(--cmdk-list-height)] overflow-y-auto">
-                      {countries.map(country => (
-                        <SelectItem
-                          key={country.code}
-                          value={country.code.toLowerCase()}
-                          className="cursor-pointer"
-                        >
-                          {country.name}
-                        </SelectItem>
-                      ))}
-                    </div>
+                  <SelectContent>
+                    <SelectItem value="southAfrica">South Africa</SelectItem>
+                    <SelectItem value="namibia">Namibia</SelectItem>
+                    <SelectItem value="botswana">Botswana</SelectItem>
+                    <SelectItem value="zimbabwe">Zimbabwe</SelectItem>
+                    <SelectItem value="mozambique">Mozambique</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
