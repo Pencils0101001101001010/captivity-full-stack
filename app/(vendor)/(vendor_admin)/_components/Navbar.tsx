@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { RxDividerVertical } from "react-icons/rx";
-import { ShoppingBag, Trash2 } from "lucide-react";
+import { ShoppingCart, Trash2 } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
 import { uploadLogo, removeLogo, getLogo } from "../actions";
@@ -170,29 +170,19 @@ const Navbar = () => {
               </div>
               {session?.user ? (
                 <div className="flex items-center space-x-4">
+                  <UserButton className="text-lg" />
                   <button
                     onClick={() => setIsCartOpen(true)}
                     className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
                   >
-                    <ShoppingBag className="w-6 h-6" />
-                    {/* Optional: Add cart items count badge */}
+                    <ShoppingCart className="w-6 h-6" />
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                       0
                     </span>
                   </button>
-                  <UserButton className="text-lg" />
                 </div>
               ) : (
                 <>
-                  <button
-                    onClick={() => setIsCartOpen(true)}
-                    className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
-                  >
-                    <ShoppingBag className="w-6 h-6" />
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      0
-                    </span>
-                  </button>
                   <Link href="/login" className="hover:text-gray-300">
                     Login
                   </Link>
@@ -200,29 +190,51 @@ const Navbar = () => {
                   <Link href="/signup" className="hover:text-gray-300">
                     Register
                   </Link>
+                  <button
+                    onClick={() => setIsCartOpen(true)}
+                    className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
+                  >
+                    <ShoppingCart className="w-6 h-6" />
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      0
+                    </span>
+                  </button>
                 </>
               )}
             </div>
 
             <div className="md:hidden flex items-center space-x-4">
-              <button
-                onClick={() => setIsCartOpen(true)}
-                className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
-              >
-                <ShoppingBag className="w-6 h-6" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  0
-                </span>
-              </button>
               {session?.user ? (
-                <UserButton className="text-lg" />
+                <>
+                  <UserButton className="text-lg" />
+                  <button
+                    onClick={() => setIsCartOpen(true)}
+                    className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
+                  >
+                    <ShoppingCart className="w-6 h-6" />
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      0
+                    </span>
+                  </button>
+                </>
               ) : (
-                <Link
-                  href="/login"
-                  className="font-bold text-lg hover:text-gray-300"
-                >
-                  Login
-                </Link>
+                <>
+                  <Link
+                    href="/login"
+                    className="font-bold text-lg hover:text-gray-300"
+                  >
+                    Login
+                  </Link>
+                  <button
+                    onClick={() => setIsCartOpen(true)}
+                    className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
+                  >
+                    <ShoppingCart className="w-6 h-6" />
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      0
+                    </span>
+                  </button>
+                </>
               )}
             </div>
           </div>
