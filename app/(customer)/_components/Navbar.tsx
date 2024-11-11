@@ -12,6 +12,7 @@ import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
 import useCartStore from "../customer/_store/useCartStore";
 import SlideInCart from "../customer/shopping/cart/SlideInCart";
+import { SearchBar } from "../customer/navSearchActions/SearchBar";
 
 const Navbar = () => {
   const session = useSession();
@@ -49,14 +50,7 @@ const Navbar = () => {
                 <span>Help</span>
               </Link>
               <div className="flex">
-                <input
-                  type="text"
-                  placeholder="Search for product"
-                  className="px-2 w-[150px] py-2 rounded-l-sm bg-white text-black"
-                />
-                <button className="bg-red-600 text-sm rounded-r-sm text-white px-2 py-2 hover:bg-red-500">
-                  SEARCH
-                </button>
+                <SearchBar />
               </div>
               {session?.user ? (
                 <div className="flex items-center space-x-4">
@@ -126,14 +120,7 @@ const Navbar = () => {
         {/* Mobile search bar - now part of fixed header */}
         <div className="md:hidden bg-white">
           <div className="flex items-center justify-center border-b-2 p-2">
-            <input
-              type="text"
-              placeholder="Search for product"
-              className="px-2 w-[150px] py-2 bg-white rounded-l-sm text-black border-2"
-            />
-            <button className="bg-red-600 hover:bg-red-500 rounded-r-sm text-white px-2 py-2">
-              SEARCH
-            </button>
+            <SearchBar />
           </div>
         </div>
       </div>

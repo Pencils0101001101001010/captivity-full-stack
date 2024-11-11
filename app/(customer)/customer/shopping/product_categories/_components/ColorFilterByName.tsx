@@ -38,7 +38,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
       </Button>
 
       {isOpen && (
-        <div className="absolute z-10 mt-2 w-full rounded-md border border-border bg-background/80 backdrop-blur-sm shadow-lg">
+        <div className="absolute z-10 mt-2 w-full rounded-md border border-border bg-background/80 backdrop-blur-sm shadow-lg overflow-scroll max-h-[150px]">
           <div className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-3 md:grid-cols-4">
             <Button
               key="deselect"
