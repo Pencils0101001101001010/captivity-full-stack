@@ -201,7 +201,7 @@ const VendorProductDetails: React.FC<Props> = ({ product, vendorWebsite }) => {
             </p>
             {currentPrice !== product.sellingPrice && (
               <p className="text-sm text-muted-foreground line-through">
-                Original: R{product.sellingPrice.toFixed(2)}
+                Discounted: R{product.sellingPrice.toFixed(2)}
               </p>
             )}
             {getDynamicPricingInfo()}
