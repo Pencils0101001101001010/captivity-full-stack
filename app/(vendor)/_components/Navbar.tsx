@@ -15,10 +15,14 @@ import {
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
 import { uploadLogo, removeLogo, getLogo } from "../actions";
+import { useParams } from "next/navigation";
 import CartSidebar from "./CartSidebar";
 
 const Navbar = () => {
   const session = useSession();
+  const params = useParams();
+  const vendorWebsite =
+    typeof params?.vendor_website === "string" ? params.vendor_website : "";
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showRemoveButton, setShowRemoveButton] = useState(false);
@@ -167,7 +171,7 @@ const Navbar = () => {
         className={`${isMobileMenuOpen ? "flex flex-col space-y-4" : "hidden md:flex"} items-center space-x-6 mr-6`}
       >
         <Link
-          href="/vendor_admin/add-product"
+          href={`/vendor/${vendorWebsite}/add-product`}
           className="flex items-center space-x-2 hover:text-gray-300"
         >
           <PlusCircle size={18} />
