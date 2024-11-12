@@ -22,6 +22,8 @@ enum UserRole {
   EDITOR = "EDITOR",
   ADMIN = "ADMIN",
   SUPERADMIN = "SUPERADMIN",
+  VENDOR = "VENDOR",
+  VENDORCUSTOMER = "VENDORCUSTOMER",
 }
 
 const roleRoutes: Record<UserRole, string> = {
@@ -33,7 +35,9 @@ const roleRoutes: Record<UserRole, string> = {
   [UserRole.SHOPMANAGER]: "/shop",
   [UserRole.EDITOR]: "/editor",
   [UserRole.ADMIN]: "/admin",
-  [UserRole.SUPERADMIN]: "/select-panel", // New route for panel selection
+  [UserRole.SUPERADMIN]: "/select-panel",
+  [UserRole.VENDOR]: "/vendor_admin",
+  [UserRole.VENDORCUSTOMER]: "/vendor_customer",
 };
 
 export async function login(
