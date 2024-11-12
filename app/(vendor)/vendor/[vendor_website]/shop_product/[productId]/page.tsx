@@ -96,10 +96,12 @@ export default async function VendorProductPage({
     const validatedData = validateProductData(result.data);
 
     return (
-      <VendorProductDetails
-        product={validatedData}
-        vendorWebsite={vendorWebsite}
-      />
+      <div className="m-4">
+        <VendorProductDetails
+          product={validatedData}
+          vendorWebsite={vendorWebsite}
+        />
+      </div>
     );
   } catch (error) {
     return (
