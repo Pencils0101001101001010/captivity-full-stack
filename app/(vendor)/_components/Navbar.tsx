@@ -15,10 +15,14 @@ import {
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
 import { uploadLogo, removeLogo, getLogo } from "../actions";
+import { useParams } from "next/navigation";
 import CartSidebar from "./CartSidebar";
 
 const Navbar = () => {
   const session = useSession();
+  const params = useParams();
+  const vendorWebsite =
+    typeof params?.vendor_website === "string" ? params.vendor_website : "";
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showRemoveButton, setShowRemoveButton] = useState(false);
@@ -98,24 +102,34 @@ const Navbar = () => {
       onMouseLeave={() => setShowRemoveButton(false)}
     >
       {logoUrl ? (
-        <>
-          <Image
-            src={logoUrl}
-            alt="Company Logo"
-            fill
-            className={`object-contain ${isVendor ? "hover:opacity-80" : ""}`}
-            onClick={() => isVendor && fileInputRef.current?.click()}
-          />
-          {isVendor && showRemoveButton && !uploading && (
-            <button
-              onClick={handleRemoveLogo}
-              className="absolute top-0 right-0 bg-red-500 p-1 rounded-bl-md hover:bg-red-600 transition-colors"
-              title="Remove logo"
-            >
-              <Trash2 size={16} className="text-white" />
-            </button>
-          )}
-        </>
+        <Link href={isVendor ? `/vendor/${vendorWebsite}` : "#"}>
+          <div className="relative w-full h-full">
+            <Image
+              src={logoUrl}
+              alt="Company Logo"
+              fill
+              className={`object-contain ${isVendor ? "hover:opacity-80" : ""}`}
+              onClick={e => {
+                if (isVendor && fileInputRef.current) {
+                  e.preventDefault();
+                  fileInputRef.current.click();
+                }
+              }}
+            />
+            {isVendor && showRemoveButton && !uploading && (
+              <button
+                onClick={e => {
+                  e.preventDefault();
+                  handleRemoveLogo();
+                }}
+                className="absolute top-0 right-0 bg-red-500 p-1 rounded-bl-md hover:bg-red-600 transition-colors"
+                title="Remove logo"
+              >
+                <Trash2 size={16} className="text-white" />
+              </button>
+            )}
+          </div>
+        </Link>
       ) : isVendor ? (
         <div
           className="w-full h-full border-2 border-dashed border-white flex items-center justify-center cursor-pointer hover:border-gray-300"
@@ -167,7 +181,7 @@ const Navbar = () => {
         className={`${isMobileMenuOpen ? "flex flex-col space-y-4" : "hidden md:flex"} items-center space-x-6 mr-6`}
       >
         <Link
-          href="/vendor_admin/add-product"
+          href={`/vendor/${vendorWebsite}/add-product`}
           className="flex items-center space-x-2 hover:text-gray-300"
         >
           <PlusCircle size={18} />
