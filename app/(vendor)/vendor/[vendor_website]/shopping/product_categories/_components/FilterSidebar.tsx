@@ -1,6 +1,6 @@
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useParams } from "next/navigation";
 
 const COLLECTIONS = [
   "Winter",
@@ -21,6 +21,8 @@ type Collection = (typeof COLLECTIONS)[number];
 const FilterSidebar = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const params = useParams();
+  const vendorWebsite = params?.vendor_website as string;
 
   // Memoize getCurrentCollection to fix dependency warning
   const getCurrentCollection = useCallback((): Collection | null => {
@@ -37,7 +39,7 @@ const FilterSidebar = () => {
     setSelectedCollection(value);
 
     // Use shallow routing for faster navigation
-    const basePath = "/customer/shopping/product_categories";
+    const basePath = `/vendor/${vendorWebsite}/shopping/product_categories`;
     const newPath = `${basePath}/${value.toLowerCase()}`;
 
     // Use shallow: true for faster route updates when possible
