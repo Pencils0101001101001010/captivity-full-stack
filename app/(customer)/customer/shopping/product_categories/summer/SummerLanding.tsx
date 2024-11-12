@@ -9,7 +9,7 @@ import {
   useSummerProducts,
 } from "../../../_store/useSummerStore";
 import ProductCard from "../_components/ProductsCard";
-import ColorPicker from "../_components/ColorFilterByName";
+import ColorPicker from "../_components/ColorPicker";
 import { Variation } from "@prisma/client";
 import ProductCardColorPicker from "../_components/ProductCardColorPicker";
 
@@ -46,7 +46,6 @@ const SummerCollectionPage: React.FC = () => {
     });
     return Array.from(colorSet);
   };
-
   // Initial fetch
   useEffect(() => {
     if (!hasInitiallyFetched && !initializationRef.current) {

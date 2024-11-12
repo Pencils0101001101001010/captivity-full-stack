@@ -65,14 +65,16 @@ const WinterCollectionPage: React.FC = () => {
   // Pagination calculations
   const totalPages = Math.max(
     1,
-    Math.ceil(allProducts.length / ITEMS_PER_PAGE)
+    Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
   );
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, allProducts.length);
-  const currentProducts = allProducts.slice(startIndex, endIndex);
+  const currentProducts = filteredProducts.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
 
-  if (loading) return <div>Loading winter collection...</div>;
+  if (loading) return <div>Loading baseball collection...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
@@ -157,7 +159,9 @@ const WinterCollectionPage: React.FC = () => {
           )}
 
           <div className="text-sm text-muted-foreground text-center mt-4">
-            Showing {startIndex + 1}-{endIndex} of {allProducts.length} products
+            Showing {startIndex + 1}-
+            {Math.min(startIndex + ITEMS_PER_PAGE, allProducts.length)} of{" "}
+            {allProducts.length} products
           </div>
         </>
       )}
