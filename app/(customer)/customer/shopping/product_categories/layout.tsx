@@ -1,10 +1,12 @@
 /* eslint-disable react/no-unescaped-entities */
-// shopping/layout.tsx
 import React, { ReactNode } from "react";
 import prisma from "@/lib/prisma";
 import FilterSidebar from "./_components/FilterSidebar";
 import ProductCarousel from "./_components/ProductCarousel";
 import SearchField from "@/app/(customer)/_components/SearchField";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Filter } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -60,44 +62,78 @@ export default async function Layout({
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Mobile Filter Button */}
+      <div className="lg:hidden fixed bottom-4 right-4 z-50">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button
+              variant="default"
+              size="lg"
+              className="rounded-full shadow-lg flex items-center gap-2"
+            >
+              <Filter className="h-5 w-5" />
+              Filters
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[300px] sm:w-[350px] p-0">
+            <div className="p-4 space-y-6 h-full overflow-y-auto">
+              <FilterSidebar />
+              {newProducts.length > 0 && (
+                <div className="mt-6">
+                  <h2 className="text-xl font-bold text-foreground mb-4">
+                    New Products
+                  </h2>
+                  <ProductCarousel
+                    products={newProducts}
+                    className="bg-card rounded-lg shadow-md"
+                  />
+                </div>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+
       {/* Main Content */}
-      <div className="container mx-auto py-8 px-4">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Column */}
-          <div className="w-full lg:w-[300px] lg:flex-shrink-0">
+      <div className="container mx-auto py-4 sm:py-6 md:py-8 px-2 sm:px-4">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
+          {/* Sidebar Column - Desktop */}
+          <div className="hidden lg:block w-[300px] flex-shrink-0">
             {/* Search - Desktop Only */}
-            <div className="hidden lg:block mb-6">
+            <div className="mb-6">
               <SearchField />
             </div>
 
             {/* Filters */}
-            <FilterSidebar />
+            <div className="sticky top-4">
+              <FilterSidebar />
 
-            {/* New Products Carousel */}
-            {newProducts.length > 0 && (
-              <div className="mt-10">
-                <h2 className="text-3xl font-bold text-foreground mb-5">
-                  New Products
+              {/* New Products Carousel */}
+              {newProducts.length > 0 && (
+                <div className="mt-8">
+                  <h2 className="text-2xl font-bold text-foreground mb-4">
+                    New Products
+                  </h2>
+                  <ProductCarousel
+                    products={newProducts}
+                    className="bg-card rounded-lg shadow-2xl shadow-black"
+                  />
+                </div>
+              )}
+
+              {/* Shop Name Banner */}
+              <div className="mt-8 bg-black shadow-2xl shadow-black text-white p-4 sm:p-6 rounded-lg">
+                <h2 className="text-xl sm:text-2xl font-medium text-center">
+                  Welcome to Captivity's new Express Shop.
                 </h2>
-                <ProductCarousel
-                  products={newProducts}
-                  className="bg-card rounded-lg shadow-2xl shadow-black"
-                />
               </div>
-            )}
-
-            {/* Shop Name Banner */}
-            <div className="mt-[52px] bg-black shadow-2xl shadow-black text-white p-6 rounded-lg">
-              <h2 className="text-2xl font-medium text-center">
-                Welcome to Captivity's new Express Shop.
-              </h2>
             </div>
           </div>
 
           {/* Main Content Column */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             {/* Search - Mobile Only */}
-            <div className="lg:hidden mb-6">
+            <div className="lg:hidden sticky top-0 bg-background z-40 pb-4 pt-2">
               <SearchField />
             </div>
             {children}
@@ -106,29 +142,30 @@ export default async function Layout({
       </div>
 
       {/* Newsletter Section */}
-      <div className="bg-muted mt-12 py-12 mb-20">
+      <div className="bg-muted mt-8 sm:mt-12 py-8 sm:py-12 mb-16 sm:mb-20">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3 sm:mb-4">
               Stay Updated
             </h2>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 px-4">
               Subscribe to our newsletter for exclusive collection updates and
               special offers.
             </p>
-            <div className="flex gap-2 max-w-md mx-auto">
+            <form className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto px-4">
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-2 rounded-md border border-border bg-background"
+                className="flex-1 px-4 py-2 rounded-md border border-border bg-background min-w-0"
+                required
               />
-              <button
-                type="button"
-                className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              <Button
+                type="submit"
+                className="w-full sm:w-auto whitespace-nowrap"
               >
                 Subscribe
-              </button>
-            </div>
+              </Button>
+            </form>
           </div>
         </div>
       </div>
