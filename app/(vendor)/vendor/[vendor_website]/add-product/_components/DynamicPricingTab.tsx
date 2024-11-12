@@ -58,7 +58,7 @@ const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
             name={`dynamicPricing.${index}.from`}
             render={({ field }) => (
               <FormItem className="flex-1">
-                <FormLabel>From (Quantity)</FormLabel>
+                <FormLabel>From</FormLabel>
                 <FormControl>
                   <Input {...field} type="number" min="0" placeholder="0" />
                 </FormControl>
@@ -72,7 +72,7 @@ const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
             name={`dynamicPricing.${index}.to`}
             render={({ field }) => (
               <FormItem className="flex-1">
-                <FormLabel>To (Quantity)</FormLabel>
+                <FormLabel>To</FormLabel>
                 <FormControl>
                   <Input {...field} type="number" min="0" placeholder="0" />
                 </FormControl>
@@ -113,7 +113,13 @@ const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
               <FormItem className="flex-1">
                 <FormLabel>Amount</FormLabel>
                 <FormControl>
-                  <Input {...field} type="number" step="0.01" min="0" placeholder="0.00" />
+                  <Input
+                    {...field}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

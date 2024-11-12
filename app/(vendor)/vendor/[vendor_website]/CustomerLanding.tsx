@@ -115,7 +115,7 @@ const CustomerLanding = () => {
 
       {/* Navigation Menu */}
       <nav className="mb-5">
-        <ul className="flex flex-wrap justify-between bg-card shadow-2xl shadow-black rounded-lg p-2">
+        <ul className="grid grid-cols-2 md:grid md:grid-cols-3 justify-between bg-card shadow-2xl shadow-black rounded-lg p-2">
           {navigationItems.map(({ icon: Icon, label, href }) => (
             <li key={label}>
               <Link href={href}>
