@@ -52,16 +52,21 @@ interface VendorCollectionsStore {
   counts: CollectionCounts | null;
   isLoading: boolean;
   error: string | null;
+  isFetched: boolean;
   fetchCollections: () => Promise<void>;
 }
 
 export const useVendorCollectionsStore = create<VendorCollectionsStore>(
-  set => ({
+  (set, get) => ({
     collections: null,
     counts: null,
     isLoading: false,
     error: null,
+    isFetched: false,
     fetchCollections: async () => {
+      // Prevent multiple fetches
+      if (get().isLoading || get().isFetched) return;
+
       try {
         set({ isLoading: true, error: null });
         const result = await fetchVendorCollections();
@@ -71,11 +76,13 @@ export const useVendorCollectionsStore = create<VendorCollectionsStore>(
             collections: result.collections,
             counts: result.counts,
             isLoading: false,
+            isFetched: true,
           });
         } else {
           set({
             error: result.error,
             isLoading: false,
+            isFetched: true,
           });
         }
       } catch (error) {
@@ -85,6 +92,7 @@ export const useVendorCollectionsStore = create<VendorCollectionsStore>(
               ? error.message
               : "An unexpected error occurred",
           isLoading: false,
+          isFetched: true,
         });
       }
     },

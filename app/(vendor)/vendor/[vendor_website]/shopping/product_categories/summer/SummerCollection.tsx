@@ -70,7 +70,7 @@ const VendorSummerCollection: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Product Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
         {currentProducts.map(product => (
           <Card
             key={product.id}
