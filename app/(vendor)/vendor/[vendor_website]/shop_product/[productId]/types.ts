@@ -2,7 +2,10 @@ import { VendorProduct, VendorVariation } from "@prisma/client";
 import { z } from "zod";
 import { Control } from "react-hook-form";
 
-// Define the DynamicPricing type
+// ============================================================================
+// Base Types and Interfaces
+// ============================================================================
+
 export interface VendorDynamicPricingRule {
   id: string;
   from: string;
@@ -12,21 +15,28 @@ export interface VendorDynamicPricingRule {
   vendorProductId: string;
 }
 
-// Vendor product display types
+// Extended type with relations
 export type VendorProductWithRelations = VendorProduct & {
   variations: VendorVariation[];
   featuredImage: { medium: string } | null;
   dynamicPricing: VendorDynamicPricingRule[];
 };
 
+// ============================================================================
+// Component Props Types
+// ============================================================================
+
 export type VendorProductDetailsProps = {
   product: VendorProductWithRelations;
+  vendorWebsite: string;
 };
 
 export type VendorAddToCartButtonProps = {
   selectedVariation: VendorVariation | null;
   quantity: number;
   disabled: boolean;
+  onAddToCart?: () => void;
+  className?: string;
 };
 
 export type VendorColorSelectorProps = {
@@ -35,18 +45,23 @@ export type VendorColorSelectorProps = {
   variations: VendorVariation[];
   onColorSelect: (color: string) => void;
   productName: string;
+  className?: string;
 };
 
 export type VendorSizeSelectorProps = {
   sizes: string[];
   selectedSize: string | undefined;
   onSizeSelect: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  disabled?: boolean;
+  className?: string;
 };
 
 export type VendorQuantitySelectorProps = {
   quantity: number;
   maxQuantity: number;
   onQuantityChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
+  className?: string;
 };
 
 export interface VendorProductImageProps {
@@ -67,9 +82,13 @@ export interface VendorProductImageProps {
   };
   uniqueColors: string[];
   onColorSelect: (color: string) => void;
+  className?: string;
 }
 
-// Vendor product form schema
+// ============================================================================
+// Form Schema and Related Types
+// ============================================================================
+
 export const vendorProductFormSchema = z.object({
   productName: z.string().min(3, "Product name must be at least 3 characters"),
   category: z.array(z.string()).min(1, "At least one category is required"),
@@ -106,6 +125,7 @@ export const vendorProductFormSchema = z.object({
 
 export type VendorProductFormData = z.infer<typeof vendorProductFormSchema>;
 
+// Form Data Types
 export type VendorDynamicPricing =
   VendorProductFormData["dynamicPricing"][number];
 export type VendorVariationFormData =
@@ -113,18 +133,40 @@ export type VendorVariationFormData =
 export type VendorFeaturedImageFormData =
   VendorProductFormData["featuredImage"];
 
-export interface VendorVariationTabProps {
+// ============================================================================
+// Form Tab Props Types
+// ============================================================================
+
+export interface VendorFormTabBaseProps {
   control: Control<VendorProductFormData>;
+  className?: string;
 }
 
-export interface VendorFeaturedImageTabProps {
-  control: Control<VendorProductFormData>;
+export interface VendorVariationTabProps extends VendorFormTabBaseProps {}
+export interface VendorFeaturedImageTabProps extends VendorFormTabBaseProps {}
+export interface VendorBasicInfoTabProps extends VendorFormTabBaseProps {}
+export interface VendorDynamicPricingTabProps extends VendorFormTabBaseProps {}
+
+// ============================================================================
+// API Response Types
+// ============================================================================
+
+export interface VendorProductApiResponse {
+  success: boolean;
+  data?: VendorProductWithRelations;
+  error?: string;
 }
 
-export interface VendorBasicInfoTabProps {
-  control: Control<VendorProductFormData>;
-}
+// ============================================================================
+// Utility Types
+// ============================================================================
 
-export interface VendorDynamicPricingTabProps {
-  control: Control<VendorProductFormData>;
+export type VendorProductStatus = "draft" | "published" | "archived";
+
+export interface VendorProductFilters {
+  status?: VendorProductStatus;
+  category?: string[];
+  search?: string;
+  sortBy?: "price" | "name" | "created" | "updated";
+  sortOrder?: "asc" | "desc";
 }
