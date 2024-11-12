@@ -102,24 +102,34 @@ const Navbar = () => {
       onMouseLeave={() => setShowRemoveButton(false)}
     >
       {logoUrl ? (
-        <>
-          <Image
-            src={logoUrl}
-            alt="Company Logo"
-            fill
-            className={`object-contain ${isVendor ? "hover:opacity-80" : ""}`}
-            onClick={() => isVendor && fileInputRef.current?.click()}
-          />
-          {isVendor && showRemoveButton && !uploading && (
-            <button
-              onClick={handleRemoveLogo}
-              className="absolute top-0 right-0 bg-red-500 p-1 rounded-bl-md hover:bg-red-600 transition-colors"
-              title="Remove logo"
-            >
-              <Trash2 size={16} className="text-white" />
-            </button>
-          )}
-        </>
+        <Link href={isVendor ? `/vendor/${vendorWebsite}` : "#"}>
+          <div className="relative w-full h-full">
+            <Image
+              src={logoUrl}
+              alt="Company Logo"
+              fill
+              className={`object-contain ${isVendor ? "hover:opacity-80" : ""}`}
+              onClick={e => {
+                if (isVendor && fileInputRef.current) {
+                  e.preventDefault();
+                  fileInputRef.current.click();
+                }
+              }}
+            />
+            {isVendor && showRemoveButton && !uploading && (
+              <button
+                onClick={e => {
+                  e.preventDefault();
+                  handleRemoveLogo();
+                }}
+                className="absolute top-0 right-0 bg-red-500 p-1 rounded-bl-md hover:bg-red-600 transition-colors"
+                title="Remove logo"
+              >
+                <Trash2 size={16} className="text-white" />
+              </button>
+            )}
+          </div>
+        </Link>
       ) : isVendor ? (
         <div
           className="w-full h-full border-2 border-dashed border-white flex items-center justify-center cursor-pointer hover:border-gray-300"
