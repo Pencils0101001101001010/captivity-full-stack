@@ -10,7 +10,7 @@ import {
   FeaturedImage,
 } from "@prisma/client";
 
-type ProductWithRelations = Product & {
+export type ProductWithRelations = Product & {
   dynamicPricing: DynamicPricing[];
   variations: Variation[];
   featuredImage: FeaturedImage | null;

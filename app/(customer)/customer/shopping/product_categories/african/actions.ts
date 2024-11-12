@@ -45,7 +45,7 @@ export async function fetchAfricanCollection(): Promise<FetchAfricanCollectionRe
     const products = await prisma.product.findMany({
       where: {
         category: {
-          has: "summer-collection",
+          has: "african-collection",
         },
         isPublished: true,
       },

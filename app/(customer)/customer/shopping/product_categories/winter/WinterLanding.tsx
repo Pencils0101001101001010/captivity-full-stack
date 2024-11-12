@@ -9,6 +9,10 @@ import {
   useWinterProducts,
 } from "../../../_store/useWinterStore";
 import ProductCard from "../_components/ProductsCard";
+// color picker
+import ColorPicker from "../_components/ColorPicker";
+import { Variation } from "@prisma/client";
+import ProductCardColorPicker from "../_components/ProductCardColorPicker";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -19,9 +23,31 @@ const WinterCollectionPage: React.FC = () => {
   const error = useWinterError();
   const { fetchWinterCollection } = useWinterActions();
   const initializationRef = useRef(false);
+  //color picker
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
   // Create flat array of products
   const allProducts = Object.values(winterProducts).flat().filter(Boolean);
+
+  // Color picker
+  const filteredProducts = selectedColor
+    ? allProducts.filter(product =>
+        product.variations.some(
+          variation =>
+            variation.color?.toLowerCase() === selectedColor.toLowerCase()
+        )
+      )
+    : allProducts;
+  // Get unique colors from products
+  const getUniqueColors = (variations: Variation[]): string[] => {
+    const colorSet = new Set<string>();
+    variations.forEach(variation => {
+      if (typeof variation.color === "string") {
+        colorSet.add(variation.color);
+      }
+    });
+    return Array.from(colorSet);
+  };
 
   // Initial fetch
   useEffect(() => {
@@ -51,6 +77,15 @@ const WinterCollectionPage: React.FC = () => {
 
   return (
     <>
+      {/* COLOR PICKER */}
+      <div className="mb-8">
+        <ColorPicker
+          colors={getUniqueColors(allProducts.flatMap(p => p.variations))}
+          selectedColor={selectedColor}
+          onColorChange={setSelectedColor}
+        />
+      </div>
+
       {allProducts.length === 0 ? (
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-foreground">
@@ -62,7 +97,14 @@ const WinterCollectionPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
             {currentProducts.map(product => (
               <div key={product.id} className="w-full">
-                <ProductCard product={product} />
+                <ProductCardColorPicker
+                  product={product}
+                  selectedColor={selectedColor}
+                  colors={[]}
+                  onColorChange={function (color: string): void {
+                    throw new Error("Function not implemented.");
+                  }}
+                />
               </div>
             ))}
           </div>
