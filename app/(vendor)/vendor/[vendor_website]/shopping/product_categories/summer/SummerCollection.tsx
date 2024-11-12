@@ -106,16 +106,16 @@ const VendorSummerCollection: React.FC = () => {
                   className="w-full bg-[#2c3e50] hover:bg-[#34495e]"
                 >
                   <Link
-                    href={`/vendor/${vendorWebsite}/product_details/${product.id}`}
+                    href={`/vendor/${vendorWebsite}/shop_product/${product.id}`}
                   >
-                    Details
+                    Shop
                   </Link>
                 </Button>
                 <Button asChild variant="destructive" className="w-full">
                   <Link
-                    href={`/vendor/${vendorWebsite}/shop_product/${product.id}`}
+                    href={`/vendor/${vendorWebsite}/product_details/${product.id}`}
                   >
-                    Shop
+                    Details
                   </Link>
                 </Button>
               </div>
