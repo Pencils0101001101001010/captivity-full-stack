@@ -66,6 +66,25 @@ model User {
   agreeTerms       Boolean   @default(false)
   role             UserRole  @default(USER)
 
+  // Vendor-specific fields
+  storeSlug          String?   @unique // URL-friendly store name
+  storeName          String? // Display name for the store
+  storeDescription   String? // Store description
+  storeLogoUrl       String? // Store logo
+  storeBannerUrl     String? // Store banner image
+  storeTheme         String?   @default("default")
+  isVendorActive     Boolean?  @default(false)
+  vendorApprovedAt   DateTime?
+  vendorRating       Float?
+  vendorCategories   String[]  @default([])
+  storeContactEmail  String? // Separate contact email for store
+  storePhoneNumber   String? // Separate phone for store
+  storeBusinessHours String? // Store operating hours
+  storePolicy        String? // Store policies and terms
+  storeSocialMedia   Json? // Social media links
+  storeLocation      Json? // Store location details
+  featured           Boolean   @default(false) // For featuring certain vendors
+
   // Regular user relations
   sessions     Session[]
   products     Product[]
@@ -73,7 +92,7 @@ model User {
   orders       Order[]
   UserSettings UserSettings?
 
-  // Vendor specific relations (only used when role is VENDOR)
+  // Vendor specific relations
   vendorProducts VendorProduct[]
   vendorOrders   VendorOrder[]
 

@@ -23,10 +23,11 @@ enum UserRole {
   ADMIN = "ADMIN",
   SUPERADMIN = "SUPERADMIN",
   VENDOR = "VENDOR",
-  VENDORCUSTOMER = "VENDORCUSTOMER",
 }
 
-const roleRoutes: Record<UserRole, string> = {
+type RouteResolver = string | ((user: User) => string);
+
+const roleRoutes: Record<UserRole, RouteResolver> = {
   [UserRole.USER]: "/register-pending-message",
   [UserRole.CUSTOMER]: "/customer",
   [UserRole.SUBSCRIBER]: "/subscriber",
@@ -36,8 +37,8 @@ const roleRoutes: Record<UserRole, string> = {
   [UserRole.EDITOR]: "/editor",
   [UserRole.ADMIN]: "/admin",
   [UserRole.SUPERADMIN]: "/select-panel",
-  [UserRole.VENDOR]: "/vendor_admin",
-  [UserRole.VENDORCUSTOMER]: "/vendor_customer",
+  [UserRole.VENDOR]: (user: User) =>
+    user.storeSlug ? `/vendor/${user.storeSlug}` : "/vendor/setup-store",
 };
 
 export async function login(
@@ -96,11 +97,13 @@ export async function login(
       }
     }
 
-    // Default routing based on role
+    // Handle routing based on user role
     if (userRole === UserRole.USER) {
       return redirect("/register-pending-message");
     } else {
-      const redirectPath = roleRoutes[userRole] || "/";
+      const route = roleRoutes[userRole];
+      const redirectPath =
+        typeof route === "function" ? route(existingUser) : route;
       return redirect(redirectPath);
     }
   } catch (error) {
