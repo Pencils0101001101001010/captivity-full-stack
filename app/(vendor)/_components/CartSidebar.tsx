@@ -23,7 +23,7 @@ const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
       <div
         className={cn(
           "fixed top-0 right-0 h-full bg-background shadow-xl transform transition-transform duration-300 ease-in-out z-50",
-          "w-[300px] sm:w-[350px] md:w-[450px]", // Responsive widths
+          "w-[400px] sm:w-[400px] md:w-[450px]", // Responsive widths
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
