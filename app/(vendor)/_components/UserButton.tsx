@@ -4,10 +4,8 @@ import { cn } from "@/lib/utils";
 import { Check, LogOutIcon, Monitor, Moon, Sun, UserIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-
 import UserAvatar from "./UserAvatar";
 import { useSession } from "../SessionProvider";
-import { logout } from "@/app/(auth)/actions";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +18,23 @@ import {
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { logout } from "../vendor_auth/actions";
+
+// Update the User interface in SessionProvider or import it if defined elsewhere
+interface User {
+  id: string;
+  name?: string;
+  email?: string;
+  role: "VENDOR" | "VENDORCUSTOMER";
+  vendor_website?: string;
+  associated_vendors?: string[];
+  avatarUrl?: string;
+  username?: string;
+}
+
+interface SessionContext {
+  user: User | null;
+}
 
 interface UserButtonProps {
   className?: string;
@@ -30,6 +45,12 @@ export default function UserButton({ className }: UserButtonProps) {
 
   const { theme, setTheme } = useTheme();
 
+  if (!user) {
+    return null;
+  }
+
+  const displayName = user.username || user.name || user.email || "User";
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -37,15 +58,17 @@ export default function UserButton({ className }: UserButtonProps) {
           <UserAvatar avatarUrl={user.avatarUrl} size={40} />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuLabel>Logged in as @{user.username}</DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>Logged in as @{displayName}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <Link href={`/users/${user.username}`}>
-          <DropdownMenuItem>
-            <UserIcon className="mr-2 size-4" />
-            Profile
-          </DropdownMenuItem>
-        </Link>
+        {user.username && (
+          <Link href={`/users/${user.username}`}>
+            <DropdownMenuItem>
+              <UserIcon className="mr-2 size-4" />
+              Profile
+            </DropdownMenuItem>
+          </Link>
+        )}
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <Monitor className="mr-2 size-4" />
@@ -73,8 +96,8 @@ export default function UserButton({ className }: UserButtonProps) {
         </DropdownMenuSub>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => {
-            logout();
+          onClick={async () => {
+            await logout();
           }}
         >
           <LogOutIcon className="mr-2 size-4" />
