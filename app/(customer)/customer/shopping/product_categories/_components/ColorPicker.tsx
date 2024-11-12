@@ -1,43 +1,12 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { COLOR_MAPPINGS } from "./ColorMapping";
 
 interface ColorPickerProps {
   colors: string[];
   selectedColor: string | null;
   onColorChange: (color: string | null) => void;
 }
-
-// Color mapping object for special color names
-const COLOR_MAPPINGS: { [key: string]: string } = {
-  // Basic colors
-  bottle: "#174835", // Dark green
-  navy: "#000080",
-  royal: "#4169E1", // Royal blue
-  cardinal: "#C41E3A", // Cardinal red
-  maroon: "#800000",
-  kelly: "#4CBB17", // Kelly green
-  forest: "#228B22", // Forest green
-  burgundy: "#800020",
-  purple: "#800080",
-  brown: "#964B00",
-  mustard: "#E4B44C",
-  charcoal: "#343942",
-  dusty_pink: "#bf8177",
-
-  // Athletic colors
-  athletic_gold: "#FFB81C",
-  vegas_gold: "#C5B358",
-
-  // Metallic colors
-  graphite: "#383838",
-  silver: "#C0C0C0",
-
-  // Special materials
-  heather: "#9CA5AE", // Heather gray
-  oxford: "#EFEFEF", // Light gray
-
-  // Add more mappings as needed
-};
 
 const ColorPicker: React.FC<ColorPickerProps> = ({
   colors,
@@ -52,8 +21,8 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
 
   // Function to get the actual color value
   const getColorValue = (colorName: string): string => {
-    // Convert to lowercase and remove spaces for consistency
-    const normalizedName = colorName.toLowerCase().trim();
+    // Convert to lowercase, remove extra spaces, and replace spaces with underscores
+    const normalizedName = colorName.toLowerCase().trim().replace(/\s+/g, "_");
     return COLOR_MAPPINGS[normalizedName] || colorName;
   };
 
@@ -138,7 +107,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
             ))}
           </div>{" "}
           <p className="p-4 text-sm font-semibold text-gray-400">
-            Colors show are not 100% accurate
+            Colors shown are not 100% accurate
           </p>
         </div>
       )}
