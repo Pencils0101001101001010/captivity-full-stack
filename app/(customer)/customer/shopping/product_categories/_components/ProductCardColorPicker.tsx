@@ -1,29 +1,30 @@
-// ProductCard.tsx
-import React, { memo, useState, useEffect } from "react";
+import React, { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ProductImage, ProductPrice } from "./ProductCardComponents";
 import { StarRating } from "./StarRating";
 import { ProductWithRelations } from "../types";
+import { useColorStore } from "../../../_store/useColorStore";
 
 interface ProductCardProps {
   product: ProductWithRelations;
   selectedColor: string | null;
-  colors: string[];
-  onColorChange: (color: string) => void;
 }
 
-const ProductCardColorPicker: React.FC<ProductCardProps> = memo(
-  ({ product, selectedColor, colors, onColorChange }) => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
+const ProductCard: React.FC<ProductCardProps> = memo(
+  ({ product, selectedColor }) => {
+    const setSelectedColor = useColorStore(state => state.setSelectedColor);
     const defaultVariation = product.variations?.[0];
     const currentVariation =
       product.variations?.find(v => v.color === selectedColor) ||
       defaultVariation;
 
-    const handleColorChange = (color: string) => {
-      onColorChange(color);
+    const handleShopClick = (e: React.MouseEvent) => {
+      if (selectedColor) {
+        // Store the selected color before navigation
+        setSelectedColor(product.id, selectedColor);
+      }
     };
 
     return (
@@ -45,24 +46,7 @@ const ProductCardColorPicker: React.FC<ProductCardProps> = memo(
           <div className="mb-4">
             <StarRating />
           </div>
-          {/* Color Selection */}
-          <div className="mb-4">
-            <h4>Select Color:</h4>
-            <div className="flex space-x-2 overflow-x-auto hide-scrollbar">
-              {colors.map(color => (
-                <Button
-                  key={color}
-                  title={color}
-                  onClick={() => handleColorChange(color)}
-                  className={`h-8 w-8 rounded-full border-gray-200 border-2 ${
-                    selectedColor === color ? "border-2 border-blue-500" : ""
-                  }`}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2 ">
+          <div className="grid grid-cols-2 gap-2">
             <Button
               variant="default"
               size="sm"
@@ -70,13 +54,19 @@ const ProductCardColorPicker: React.FC<ProductCardProps> = memo(
             >
               View More
             </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="w-full text-sm py-2"
+            <Link
+              href={`/customer/shopping/${product.id}`}
+              className="w-full"
+              onClick={handleShopClick}
             >
-              <Link href={`/customer/shopping/${product.id}`}>Shop</Link>
-            </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="w-full text-sm py-2"
+              >
+                Shop
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
@@ -84,5 +74,5 @@ const ProductCardColorPicker: React.FC<ProductCardProps> = memo(
   }
 );
 
-ProductCardColorPicker.displayName = "ProductCard";
-export default ProductCardColorPicker;
+ProductCard.displayName = "ProductCard";
+export default ProductCard;

@@ -12,6 +12,7 @@ import ProductCard from "../_components/ProductsCard";
 import ColorPicker from "../_components/ColorPicker";
 import { Variation } from "@prisma/client";
 import ProductCardColorPicker from "../_components/ProductCardColorPicker";
+import { useColorStore } from "../../../_store/useColorStore";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -23,6 +24,7 @@ const SummerCollectionPage: React.FC = () => {
   const { fetchSummerCollection } = useSummerActions();
   const initializationRef = useRef(false);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const setGlobalSelectedColor = useColorStore(state => state.setSelectedColor);
 
   // Create flat array of products
   const allProducts = Object.values(summerProducts).flat().filter(Boolean);
@@ -101,10 +103,6 @@ const SummerCollectionPage: React.FC = () => {
                 <ProductCardColorPicker
                   product={product}
                   selectedColor={selectedColor}
-                  colors={[]}
-                  onColorChange={function (color: string): void {
-                    throw new Error("Function not implemented.");
-                  }}
                 />
               </div>
             ))}
