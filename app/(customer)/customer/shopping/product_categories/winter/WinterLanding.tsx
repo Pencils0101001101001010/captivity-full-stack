@@ -102,10 +102,6 @@ const WinterCollectionPage: React.FC = () => {
                 <ProductCardColorPicker
                   product={product}
                   selectedColor={selectedColor}
-                  colors={[]}
-                  onColorChange={function (color: string): void {
-                    throw new Error("Function not implemented.");
-                  }}
                 />
               </div>
             ))}
