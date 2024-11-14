@@ -256,6 +256,7 @@ model UserSettings {
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
+  BannerImage      BannerImage[]
 }
 
 model StoreDescription {
@@ -267,6 +268,16 @@ model StoreDescription {
   description4    String?
   userSettings    UserSettings @relation(fields: [userSettingsId], references: [id], onDelete: Cascade)
   userSettingsId  String       @unique
+}
+
+model BannerImage {
+  id             String       @id @default(cuid())
+  url            String
+  userSettings   UserSettings @relation(fields: [userSettingsId], references: [id], onDelete: Cascade)
+  userSettingsId String
+  order          Int          @default(0) // For maintaining image order
+
+  @@map("banner_images")
 }
 
 // Vendor-specific models
