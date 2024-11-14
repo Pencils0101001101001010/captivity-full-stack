@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   useAfricanActions,
@@ -11,6 +11,8 @@ import {
 import { ProductWithRelations } from "./actions";
 import FilterProductCard from "../_components/FilterProductCard";
 import { Variation } from "@prisma/client";
+import ColorPicker from "../_components/ColorPicker";
+import ProductCardColorPicker from "../_components/ProductCardColorPicker";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -24,6 +26,18 @@ const AfricanCollectionPage: React.FC = () => {
   const initializationRef = useRef(false);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
+  // Memoize flattened products array
+  const allProducts = useMemo(
+    () => Object.values(africanProducts).flat().filter(Boolean),
+    [africanProducts]
+  );
+
+  // Memoize lowercase selected color
+  const lowercaseSelectedColor = useMemo(
+    () => selectedColor?.toLowerCase(),
+    [selectedColor]
+  );
+
   // Single useEffect for initialization
   useEffect(() => {
     if (!hasInitiallyFetched && !initializationRef.current) {
@@ -32,75 +46,96 @@ const AfricanCollectionPage: React.FC = () => {
     }
   }, [hasInitiallyFetched, fetchAfricanCollection]);
 
-  // Create flat array of products
-  const allProducts = Object.values(africanProducts).flat().filter(Boolean);
+  // Memoize filtered products
+  const filteredProducts = useMemo(
+    () =>
+      lowercaseSelectedColor
+        ? allProducts.filter(product =>
+            product.variations.some(
+              variation =>
+                variation.color?.toLowerCase() === lowercaseSelectedColor
+            )
+          )
+        : allProducts,
+    [allProducts, lowercaseSelectedColor]
+  );
 
-  // Extract colors per product
-  const getUniqueColors = (variations: Variation[]): string[] => {
+  // Memoize unique colors
+  const uniqueColors = useMemo(() => {
     const colorSet = new Set<string>();
-    variations.forEach(variation => {
-      if (typeof variation.color === "string") {
-        colorSet.add(variation.color);
-      }
-    });
+    allProducts.forEach(product =>
+      product.variations.forEach(variation => {
+        if (typeof variation.color === "string") {
+          colorSet.add(variation.color);
+        }
+      })
+    );
     return Array.from(colorSet);
-  };
+  }, [allProducts]);
 
   // Reset to first page whenever products array changes
   useEffect(() => {
     setCurrentPage(1);
   }, [allProducts.length]);
 
-  // Pagination calculations
-  const totalPages = Math.max(
-    1,
-    Math.ceil(allProducts.length / ITEMS_PER_PAGE)
-  );
-  const safeCurrentPage = Math.min(currentPage, totalPages);
-  const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentProducts = allProducts.slice(startIndex, endIndex);
+  // Memoize pagination calculations
+  const paginationData = useMemo(() => {
+    const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+    const safeCurrentPage = Math.min(currentPage, totalPages);
+    const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = Math.min(
+      startIndex + ITEMS_PER_PAGE,
+      filteredProducts.length
+    );
+    const currentProducts = filteredProducts.slice(startIndex, endIndex);
 
-  // Filter products by color if selected
-  const filteredProducts = selectedColor
-    ? allProducts.filter(product =>
-        product.variations.some(variation => variation.color === selectedColor)
-      )
-    : allProducts;
+    return {
+      totalPages,
+      safeCurrentPage,
+      startIndex,
+      endIndex,
+      currentProducts,
+    };
+  }, [filteredProducts, currentPage]);
 
-  if (loading) return <div>Loading african collection...</div>;
+  if (loading) return <div>Loading winter collection...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
     <>
+      {/* COLOR PICKER */}
+      <div className="mb-8">
+        <ColorPicker
+          colors={uniqueColors}
+          selectedColor={selectedColor}
+          onColorChange={setSelectedColor}
+        />
+      </div>
+
       {filteredProducts.length === 0 ? (
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-foreground">
-            No products found in the african collection.
+            No products found in the winter collection.
           </h2>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-            {currentProducts.map(product => {
-              const colors = getUniqueColors(product.variations);
-              return (
-                <FilterProductCard
-                  key={product.id}
+            {paginationData.currentProducts.map(product => (
+              <div key={product.id} className="w-full">
+                <ProductCardColorPicker
                   product={product}
-                  colors={colors}
                   selectedColor={selectedColor}
-                  onColorChange={setSelectedColor}
                 />
-              );
-            })}
+              </div>
+            ))}
           </div>
 
-          {totalPages > 1 && (
+          {paginationData.totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
               <button
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={safeCurrentPage === 1}
+                disabled={paginationData.safeCurrentPage === 1}
                 className="p-2 rounded-lg border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Previous page"
               >
@@ -108,33 +143,40 @@ const AfricanCollectionPage: React.FC = () => {
               </button>
 
               <div className="flex gap-2">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  page => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
-                    ${
-                      safeCurrentPage === page
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-muted text-foreground"
-                    }`}
-                      aria-label={`Page ${page}`}
-                      aria-current={
-                        safeCurrentPage === page ? "page" : undefined
-                      }
-                    >
-                      {page}
-                    </button>
-                  )
-                )}
+                {Array.from(
+                  { length: paginationData.totalPages },
+                  (_, i) => i + 1
+                ).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                      ${
+                        paginationData.safeCurrentPage === page
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted text-foreground"
+                      }`}
+                    aria-label={`Page ${page}`}
+                    aria-current={
+                      paginationData.safeCurrentPage === page
+                        ? "page"
+                        : undefined
+                    }
+                  >
+                    {page}
+                  </button>
+                ))}
               </div>
 
               <button
                 onClick={() =>
-                  setCurrentPage(prev => Math.min(totalPages, prev + 1))
+                  setCurrentPage(prev =>
+                    Math.min(paginationData.totalPages, prev + 1)
+                  )
                 }
-                disabled={safeCurrentPage === totalPages}
+                disabled={
+                  paginationData.safeCurrentPage === paginationData.totalPages
+                }
                 className="p-2 rounded-lg border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Next page"
               >
@@ -144,8 +186,7 @@ const AfricanCollectionPage: React.FC = () => {
           )}
 
           <div className="text-sm text-muted-foreground text-center mt-4">
-            Showing {startIndex + 1}-
-            {Math.min(endIndex, filteredProducts.length)} of{" "}
+            Showing {paginationData.startIndex + 1}-{paginationData.endIndex} of{" "}
             {filteredProducts.length} products
           </div>
         </>
