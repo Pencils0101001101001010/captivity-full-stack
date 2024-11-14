@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Trash2, Plus } from "lucide-react";
 import { useBannerStore } from "./_store/BannerStore";
+import { useParams } from "next/navigation";
 import { useSession } from "@/app/(vendor)/SessionProvider";
 
 const MAX_BANNERS = 5;
@@ -13,6 +14,9 @@ export default function CarouselPlugin() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useSession();
+  const params = useParams();
+  const vendorWebsite =
+    typeof params?.vendor_website === "string" ? params.vendor_website : "";
 
   const {
     banners,
@@ -21,11 +25,26 @@ export default function CarouselPlugin() {
     uploadBanner,
     removeBanner,
     fetchBanners,
+    fetchVendorBanners,
   } = useBannerStore();
 
   useEffect(() => {
-    fetchBanners();
-  }, [fetchBanners]);
+    const fetchAppropriateContent = async () => {
+      if (!user) return;
+
+      try {
+        if (user.role === "VENDOR") {
+          await fetchBanners();
+        } else if (user.role === "VENDORCUSTOMER" && vendorWebsite) {
+          await fetchVendorBanners(vendorWebsite);
+        }
+      } catch (error) {
+        console.error("Error fetching banners:", error);
+      }
+    };
+
+    fetchAppropriateContent();
+  }, [user, vendorWebsite, fetchBanners, fetchVendorBanners]);
 
   const isVendor = user?.role === "VENDOR";
   const showUploadSlot = isVendor && banners.length < MAX_BANNERS;
@@ -54,6 +73,8 @@ export default function CarouselPlugin() {
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
+    if (!isVendor) return;
+
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -72,6 +93,8 @@ export default function CarouselPlugin() {
   };
 
   const handleRemoveBanner = async (url: string) => {
+    if (!isVendor) return;
+
     if (window.confirm("Are you sure you want to remove this banner?")) {
       await removeBanner(url);
       if (currentIndex >= banners.length - 1) {
@@ -80,12 +103,20 @@ export default function CarouselPlugin() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[438px] flex items-center justify-center bg-gray-50">
+        <p>Loading banners...</p>
+      </div>
+    );
+  }
+
   if (banners.length === 0 && !showUploadSlot) {
     return null;
   }
 
   return (
-    <div className="relative overflow-hidden w-full h-[438px] group">
+    <div className="relative overflow-hidden w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[438px] group">
       <div
         className="flex transition-transform duration-500"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -97,7 +128,7 @@ export default function CarouselPlugin() {
           >
             {slide === "upload-slot" && isVendor ? (
               <div className="relative w-full h-full flex items-center justify-center">
-                <div className="w-[800px] h-[300px] flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300">
+                <div className="w-full max-w-[300px] sm:max-w-[500px] md:max-w-[600px] lg:max-w-[800px] h-[150px] sm:h-[200px] md:h-[250px] lg:h-[300px] flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300">
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -106,35 +137,33 @@ export default function CarouselPlugin() {
                     className="absolute inset-0 opacity-0 cursor-pointer z-10"
                   />
                   <div className="flex flex-col items-center gap-3">
-                    <div className="p-3 rounded-full bg-gray-100">
-                      <Plus size={30} className="text-gray-500" />
+                    <div className="p-2 sm:p-3 rounded-full bg-gray-100">
+                      <Plus size={20} className="text-gray-500 sm:w-6 sm:h-6" />
                     </div>
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-xs sm:text-sm text-gray-500">
                       Click to upload banner ({banners.length}/{MAX_BANNERS})
                     </p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="relative group">
-                {" "}
-                {/* Added group class here */}
+              <div className="relative group h-full">
                 <Image
                   src={slide}
                   alt={`Banner ${index + 1}`}
                   width={1903}
                   height={438}
+                  className="w-full h-full object-contain"
                   priority
-                  className="object-cover"
                 />
                 {isVendor && (
                   <button
                     onClick={() => handleRemoveBanner(slide)}
-                    className="absolute top-4 left-4 p-2 bg-white/80 rounded-full 
+                    className="absolute top-2 sm:top-4 left-2 sm:left-4 p-1.5 sm:p-2 bg-white/80 rounded-full 
                              opacity-0 group-hover:opacity-100 transition-opacity
                              hover:bg-white hover:text-red-500 z-10"
                   >
-                    <Trash2 size={20} />
+                    <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 )}
               </div>
@@ -144,8 +173,8 @@ export default function CarouselPlugin() {
       </div>
 
       {allSlides.length > 1 && (
-        <section className="flex my-4">
-          <div className="absolute bottom-4 w-full flex justify-center">
+        <section className="flex my-2 sm:my-4">
+          <div className="absolute bottom-2 sm:bottom-4 w-full flex justify-center">
             {allSlides.map((_, index) => (
               <button
                 key={index}
@@ -160,13 +189,13 @@ export default function CarouselPlugin() {
       )}
 
       {isVendor && isLoading && (
-        <div className="absolute top-4 right-4 bg-white/80 px-3 py-1 rounded-md text-sm">
+        <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-white/80 px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm">
           Uploading...
         </div>
       )}
 
       {isVendor && error && (
-        <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-md text-sm">
+        <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-red-500 text-white px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm">
           {error}
         </div>
       )}
