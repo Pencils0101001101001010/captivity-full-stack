@@ -1,11 +1,12 @@
+import CarouselPlugin from "./CarouselPlugin";
 import React from "react";
 
-const WelocimeLandingPage = () => {
+const WelcomePage = () => {
   return (
-    <div>
-      <h1>WelocomeLandingPage</h1>
+    <div className="my-4">
+      <CarouselPlugin />
     </div>
   );
 };
 
-export default WelocimeLandingPage;
+export default WelcomePage;
