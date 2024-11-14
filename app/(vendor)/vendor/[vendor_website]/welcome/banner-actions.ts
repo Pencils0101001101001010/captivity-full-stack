@@ -35,8 +35,8 @@ export async function uploadBanner(
       },
     });
 
-    if (bannerCount >= 4) {
-      throw new Error("Maximum of 4 banner images allowed");
+    if (bannerCount >= 5) {
+      throw new Error("Maximum of 5 banner images allowed");
     }
 
     const fileExt = file.name.split(".").pop() || "png";
