@@ -1,3 +1,4 @@
+// app/vendor/layout.tsx
 import { validateRequest } from "@/auth";
 import { redirect } from "next/navigation";
 import { Toaster } from "@/components/ui/toaster";
@@ -25,10 +26,7 @@ export default async function VendorLayout({
       <Toaster />
       <div className="flex min-h-screen flex-col">
         <Navbar />
-        <div className="bg-slate-400"></div>
-        <div className="flex w-full grow">
-          <main className="flex-grow">{children}</main>
-        </div>
+        <div className="flex-grow">{children}</div>
       </div>
     </SessionProvider>
   );

@@ -105,7 +105,7 @@ export default function CarouselPlugin() {
 
   if (isLoading) {
     return (
-      <div className="w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[438px] flex items-center justify-center bg-gray-50">
+      <div className="w-full h-[150px] sm:h-[200px] md:h-[250px] lg:h-[300px] flex items-center justify-center bg-gray-50">
         <p>Loading banners...</p>
       </div>
     );
@@ -116,19 +116,19 @@ export default function CarouselPlugin() {
   }
 
   return (
-    <div className="relative overflow-hidden w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[438px] group">
+    <div className="relative overflow-hidden w-full h-[150px] sm:h-[200px] md:h-[250px] lg:h-[300px] group">
       <div
-        className="flex transition-transform duration-500"
+        className="flex transition-transform duration-500 h-full"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
         {allSlides.map((slide, index) => (
           <div
             key={slide === "upload-slot" ? "upload" : `banner-${index}`}
-            className="flex-shrink-0 w-full h-full flex items-center justify-center"
+            className="flex-shrink-0 w-full h-full relative"
           >
             {slide === "upload-slot" && isVendor ? (
               <div className="relative w-full h-full flex items-center justify-center">
-                <div className="w-full max-w-[300px] sm:max-w-[500px] md:max-w-[600px] lg:max-w-[800px] h-[150px] sm:h-[200px] md:h-[250px] lg:h-[300px] flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300">
+                <div className="w-full max-w-[300px] sm:max-w-[500px] md:max-w-[600px] lg:max-w-[800px] h-[100px] sm:h-[150px] md:h-[200px] lg:h-[250px] flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300">
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -136,24 +136,24 @@ export default function CarouselPlugin() {
                     accept="image/*"
                     className="absolute inset-0 opacity-0 cursor-pointer z-10"
                   />
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="p-2 sm:p-3 rounded-full bg-gray-100">
-                      <Plus size={20} className="text-gray-500 sm:w-6 sm:h-6" />
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="p-2 rounded-full bg-gray-100">
+                      <Plus size={20} className="text-gray-500" />
                     </div>
-                    <p className="text-xs sm:text-sm text-gray-500">
+                    <p className="text-xs text-gray-500">
                       Click to upload banner ({banners.length}/{MAX_BANNERS})
                     </p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="relative group h-full">
+              <div className="relative group w-full h-full">
                 <Image
                   src={slide}
                   alt={`Banner ${index + 1}`}
-                  width={1903}
-                  height={438}
-                  className="w-full h-full object-contain"
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
+                  className="object-cover"
                   priority
                 />
                 {isVendor && (
@@ -171,22 +171,6 @@ export default function CarouselPlugin() {
           </div>
         ))}
       </div>
-
-      {allSlides.length > 1 && (
-        <section className="flex my-2 sm:my-4">
-          <div className="absolute bottom-2 sm:bottom-4 w-full flex justify-center">
-            {allSlides.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`h-1 w-1 mx-1 rounded-full ${
-                  currentIndex === index ? "bg-red-600" : "bg-gray-400"
-                }`}
-              />
-            ))}
-          </div>
-        </section>
-      )}
 
       {isVendor && isLoading && (
         <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-white/80 px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm">

@@ -1,6 +1,5 @@
 // app/vendor/[vendor_website]/layout.tsx
 import type { Metadata } from "next";
-import SessionProvider from "@/app/(vendor)/SessionProvider";
 import { validateRequest } from "@/auth";
 import React from "react";
 import CarouselPlugin from "./welcome/CarouselPlugin";
@@ -12,7 +11,6 @@ interface LayoutProps {
   };
 }
 
-// Generate metadata for the page
 export async function generateMetadata({
   params,
 }: LayoutProps): Promise<Metadata> {
@@ -31,17 +29,9 @@ export default async function VendorWebsiteLayout({
   const session = await validateRequest();
 
   return (
-    <SessionProvider value={{ user: session?.user || null }}>
-      <div className="min-h-screen flex flex-col bg-white">
-        <main className="flex-grow">
-          <div className="max-w-[1903px] mx-auto">
-            <div className="my-4">
-              <CarouselPlugin />
-            </div>
-            {children}
-          </div>
-        </main>
-      </div>
-    </SessionProvider>
+    <>
+      <CarouselPlugin />
+      <div className="max-w-[1903px] mx-auto px-4">{children}</div>
+    </>
   );
 }
