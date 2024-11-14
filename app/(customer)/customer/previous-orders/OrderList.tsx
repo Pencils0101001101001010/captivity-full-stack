@@ -1,5 +1,5 @@
 "use client";
-//! filter by statuses needs to be fixed to make sure on selecting filter by status it doesn't give a failed error
+//! filter by statuses needs to be fixed to make sure on selecting "filter by status" it doesn't give a failed error
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
@@ -129,7 +129,7 @@ const OrderHistory = ({
   const handleStatusFilter = (status: string) => {
     setSearchParams(prev => ({
       ...prev,
-      status: status as OrderStatus | undefined,
+      status: status === "ALL" ? undefined : (status as OrderStatus),
       page: 1,
     }));
   };
