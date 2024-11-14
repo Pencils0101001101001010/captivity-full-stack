@@ -4,7 +4,7 @@ import {
   removeBanner,
   getBanners,
   getVendorBannersBySlug,
-} from "../actions";
+} from "../banner-actions";
 
 interface BannerStore {
   banners: string[];
