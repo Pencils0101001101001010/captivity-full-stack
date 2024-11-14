@@ -134,18 +134,92 @@ export async function getLogo() {
       return { success: false, error: "Unauthorized access" };
     }
 
-    // For getLogo, we want to allow both VENDOR and VENDORCUSTOMER to fetch the logo
-    const settings = await prisma.userSettings.findUnique({
-      where: { userId: user.id },
-      select: { logoUrl: true },
+    // If the user is a vendor, get their own logo
+    if (user.role === "VENDOR") {
+      const settings = await prisma.userSettings.findUnique({
+        where: { userId: user.id },
+        select: { logoUrl: true },
+      });
+
+      return {
+        success: true,
+        url: settings?.logoUrl,
+      };
+    }
+
+    // If the user is a vendor customer, get their vendor's logo
+    if (user.role === "VENDORCUSTOMER") {
+      // Get the vendor's store slug from the current user's data
+      const currentUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: {
+          companyName: true, // We'll need this to find the vendor
+        },
+      });
+
+      if (!currentUser) {
+        return { success: false, error: "User not found" };
+      }
+
+      // Find the vendor based on the customer's company name
+      const vendor = await prisma.user.findFirst({
+        where: {
+          role: "VENDOR",
+          storeName: currentUser.companyName, // Assuming the customer's companyName matches the vendor's storeName
+        },
+        select: {
+          UserSettings: {
+            select: {
+              logoUrl: true,
+            },
+          },
+        },
+      });
+
+      return {
+        success: true,
+        url: vendor?.UserSettings?.logoUrl,
+      };
+    }
+
+    // For other user types, return null or default logo
+    return {
+      success: true,
+      url: null,
+    };
+  } catch (error) {
+    console.error("Error getting logo:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
+  }
+}
+
+// New function to get vendor logo by store slug
+export async function getVendorLogoBySlug(storeSlug: string) {
+  try {
+    const vendor = await prisma.user.findFirst({
+      where: {
+        storeSlug: storeSlug,
+        role: "VENDOR",
+      },
+      select: {
+        UserSettings: {
+          select: {
+            logoUrl: true,
+          },
+        },
+      },
     });
 
     return {
       success: true,
-      url: settings?.logoUrl,
+      url: vendor?.UserSettings?.logoUrl,
     };
   } catch (error) {
-    console.error("Error getting logo:", error);
+    console.error("Error getting vendor logo:", error);
     return {
       success: false,
       error:

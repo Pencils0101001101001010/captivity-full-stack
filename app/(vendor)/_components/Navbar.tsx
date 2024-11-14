@@ -14,12 +14,42 @@ import {
 } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
-import { uploadLogo, removeLogo, getLogo } from "../actions";
+import {
+  uploadLogo,
+  removeLogo,
+  getLogo,
+  getVendorLogoBySlug,
+} from "../actions";
 import { useParams } from "next/navigation";
 import CartSidebar from "./CartSidebar";
 
+// Define types for session
+type UserRole =
+  | "USER"
+  | "CUSTOMER"
+  | "SUBSCRIBER"
+  | "PROMO"
+  | "DISTRIBUTOR"
+  | "SHOPMANAGER"
+  | "EDITOR"
+  | "ADMIN"
+  | "SUPERADMIN"
+  | "VENDOR"
+  | "VENDORCUSTOMER"
+  | "APPROVEDVENDORCUSTOMER";
+
+interface User {
+  id: string;
+  role: UserRole;
+  // Add other user properties as needed
+}
+
+interface Session {
+  user: User | null;
+}
+
 const Navbar = () => {
-  const session = useSession();
+  const session = useSession() as Session;
   const params = useParams();
   const vendorWebsite =
     typeof params?.vendor_website === "string" ? params.vendor_website : "";
@@ -30,21 +60,41 @@ const Navbar = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const isVendor = session?.user?.role === "VENDOR";
+  const defaultLogoUrl = "/captivity-logo-white.png";
 
-  // Keep all existing functions (handleLogoUpload, handleRemoveLogo, etc.)
+  // Derive these values from session rather than storing them
+  const isVendor = session?.user?.role === "VENDOR";
+  const isVendorCustomer =
+    session?.user?.role === "VENDORCUSTOMER" ||
+    session?.user?.role === "APPROVEDVENDORCUSTOMER";
+
   useEffect(() => {
     const fetchLogo = async () => {
-      const result = await getLogo();
-      if (result.success && result.url) {
-        setLogoUrl(result.url);
+      if (!session?.user) return;
+
+      try {
+        if (session.user.role === "VENDOR") {
+          const result = await getLogo();
+          if (result.success && result.url) {
+            setLogoUrl(result.url);
+          }
+        } else if (
+          (session.user.role === "VENDORCUSTOMER" ||
+            session.user.role === "APPROVEDVENDORCUSTOMER") &&
+          vendorWebsite
+        ) {
+          const result = await getVendorLogoBySlug(vendorWebsite);
+          if (result.success && result.url) {
+            setLogoUrl(result.url);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching logo:", error);
       }
     };
 
-    if (session?.user) {
-      fetchLogo();
-    }
-  }, [session?.user]);
+    fetchLogo();
+  }, [session?.user, vendorWebsite]);
 
   const handleLogoUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
