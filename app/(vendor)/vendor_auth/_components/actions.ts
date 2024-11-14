@@ -217,7 +217,7 @@ export async function vendorCustomerLogin(
     );
 
     return {
-      redirect: `/vendor/${vendorStoreSlug}`,
+      redirect: `/vendor/${vendorStoreSlug}/welcome`,
     };
   } catch (error) {
     console.error("Login error:", error);

@@ -39,7 +39,7 @@ const roleRoutes: Record<UserRole, RouteValue> = {
 
     if (!userWithStore?.storeSlug) {
       console.warn("Vendor without storeSlug detected:", user);
-      return "/vendor";
+      return "/login";
     }
     return `/vendor/${userWithStore.storeSlug}`;
   },
