@@ -16,6 +16,7 @@ import ProductImage from "./ProductImage";
 import AddToCartButton from "./AddToCartButton";
 import Link from "next/link";
 import ViewMore from "@/app/(customer)/_components/ViewMore";
+import { useColorStore } from "../../_store/useColorStore";
 
 // Helper function to transform product data for ProductImage component
 const transformProductForImage = (
@@ -38,13 +39,37 @@ const transformProductForImage = (
 });
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
-  const [selectedVariation, setSelectedVariation] = useState<Variation | null>(
-    product.variations[0] || null
-  );
-  const [quantity, setQuantity] = useState(1);
   const [recommendedBranding, setRecommendedBranding] = useState<string | null>(
     null
   );
+
+  const getSelectedColor = useColorStore(state => state.getSelectedColor);
+  const setSelectedColor = useColorStore(state => state.setSelectedColor);
+  const clearSelectedColor = useColorStore(state => state.clearSelectedColor);
+
+  // Get the saved color for this product
+  const savedColor = getSelectedColor(product.id);
+  const initialVariation = savedColor
+    ? product.variations.find(v => v.color === savedColor)
+    : product.variations[0];
+
+  const [selectedVariation, setSelectedVariation] = useState<Variation | null>(
+    initialVariation || null
+  );
+  const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    return () => {
+      clearSelectedColor(product.id);
+    };
+  }, [clearSelectedColor, product.id]);
+
+  // Initialize with saved color
+  useEffect(() => {
+    if (savedColor && initialVariation) {
+      setSelectedVariation(initialVariation);
+    }
+  }, [savedColor, product.id, initialVariation]);
 
   useEffect(() => {
     const match = product.description.match(
@@ -67,6 +92,8 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     );
     if (newVariation) {
       setSelectedVariation(newVariation);
+      //color
+      setSelectedColor(product.id, color);
       setQuantity(1);
     }
   };
