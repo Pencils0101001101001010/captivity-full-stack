@@ -22,7 +22,7 @@ export interface User {
   name?: string;
   email?: string;
   username?: string;
-  avatarUrl?: string;
+  avatarUrl: string | null | undefined; // Allow null as well
   role: UserRole;
   vendor_website?: string;
   associated_vendors?: string[];

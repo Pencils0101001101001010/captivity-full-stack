@@ -239,12 +239,45 @@ model OrderItem {
 }
 
 model UserSettings {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  logoUrl   String?
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String            @id @default(cuid())
+  userId           String            @unique
+  logoUrl          String?
+  bannerUrl        String?
+  storeDescription StoreDescription?
+  storeName        String?
+  contactEmail     String?
+  phoneNumber      String?
+  businessHours    String?
+  storePolicy      String?
+  socialMedia      Json? // { facebook?: string, instagram?: string, twitter?: string }
+  location         Json? // { address: string, coordinates?: { lat: number, lng: number } }
+  categories       String[]
+  featured         Boolean           @default(false)
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  BannerImage      BannerImage[]
+}
+
+model StoreDescription {
+  id              String       @id @default(cuid())
+  mainDescription String
+  description1    String?
+  description2    String?
+  description3    String?
+  description4    String?
+  userSettings    UserSettings @relation(fields: [userSettingsId], references: [id], onDelete: Cascade)
+  userSettingsId  String       @unique
+}
+
+model BannerImage {
+  id             String       @id @default(cuid())
+  url            String
+  userSettings   UserSettings @relation(fields: [userSettingsId], references: [id], onDelete: Cascade)
+  userSettingsId String
+  order          Int          @default(0) // For maintaining image order
+
+  @@map("banner_images")
 }
 
 // Vendor-specific models

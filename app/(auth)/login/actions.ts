@@ -38,7 +38,9 @@ const roleRoutes: Record<UserRole, RouteResolver> = {
   [UserRole.ADMIN]: "/admin",
   [UserRole.SUPERADMIN]: "/select-panel",
   [UserRole.VENDOR]: (user: User) =>
-    user.storeSlug ? `/vendor/${user.storeSlug}` : "/vendor/setup-store",
+    user.storeSlug
+      ? `/vendor/${user.storeSlug}/welcome`
+      : "/vendor/setup-store",
 };
 
 export async function login(

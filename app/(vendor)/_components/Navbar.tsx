@@ -14,37 +14,92 @@ import {
 } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
-import { uploadLogo, removeLogo, getLogo } from "../actions";
+import {
+  uploadLogo,
+  removeLogo,
+  getLogo,
+  getVendorLogoBySlug,
+} from "../actions";
 import { useParams } from "next/navigation";
 import CartSidebar from "./CartSidebar";
 
+type UserRole =
+  | "USER"
+  | "CUSTOMER"
+  | "SUBSCRIBER"
+  | "PROMO"
+  | "DISTRIBUTOR"
+  | "SHOPMANAGER"
+  | "EDITOR"
+  | "ADMIN"
+  | "SUPERADMIN"
+  | "VENDOR"
+  | "VENDORCUSTOMER"
+  | "APPROVEDVENDORCUSTOMER";
+
+interface User {
+  id: string;
+  role: UserRole;
+}
+
+interface Session {
+  user: User | null;
+}
+
 const Navbar = () => {
-  const session = useSession();
+  const session = useSession() as Session;
   const params = useParams();
   const vendorWebsite =
     typeof params?.vendor_website === "string" ? params.vendor_website : "";
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [isLogoLoading, setIsLogoLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [showRemoveButton, setShowRemoveButton] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const isVendor = session?.user?.role === "VENDOR";
+  const defaultLogoUrl = "/captivity-logo-white.png";
 
-  // Keep all existing functions (handleLogoUpload, handleRemoveLogo, etc.)
+  const isVendor = session?.user?.role === "VENDOR";
+  const isVendorCustomer =
+    session?.user?.role === "VENDORCUSTOMER" ||
+    session?.user?.role === "APPROVEDVENDORCUSTOMER";
+
   useEffect(() => {
     const fetchLogo = async () => {
-      const result = await getLogo();
-      if (result.success && result.url) {
-        setLogoUrl(result.url);
+      if (!session?.user) {
+        setIsLogoLoading(false);
+        return;
+      }
+
+      try {
+        setIsLogoLoading(true);
+
+        if (session.user.role === "VENDOR") {
+          const result = await getLogo();
+          if (result.success && result.url) {
+            setLogoUrl(result.url);
+          }
+        } else if (
+          (session.user.role === "VENDORCUSTOMER" ||
+            session.user.role === "APPROVEDVENDORCUSTOMER") &&
+          vendorWebsite
+        ) {
+          const result = await getVendorLogoBySlug(vendorWebsite);
+          if (result.success && result.url) {
+            setLogoUrl(result.url);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching logo:", error);
+      } finally {
+        setIsLogoLoading(false);
       }
     };
 
-    if (session?.user) {
-      fetchLogo();
-    }
-  }, [session?.user]);
+    fetchLogo();
+  }, [session?.user, vendorWebsite]);
 
   const handleLogoUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -101,8 +156,12 @@ const Navbar = () => {
       onMouseEnter={() => isVendor && logoUrl && setShowRemoveButton(true)}
       onMouseLeave={() => setShowRemoveButton(false)}
     >
-      {logoUrl ? (
-        <Link href={isVendor ? `/vendor/${vendorWebsite}` : "#"}>
+      {isLogoLoading ? (
+        <div className="w-full h-full bg-gray-800 animate-pulse rounded"></div>
+      ) : logoUrl ? (
+        <Link
+          href={isVendor || isVendorCustomer ? `/vendor/${vendorWebsite}` : "#"}
+        >
           <div className="relative w-full h-full">
             <Image
               src={logoUrl}
@@ -115,6 +174,7 @@ const Navbar = () => {
                   fileInputRef.current.click();
                 }
               }}
+              priority
             />
             {isVendor && showRemoveButton && !uploading && (
               <button
@@ -140,14 +200,18 @@ const Navbar = () => {
           </span>
         </div>
       ) : (
-        <Image
-          src="/captivity-logo-white.png"
-          alt="captivityLogo"
-          width={331}
-          height={54}
-          className="h-auto border border-white"
-          priority
-        />
+        <Link
+          href={isVendorCustomer ? `/vendor/${vendorWebsite}` : "/vendor_admin"}
+        >
+          <Image
+            src={defaultLogoUrl}
+            alt="captivityLogo"
+            width={331}
+            height={54}
+            className="h-auto border border-white hover:opacity-80 hover:border-2"
+            priority
+          />
+        </Link>
       )}
       {isVendor && (
         <input
@@ -163,7 +227,7 @@ const Navbar = () => {
   ) : (
     <Link href="/vendor_admin" className="w-[170px] h-[54px]">
       <Image
-        src="/captivity-logo-white.png"
+        src={defaultLogoUrl}
         alt="captivityLogo"
         width={331}
         height={54}
@@ -210,12 +274,15 @@ const Navbar = () => {
       <div className="sticky top-0 z-50">
         <nav className="bg-black text-white">
           <div className="flex items-center justify-between text-xs mx-auto w-full py-6 px-8">
-            {logoSection}
+            {/* Logo Section */}
+            <div className="flex items-center">{logoSection}</div>
 
-            <div className="hidden md:flex items-center justify-between flex-1 ml-6">
-              {/* Vendor Navigation Items */}
+            {/* Navigation and Search Section - Always Right Aligned */}
+            <div className="hidden md:flex items-center justify-end flex-1 ml-6">
+              {/* Vendor Navigation Items - Only show for vendors */}
               {isVendor && <VendorNavItems />}
 
+              {/* Search and User Controls - Always right aligned */}
               <div className="flex items-center space-x-6">
                 <div className="flex">
                   <input

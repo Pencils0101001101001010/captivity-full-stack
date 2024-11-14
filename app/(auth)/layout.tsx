@@ -1,8 +1,9 @@
 import { validateRequest } from "@/auth";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import type { User } from "lucia";
+import prisma from "@/lib/prisma";
 
-// Define the UserRole enum to match your schema
 enum UserRole {
   USER = "USER",
   CUSTOMER = "CUSTOMER",
@@ -17,8 +18,9 @@ enum UserRole {
   VENDORCUSTOMER = "VENDORCUSTOMER",
 }
 
-// Define the routes for each role
-const roleRoutes: Record<UserRole, string> = {
+type RouteValue = string | ((user: User) => Promise<string> | string);
+
+const roleRoutes: Record<UserRole, RouteValue> = {
   [UserRole.USER]: "/dashboard",
   [UserRole.CUSTOMER]: "/customer",
   [UserRole.SUBSCRIBER]: "/subscriber",
@@ -28,18 +30,28 @@ const roleRoutes: Record<UserRole, string> = {
   [UserRole.EDITOR]: "/editor",
   [UserRole.ADMIN]: "/admin",
   [UserRole.SUPERADMIN]: "/select-panel",
-  [UserRole.VENDOR]: "/vendor_admin",
-  [UserRole.VENDORCUSTOMER]: "/vendor_admin",
+  [UserRole.VENDOR]: async (user: User) => {
+    // Fetch the user's store info directly from the user table
+    const userWithStore = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { storeSlug: true },
+    });
+
+    if (!userWithStore?.storeSlug) {
+      console.warn("Vendor without storeSlug detected:", user);
+      return "/login";
+    }
+    return `/vendor/${userWithStore.storeSlug}`;
+  },
+  [UserRole.VENDORCUSTOMER]: "/vendor_auth",
 };
 
-// Function to safely convert string to UserRole
 function toUserRole(role: string): UserRole | undefined {
   return Object.values(UserRole).includes(role as UserRole)
     ? (role as UserRole)
     : undefined;
 }
 
-// Function to safely get search params from headers
 function getSearchParamsFromHeaders(): URLSearchParams {
   const headersList = headers();
   const referer = headersList.get("referer");
@@ -69,14 +81,22 @@ export default async function RoleBasedLayout({
     if (userRole === UserRole.SUPERADMIN && selectedRole) {
       const targetRole = toUserRole(selectedRole);
       if (targetRole && targetRole in roleRoutes) {
-        redirect(roleRoutes[targetRole]);
+        const route = roleRoutes[targetRole];
+        // Handle both string and function route values
+        const targetRoute =
+          typeof route === "function" ? await route(user) : route;
+        redirect(targetRoute);
       }
       // If no valid target role selected, go to panel selector
-      redirect(roleRoutes[UserRole.SUPERADMIN]);
+      redirect(roleRoutes[UserRole.SUPERADMIN] as string);
     }
     // For all other users, redirect based on their role
     else if (userRole && userRole in roleRoutes) {
-      redirect(roleRoutes[userRole]);
+      const route = roleRoutes[userRole];
+      // Handle both string and function route values
+      const targetRoute =
+        typeof route === "function" ? await route(user) : route;
+      redirect(targetRoute);
     } else {
       console.warn(`Unrecognized user role: ${user.role}`);
       redirect("/");
