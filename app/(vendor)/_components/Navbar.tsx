@@ -23,7 +23,6 @@ import {
 import { useParams } from "next/navigation";
 import CartSidebar from "./CartSidebar";
 
-// Define types for session
 type UserRole =
   | "USER"
   | "CUSTOMER"
@@ -41,7 +40,6 @@ type UserRole =
 interface User {
   id: string;
   role: UserRole;
-  // Add other user properties as needed
 }
 
 interface Session {
@@ -54,6 +52,7 @@ const Navbar = () => {
   const vendorWebsite =
     typeof params?.vendor_website === "string" ? params.vendor_website : "";
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [isLogoLoading, setIsLogoLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [showRemoveButton, setShowRemoveButton] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -62,7 +61,6 @@ const Navbar = () => {
 
   const defaultLogoUrl = "/captivity-logo-white.png";
 
-  // Derive these values from session rather than storing them
   const isVendor = session?.user?.role === "VENDOR";
   const isVendorCustomer =
     session?.user?.role === "VENDORCUSTOMER" ||
@@ -70,9 +68,14 @@ const Navbar = () => {
 
   useEffect(() => {
     const fetchLogo = async () => {
-      if (!session?.user) return;
+      if (!session?.user) {
+        setIsLogoLoading(false);
+        return;
+      }
 
       try {
+        setIsLogoLoading(true);
+
         if (session.user.role === "VENDOR") {
           const result = await getLogo();
           if (result.success && result.url) {
@@ -90,6 +93,8 @@ const Navbar = () => {
         }
       } catch (error) {
         console.error("Error fetching logo:", error);
+      } finally {
+        setIsLogoLoading(false);
       }
     };
 
@@ -151,8 +156,12 @@ const Navbar = () => {
       onMouseEnter={() => isVendor && logoUrl && setShowRemoveButton(true)}
       onMouseLeave={() => setShowRemoveButton(false)}
     >
-      {logoUrl ? (
-        <Link href={isVendor ? `/vendor/${vendorWebsite}` : "#"}>
+      {isLogoLoading ? (
+        <div className="w-full h-full bg-gray-800 animate-pulse rounded"></div>
+      ) : logoUrl ? (
+        <Link
+          href={isVendor || isVendorCustomer ? `/vendor/${vendorWebsite}` : "#"}
+        >
           <div className="relative w-full h-full">
             <Image
               src={logoUrl}
@@ -165,6 +174,7 @@ const Navbar = () => {
                   fileInputRef.current.click();
                 }
               }}
+              priority
             />
             {isVendor && showRemoveButton && !uploading && (
               <button
@@ -190,14 +200,18 @@ const Navbar = () => {
           </span>
         </div>
       ) : (
-        <Image
-          src="/captivity-logo-white.png"
-          alt="captivityLogo"
-          width={331}
-          height={54}
-          className="h-auto border border-white"
-          priority
-        />
+        <Link
+          href={isVendorCustomer ? `/vendor/${vendorWebsite}` : "/vendor_admin"}
+        >
+          <Image
+            src={defaultLogoUrl}
+            alt="captivityLogo"
+            width={331}
+            height={54}
+            className="h-auto border border-white hover:opacity-80 hover:border-2"
+            priority
+          />
+        </Link>
       )}
       {isVendor && (
         <input
@@ -213,7 +227,7 @@ const Navbar = () => {
   ) : (
     <Link href="/vendor_admin" className="w-[170px] h-[54px]">
       <Image
-        src="/captivity-logo-white.png"
+        src={defaultLogoUrl}
         alt="captivityLogo"
         width={331}
         height={54}
@@ -260,12 +274,15 @@ const Navbar = () => {
       <div className="sticky top-0 z-50">
         <nav className="bg-black text-white">
           <div className="flex items-center justify-between text-xs mx-auto w-full py-6 px-8">
-            {logoSection}
+            {/* Logo Section */}
+            <div className="flex items-center">{logoSection}</div>
 
-            <div className="hidden md:flex items-center justify-between flex-1 ml-6">
-              {/* Vendor Navigation Items */}
+            {/* Navigation and Search Section - Always Right Aligned */}
+            <div className="hidden md:flex items-center justify-end flex-1 ml-6">
+              {/* Vendor Navigation Items - Only show for vendors */}
               {isVendor && <VendorNavItems />}
 
+              {/* Search and User Controls - Always right aligned */}
               <div className="flex items-center space-x-6">
                 <div className="flex">
                   <input
