@@ -243,7 +243,6 @@ model UserSettings {
   userId           String            @unique
   logoUrl          String?
   bannerUrl        String?
-  storeDescription StoreDescription?
   storeName        String?
   contactEmail     String?
   phoneNumber      String?
@@ -262,6 +261,7 @@ model UserSettings {
   BestSellerImage  BestSellerImage[]
   CategoryImage    CategoryImage[]
   OfficeLocation   OfficeLocation[]
+  storeDescription StoreDescription?
 
   @@map("user_settings")
 }
@@ -313,6 +313,8 @@ model OfficeLocation {
   id             String        @id @default(cuid())
   city           String
   telephone      String
+  general        String
+  websiteQueries String
   openingHours   OpeningHours?
   userSettings   UserSettings  @relation(fields: [userSettingsId], references: [id], onDelete: Cascade)
   userSettingsId String
