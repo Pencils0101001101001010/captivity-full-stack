@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Trash2, Plus } from "lucide-react";
-import { useBannerStore } from "./_store/BannerStore";
+import { useBannerStore } from "../_store/BannerStore";
 import { useParams } from "next/navigation";
 import { useSession } from "@/app/(vendor)/SessionProvider";
 

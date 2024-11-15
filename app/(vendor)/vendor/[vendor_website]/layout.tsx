@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 import { validateRequest } from "@/auth";
 import React from "react";
-import CarouselPlugin from "./welcome/CarouselPlugin";
+import CarouselPlugin from "./welcome/_components/CarouselPlugin";
 
 interface LayoutProps {
   children: React.ReactNode;

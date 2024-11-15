@@ -1,4 +1,4 @@
-import BestSeller from "./BestSeller";
+import BestSeller from "./_components/BestSeller";
 
 const WelcomePage = () => {
   return (

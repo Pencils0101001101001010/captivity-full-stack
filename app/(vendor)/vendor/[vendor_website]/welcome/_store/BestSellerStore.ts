@@ -4,7 +4,7 @@ import {
   removeBestSeller,
   getBestSellers,
   getVendorBestSellersBySlug,
-} from "../best_seller-actions";
+} from "../_actions/best_seller-actions";
 
 interface BestSellerStore {
   bestSellers: string[];

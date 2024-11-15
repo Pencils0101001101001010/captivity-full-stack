@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { Trash2, Plus } from "lucide-react";
 import { RiStarSFill } from "react-icons/ri";
-import { useBestSellerStore } from "./_store/BestSellerStore";
+import { useBestSellerStore } from "../_store/BestSellerStore";
 import { useParams } from "next/navigation";
 import { useSession } from "@/app/(vendor)/SessionProvider";
 
