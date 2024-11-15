@@ -7,16 +7,14 @@ import {
   ProductWithRelations,
   ProductImageProps,
 } from "./types";
-import {
-  ColorSelector,
-  SizeSelector,
-  QuantitySelector,
-} from "./ProductSelectors";
+import { SizeSelector, QuantitySelector } from "./ProductSelectors";
+
 import ProductImage from "./ProductImage";
 import AddToCartButton from "./AddToCartButton";
 import Link from "next/link";
 import ViewMore from "@/app/(customer)/_components/ViewMore";
 import { useColorStore } from "../../_store/useColorStore";
+import ColorPicker from "../product_categories/_components/ColorPicker";
 
 // Helper function to transform product data for ProductImage component
 const transformProductForImage = (
@@ -26,9 +24,9 @@ const transformProductForImage = (
   productName: product.productName,
   featuredImage: product.featuredImage
     ? {
-        thumbnail: product.featuredImage.medium, // Use medium as fallback
+        thumbnail: product.featuredImage.medium,
         medium: product.featuredImage.medium,
-        large: product.featuredImage.medium, // Use medium as fallback
+        large: product.featuredImage.medium,
       }
     : null,
   variations: product.variations.map(variation => ({
@@ -86,13 +84,18 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
   const uniqueSizes = Array.from(new Set(product.variations.map(v => v.size)));
 
-  const handleColorSelect = (color: string) => {
+  const handleColorSelect = (color: string | null) => {
+    if (!color) {
+      setSelectedVariation(null);
+      setSelectedColor(product.id, "");
+      return;
+    }
+
     const newVariation = product.variations.find(
       v => v.color === color && v.size === selectedVariation?.size
     );
     if (newVariation) {
       setSelectedVariation(newVariation);
-      //color
       setSelectedColor(product.id, color);
       setQuantity(1);
     }
@@ -143,12 +146,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             R{product.sellingPrice.toFixed(2)}
           </p>
 
-          <ColorSelector
+          <ColorPicker
             colors={uniqueColors}
-            selectedColor={selectedVariation?.color}
-            variations={product.variations}
-            onColorSelect={handleColorSelect}
-            productName={product.productName}
+            selectedColor={selectedVariation?.color || null}
+            onColorChange={handleColorSelect}
           />
 
           <SizeSelector
