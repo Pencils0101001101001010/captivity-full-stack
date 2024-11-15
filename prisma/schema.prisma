@@ -249,16 +249,21 @@ model UserSettings {
   phoneNumber      String?
   businessHours    String?
   storePolicy      String?
-  socialMedia      Json? // { facebook?: string, instagram?: string, twitter?: string }
+  socialMedia      Json? // { facebook?: string, instagram?: string, youtube?: string }
   location         Json? // { address: string, coordinates?: { lat: number, lng: number } }
   categories       String[]
   featured         Boolean           @default(false)
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generalEmail     String? // Added for info@ email
+  websiteEmail     String? // Added for web@ email
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   BannerImage      BannerImage[]
   BestSellerImage  BestSellerImage[]
   CategoryImage    CategoryImage[]
+  OfficeLocation   OfficeLocation[]
+
+  @@map("user_settings")
 }
 
 model StoreDescription {
@@ -302,6 +307,29 @@ model CategoryImage {
   order          Int          @default(0)
 
   @@map("category_images")
+}
+
+model OfficeLocation {
+  id             String        @id @default(cuid())
+  city           String
+  telephone      String
+  openingHours   OpeningHours?
+  userSettings   UserSettings  @relation(fields: [userSettingsId], references: [id], onDelete: Cascade)
+  userSettingsId String
+
+  @@map("office_locations")
+}
+
+model OpeningHours {
+  id               String         @id @default(cuid())
+  mondayToThursday String
+  friday           String
+  saturdaySunday   String         @default("Closed")
+  publicHolidays   String         @default("Closed")
+  officeLocation   OfficeLocation @relation(fields: [officeLocationId], references: [id], onDelete: Cascade)
+  officeLocationId String         @unique
+
+  @@map("opening_hours")
 }
 
 // Vendor-specific models
