@@ -162,7 +162,7 @@ const VendorProductForm = () => {
   }, [form]);
 
   return (
-    <Card className="w-full max-w-3xl mx-auto shadow-2xl shadow-black">
+    <Card className="w-full max-w-3xl mx-auto my-5 shadow-2xl shadow-black">
       <CardHeader>
         <CardTitle>Create New Vendor Product</CardTitle>
       </CardHeader>
