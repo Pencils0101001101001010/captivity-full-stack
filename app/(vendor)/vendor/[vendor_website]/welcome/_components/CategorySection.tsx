@@ -207,7 +207,7 @@ export default function CategoryImages() {
     <div className="mx-auto max-w-6xl">
       <section className="max-container max-sm:mt-12">
         <div className="flex flex-col justify-center gap-2 mb-6">
-          <h2 className="text-3xl sm:text-2xl md:text-2xl lg:text-3xl flex items-center justify-center text-black font-semibold">
+          <h2 className="text-3xl sm:text-2xl md:text-2xl lg:text-3xl flex items-center justify-center text-red-600 font-semibold">
             PRODUCT CATEGORIES
           </h2>
         </div>

@@ -153,7 +153,7 @@ export default function BestSeller() {
                         : "⚠️ Enter product name below first"}
                     </p>
                     <p className="text-[10px] text-gray-400 mt-1">
-                      Image Dimensions: 300 x 300
+                      Image Dimensions: width=300 x height=300
                     </p>
                   </div>
                 </div>
