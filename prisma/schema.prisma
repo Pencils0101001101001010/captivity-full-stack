@@ -257,6 +257,7 @@ model UserSettings {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   BannerImage      BannerImage[]
+  BestSellerImage  BestSellerImage[]
 }
 
 model StoreDescription {
@@ -278,6 +279,16 @@ model BannerImage {
   order          Int          @default(0) // For maintaining image order
 
   @@map("banner_images")
+}
+
+model BestSellerImage {
+  id             String       @id @default(cuid())
+  url            String
+  userSettings   UserSettings @relation(fields: [userSettingsId], references: [id], onDelete: Cascade)
+  userSettingsId String
+  order          Int          @default(0) // For maintaining image order
+
+  @@map("best_seller_images")
 }
 
 // Vendor-specific models
