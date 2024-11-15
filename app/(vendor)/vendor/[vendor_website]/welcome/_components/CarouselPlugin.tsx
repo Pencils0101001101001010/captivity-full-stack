@@ -148,7 +148,7 @@ export default function CarouselPlugin() {
                         Recommended dimensions:
                       </p>
                       <p className="text-[11px] text-gray-400">
-                        1903 x 438 pixels
+                        width=1903 x height=438 pixels
                       </p>
                     </div>
                   </div>
