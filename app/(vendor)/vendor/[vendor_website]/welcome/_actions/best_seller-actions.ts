@@ -6,7 +6,7 @@ import { validateRequest } from "@/auth";
 
 interface BestSellerActionResult {
   success: boolean;
-  urls?: string[];
+  urls?: Array<{ url: string; productName: string }>;
   url?: string;
   error?: string;
 }
@@ -18,10 +18,13 @@ export async function uploadBestSeller(
     const { user } = await validateRequest();
     if (!user) throw new Error("Unauthorized access");
     if (user.role !== "VENDOR")
-      throw new Error("Only vendors can manage best seller images");
+      throw new Error("Only vendors can manage best sellers");
 
     const file = formData.get("bestSeller") as File;
+    const productName = formData.get("productName") as string;
+
     if (!file || !file.size) throw new Error("No file provided");
+    if (!productName) throw new Error("Product name is required");
     if (!file.type.startsWith("image/"))
       throw new Error("File must be an image");
     if (file.size > 5 * 1024 * 1024)
@@ -59,6 +62,7 @@ export async function uploadBestSeller(
     await prisma.bestSellerImage.create({
       data: {
         url: blob.url,
+        productName,
         userSettingsId: userSettings.id,
         order: bestSellerCount,
       },
@@ -78,10 +82,13 @@ export async function uploadBestSeller(
     return {
       success: true,
       url: blob.url,
-      urls: allBestSellers.map(bestSeller => bestSeller.url),
+      urls: allBestSellers.map(item => ({
+        url: item.url,
+        productName: item.productName,
+      })),
     };
   } catch (error) {
-    console.error("Error uploading best seller image:", error);
+    console.error("Error uploading best seller:", error);
     return {
       success: false,
       error:
@@ -97,7 +104,7 @@ export async function removeBestSeller(
     const { user } = await validateRequest();
     if (!user) throw new Error("Unauthorized access");
     if (user.role !== "VENDOR")
-      throw new Error("Only vendors can manage best seller images");
+      throw new Error("Only vendors can manage best sellers");
 
     const bestSeller = await prisma.bestSellerImage.findFirst({
       where: {
@@ -128,6 +135,7 @@ export async function removeBestSeller(
       orderBy: { order: "asc" },
     });
 
+    // Reorder remaining images
     for (let i = 0; i < remainingBestSellers.length; i++) {
       await prisma.bestSellerImage.update({
         where: { id: remainingBestSellers[i].id },
@@ -137,10 +145,13 @@ export async function removeBestSeller(
 
     return {
       success: true,
-      urls: remainingBestSellers.map(bestSeller => bestSeller.url),
+      urls: remainingBestSellers.map(item => ({
+        url: item.url,
+        productName: item.productName,
+      })),
     };
   } catch (error) {
-    console.error("Error removing best seller image:", error);
+    console.error("Error removing best seller:", error);
     return {
       success: false,
       error:
@@ -167,7 +178,10 @@ export async function getBestSellers(): Promise<BestSellerActionResult> {
       return {
         success: true,
         urls:
-          userSettings?.BestSellerImage.map(bestSeller => bestSeller.url) || [],
+          userSettings?.BestSellerImage.map(item => ({
+            url: item.url,
+            productName: item.productName,
+          })) || [],
       };
     }
 
@@ -196,13 +210,16 @@ export async function getBestSellers(): Promise<BestSellerActionResult> {
       return {
         success: true,
         urls:
-          userSettings?.BestSellerImage.map(bestSeller => bestSeller.url) || [],
+          userSettings?.BestSellerImage.map(item => ({
+            url: item.url,
+            productName: item.productName,
+          })) || [],
       };
     }
 
     return { success: true, urls: [] };
   } catch (error) {
-    console.error("Error getting best seller images:", error);
+    console.error("Error getting best sellers:", error);
     return {
       success: false,
       error:
@@ -232,10 +249,13 @@ export async function getVendorBestSellersBySlug(
     return {
       success: true,
       urls:
-        userSettings?.BestSellerImage.map(bestSeller => bestSeller.url) || [],
+        userSettings?.BestSellerImage.map(item => ({
+          url: item.url,
+          productName: item.productName,
+        })) || [],
     };
   } catch (error) {
-    console.error("Error getting vendor best seller images:", error);
+    console.error("Error getting vendor best sellers:", error);
     return {
       success: false,
       error:

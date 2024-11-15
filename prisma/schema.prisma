@@ -284,9 +284,10 @@ model BannerImage {
 model BestSellerImage {
   id             String       @id @default(cuid())
   url            String
+  productName    String // Added this field
   userSettings   UserSettings @relation(fields: [userSettingsId], references: [id], onDelete: Cascade)
   userSettingsId String
-  order          Int          @default(0) // For maintaining image order
+  order          Int          @default(0)
 
   @@map("best_seller_images")
 }

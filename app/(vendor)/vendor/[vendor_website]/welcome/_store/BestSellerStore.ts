@@ -6,8 +6,13 @@ import {
   getVendorBestSellersBySlug,
 } from "../_actions/best_seller-actions";
 
+interface BestSellerItem {
+  url: string;
+  productName: string;
+}
+
 interface BestSellerStore {
-  bestSellers: string[];
+  bestSellers: BestSellerItem[];
   isLoading: boolean;
   error: string | null;
   uploadBestSeller: (formData: FormData) => Promise<void>;

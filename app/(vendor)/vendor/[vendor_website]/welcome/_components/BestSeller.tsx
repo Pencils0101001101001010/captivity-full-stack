@@ -1,14 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Trash2, Plus } from "lucide-react";
 import { RiStarSFill } from "react-icons/ri";
 import { useBestSellerStore } from "../_store/BestSellerStore";
 import { useParams } from "next/navigation";
 import { useSession } from "@/app/(vendor)/SessionProvider";
-
-const MAX_BESTSELLERS = 4;
 
 export default function BestSeller() {
   const fileInputRefs = [
@@ -17,6 +15,8 @@ export default function BestSeller() {
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
   ];
+
+  const [productNames, setProductNames] = useState<string[]>(["", "", "", ""]);
 
   const { user } = useSession();
   const params = useParams();
@@ -62,18 +62,34 @@ export default function BestSeller() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (bestSellers.length >= MAX_BESTSELLERS) {
-      alert(`Maximum ${MAX_BESTSELLERS} best seller images allowed`);
+    if (bestSellers.length >= 4) {
+      alert("Maximum 4 best seller images allowed");
+      return;
+    }
+
+    const productName = productNames[index].trim();
+    if (!productName) {
+      alert("Please enter a product name first");
       return;
     }
 
     const formData = new FormData();
     formData.append("bestSeller", file);
+    formData.append("productName", productName);
     await uploadBestSeller(formData);
 
     if (fileInputRefs[index].current) {
       fileInputRefs[index].current.value = "";
     }
+
+    // Reset the product name for this slot
+    handleProductNameChange(index, "");
+  };
+
+  const handleProductNameChange = (index: number, name: string) => {
+    const newNames = [...productNames];
+    newNames[index] = name;
+    setProductNames(newNames);
   };
 
   const handleRemoveBestSeller = async (url: string) => {
@@ -86,6 +102,12 @@ export default function BestSeller() {
     }
   };
 
+  const handleUploadClick = (index: number) => {
+    if (fileInputRefs[index].current && productNames[index].trim()) {
+      fileInputRefs[index].current.click();
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="w-full flex items-center justify-center py-12">
@@ -95,41 +117,89 @@ export default function BestSeller() {
   }
 
   const renderBlock = (index: number) => {
-    const imageUrl = bestSellers[index];
-    const isEmpty = !imageUrl;
+    const bestSeller = bestSellers[index];
+    const isEmpty = !bestSeller;
 
     return (
-      <div className="py-3">
+      <div key={index} className="py-3">
         <div className="card card-compact rounded-md object-cover w-90 relative group">
           {isEmpty && isVendor ? (
-            <div className="aspect-square relative flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300 rounded-t-md">
-              <input
-                type="file"
-                ref={fileInputRefs[index]}
-                onChange={e => handleFileSelect(e, index)}
-                accept="image/*"
-                className="absolute inset-0 opacity-0 cursor-pointer z-10"
-              />
-              <div className="flex flex-col items-center gap-2">
-                <div className="p-2 rounded-full bg-gray-100">
-                  <Plus size={20} className="text-gray-500" />
+            <>
+              <div
+                className="aspect-square relative flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300 rounded-t-md cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => handleUploadClick(index)}
+              >
+                <input
+                  type="file"
+                  ref={fileInputRefs[index]}
+                  onChange={e => handleFileSelect(e, index)}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <div className="flex flex-col items-center gap-3 px-4">
+                  <div className="p-2 rounded-full bg-gray-100">
+                    <Plus
+                      size={20}
+                      className={`${productNames[index].trim() ? "text-gray-500" : "text-gray-300"}`}
+                    />
+                  </div>
+                  <div className="flex flex-col items-center text-center">
+                    <p className="text-xs text-gray-500 font-medium mb-1">
+                      Best seller slot ({index + 1}/4)
+                    </p>
+                    <p className="text-[11px] text-gray-400">
+                      {productNames[index].trim()
+                        ? "Click to upload image (300 x 300px)"
+                        : "⚠️ Enter product name below first"}
+                    </p>
+                    <p className="text-[10px] text-gray-400 mt-1">
+                      Image Dimensions: 300 x 300
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-500">Upload best seller</p>
               </div>
-            </div>
+              <div className="card-body bg-gray-300 rounded-b p-4">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Enter product name*"
+                    value={productNames[index]}
+                    onChange={e =>
+                      handleProductNameChange(index, e.target.value)
+                    }
+                    className="w-full p-2 mb-2 rounded border border-gray-400 text-center text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                  {!productNames[index].trim() && (
+                    <div className="absolute -top-2 right-2 transform translate-y-[-50%]">
+                      <span className="text-[10px] text-red-500 bg-white px-1">
+                        Required
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="rating flex justify-center">
+                  {[...Array(5)].map((_, i) => (
+                    <RiStarSFill
+                      key={i}
+                      className="my-3 text-yellow-400 text-2xl"
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
           ) : (
-            <figure className="aspect-square relative">
-              {imageUrl && (
-                <>
+            bestSeller && (
+              <>
+                <figure className="aspect-square relative">
                   <Image
-                    src={imageUrl}
-                    alt={`Best Seller ${index + 1}`}
+                    src={bestSeller.url}
+                    alt={bestSeller.productName}
                     fill
                     className="object-cover rounded-t-md"
                   />
                   {isVendor && (
                     <button
-                      onClick={() => handleRemoveBestSeller(imageUrl)}
+                      onClick={() => handleRemoveBestSeller(bestSeller.url)}
                       className="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full 
                                opacity-0 group-hover:opacity-100 transition-opacity
                                hover:bg-white hover:text-red-500 z-10"
@@ -137,20 +207,23 @@ export default function BestSeller() {
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}
-                </>
-              )}
-            </figure>
+                </figure>
+                <div className="card-body bg-gray-300 rounded-b p-4">
+                  <h2 className="text-center font-semibold text-gray-800 mb-2">
+                    {bestSeller.productName}
+                  </h2>
+                  <div className="rating flex justify-center">
+                    {[...Array(5)].map((_, i) => (
+                      <RiStarSFill
+                        key={i}
+                        className="my-3 text-yellow-400 text-2xl"
+                      />
+                    ))}
+                  </div>
+                </div>
+              </>
+            )
           )}
-          <div className="card-body bg-gray-300 rounded-b hover:shadow-lg">
-            <div className="rating flex justify-center">
-              {[...Array(5)].map((_, i) => (
-                <RiStarSFill
-                  key={i}
-                  className="my-3 text-yellow-400 text-2xl"
-                />
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     );
