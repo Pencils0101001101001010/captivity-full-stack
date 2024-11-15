@@ -136,13 +136,21 @@ export default function CarouselPlugin() {
                     accept="image/*"
                     className="absolute inset-0 opacity-0 cursor-pointer z-10"
                   />
-                  <div className="flex flex-col items-center gap-2">
+                  <div className="flex flex-col items-center gap-3">
                     <div className="p-2 rounded-full bg-gray-100">
                       <Plus size={20} className="text-gray-500" />
                     </div>
-                    <p className="text-xs text-gray-500">
-                      Click to upload banner ({banners.length}/{MAX_BANNERS})
-                    </p>
+                    <div className="flex flex-col items-center text-center">
+                      <p className="text-xs text-gray-500 mb-1">
+                        Click to upload banner ({banners.length}/{MAX_BANNERS})
+                      </p>
+                      <p className="text-[11px] text-gray-400 font-medium">
+                        Recommended dimensions:
+                      </p>
+                      <p className="text-[11px] text-gray-400">
+                        1903 x 438 pixels
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
