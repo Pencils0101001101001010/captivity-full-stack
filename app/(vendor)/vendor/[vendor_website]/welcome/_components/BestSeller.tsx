@@ -232,13 +232,13 @@ export default function BestSeller() {
   return (
     <div className="mx-auto max-w-6xl">
       <section className="max-container max-sm:mt-12">
-        <div className="flex flex-col justify-center gap-2">
+        <div className="flex flex-col justify-center gap-2 mb-1">
           <h2 className="text-3xl sm:text-2xl md:text-2xl lg:text-3xl flex items-center justify-center text-red-600 font-semibold">
             BEST SELLERS
           </h2>
         </div>
 
-        <div className="lg:ml-11 lg:mr-12 p-12 mb-10 lg:mt-0 grid xl:grid-cols-4 lg:grid-cols-4 md:grid-cols-4 sm:grid-cols-1 grid-cols-2 sm:gap-4 gap-2 justify-center items-center">
+        <div className="lg:ml-11 lg:mr-12 px-12 mb-4 grid xl:grid-cols-4 lg:grid-cols-4 md:grid-cols-4 sm:grid-cols-1 grid-cols-2 sm:gap-4 gap-2 justify-center items-center">
           {[0, 1, 2, 3].map(index => renderBlock(index))}
         </div>
 
