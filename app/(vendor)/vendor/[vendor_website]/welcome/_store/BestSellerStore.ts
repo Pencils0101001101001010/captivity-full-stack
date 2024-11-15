@@ -1,32 +1,37 @@
 import { create } from "zustand";
 import {
-  uploadBanner,
-  removeBanner,
-  getBanners,
-  getVendorBannersBySlug,
-} from "../_actions/banner-actions";
+  uploadBestSeller,
+  removeBestSeller,
+  getBestSellers,
+  getVendorBestSellersBySlug,
+} from "../_actions/best_seller-actions";
 
-interface BannerStore {
-  banners: string[];
-  isLoading: boolean;
-  error: string | null;
-  uploadBanner: (formData: FormData) => Promise<void>;
-  removeBanner: (url: string) => Promise<void>;
-  fetchBanners: () => Promise<void>;
-  fetchVendorBanners: (storeSlug: string) => Promise<void>;
+interface BestSellerItem {
+  url: string;
+  productName: string;
 }
 
-export const useBannerStore = create<BannerStore>(set => ({
-  banners: [],
+interface BestSellerStore {
+  bestSellers: BestSellerItem[];
+  isLoading: boolean;
+  error: string | null;
+  uploadBestSeller: (formData: FormData) => Promise<void>;
+  removeBestSeller: (url: string) => Promise<void>;
+  fetchBestSellers: () => Promise<void>;
+  fetchVendorBestSellers: (storeSlug: string) => Promise<void>;
+}
+
+export const useBestSellerStore = create<BestSellerStore>(set => ({
+  bestSellers: [],
   isLoading: false,
   error: null,
 
-  uploadBanner: async (formData: FormData) => {
+  uploadBestSeller: async (formData: FormData) => {
     set({ isLoading: true, error: null });
     try {
-      const result = await uploadBanner(formData);
+      const result = await uploadBestSeller(formData);
       if (!result.success) throw new Error(result.error);
-      set({ banners: result.urls || [] });
+      set({ bestSellers: result.urls || [] });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : "Upload failed" });
     } finally {
@@ -34,12 +39,12 @@ export const useBannerStore = create<BannerStore>(set => ({
     }
   },
 
-  removeBanner: async (url: string) => {
+  removeBestSeller: async (url: string) => {
     set({ isLoading: true, error: null });
     try {
-      const result = await removeBanner(url);
+      const result = await removeBestSeller(url);
       if (!result.success) throw new Error(result.error);
-      set({ banners: result.urls || [] });
+      set({ bestSellers: result.urls || [] });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : "Removal failed" });
     } finally {
@@ -47,12 +52,12 @@ export const useBannerStore = create<BannerStore>(set => ({
     }
   },
 
-  fetchBanners: async () => {
+  fetchBestSellers: async () => {
     set({ isLoading: true, error: null });
     try {
-      const result = await getBanners();
+      const result = await getBestSellers();
       if (!result.success) throw new Error(result.error);
-      set({ banners: result.urls || [] });
+      set({ bestSellers: result.urls || [] });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : "Fetch failed" });
     } finally {
@@ -60,12 +65,12 @@ export const useBannerStore = create<BannerStore>(set => ({
     }
   },
 
-  fetchVendorBanners: async (storeSlug: string) => {
+  fetchVendorBestSellers: async (storeSlug: string) => {
     set({ isLoading: true, error: null });
     try {
-      const result = await getVendorBannersBySlug(storeSlug);
+      const result = await getVendorBestSellersBySlug(storeSlug);
       if (!result.success) throw new Error(result.error);
-      set({ banners: result.urls || [] });
+      set({ bestSellers: result.urls || [] });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : "Fetch failed" });
     } finally {

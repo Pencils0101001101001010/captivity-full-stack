@@ -1,32 +1,37 @@
 import { create } from "zustand";
 import {
-  uploadBanner,
-  removeBanner,
-  getBanners,
-  getVendorBannersBySlug,
-} from "../_actions/banner-actions";
+  uploadCategory,
+  removeCategory,
+  getCategories,
+  getVendorCategoriesBySlug,
+} from "../_actions/category-actions";
 
-interface BannerStore {
-  banners: string[];
-  isLoading: boolean;
-  error: string | null;
-  uploadBanner: (formData: FormData) => Promise<void>;
-  removeBanner: (url: string) => Promise<void>;
-  fetchBanners: () => Promise<void>;
-  fetchVendorBanners: (storeSlug: string) => Promise<void>;
+interface CategoryItem {
+  url: string;
+  categoryName: string;
 }
 
-export const useBannerStore = create<BannerStore>(set => ({
-  banners: [],
+interface CategoryStore {
+  categories: CategoryItem[];
+  isLoading: boolean;
+  error: string | null;
+  uploadCategory: (formData: FormData) => Promise<void>;
+  removeCategory: (url: string) => Promise<void>;
+  fetchCategories: () => Promise<void>;
+  fetchVendorCategories: (storeSlug: string) => Promise<void>;
+}
+
+export const useCategoryStore = create<CategoryStore>(set => ({
+  categories: [],
   isLoading: false,
   error: null,
 
-  uploadBanner: async (formData: FormData) => {
+  uploadCategory: async (formData: FormData) => {
     set({ isLoading: true, error: null });
     try {
-      const result = await uploadBanner(formData);
+      const result = await uploadCategory(formData);
       if (!result.success) throw new Error(result.error);
-      set({ banners: result.urls || [] });
+      set({ categories: result.categories || [] });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : "Upload failed" });
     } finally {
@@ -34,12 +39,12 @@ export const useBannerStore = create<BannerStore>(set => ({
     }
   },
 
-  removeBanner: async (url: string) => {
+  removeCategory: async (url: string) => {
     set({ isLoading: true, error: null });
     try {
-      const result = await removeBanner(url);
+      const result = await removeCategory(url);
       if (!result.success) throw new Error(result.error);
-      set({ banners: result.urls || [] });
+      set({ categories: result.categories || [] });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : "Removal failed" });
     } finally {
@@ -47,12 +52,12 @@ export const useBannerStore = create<BannerStore>(set => ({
     }
   },
 
-  fetchBanners: async () => {
+  fetchCategories: async () => {
     set({ isLoading: true, error: null });
     try {
-      const result = await getBanners();
+      const result = await getCategories();
       if (!result.success) throw new Error(result.error);
-      set({ banners: result.urls || [] });
+      set({ categories: result.categories || [] });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : "Fetch failed" });
     } finally {
@@ -60,12 +65,12 @@ export const useBannerStore = create<BannerStore>(set => ({
     }
   },
 
-  fetchVendorBanners: async (storeSlug: string) => {
+  fetchVendorCategories: async (storeSlug: string) => {
     set({ isLoading: true, error: null });
     try {
-      const result = await getVendorBannersBySlug(storeSlug);
+      const result = await getVendorCategoriesBySlug(storeSlug);
       if (!result.success) throw new Error(result.error);
-      set({ banners: result.urls || [] });
+      set({ categories: result.categories || [] });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : "Fetch failed" });
     } finally {
