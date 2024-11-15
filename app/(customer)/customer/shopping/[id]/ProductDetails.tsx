@@ -14,7 +14,7 @@ import AddToCartButton from "./AddToCartButton";
 import Link from "next/link";
 import ViewMore from "@/app/(customer)/_components/ViewMore";
 import { useColorStore } from "../../_store/useColorStore";
-import ColorPicker from "../product_categories/_components/ColorPicker";
+import ColorPicker from "./DetailPageColorPicker";
 
 // Helper function to transform product data for ProductImage component
 const transformProductForImage = (
