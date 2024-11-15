@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { COLOR_MAPPINGS } from "../product_categories/_components/ColorMapping";
 
+
 interface ColorValue {
   colors: string[];
   pattern: string;
@@ -123,8 +124,8 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
   };
 
   const getColorDisplayName = (colorName: string | null): string => {
-    if (!colorName) return "Filter by color";
-    return `Filter by color: ${formatColorName(colorName)}`;
+    if (!colorName) return "Select color";
+    return `Selected: ${formatColorName(colorName)}`;
   };
 
   // Sort colors to put multi-colored options at the end
