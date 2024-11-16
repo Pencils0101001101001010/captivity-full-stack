@@ -3,6 +3,8 @@
 import { put, del } from "@vercel/blob";
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/auth";
+import { revalidatePath } from "next/cache";
+import { cache } from "react";
 
 interface BestSellerActionResult {
   success: boolean;
@@ -10,6 +12,34 @@ interface BestSellerActionResult {
   url?: string;
   error?: string;
 }
+
+// Cache frequently used queries
+const getCachedUserSettings = cache(async (userId: string) => {
+  return prisma.userSettings.findUnique({
+    where: { userId },
+    include: {
+      BestSellerImage: {
+        orderBy: { order: "asc" },
+      },
+    },
+  });
+});
+
+const getCachedVendorSettings = cache(async (storeSlug: string) => {
+  return prisma.userSettings.findFirst({
+    where: {
+      user: {
+        storeSlug: storeSlug,
+        role: "VENDOR",
+      },
+    },
+    include: {
+      BestSellerImage: {
+        orderBy: { order: "asc" },
+      },
+    },
+  });
+});
 
 export async function uploadBestSeller(
   formData: FormData
@@ -30,13 +60,8 @@ export async function uploadBestSeller(
     if (file.size > 5 * 1024 * 1024)
       throw new Error("File size must be less than 5MB");
 
-    const bestSellerCount = await prisma.bestSellerImage.count({
-      where: {
-        userSettings: {
-          userId: user.id,
-        },
-      },
-    });
+    const userSettings = await getCachedUserSettings(user.id);
+    const bestSellerCount = userSettings?.BestSellerImage.length || 0;
 
     if (bestSellerCount >= 4) {
       throw new Error("Maximum of 4 best seller images allowed");
@@ -53,36 +78,40 @@ export async function uploadBestSeller(
 
     if (!blob.url) throw new Error("Failed to get URL from blob storage");
 
-    const userSettings = await prisma.userSettings.upsert({
+    const updatedSettings = await prisma.userSettings.upsert({
       where: { userId: user.id },
-      update: {},
-      create: { userId: user.id },
-    });
-
-    await prisma.bestSellerImage.create({
-      data: {
-        url: blob.url,
-        productName,
-        userSettingsId: userSettings.id,
-        order: bestSellerCount,
-      },
-    });
-
-    const allBestSellers = await prisma.bestSellerImage.findMany({
-      where: {
-        userSettings: {
-          userId: user.id,
+      update: {
+        BestSellerImage: {
+          create: {
+            url: blob.url,
+            productName,
+            order: bestSellerCount,
+          },
         },
       },
-      orderBy: {
-        order: "asc",
+      create: {
+        userId: user.id,
+        BestSellerImage: {
+          create: {
+            url: blob.url,
+            productName,
+            order: 0,
+          },
+        },
+      },
+      include: {
+        BestSellerImage: {
+          orderBy: { order: "asc" },
+        },
       },
     });
+
+    revalidatePath("/vendor/[vendor_website]/welcome");
 
     return {
       success: true,
       url: blob.url,
-      urls: allBestSellers.map(item => ({
+      urls: updatedSettings.BestSellerImage.map(item => ({
         url: item.url,
         productName: item.productName,
       })),
@@ -122,30 +151,30 @@ export async function removeBestSeller(
     const path = new URL(url).pathname.slice(1);
     await del(path);
 
-    await prisma.bestSellerImage.delete({
-      where: { id: bestSeller.id },
-    });
-
-    const remainingBestSellers = await prisma.bestSellerImage.findMany({
-      where: {
-        userSettings: {
-          userId: user.id,
+    // Combine delete and reorder in a single transaction
+    const { BestSellerImage } = await prisma.userSettings.update({
+      where: { userId: user.id },
+      data: {
+        BestSellerImage: {
+          delete: { id: bestSeller.id },
+          updateMany: {
+            where: { order: { gt: bestSeller.order } },
+            data: { order: { decrement: 1 } },
+          },
         },
       },
-      orderBy: { order: "asc" },
+      include: {
+        BestSellerImage: {
+          orderBy: { order: "asc" },
+        },
+      },
     });
 
-    // Reorder remaining images
-    for (let i = 0; i < remainingBestSellers.length; i++) {
-      await prisma.bestSellerImage.update({
-        where: { id: remainingBestSellers[i].id },
-        data: { order: i },
-      });
-    }
+    revalidatePath("/vendor/[vendor_website]/welcome");
 
     return {
       success: true,
-      urls: remainingBestSellers.map(item => ({
+      urls: BestSellerImage.map(item => ({
         url: item.url,
         productName: item.productName,
       })),
@@ -160,21 +189,74 @@ export async function removeBestSeller(
   }
 }
 
-export async function getBestSellers(): Promise<BestSellerActionResult> {
-  try {
-    const { user } = await validateRequest();
-    if (!user) return { success: false, error: "Unauthorized access" };
+export const getBestSellers = cache(
+  async (): Promise<BestSellerActionResult> => {
+    try {
+      const { user } = await validateRequest();
+      if (!user) return { success: false, error: "Unauthorized access" };
 
-    if (user.role === "VENDOR") {
-      const userSettings = await prisma.userSettings.findUnique({
-        where: { userId: user.id },
-        include: {
-          BestSellerImage: {
-            orderBy: { order: "asc" },
+      if (user.role === "VENDOR") {
+        const userSettings = await getCachedUserSettings(user.id);
+        return {
+          success: true,
+          urls:
+            userSettings?.BestSellerImage.map(item => ({
+              url: item.url,
+              productName: item.productName,
+            })) || [],
+        };
+      }
+
+      if (user.role === "VENDORCUSTOMER") {
+        const currentUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { companyName: true },
+        });
+
+        if (!currentUser) return { success: false, error: "User not found" };
+
+        const userSettings = await prisma.userSettings.findFirst({
+          where: {
+            user: {
+              role: "VENDOR",
+              storeName: currentUser.companyName,
+            },
           },
-        },
-      });
+          include: {
+            BestSellerImage: {
+              orderBy: { order: "asc" },
+            },
+          },
+        });
 
+        return {
+          success: true,
+          urls:
+            userSettings?.BestSellerImage.map(item => ({
+              url: item.url,
+              productName: item.productName,
+            })) || [],
+        };
+      }
+
+      return { success: true, urls: [] };
+    } catch (error) {
+      console.error("Error getting best sellers:", error);
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred",
+      };
+    }
+  }
+);
+
+export const getVendorBestSellersBySlug = cache(
+  async (storeSlug: string): Promise<BestSellerActionResult> => {
+    try {
+      const userSettings = await getCachedVendorSettings(storeSlug);
       return {
         success: true,
         urls:
@@ -183,83 +265,15 @@ export async function getBestSellers(): Promise<BestSellerActionResult> {
             productName: item.productName,
           })) || [],
       };
-    }
-
-    if (user.role === "VENDORCUSTOMER") {
-      const currentUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { companyName: true },
-      });
-
-      if (!currentUser) return { success: false, error: "User not found" };
-
-      const userSettings = await prisma.userSettings.findFirst({
-        where: {
-          user: {
-            role: "VENDOR",
-            storeName: currentUser.companyName,
-          },
-        },
-        include: {
-          BestSellerImage: {
-            orderBy: { order: "asc" },
-          },
-        },
-      });
-
+    } catch (error) {
+      console.error("Error getting vendor best sellers:", error);
       return {
-        success: true,
-        urls:
-          userSettings?.BestSellerImage.map(item => ({
-            url: item.url,
-            productName: item.productName,
-          })) || [],
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred",
       };
     }
-
-    return { success: true, urls: [] };
-  } catch (error) {
-    console.error("Error getting best sellers:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
   }
-}
-
-export async function getVendorBestSellersBySlug(
-  storeSlug: string
-): Promise<BestSellerActionResult> {
-  try {
-    const userSettings = await prisma.userSettings.findFirst({
-      where: {
-        user: {
-          storeSlug: storeSlug,
-          role: "VENDOR",
-        },
-      },
-      include: {
-        BestSellerImage: {
-          orderBy: { order: "asc" },
-        },
-      },
-    });
-
-    return {
-      success: true,
-      urls:
-        userSettings?.BestSellerImage.map(item => ({
-          url: item.url,
-          productName: item.productName,
-        })) || [],
-    };
-  } catch (error) {
-    console.error("Error getting vendor best sellers:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
-  }
-}
+);

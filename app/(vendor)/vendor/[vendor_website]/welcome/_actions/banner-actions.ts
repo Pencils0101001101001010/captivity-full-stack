@@ -3,6 +3,8 @@
 import { put, del } from "@vercel/blob";
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/auth";
+import { revalidatePath } from "next/cache";
+import { cache } from "react";
 
 interface BannerActionResult {
   success: boolean;
@@ -10,6 +12,34 @@ interface BannerActionResult {
   url?: string;
   error?: string;
 }
+
+// Cache the fetch functions
+const getCachedUserSettings = cache(async (userId: string) => {
+  return prisma.userSettings.findUnique({
+    where: { userId },
+    include: {
+      BannerImage: {
+        orderBy: { order: "asc" },
+      },
+    },
+  });
+});
+
+const getCachedVendorSettings = cache(async (storeSlug: string) => {
+  return prisma.userSettings.findFirst({
+    where: {
+      user: {
+        storeSlug: storeSlug,
+        role: "VENDOR",
+      },
+    },
+    include: {
+      BannerImage: {
+        orderBy: { order: "asc" },
+      },
+    },
+  });
+});
 
 export async function uploadBanner(
   formData: FormData
@@ -27,13 +57,8 @@ export async function uploadBanner(
     if (file.size > 5 * 1024 * 1024)
       throw new Error("File size must be less than 5MB");
 
-    const bannerCount = await prisma.bannerImage.count({
-      where: {
-        userSettings: {
-          userId: user.id,
-        },
-      },
-    });
+    const userSettings = await getCachedUserSettings(user.id);
+    const bannerCount = userSettings?.BannerImage.length || 0;
 
     if (bannerCount >= 5) {
       throw new Error("Maximum of 5 banner images allowed");
@@ -50,35 +75,38 @@ export async function uploadBanner(
 
     if (!blob.url) throw new Error("Failed to get URL from blob storage");
 
-    const userSettings = await prisma.userSettings.upsert({
+    const updatedSettings = await prisma.userSettings.upsert({
       where: { userId: user.id },
-      update: {},
-      create: { userId: user.id },
-    });
-
-    await prisma.bannerImage.create({
-      data: {
-        url: blob.url,
-        userSettingsId: userSettings.id,
-        order: bannerCount,
-      },
-    });
-
-    const allBanners = await prisma.bannerImage.findMany({
-      where: {
-        userSettings: {
-          userId: user.id,
+      update: {
+        BannerImage: {
+          create: {
+            url: blob.url,
+            order: bannerCount,
+          },
         },
       },
-      orderBy: {
-        order: "asc",
+      create: {
+        userId: user.id,
+        BannerImage: {
+          create: {
+            url: blob.url,
+            order: 0,
+          },
+        },
+      },
+      include: {
+        BannerImage: {
+          orderBy: { order: "asc" },
+        },
       },
     });
+
+    revalidatePath("/vendor/[vendor_website]/welcome");
 
     return {
       success: true,
       url: blob.url,
-      urls: allBanners.map(banner => banner.url),
+      urls: updatedSettings.BannerImage.map(banner => banner.url),
     };
   } catch (error) {
     console.error("Error uploading banner:", error);
@@ -113,29 +141,29 @@ export async function removeBanner(url: string): Promise<BannerActionResult> {
     const path = new URL(url).pathname.slice(1);
     await del(path);
 
-    await prisma.bannerImage.delete({
-      where: { id: banner.id },
-    });
-
-    const remainingBanners = await prisma.bannerImage.findMany({
-      where: {
-        userSettings: {
-          userId: user.id,
+    const { BannerImage } = await prisma.userSettings.update({
+      where: { userId: user.id },
+      data: {
+        BannerImage: {
+          delete: { id: banner.id },
+          updateMany: {
+            where: { order: { gt: banner.order } },
+            data: { order: { decrement: 1 } },
+          },
         },
       },
-      orderBy: { order: "asc" },
+      include: {
+        BannerImage: {
+          orderBy: { order: "asc" },
+        },
+      },
     });
 
-    for (let i = 0; i < remainingBanners.length; i++) {
-      await prisma.bannerImage.update({
-        where: { id: remainingBanners[i].id },
-        data: { order: i },
-      });
-    }
+    revalidatePath("/vendor/[vendor_website]/welcome");
 
     return {
       success: true,
-      urls: remainingBanners.map(banner => banner.url),
+      urls: BannerImage.map(banner => banner.url),
     };
   } catch (error) {
     console.error("Error removing banner:", error);
@@ -147,21 +175,13 @@ export async function removeBanner(url: string): Promise<BannerActionResult> {
   }
 }
 
-export async function getBanners(): Promise<BannerActionResult> {
+export const getBanners = cache(async (): Promise<BannerActionResult> => {
   try {
     const { user } = await validateRequest();
     if (!user) return { success: false, error: "Unauthorized access" };
 
     if (user.role === "VENDOR") {
-      const userSettings = await prisma.userSettings.findUnique({
-        where: { userId: user.id },
-        include: {
-          BannerImage: {
-            orderBy: { order: "asc" },
-          },
-        },
-      });
-
+      const userSettings = await getCachedUserSettings(user.id);
       return {
         success: true,
         urls: userSettings?.BannerImage.map(banner => banner.url) || [],
@@ -205,36 +225,25 @@ export async function getBanners(): Promise<BannerActionResult> {
         error instanceof Error ? error.message : "An unexpected error occurred",
     };
   }
-}
+});
 
-export async function getVendorBannersBySlug(
-  storeSlug: string
-): Promise<BannerActionResult> {
-  try {
-    const userSettings = await prisma.userSettings.findFirst({
-      where: {
-        user: {
-          storeSlug: storeSlug,
-          role: "VENDOR",
-        },
-      },
-      include: {
-        BannerImage: {
-          orderBy: { order: "asc" },
-        },
-      },
-    });
-
-    return {
-      success: true,
-      urls: userSettings?.BannerImage.map(banner => banner.url) || [],
-    };
-  } catch (error) {
-    console.error("Error getting vendor banners:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
+export const getVendorBannersBySlug = cache(
+  async (storeSlug: string): Promise<BannerActionResult> => {
+    try {
+      const userSettings = await getCachedVendorSettings(storeSlug);
+      return {
+        success: true,
+        urls: userSettings?.BannerImage.map(banner => banner.url) || [],
+      };
+    } catch (error) {
+      console.error("Error getting vendor banners:", error);
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred",
+      };
+    }
   }
-}
+);

@@ -3,6 +3,8 @@
 import { put, del } from "@vercel/blob";
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/auth";
+import { revalidatePath } from "next/cache";
+import { cache } from "react";
 
 interface CategoryActionResult {
   success: boolean;
@@ -10,6 +12,34 @@ interface CategoryActionResult {
   url?: string;
   error?: string;
 }
+
+// Cache frequently used queries
+const getCachedUserSettings = cache(async (userId: string) => {
+  return prisma.userSettings.findUnique({
+    where: { userId },
+    include: {
+      CategoryImage: {
+        orderBy: { order: "asc" },
+      },
+    },
+  });
+});
+
+const getCachedVendorSettings = cache(async (storeSlug: string) => {
+  return prisma.userSettings.findFirst({
+    where: {
+      user: {
+        storeSlug: storeSlug,
+        role: "VENDOR",
+      },
+    },
+    include: {
+      CategoryImage: {
+        orderBy: { order: "asc" },
+      },
+    },
+  });
+});
 
 export async function uploadCategory(
   formData: FormData
@@ -30,13 +60,8 @@ export async function uploadCategory(
     if (file.size > 5 * 1024 * 1024)
       throw new Error("File size must be less than 5MB");
 
-    const categoryCount = await prisma.categoryImage.count({
-      where: {
-        userSettings: {
-          userId: user.id,
-        },
-      },
-    });
+    const userSettings = await getCachedUserSettings(user.id);
+    const categoryCount = userSettings?.CategoryImage.length || 0;
 
     if (categoryCount >= 8) {
       throw new Error("Maximum of 8 category images allowed");
@@ -53,36 +78,40 @@ export async function uploadCategory(
 
     if (!blob.url) throw new Error("Failed to get URL from blob storage");
 
-    const userSettings = await prisma.userSettings.upsert({
+    const updatedSettings = await prisma.userSettings.upsert({
       where: { userId: user.id },
-      update: {},
-      create: { userId: user.id },
-    });
-
-    await prisma.categoryImage.create({
-      data: {
-        url: blob.url,
-        categoryName,
-        userSettingsId: userSettings.id,
-        order: categoryCount,
-      },
-    });
-
-    const allCategories = await prisma.categoryImage.findMany({
-      where: {
-        userSettings: {
-          userId: user.id,
+      update: {
+        CategoryImage: {
+          create: {
+            url: blob.url,
+            categoryName,
+            order: categoryCount,
+          },
         },
       },
-      orderBy: {
-        order: "asc",
+      create: {
+        userId: user.id,
+        CategoryImage: {
+          create: {
+            url: blob.url,
+            categoryName,
+            order: 0,
+          },
+        },
+      },
+      include: {
+        CategoryImage: {
+          orderBy: { order: "asc" },
+        },
       },
     });
+
+    revalidatePath("/vendor/[vendor_website]/welcome");
 
     return {
       success: true,
       url: blob.url,
-      categories: allCategories.map(item => ({
+      categories: updatedSettings.CategoryImage.map(item => ({
         url: item.url,
         categoryName: item.categoryName,
       })),
@@ -122,29 +151,29 @@ export async function removeCategory(
     const path = new URL(url).pathname.slice(1);
     await del(path);
 
-    await prisma.categoryImage.delete({
-      where: { id: category.id },
-    });
-
-    const remainingCategories = await prisma.categoryImage.findMany({
-      where: {
-        userSettings: {
-          userId: user.id,
+    const { CategoryImage } = await prisma.userSettings.update({
+      where: { userId: user.id },
+      data: {
+        CategoryImage: {
+          delete: { id: category.id },
+          updateMany: {
+            where: { order: { gt: category.order } },
+            data: { order: { decrement: 1 } },
+          },
         },
       },
-      orderBy: { order: "asc" },
+      include: {
+        CategoryImage: {
+          orderBy: { order: "asc" },
+        },
+      },
     });
 
-    for (let i = 0; i < remainingCategories.length; i++) {
-      await prisma.categoryImage.update({
-        where: { id: remainingCategories[i].id },
-        data: { order: i },
-      });
-    }
+    revalidatePath("/vendor/[vendor_website]/welcome");
 
     return {
       success: true,
-      categories: remainingCategories.map(item => ({
+      categories: CategoryImage.map(item => ({
         url: item.url,
         categoryName: item.categoryName,
       })),
@@ -159,21 +188,13 @@ export async function removeCategory(
   }
 }
 
-export async function getCategories(): Promise<CategoryActionResult> {
+export const getCategories = cache(async (): Promise<CategoryActionResult> => {
   try {
     const { user } = await validateRequest();
     if (!user) return { success: false, error: "Unauthorized access" };
 
     if (user.role === "VENDOR") {
-      const userSettings = await prisma.userSettings.findUnique({
-        where: { userId: user.id },
-        include: {
-          CategoryImage: {
-            orderBy: { order: "asc" },
-          },
-        },
-      });
-
+      const userSettings = await getCachedUserSettings(user.id);
       return {
         success: true,
         categories:
@@ -225,40 +246,29 @@ export async function getCategories(): Promise<CategoryActionResult> {
         error instanceof Error ? error.message : "An unexpected error occurred",
     };
   }
-}
+});
 
-export async function getVendorCategoriesBySlug(
-  storeSlug: string
-): Promise<CategoryActionResult> {
-  try {
-    const userSettings = await prisma.userSettings.findFirst({
-      where: {
-        user: {
-          storeSlug: storeSlug,
-          role: "VENDOR",
-        },
-      },
-      include: {
-        CategoryImage: {
-          orderBy: { order: "asc" },
-        },
-      },
-    });
-
-    return {
-      success: true,
-      categories:
-        userSettings?.CategoryImage.map(item => ({
-          url: item.url,
-          categoryName: item.categoryName,
-        })) || [],
-    };
-  } catch (error) {
-    console.error("Error getting vendor categories:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
+export const getVendorCategoriesBySlug = cache(
+  async (storeSlug: string): Promise<CategoryActionResult> => {
+    try {
+      const userSettings = await getCachedVendorSettings(storeSlug);
+      return {
+        success: true,
+        categories:
+          userSettings?.CategoryImage.map(item => ({
+            url: item.url,
+            categoryName: item.categoryName,
+          })) || [],
+      };
+    } catch (error) {
+      console.error("Error getting vendor categories:", error);
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred",
+      };
+    }
   }
-}
+);
