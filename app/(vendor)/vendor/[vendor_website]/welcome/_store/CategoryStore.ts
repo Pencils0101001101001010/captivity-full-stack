@@ -143,8 +143,3 @@ export const useCategoryData = () =>
 export const useCategoryLoading = () =>
   useCategoryStore(state => state.isLoading);
 export const useCategoryError = () => useCategoryStore(state => state.error);
-
-// Example usage in component:
-// const categories = useCategoryData();
-// const isLoading = useCategoryLoading();
-// const error = useCategoryError();

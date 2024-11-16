@@ -5,8 +5,8 @@ import { validateRequest } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { cache } from "react";
 import { Prisma } from "@prisma/client";
+import { put } from "@vercel/blob";
 
-// Types
 interface OfficeHours {
   mondayToThursday: string;
   friday: string;
@@ -19,6 +19,7 @@ interface OfficeData {
   telephone: string;
   general?: string;
   websiteQueries?: string;
+  logo?: File;
   openingHours: {
     mondayToThursday: string;
     friday: string;
@@ -31,6 +32,9 @@ interface Office {
   id: string;
   city: string;
   telephone: string;
+  general: string;
+  websiteQueries: string;
+  logoUrl?: string;
   openingHours: OfficeHours | null;
 }
 
@@ -53,7 +57,6 @@ interface OfficeActionResult {
   error?: string;
 }
 
-// Cached queries
 const getCachedUserSettings = cache(async (userId: string) => {
   return prisma.userSettings.findUnique({
     where: { userId },
@@ -67,40 +70,33 @@ const getCachedUserSettings = cache(async (userId: string) => {
   });
 });
 
-// Utility functions
 function transformOfficeData(office: any): Office {
   return {
     id: office.id,
     city: office.city,
     telephone: office.telephone,
+    general: office.general || "",
+    websiteQueries: office.websiteQueries || "",
+    logoUrl: office.logoUrl,
     openingHours: office.openingHours,
   };
 }
 
-const createOfficeData = (
-  data: OfficeData,
-  userSettingsId: string
-): Prisma.OfficeLocationCreateInput => ({
-  city: data.city,
-  telephone: data.telephone,
-  general: data.general || "",
-  websiteQueries: data.websiteQueries || "",
-  userSettings: {
-    connect: { id: userSettingsId },
-  },
-  openingHours: {
-    create: {
-      mondayToThursday: data.openingHours.mondayToThursday,
-      friday: data.openingHours.friday,
-      saturdaySunday: data.openingHours.saturdaySunday || "Closed",
-      publicHolidays: data.openingHours.publicHolidays || "Closed",
-    },
-  },
-});
+async function uploadLogoToBlob(file: File, userId: string): Promise<string> {
+  try {
+    const blob = await put(`office-logos/${userId}/${file.name}`, file, {
+      access: "public",
+      addRandomSuffix: true,
+    });
+    return blob.url;
+  } catch (error) {
+    console.error("Error uploading to blob:", error);
+    throw new Error("Failed to upload logo");
+  }
+}
 
-// Actions
 export async function addOfficeLocation(
-  officeData: OfficeData
+  formData: FormData
 ): Promise<OfficeActionResult> {
   try {
     const { user } = await validateRequest();
@@ -115,16 +111,38 @@ export async function addOfficeLocation(
       throw new Error("Maximum of 2 office locations allowed");
     }
 
-    const existingOffice = userSettings.OfficeLocation.find(
-      office => office.city.toLowerCase() === officeData.city.toLowerCase()
-    );
+    const city = formData.get("city") as string;
+    const telephone = formData.get("telephone") as string;
+    const general = formData.get("general") as string;
+    const websiteQueries = formData.get("websiteQueries") as string;
+    const logo = formData.get("logo") as File;
 
-    if (existingOffice) {
-      throw new Error(`Office location in ${officeData.city} already exists`);
+    let logoUrl = "";
+    if (logo && logo.size > 0) {
+      logoUrl = await uploadLogoToBlob(logo, user.id);
     }
 
+    const openingHours = {
+      mondayToThursday: formData.get("mondayToThursday") as string,
+      friday: formData.get("friday") as string,
+      saturdaySunday: (formData.get("saturdaySunday") as string) || "Closed",
+      publicHolidays: (formData.get("publicHolidays") as string) || "Closed",
+    };
+
     const newOffice = await prisma.officeLocation.create({
-      data: createOfficeData(officeData, userSettings.id),
+      data: {
+        city,
+        telephone,
+        general,
+        websiteQueries,
+        logoUrl,
+        userSettings: {
+          connect: { id: userSettings.id },
+        },
+        openingHours: {
+          create: openingHours,
+        },
+      },
       include: {
         openingHours: true,
       },
@@ -155,7 +173,7 @@ export async function addOfficeLocation(
 
 export async function updateOfficeLocation(
   officeId: string,
-  officeData: Partial<OfficeData>
+  formData: FormData
 ): Promise<OfficeActionResult> {
   try {
     const { user } = await validateRequest();
@@ -173,25 +191,35 @@ export async function updateOfficeLocation(
 
     if (!office) throw new Error("Office location not found");
 
+    const city = formData.get("city") as string;
+    const telephone = formData.get("telephone") as string;
+    const general = formData.get("general") as string;
+    const websiteQueries = formData.get("websiteQueries") as string;
+    const logo = formData.get("logo") as File;
+
+    let logoUrl = office.logoUrl;
+    if (logo && logo.size > 0) {
+      logoUrl = await uploadLogoToBlob(logo, user.id);
+    }
+
+    const openingHours = {
+      mondayToThursday: formData.get("mondayToThursday") as string,
+      friday: formData.get("friday") as string,
+      saturdaySunday: (formData.get("saturdaySunday") as string) || "Closed",
+      publicHolidays: (formData.get("publicHolidays") as string) || "Closed",
+    };
+
     const updatedOffice = await prisma.officeLocation.update({
       where: { id: officeId },
       data: {
-        city: officeData.city,
-        telephone: officeData.telephone,
-        general: officeData.general,
-        websiteQueries: officeData.websiteQueries,
-        openingHours: officeData.openingHours
-          ? {
-              update: {
-                mondayToThursday: officeData.openingHours.mondayToThursday,
-                friday: officeData.openingHours.friday,
-                saturdaySunday:
-                  officeData.openingHours.saturdaySunday || "Closed",
-                publicHolidays:
-                  officeData.openingHours.publicHolidays || "Closed",
-              },
-            }
-          : undefined,
+        city,
+        telephone,
+        general,
+        websiteQueries,
+        logoUrl,
+        openingHours: {
+          update: openingHours,
+        },
       },
       include: { openingHours: true },
     });
@@ -234,7 +262,6 @@ export async function removeOfficeLocation(
 
     if (!office) throw new Error("Office location not found");
 
-    // Delete the office and its associated openingHours
     await prisma.$transaction([
       prisma.openingHours.deleteMany({
         where: { officeLocationId: officeId },

@@ -41,7 +41,7 @@ const roleRoutes: Record<UserRole, RouteValue> = {
       console.warn("Vendor without storeSlug detected:", user);
       return "/login";
     }
-    return `/vendor/${userWithStore.storeSlug}`;
+    return `/vendor/${userWithStore.storeSlug}/welcome`;
   },
   [UserRole.VENDORCUSTOMER]: "/vendor_auth",
 };

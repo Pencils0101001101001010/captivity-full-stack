@@ -315,6 +315,7 @@ model OfficeLocation {
   telephone      String
   general        String
   websiteQueries String
+  logoUrl        String? // Added this field
   openingHours   OpeningHours?
   userSettings   UserSettings  @relation(fields: [userSettingsId], references: [id], onDelete: Cascade)
   userSettingsId String
