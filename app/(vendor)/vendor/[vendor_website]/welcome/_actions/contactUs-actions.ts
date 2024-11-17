@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { validateRequest } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { cache } from "react";
+import { Prisma, UserSettings as PrismaUserSettings } from "@prisma/client";
 
 interface ContactInfo {
   id: string;
@@ -27,33 +28,55 @@ interface ContactActionResult {
   error?: string;
 }
 
-// Cache frequently used queries
-const getCachedUserSettings = cache(async (userId: string) => {
-  return prisma.userSettings.findUnique({
-    where: { userId },
-    include: {
-      OfficeLocation: {
-        orderBy: { id: "asc" },
-      },
-    },
-  });
-});
+interface ExtendedUserSettings extends PrismaUserSettings {
+  OfficeLocation: ContactInfo[];
+  user?: {
+    storeSlug: string | null;
+  } | null;
+}
 
-const getCachedVendorSettings = cache(async (storeSlug: string) => {
-  return prisma.userSettings.findFirst({
-    where: {
-      user: {
-        storeSlug: storeSlug,
-        role: "VENDOR",
+const getCachedUserSettings = cache(
+  async (userId: string): Promise<ExtendedUserSettings | null> => {
+    const settings = await prisma.userSettings.findUnique({
+      where: { userId },
+      include: {
+        OfficeLocation: {
+          orderBy: { id: "asc" },
+        },
+        user: {
+          select: {
+            storeSlug: true,
+          },
+        },
       },
-    },
-    include: {
-      OfficeLocation: {
-        orderBy: { id: "asc" },
+    });
+    return settings;
+  }
+);
+
+const getCachedVendorSettings = cache(
+  async (storeSlug: string): Promise<ExtendedUserSettings | null> => {
+    const settings = await prisma.userSettings.findFirst({
+      where: {
+        user: {
+          storeSlug: storeSlug,
+          role: "VENDOR",
+        },
       },
-    },
-  });
-});
+      include: {
+        OfficeLocation: {
+          orderBy: { id: "asc" },
+        },
+        user: {
+          select: {
+            storeSlug: true,
+          },
+        },
+      },
+    });
+    return settings;
+  }
+);
 
 export async function getContactInfo(): Promise<ContactActionResult> {
   try {
@@ -115,8 +138,7 @@ export async function createContactInfo(
       throw new Error("Only vendors can manage contact info");
 
     const userSettings = await getCachedUserSettings(user.id);
-
-    let updatedSettings;
+    let updatedSettings: ExtendedUserSettings | null;
 
     if (!userSettings) {
       updatedSettings = await prisma.userSettings.create({
@@ -139,9 +161,7 @@ export async function createContactInfo(
       await prisma.officeLocation.create({
         data: {
           ...data,
-          userSettings: {
-            connect: { id: userSettings.id },
-          },
+          userSettingsId: userSettings.id,
         },
       });
 
@@ -164,7 +184,6 @@ export async function createContactInfo(
         "page"
       );
     }
-    revalidatePath("/vendor/[vendor_website]/welcome", "layout");
 
     return {
       success: true,
@@ -219,7 +238,6 @@ export async function updateContactInfo(
         "page"
       );
     }
-    revalidatePath("/vendor/[vendor_website]/welcome", "layout");
 
     return {
       success: true,
@@ -272,7 +290,6 @@ export async function deleteContactInfo(
         "page"
       );
     }
-    revalidatePath("/vendor/[vendor_website]/welcome", "layout");
 
     return {
       success: true,
