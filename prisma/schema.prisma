@@ -9,6 +9,8 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
+// Enums
+
 enum UserRole {
   USER
   CUSTOMER
@@ -32,6 +34,8 @@ enum OrderStatus {
   CANCELLED
   REFUNDED
 }
+
+// Default User with roles and relations
 
 model User {
   id               String    @id @default(uuid())
@@ -338,6 +342,7 @@ model OpeningHours {
 }
 
 // Vendor-specific models
+
 model VendorProduct {
   id             String                 @id @default(uuid())
   userId         String // Changed from vendorId
