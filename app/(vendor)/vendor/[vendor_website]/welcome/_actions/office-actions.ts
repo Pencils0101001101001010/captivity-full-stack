@@ -4,7 +4,6 @@ import prisma from "@/lib/prisma";
 import { validateRequest } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { cache } from "react";
-import { Prisma } from "@prisma/client";
 import { put } from "@vercel/blob";
 
 interface OfficeHours {
@@ -129,7 +128,7 @@ export async function addOfficeLocation(
       publicHolidays: (formData.get("publicHolidays") as string) || "Closed",
     };
 
-    const newOffice = await prisma.officeLocation.create({
+    await prisma.officeLocation.create({
       data: {
         city,
         telephone,
@@ -153,7 +152,7 @@ export async function addOfficeLocation(
       include: { openingHours: true },
     });
 
-    revalidatePath("/vendor/[vendor_website]/contact");
+    revalidatePath("/vendor/[vendor_website]");
 
     return {
       success: true,
@@ -224,7 +223,7 @@ export async function updateOfficeLocation(
       include: { openingHours: true },
     });
 
-    revalidatePath("/vendor/[vendor_website]/contact");
+    revalidatePath("/vendor/[vendor_website]");
 
     return {
       success: true,
