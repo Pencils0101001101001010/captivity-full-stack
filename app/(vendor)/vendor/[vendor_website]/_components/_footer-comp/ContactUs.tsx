@@ -1,64 +1,238 @@
+// ContactUs.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { useSession } from "@/app/(vendor)/SessionProvider";
 import { Pencil, Save, X, Plus, Trash2 } from "lucide-react";
-import { useContactStore } from "../../welcome/_store/contactUsStore";
+import { toast } from "sonner";
+import { useParams } from "next/navigation";
+import {
+  useContactStore,
+  ContactInfo,
+} from "../../welcome/_store/contactUsStore";
 
-interface ContactFormData {
-  id?: string | null; // Updated type to include null
+type ContactFormData = {
   city: string;
   telephone: string;
   general: string;
   websiteQueries: string;
+};
+
+interface RenderContactProps {
+  contact: ContactInfo;
+  onEdit: (contact: ContactInfo) => void;
+  onDelete: (id: string) => void;
+  isVendor: boolean;
 }
 
-const ContactUs = () => {
+interface RenderFormProps {
+  data: ContactFormData;
+  onSubmit: (e: React.FormEvent) => Promise<void>;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onCancel: () => void;
+}
+
+const RenderContact: React.FC<RenderContactProps> = ({
+  contact,
+  onEdit,
+  onDelete,
+  isVendor,
+}) => (
+  <div className="mb-6 p-4 bg-gray-800 rounded-lg">
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="font-bold text-white text-lg">{contact.city}</h3>
+      {isVendor && (
+        <div className="flex gap-2">
+          <button
+            onClick={() => onEdit(contact)}
+            className="p-1.5 rounded hover:bg-gray-700 transition-colors"
+            title="Edit contact"
+          >
+            <Pencil size={16} className="text-white" />
+          </button>
+          <button
+            onClick={() => onDelete(contact.id)}
+            className="p-1.5 rounded hover:bg-gray-700 transition-colors"
+            title="Delete contact"
+          >
+            <Trash2 size={16} className="text-white" />
+          </button>
+        </div>
+      )}
+    </div>
+    <div className="space-y-2">
+      <p className="text-gray-300">
+        General:{" "}
+        <a
+          href={`mailto:${contact.general}`}
+          className="text-red-500 hover:text-red-400 transition-colors"
+        >
+          {contact.general}
+        </a>
+      </p>
+      <p className="text-gray-300">
+        Website Queries:{" "}
+        <a
+          href={`mailto:${contact.websiteQueries}`}
+          className="text-red-500 hover:text-red-400 transition-colors"
+        >
+          {contact.websiteQueries}
+        </a>
+      </p>
+      <p className="text-gray-300">Tel: {contact.telephone}</p>
+    </div>
+  </div>
+);
+
+const RenderForm: React.FC<RenderFormProps> = ({
+  data,
+  onSubmit,
+  onChange,
+  onCancel,
+}) => (
+  <form
+    onSubmit={onSubmit}
+    className="space-y-4 bg-gray-800 p-4 rounded-lg mt-4"
+  >
+    <div>
+      <label className="block text-sm font-medium text-white">City</label>
+      <input
+        type="text"
+        name="city"
+        value={data.city}
+        onChange={onChange}
+        className="mt-1 w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:ring-2 focus:ring-red-500"
+        required
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-medium text-white">Telephone</label>
+      <input
+        type="text"
+        name="telephone"
+        value={data.telephone}
+        onChange={onChange}
+        className="mt-1 w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:ring-2 focus:ring-red-500"
+        required
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-medium text-white">
+        General Email
+      </label>
+      <input
+        type="email"
+        name="general"
+        value={data.general}
+        onChange={onChange}
+        className="mt-1 w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:ring-2 focus:ring-red-500"
+        required
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-medium text-white">
+        Website Queries Email
+      </label>
+      <input
+        type="email"
+        name="websiteQueries"
+        value={data.websiteQueries}
+        onChange={onChange}
+        className="mt-1 w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:ring-2 focus:ring-red-500"
+        required
+      />
+    </div>
+    <div className="flex gap-2">
+      <button
+        type="submit"
+        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+      >
+        <Save size={16} />
+        Save
+      </button>
+      <button
+        type="button"
+        onClick={onCancel}
+        className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+      >
+        <X size={16} />
+        Cancel
+      </button>
+    </div>
+  </form>
+);
+
+const ContactUs: React.FC = () => {
   const { user } = useSession();
+  const params = useParams();
+  const vendorWebsite =
+    typeof params?.vendor_website === "string" ? params.vendor_website : "";
+
   const {
     contacts,
     isLoading,
     error,
+    initialized,
     fetchContacts,
+    fetchVendorContacts,
     updateContact,
     createContact,
     deleteContact,
   } = useContactStore();
+
   const [isEditing, setIsEditing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | undefined>(undefined);
 
   const [formData, setFormData] = useState<ContactFormData>({
-    id: null, // Initialize with null
     city: "",
     telephone: "",
     general: "",
     websiteQueries: "",
   });
 
-  useEffect(() => {
-    fetchContacts();
-  }, [fetchContacts]);
+  const initializeData = useCallback(async () => {
+    if (!user || initialized) return;
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+    try {
+      if (user.role === "VENDOR") {
+        await fetchContacts();
+      } else if (user.role === "VENDORCUSTOMER" && vendorWebsite) {
+        await fetchVendorContacts(vendorWebsite);
+      }
+    } catch (error) {
+      console.error("Error initializing data:", error);
+    }
+  }, [user, vendorWebsite, initialized, fetchContacts, fetchVendorContacts]);
+
+  useEffect(() => {
+    initializeData();
+  }, [initializeData]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleEdit = (contact: ContactFormData) => {
+  const handleEdit = (contact: ContactInfo) => {
     setFormData({
-      ...contact,
-      id: contact.id || null, // Ensure id is never undefined
+      city: contact.city,
+      telephone: contact.telephone,
+      general: contact.general,
+      websiteQueries: contact.websiteQueries,
     });
-    setEditingId(contact.id || null); // Handle potential undefined
+    setEditingId(contact.id);
     setIsEditing(true);
   };
 
   const handleAdd = () => {
     setFormData({
-      id: null,
       city: "",
       telephone: "",
       general: "",
@@ -70,9 +244,8 @@ const ContactUs = () => {
   const handleCancel = () => {
     setIsEditing(false);
     setShowAddForm(false);
-    setEditingId(null);
+    setEditingId(undefined);
     setFormData({
-      id: null,
       city: "",
       telephone: "",
       general: "",
@@ -85,12 +258,19 @@ const ContactUs = () => {
     try {
       if (editingId) {
         await updateContact(editingId, formData);
+        toast.success("Contact information updated successfully");
       } else {
         await createContact(formData);
+        toast.success("Contact information added successfully");
       }
       handleCancel();
     } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to save contact information";
       console.error("Error saving contact:", error);
+      toast.error(errorMessage);
     }
   };
 
@@ -100,143 +280,31 @@ const ContactUs = () => {
         "Are you sure you want to delete this contact information?"
       )
     ) {
-      await deleteContact(id);
+      try {
+        await deleteContact(id);
+        toast.success("Contact information deleted successfully");
+      } catch (error) {
+        toast.error("Failed to delete contact information");
+      }
     }
   };
 
   if (isLoading) {
-    return <div className="text-white">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500">Error: {error}</div>;
-  }
-
-  const renderForm = (data: ContactFormData, isNew: boolean = false) => (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-4 bg-gray-800 p-4 rounded-lg mt-4"
-    >
-      <div>
-        <label className="block text-sm font-medium text-white">City</label>
-        <input
-          type="text"
-          name="city"
-          value={data.city}
-          onChange={handleInputChange}
-          className="mt-1 w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:ring-2 focus:ring-red-500"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-white">
-          Telephone
-        </label>
-        <input
-          type="text"
-          name="telephone"
-          value={data.telephone}
-          onChange={handleInputChange}
-          className="mt-1 w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:ring-2 focus:ring-red-500"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-white">
-          General Email
-        </label>
-        <input
-          type="email"
-          name="general"
-          value={data.general}
-          onChange={handleInputChange}
-          className="mt-1 w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:ring-2 focus:ring-red-500"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-white">
-          Website Queries Email
-        </label>
-        <input
-          type="email"
-          name="websiteQueries"
-          value={data.websiteQueries}
-          onChange={handleInputChange}
-          className="mt-1 w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:ring-2 focus:ring-red-500"
-          required
-        />
-      </div>
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-        >
-          <Save size={16} />
-          Save
-        </button>
-        <button
-          type="button"
-          onClick={handleCancel}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-        >
-          <X size={16} />
-          Cancel
-        </button>
-      </div>
-    </form>
-  );
-
-  const renderContact = (contact: ContactFormData) => {
-    // Ensure we have an id before rendering edit/delete buttons
-    if (!contact.id) return null;
-
     return (
-      <div key={contact.id} className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-white">{contact.city}</h3>
-          {user?.role === "VENDOR" && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleEdit(contact)}
-                className="p-1 rounded hover:bg-gray-700"
-              >
-                <Pencil size={16} className="text-white" />
-              </button>
-              <button
-                onClick={() => handleDelete(contact.id!)} // Safe assertion since we checked above
-                className="p-1 rounded hover:bg-gray-700"
-              >
-                <Trash2 size={16} className="text-white" />
-              </button>
-            </div>
-          )}
-        </div>
-        <p>
-          General:{" "}
-          <a href={`mailto:${contact.general}`} className="text-red-500">
-            {contact.general}
-          </a>
-        </p>
-        <p>
-          Website Queries:{" "}
-          <a href={`mailto:${contact.websiteQueries}`} className="text-red-500">
-            {contact.websiteQueries}
-          </a>
-        </p>
-        <p className="mt-2">Tel: {contact.telephone}</p>
+      <div className="min-h-[200px] flex items-center justify-center">
+        <div className="text-white">Loading contact information...</div>
       </div>
     );
-  };
+  }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
+    <div className="w-full">
+      <div className="flex items-center justify-between mb-6">
         <h3 className="font-bold text-white text-xl">CONTACT US</h3>
         {user?.role === "VENDOR" && !isEditing && !showAddForm && (
           <button
             onClick={handleAdd}
-            className="flex items-center gap-2 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+            className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
           >
             <Plus size={16} />
             Add Office
@@ -244,18 +312,54 @@ const ContactUs = () => {
         )}
       </div>
 
-      {showAddForm && renderForm(formData, true)}
+      {showAddForm && (
+        <RenderForm
+          data={formData}
+          onSubmit={handleSubmit}
+          onChange={handleInputChange}
+          onCancel={handleCancel}
+        />
+      )}
 
-      {contacts.map(contact => (
-        <div key={contact.id || "new"}>
-          {editingId === contact.id
-            ? renderForm(formData)
-            : renderContact(contact)}
-        </div>
-      ))}
+      <div className="space-y-4">
+        {contacts.map((contact: ContactInfo) => (
+          <div key={contact.id}>
+            {editingId === contact.id ? (
+              <RenderForm
+                data={formData}
+                onSubmit={handleSubmit}
+                onChange={handleInputChange}
+                onCancel={handleCancel}
+              />
+            ) : (
+              <RenderContact
+                contact={contact}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                isVendor={user?.role === "VENDOR"}
+              />
+            )}
+          </div>
+        ))}
+      </div>
 
       {!contacts.length && !showAddForm && (
-        <p className="text-gray-400">No contact information available.</p>
+        <div className="text-center py-8 bg-gray-800 rounded-lg">
+          <p className="text-gray-400">
+            {user?.role === "VENDOR"
+              ? "No contact information added yet. Add your first office location."
+              : "No contact information available from the vendor."}
+          </p>
+          {user?.role === "VENDOR" && (
+            <button
+              onClick={handleAdd}
+              className="mt-4 flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors mx-auto"
+            >
+              <Plus size={16} />
+              Add Office
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

@@ -3,8 +3,18 @@
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { cache } from "react";
 
 interface ContactInfo {
+  id: string;
+  city: string;
+  telephone: string;
+  general: string;
+  websiteQueries: string;
+  userSettingsId: string;
+}
+
+interface ContactFormData {
   city: string;
   telephone: string;
   general: string;
@@ -13,179 +23,185 @@ interface ContactInfo {
 
 interface ContactActionResult {
   success: boolean;
-  data?: any;
+  data?: ContactInfo[];
   error?: string;
 }
 
-// Helper function to revalidate paths
-const revalidateVendorPaths = (storeSlug: string | null | undefined) => {
-  // Only revalidate specific vendor page if storeSlug exists and is not null
-  if (storeSlug) {
-    revalidatePath(`/vendor/${storeSlug}/welcome`, "page");
-  }
-  // Always revalidate the layout
-  revalidatePath("/vendor/[vendor_website]/welcome", "layout");
-};
+// Cache frequently used queries
+const getCachedUserSettings = cache(async (userId: string) => {
+  return prisma.userSettings.findUnique({
+    where: { userId },
+    include: {
+      OfficeLocation: {
+        orderBy: { id: "asc" },
+      },
+    },
+  });
+});
 
-// Rest of the code remains the same, just using the updated revalidateVendorPaths function
+const getCachedVendorSettings = cache(async (storeSlug: string) => {
+  return prisma.userSettings.findFirst({
+    where: {
+      user: {
+        storeSlug: storeSlug,
+        role: "VENDOR",
+      },
+    },
+    include: {
+      OfficeLocation: {
+        orderBy: { id: "asc" },
+      },
+    },
+  });
+});
+
+export async function getContactInfo(): Promise<ContactActionResult> {
+  try {
+    const { user } = await validateRequest();
+    if (!user) return { success: false, error: "Unauthorized access" };
+
+    if (user.role === "VENDOR") {
+      const userSettings = await getCachedUserSettings(user.id);
+      return {
+        success: true,
+        data: userSettings?.OfficeLocation || [],
+      };
+    }
+
+    if (user.role === "VENDORCUSTOMER") {
+      const currentUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { companyName: true },
+      });
+
+      if (!currentUser) return { success: false, error: "User not found" };
+
+      const userSettings = await prisma.userSettings.findFirst({
+        where: {
+          user: {
+            role: "VENDOR",
+            storeName: currentUser.companyName,
+          },
+        },
+        include: {
+          OfficeLocation: true,
+        },
+      });
+
+      return {
+        success: true,
+        data: userSettings?.OfficeLocation || [],
+      };
+    }
+
+    return { success: true, data: [] };
+  } catch (error) {
+    console.error("Error getting contact info:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
+  }
+}
+
 export async function createContactInfo(
-  data: ContactInfo
+  data: ContactFormData
 ): Promise<ContactActionResult> {
   try {
     const { user } = await validateRequest();
-    if (!user) throw new Error("Unauthorized");
+    if (!user) throw new Error("Unauthorized access");
     if (user.role !== "VENDOR")
-      throw new Error("Only vendors can create contact info");
+      throw new Error("Only vendors can manage contact info");
 
-    const userSettings = await prisma.userSettings.findUnique({
-      where: { userId: user.id },
-      include: {
-        user: {
-          select: {
-            storeSlug: true,
+    const userSettings = await getCachedUserSettings(user.id);
+
+    let updatedSettings;
+
+    if (!userSettings) {
+      updatedSettings = await prisma.userSettings.create({
+        data: {
+          userId: user.id,
+          OfficeLocation: {
+            create: data,
           },
         },
-      },
-    });
-
-    if (!userSettings) throw new Error("User settings not found");
-
-    const newLocation = await prisma.officeLocation.create({
-      data: {
-        city: data.city,
-        telephone: data.telephone,
-        general: data.general,
-        websiteQueries: data.websiteQueries,
-        userSettings: {
-          connect: { id: userSettings.id },
+        include: {
+          OfficeLocation: true,
+          user: {
+            select: {
+              storeSlug: true,
+            },
+          },
         },
-      },
-    });
+      });
+    } else {
+      await prisma.officeLocation.create({
+        data: {
+          ...data,
+          userSettings: {
+            connect: { id: userSettings.id },
+          },
+        },
+      });
 
-    revalidateVendorPaths(userSettings.user?.storeSlug);
+      updatedSettings = await prisma.userSettings.findUnique({
+        where: { userId: user.id },
+        include: {
+          OfficeLocation: true,
+          user: {
+            select: {
+              storeSlug: true,
+            },
+          },
+        },
+      });
+    }
+
+    if (updatedSettings?.user?.storeSlug) {
+      revalidatePath(
+        `/vendor/${updatedSettings.user.storeSlug}/welcome`,
+        "page"
+      );
+    }
+    revalidatePath("/vendor/[vendor_website]/welcome", "layout");
 
     return {
       success: true,
-      data: [newLocation],
+      data: updatedSettings?.OfficeLocation || [],
     };
   } catch (error) {
     console.error("Error creating contact info:", error);
     return {
       success: false,
       error:
-        error instanceof Error
-          ? error.message
-          : "Failed to create contact info",
+        error instanceof Error ? error.message : "An unexpected error occurred",
     };
   }
 }
 
 export async function updateContactInfo(
   id: string,
-  data: ContactInfo
+  data: ContactFormData
 ): Promise<ContactActionResult> {
   try {
     const { user } = await validateRequest();
-    if (!user) throw new Error("Unauthorized");
+    if (!user) throw new Error("Unauthorized access");
     if (user.role !== "VENDOR")
-      throw new Error("Only vendors can update contact info");
+      throw new Error("Only vendors can manage contact info");
 
-    const userSettings = await prisma.userSettings.findUnique({
-      where: { userId: user.id },
-      include: {
-        user: {
-          select: {
-            storeSlug: true,
-          },
-        },
-      },
-    });
-
+    const userSettings = await getCachedUserSettings(user.id);
     if (!userSettings) throw new Error("User settings not found");
 
-    const updatedLocation = await prisma.officeLocation.update({
+    await prisma.officeLocation.update({
       where: {
-        id: id,
+        id,
         userSettingsId: userSettings.id,
       },
-      data: {
-        city: data.city,
-        telephone: data.telephone,
-        general: data.general,
-        websiteQueries: data.websiteQueries,
-      },
+      data,
     });
 
-    revalidateVendorPaths(userSettings.user?.storeSlug);
-
-    return {
-      success: true,
-      data: [updatedLocation],
-    };
-  } catch (error) {
-    console.error("Error updating contact info:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to update contact info",
-    };
-  }
-}
-
-export async function deleteContactInfo(
-  id: string
-): Promise<ContactActionResult> {
-  try {
-    const { user } = await validateRequest();
-    if (!user) throw new Error("Unauthorized");
-    if (user.role !== "VENDOR")
-      throw new Error("Only vendors can delete contact info");
-
-    const userSettings = await prisma.userSettings.findUnique({
-      where: { userId: user.id },
-      include: {
-        user: {
-          select: {
-            storeSlug: true,
-          },
-        },
-      },
-    });
-
-    if (!userSettings) throw new Error("User settings not found");
-
-    await prisma.officeLocation.delete({
-      where: {
-        id: id,
-        userSettingsId: userSettings.id,
-      },
-    });
-
-    revalidateVendorPaths(userSettings.user?.storeSlug);
-
-    return {
-      success: true,
-    };
-  } catch (error) {
-    console.error("Error deleting contact info:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to delete contact info",
-    };
-  }
-}
-
-export async function getContactInfo(): Promise<ContactActionResult> {
-  try {
-    const { user } = await validateRequest();
-    if (!user) throw new Error("Unauthorized");
-
-    const userSettings = await prisma.userSettings.findUnique({
+    const updatedSettings = await prisma.userSettings.findUnique({
       where: { userId: user.id },
       include: {
         OfficeLocation: true,
@@ -197,18 +213,98 @@ export async function getContactInfo(): Promise<ContactActionResult> {
       },
     });
 
-    if (!userSettings) throw new Error("User settings not found");
+    if (updatedSettings?.user?.storeSlug) {
+      revalidatePath(
+        `/vendor/${updatedSettings.user.storeSlug}/welcome`,
+        "page"
+      );
+    }
+    revalidatePath("/vendor/[vendor_website]/welcome", "layout");
 
     return {
       success: true,
-      data: userSettings.OfficeLocation,
+      data: updatedSettings?.OfficeLocation || [],
     };
   } catch (error) {
-    console.error("Error getting contact info:", error);
+    console.error("Error updating contact info:", error);
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to get contact info",
+        error instanceof Error ? error.message : "An unexpected error occurred",
     };
   }
 }
+
+export async function deleteContactInfo(
+  id: string
+): Promise<ContactActionResult> {
+  try {
+    const { user } = await validateRequest();
+    if (!user) throw new Error("Unauthorized access");
+    if (user.role !== "VENDOR")
+      throw new Error("Only vendors can manage contact info");
+
+    const userSettings = await getCachedUserSettings(user.id);
+    if (!userSettings) throw new Error("User settings not found");
+
+    await prisma.officeLocation.delete({
+      where: {
+        id,
+        userSettingsId: userSettings.id,
+      },
+    });
+
+    const updatedSettings = await prisma.userSettings.findUnique({
+      where: { userId: user.id },
+      include: {
+        OfficeLocation: true,
+        user: {
+          select: {
+            storeSlug: true,
+          },
+        },
+      },
+    });
+
+    if (updatedSettings?.user?.storeSlug) {
+      revalidatePath(
+        `/vendor/${updatedSettings.user.storeSlug}/welcome`,
+        "page"
+      );
+    }
+    revalidatePath("/vendor/[vendor_website]/welcome", "layout");
+
+    return {
+      success: true,
+      data: updatedSettings?.OfficeLocation || [],
+    };
+  } catch (error) {
+    console.error("Error deleting contact info:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
+  }
+}
+
+export const getVendorContactsBySlug = cache(
+  async (storeSlug: string): Promise<ContactActionResult> => {
+    try {
+      const userSettings = await getCachedVendorSettings(storeSlug);
+      return {
+        success: true,
+        data: userSettings?.OfficeLocation || [],
+      };
+    } catch (error) {
+      console.error("Error getting vendor contacts:", error);
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred",
+      };
+    }
+  }
+);
