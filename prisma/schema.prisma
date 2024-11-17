@@ -238,6 +238,8 @@ model OrderItem {
   @@map("order_items")
 }
 
+// User Settings and relations
+
 model UserSettings {
   id               String            @id @default(cuid())
   userId           String            @unique
