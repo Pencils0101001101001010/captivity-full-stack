@@ -3,7 +3,13 @@
 import Image from "next/image";
 import { useEffect, useState, useRef, useCallback, memo, useMemo } from "react";
 import { Trash2, Plus, ChevronLeft, ChevronRight } from "lucide-react";
-import { useBannerStore } from "../_store/BannerStore";
+import {
+  useBannerStore,
+  useBanners,
+  useBannerLoading,
+  useBannerError,
+  useBannerData,
+} from "../_store/BannerStore";
 import { useParams } from "next/navigation";
 import { useSession } from "@/app/(vendor)/SessionProvider";
 
@@ -22,7 +28,6 @@ interface UploadSlotProps {
   bannersLength: number;
 }
 
-// Memoized components
 const BannerImage = memo(
   ({ src, index, onRemove, isVendor }: BannerImageProps) => (
     <div className="relative group w-full h-full">
@@ -127,24 +132,29 @@ export default function CarouselPlugin() {
   const vendorWebsite =
     typeof params?.vendor_website === "string" ? params.vendor_website : "";
 
-  const {
-    banners,
-    isLoading,
-    error,
-    uploadBanner,
-    removeBanner,
-    fetchBanners,
-    fetchVendorBanners,
-  } = useBannerStore();
+  // Use factory store hooks
+  const banners = useBanners();
+  const isLoading = useBannerLoading();
+  const error = useBannerError();
+  const { upload, remove } = useBannerStore();
+
+  // Use the data hook for fetching
+  useBannerData(user?.role === "VENDORCUSTOMER" ? vendorWebsite : undefined);
+
+  // Get the banner URLs for the UI
+  const bannerUrls = useMemo(
+    () => banners.map(banner => banner.url),
+    [banners]
+  );
 
   const isVendor = useMemo(() => user?.role === "VENDOR", [user?.role]);
   const showUploadSlot = useMemo(
-    () => isVendor && banners.length < MAX_BANNERS,
-    [isVendor, banners.length]
+    () => isVendor && bannerUrls.length < MAX_BANNERS,
+    [isVendor, bannerUrls.length]
   );
   const allSlides = useMemo(
-    () => (showUploadSlot ? [...banners, "upload-slot"] : banners),
-    [banners, showUploadSlot]
+    () => (showUploadSlot ? [...bannerUrls, "upload-slot"] : bannerUrls),
+    [bannerUrls, showUploadSlot]
   );
 
   const stopCarousel = useCallback(() => {
@@ -173,17 +183,17 @@ export default function CarouselPlugin() {
       const file = event.target.files?.[0];
       if (!file) return;
 
-      if (banners.length >= MAX_BANNERS) {
+      if (bannerUrls.length >= MAX_BANNERS) {
         alert(`Maximum ${MAX_BANNERS} banners allowed`);
         return;
       }
 
       const formData = new FormData();
       formData.append("banner", file);
-      await uploadBanner(formData);
+      await upload(formData);
       event.target.value = "";
     },
-    [isVendor, banners.length, uploadBanner]
+    [isVendor, bannerUrls.length, upload]
   );
 
   const handleRemoveBanner = useCallback(
@@ -193,10 +203,10 @@ export default function CarouselPlugin() {
         !window.confirm("Are you sure you want to remove this banner?")
       )
         return;
-      await removeBanner(url);
-      setCurrentIndex(prev => (prev >= banners.length - 1 ? 0 : prev));
+      await remove(url);
+      setCurrentIndex(prev => (prev >= bannerUrls.length - 1 ? 0 : prev));
     },
-    [isVendor, removeBanner, banners.length]
+    [isVendor, remove, bannerUrls.length]
   );
 
   const handleNext = useCallback(() => {
@@ -207,32 +217,11 @@ export default function CarouselPlugin() {
     setCurrentIndex(prev => (prev - 1 + allSlides.length) % allSlides.length);
   }, [allSlides.length]);
 
-  // Initial fetch effect
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return;
-
-      try {
-        if (user.role === "VENDOR") {
-          await fetchBanners();
-        } else if (user.role === "VENDORCUSTOMER" && vendorWebsite) {
-          await fetchVendorBanners(vendorWebsite);
-        }
-      } catch (error) {
-        console.error("Error fetching banners:", error);
-      }
-    };
-
-    fetchData();
-  }, [user, vendorWebsite, fetchBanners, fetchVendorBanners]);
-
-  // Carousel control effect
   useEffect(() => {
     startCarousel();
     return () => stopCarousel();
   }, [startCarousel, stopCarousel]);
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="w-full h-[150px] sm:h-[200px] md:h-[250px] lg:h-[300px] flex items-center justify-center bg-gray-50">
@@ -241,8 +230,7 @@ export default function CarouselPlugin() {
     );
   }
 
-  // Empty state
-  if (banners.length === 0 && !showUploadSlot) {
+  if (bannerUrls.length === 0 && !showUploadSlot) {
     return null;
   }
 
@@ -264,7 +252,7 @@ export default function CarouselPlugin() {
             {slide === "upload-slot" && isVendor ? (
               <UploadSlot
                 onFileSelect={handleFileSelect}
-                bannersLength={banners.length}
+                bannersLength={bannerUrls.length}
               />
             ) : (
               <BannerImage

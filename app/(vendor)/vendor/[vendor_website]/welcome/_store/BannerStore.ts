@@ -1,3 +1,4 @@
+// _store/BannerStore.ts
 "use client";
 
 import { create } from "zustand";
@@ -9,191 +10,119 @@ import {
 } from "../_actions/banner-actions";
 import { useEffect } from "react";
 
-interface BannerStore {
-  banners: string[];
-  isLoading: boolean;
-  error: string | null;
-  initialized: boolean;
-  currentFetch: AbortController | null;
-  uploadBanner: (formData: FormData) => Promise<void>;
-  removeBanner: (url: string) => Promise<void>;
-  fetchBanners: () => Promise<void>;
-  fetchVendorBanners: (storeSlug: string) => Promise<void>;
-  resetState: () => void;
+interface BannerItem {
+  url: string;
 }
 
-export const useBannerStore = create<BannerStore>((set, get) => ({
+interface BannerActionResult {
+  success: boolean;
+  urls?: string[];
+  url?: string;
+  error?: string;
+}
+
+interface BannerStore {
+  banners: BannerItem[];
+  isLoading: boolean;
+  error: string | null;
+  upload: (formData: FormData) => Promise<void>;
+  remove: (url: string) => Promise<void>;
+  fetchBanners: () => Promise<void>;
+  fetchVendorBanners: (storeSlug: string) => Promise<void>;
+}
+
+const mapUrlsToBannerItems = (urls: string[] = []): BannerItem[] => {
+  return urls.map(url => ({ url }));
+};
+
+export const useBannerStore = create<BannerStore>(set => ({
   banners: [],
   isLoading: false,
   error: null,
-  initialized: false,
-  currentFetch: null,
 
-  resetState: () => {
-    const { currentFetch } = get();
-    if (currentFetch) {
-      currentFetch.abort();
-    }
-    set({
-      banners: [],
-      isLoading: false,
-      error: null,
-      initialized: false,
-      currentFetch: null,
-    });
-  },
-
-  uploadBanner: async (formData: FormData) => {
-    const state = get();
-    if (state.isLoading) return;
-
+  upload: async (formData: FormData) => {
     set({ isLoading: true, error: null });
     try {
-      // Optimistic update with temporary URL
-      const tempUrl = URL.createObjectURL(formData.get("file") as File);
-      set(state => ({ banners: [...state.banners, tempUrl] }));
-
       const result = await uploadBanner(formData);
       if (!result.success) throw new Error(result.error);
-
-      // Update with actual URLs
-      set({ banners: result.urls || [] });
-    } catch (error) {
-      // Revert optimistic update on error
-      const revertResult = await getBanners();
-      if (revertResult.success) {
-        set({ banners: revertResult.urls || [] });
-      }
       set({
+        banners: mapUrlsToBannerItems(result.urls),
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
         error: error instanceof Error ? error.message : "Upload failed",
       });
       throw error;
-    } finally {
-      set({ isLoading: false });
     }
   },
 
-  removeBanner: async (url: string) => {
-    const state = get();
-    if (state.isLoading) return;
-
+  remove: async (url: string) => {
     set({ isLoading: true, error: null });
     try {
-      // Optimistic update
-      set(state => ({
-        banners: state.banners.filter(banner => banner !== url),
-      }));
-
       const result = await removeBanner(url);
       if (!result.success) throw new Error(result.error);
-
-      set({ banners: result.urls || [] });
-    } catch (error) {
-      // Revert optimistic update on error
-      const revertResult = await getBanners();
-      if (revertResult.success) {
-        set({ banners: revertResult.urls || [] });
-      }
       set({
-        error: error instanceof Error ? error.message : "Removal failed",
+        banners: mapUrlsToBannerItems(result.urls),
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Remove failed",
       });
       throw error;
-    } finally {
-      set({ isLoading: false });
     }
   },
 
   fetchBanners: async () => {
-    const state = get();
-    if (state.isLoading || state.initialized) return;
-
-    // Cancel any existing fetch
-    if (state.currentFetch) {
-      state.currentFetch.abort();
-    }
-
-    const controller = new AbortController();
-    set({ currentFetch: controller, isLoading: true, error: null });
-
+    set({ isLoading: true, error: null });
     try {
       const result = await getBanners();
-
-      // Check if request was aborted
-      if (controller.signal.aborted) return;
-
       if (!result.success) throw new Error(result.error);
-
       set({
-        banners: result.urls || [],
-        initialized: true,
+        banners: mapUrlsToBannerItems(result.urls),
+        isLoading: false,
+        error: null,
       });
     } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        return;
-      }
       set({
+        isLoading: false,
         error: error instanceof Error ? error.message : "Fetch failed",
       });
-    } finally {
-      set(state => ({
-        isLoading: false,
-        currentFetch:
-          state.currentFetch === controller ? null : state.currentFetch,
-      }));
     }
   },
 
   fetchVendorBanners: async (storeSlug: string) => {
-    const state = get();
-    if (state.isLoading || state.initialized) return;
-
-    // Cancel any existing fetch
-    if (state.currentFetch) {
-      state.currentFetch.abort();
-    }
-
-    const controller = new AbortController();
-    set({ currentFetch: controller, isLoading: true, error: null });
-
+    set({ isLoading: true, error: null });
     try {
       const result = await getVendorBannersBySlug(storeSlug);
-
-      // Check if request was aborted
-      if (controller.signal.aborted) return;
-
       if (!result.success) throw new Error(result.error);
-
       set({
-        banners: result.urls || [],
-        initialized: true,
+        banners: mapUrlsToBannerItems(result.urls),
+        isLoading: false,
+        error: null,
       });
     } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        return;
-      }
       set({
+        isLoading: false,
         error: error instanceof Error ? error.message : "Fetch failed",
       });
-    } finally {
-      set(state => ({
-        isLoading: false,
-        currentFetch:
-          state.currentFetch === controller ? null : state.currentFetch,
-      }));
     }
   },
 }));
 
-// Custom hook for managing banner data fetching
+// Export the selector hooks
+export const useBanners = () => useBannerStore(state => state.banners);
+export const useBannerLoading = () => useBannerStore(state => state.isLoading);
+export const useBannerError = () => useBannerStore(state => state.error);
+
 export const useBannerData = (storeSlug?: string) => {
-  const {
-    fetchBanners,
-    fetchVendorBanners,
-    resetState,
-    banners,
-    isLoading,
-    error,
-  } = useBannerStore();
+  const fetchBanners = useBannerStore(state => state.fetchBanners);
+  const fetchVendorBanners = useBannerStore(state => state.fetchVendorBanners);
 
   useEffect(() => {
     if (storeSlug) {
@@ -201,11 +130,5 @@ export const useBannerData = (storeSlug?: string) => {
     } else {
       fetchBanners();
     }
-
-    return () => {
-      resetState();
-    };
-  }, [storeSlug, fetchBanners, fetchVendorBanners, resetState]);
-
-  return { banners, isLoading, error };
+  }, [storeSlug, fetchBanners, fetchVendorBanners]);
 };
