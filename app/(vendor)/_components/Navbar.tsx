@@ -22,6 +22,7 @@ import {
 } from "../actions";
 import { useParams } from "next/navigation";
 import CartSidebar from "./CartSidebar";
+import { Button } from "@/components/ui/button";
 
 type UserRole =
   | "USER"
@@ -275,7 +276,22 @@ const Navbar = () => {
         <nav className="bg-black text-white">
           <div className="flex items-center justify-between text-xs mx-auto w-full py-6 px-8">
             {/* Logo Section */}
-            <div className="flex items-center">{logoSection}</div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center">{logoSection}</div>
+              <Button asChild className="bg-blue-300">
+                <Link href={`/vendor/${vendorWebsite}/welcome`}>Back</Link>
+              </Button>
+              <Button asChild variant={"secondary"}>
+                <Link href={`/vendor/${vendorWebsite}`}>Home</Link>
+              </Button>
+              <Button asChild variant={"destructive"}>
+                <Link
+                  href={`/vendor/${vendorWebsite}/shopping/product_categories/summer`}
+                >
+                  Shop
+                </Link>
+              </Button>
+            </div>
 
             {/* Navigation and Search Section - Always Right Aligned */}
             <div className="hidden md:flex items-center justify-end flex-1 ml-6">
