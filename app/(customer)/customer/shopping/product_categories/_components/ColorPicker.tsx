@@ -143,7 +143,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
     <div className="relative">
       <Button
         variant="outline"
-        className="mb-4 flex w-full items-center justify-between bg-white px-4 py-2 shadow-sm"
+        className="mb-4 flex w-full items-center justify-between bg-white px-4 py-2 shadow-2xl shadow-black transition-transform duration-300 hover:scale-95"
         onClick={toggleDropdown}
       >
         <div className="flex items-center gap-2">
@@ -164,7 +164,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
       </Button>
 
       {isOpen && (
-        <div className="absolute z-10 mt-2 w-full rounded-lg bg-white p-4 shadow-xl">
+        <div className="absolute z-10 mt-2 w-full rounded-lg bg-white p-2 shadow-2xl min-w-[300px] max-h-[300px] overflow-y-scroll">
           <div className="mb-4 flex flex-wrap gap-3">
             <button
               key="deselect"

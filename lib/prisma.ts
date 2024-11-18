@@ -9,6 +9,12 @@ const prisma =
   new PrismaClient({
     log: ["error", "warn"],
     errorFormat: "pretty",
+
+    datasources: {
+      db: {
+        url: process.env.POSTGRES_PRISMA_URL,
+      },
+    },
   });
 
 if (process.env.NODE_ENV !== "production") {
