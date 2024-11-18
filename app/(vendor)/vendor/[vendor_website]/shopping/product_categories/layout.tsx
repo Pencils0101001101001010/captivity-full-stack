@@ -1,7 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 // shopping/layout.tsx
 import React, { ReactNode } from "react";
-import prisma from "@/lib/prisma";
 import FilterSidebar from "./_components/FilterSidebar";
 import SearchField from "./_components/SearchField";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
