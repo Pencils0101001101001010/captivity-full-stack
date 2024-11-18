@@ -1,23 +1,18 @@
 // openingHoursStore.ts
 import { create } from "zustand";
-import { useState, useEffect, useCallback } from "react";
 import {
-  createOpeningHours,
-  deleteOpeningHours,
   getOpeningHours,
-  updateOpeningHours,
+  createOpeningHours as createHours,
+  updateOpeningHours as updateHours,
+  deleteOpeningHours as deleteHours,
+  OpeningHoursInfo,
+  OpeningHoursFormData as FormData,
 } from "../_actions/officeLocation-actions";
+import React from "react";
 
-export interface OpeningHoursInfo {
-  id: string;
-  mondayToThursday: string;
-  friday: string;
-  saturdaySunday: string;
-  publicHolidays: string;
-  officeLocationId: string;
-}
-
-type OpeningHoursFormData = Omit<OpeningHoursInfo, "id" | "officeLocationId">;
+// Re-export the types from the actions file
+export type { OpeningHoursInfo };
+export type OpeningHoursFormData = FormData;
 
 interface OpeningHoursStore {
   openingHours: OpeningHoursInfo[];
@@ -25,10 +20,10 @@ interface OpeningHoursStore {
   error: string | null;
   initialized: boolean;
   currentFetch: AbortController | null;
-  fetchOpeningHours: (officeLocationId: string) => Promise<void>;
+  fetchOpeningHours: (vendorWebsite: string) => Promise<void>;
   updateOpeningHours: (id: string, data: OpeningHoursFormData) => Promise<void>;
   createOpeningHours: (
-    officeLocationId: string,
+    vendorWebsite: string,
     data: OpeningHoursFormData
   ) => Promise<void>;
   deleteOpeningHours: (id: string) => Promise<void>;
@@ -56,11 +51,10 @@ export const useOpeningHoursStore = create<OpeningHoursStore>((set, get) => ({
     });
   },
 
-  fetchOpeningHours: async (officeLocationId: string) => {
+  fetchOpeningHours: async (vendorWebsite: string) => {
     const state = get();
     if (state.isLoading || state.initialized) return;
 
-    // Cancel any existing fetch
     if (state.currentFetch) {
       state.currentFetch.abort();
     }
@@ -69,9 +63,8 @@ export const useOpeningHoursStore = create<OpeningHoursStore>((set, get) => ({
     set({ currentFetch: controller, isLoading: true, error: null });
 
     try {
-      const result = await getOpeningHours(officeLocationId);
+      const result = await getOpeningHours(vendorWebsite);
 
-      // Check if request was aborted
       if (controller.signal.aborted) return;
 
       if (!result.success) {
@@ -102,11 +95,12 @@ export const useOpeningHoursStore = create<OpeningHoursStore>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const result = await updateOpeningHours(id, data);
+      const result = await updateHours(id, data);
       if (!result.success) {
         throw new Error(result.error);
       }
-      set({ openingHours: result.data });
+
+      set({ openingHours: result.data || [] });
     } catch (error) {
       set({
         error:
@@ -121,17 +115,18 @@ export const useOpeningHoursStore = create<OpeningHoursStore>((set, get) => ({
   },
 
   createOpeningHours: async (
-    officeLocationId: string,
+    vendorWebsite: string,
     data: OpeningHoursFormData
   ) => {
     set({ isLoading: true, error: null });
 
     try {
-      const result = await createOpeningHours(officeLocationId, data);
+      const result = await createHours(vendorWebsite, data);
       if (!result.success) {
         throw new Error(result.error);
       }
-      set({ openingHours: result.data });
+
+      set({ openingHours: result.data || [] });
     } catch (error) {
       set({
         error:
@@ -149,11 +144,12 @@ export const useOpeningHoursStore = create<OpeningHoursStore>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const result = await deleteOpeningHours(id);
+      const result = await deleteHours(id);
       if (!result.success) {
         throw new Error(result.error);
       }
-      set({ openingHours: result.data });
+
+      set({ openingHours: result.data || [] });
     } catch (error) {
       set({
         error:
@@ -169,19 +165,33 @@ export const useOpeningHoursStore = create<OpeningHoursStore>((set, get) => ({
 }));
 
 // Custom hook for managing opening hours data fetching
-export const useOpeningHoursData = (officeLocationId: string) => {
-  const { fetchOpeningHours, resetState, openingHours, isLoading, error } =
-    useOpeningHoursStore();
+export const useOpeningHoursData = (vendorWebsite: string) => {
+  const {
+    openingHours,
+    isLoading,
+    error,
+    fetchOpeningHours,
+    createOpeningHours,
+    updateOpeningHours,
+    deleteOpeningHours,
+    resetState,
+  } = useOpeningHoursStore();
 
-  useEffect(() => {
-    if (officeLocationId) {
-      fetchOpeningHours(officeLocationId);
+  React.useEffect(() => {
+    if (vendorWebsite) {
+      fetchOpeningHours(vendorWebsite);
     }
-
     return () => {
       resetState();
     };
-  }, [officeLocationId, fetchOpeningHours, resetState]);
+  }, [vendorWebsite, fetchOpeningHours, resetState]);
 
-  return { openingHours, isLoading, error };
+  return {
+    openingHours,
+    isLoading,
+    error,
+    createOpeningHours,
+    updateOpeningHours,
+    deleteOpeningHours,
+  };
 };

@@ -2,47 +2,66 @@
 
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/auth";
-import { cache } from "react";
 
-interface OpeningHoursInfo {
+export interface OpeningHoursInfo {
   id: string;
   mondayToThursday: string;
   friday: string;
   saturdaySunday: string;
   publicHolidays: string;
   officeLocationId: string;
+  officeLocation: {
+    id: string;
+    city: string;
+  };
 }
 
-interface OpeningHoursFormData {
+export interface OpeningHoursFormData {
+  city: string;
   mondayToThursday: string;
   friday: string;
   saturdaySunday?: string;
   publicHolidays?: string;
 }
 
-interface OpeningHoursActionResult {
+export interface OpeningHoursActionResult {
   success: boolean;
   data?: OpeningHoursInfo[];
   error?: string;
 }
 
-const getCachedOpeningHours = cache(
-  async (officeLocationId: string): Promise<OpeningHoursInfo | null> => {
-    const hours = await prisma.openingHours.findUnique({
-      where: { officeLocationId },
-    });
-    return hours;
-  }
-);
-
 export async function getOpeningHours(
-  officeLocationId: string
+  vendorWebsite: string
 ): Promise<OpeningHoursActionResult> {
   try {
-    const hours = await getCachedOpeningHours(officeLocationId);
+    const hours = await prisma.openingHours.findMany({
+      where: {
+        officeLocation: {
+          userSettings: {
+            user: {
+              storeSlug: vendorWebsite,
+            },
+          },
+        },
+      },
+      include: {
+        officeLocation: {
+          select: {
+            id: true,
+            city: true,
+          },
+        },
+      },
+      orderBy: {
+        officeLocation: {
+          city: "asc",
+        },
+      },
+    });
+
     return {
       success: true,
-      data: hours ? [hours] : [],
+      data: hours,
     };
   } catch (error) {
     console.error("Error getting opening hours:", error);
@@ -55,7 +74,7 @@ export async function getOpeningHours(
 }
 
 export async function createOpeningHours(
-  officeLocationId: string,
+  vendorWebsite: string,
   data: OpeningHoursFormData
 ): Promise<OpeningHoursActionResult> {
   try {
@@ -64,33 +83,78 @@ export async function createOpeningHours(
     if (user.role !== "VENDOR")
       throw new Error("Only vendors can manage opening hours");
 
-    // Check if the office location belongs to the vendor
-    const userSettings = await prisma.userSettings.findUnique({
-      where: { userId: user.id },
+    // First find the vendor and their settings
+    const vendor = await prisma.user.findFirst({
+      where: {
+        AND: [{ storeSlug: vendorWebsite }, { role: "VENDOR" }],
+      },
       include: {
-        OfficeLocation: {
-          where: { id: officeLocationId },
+        UserSettings: true,
+      },
+    });
+
+    if (!vendor || !vendor.UserSettings) {
+      throw new Error("Vendor settings not found");
+    }
+
+    // Create hours office location
+    const hoursOfficeLocation = await prisma.hoursOfficeLocation.create({
+      data: {
+        city: data.city,
+        userSettings: {
+          connect: {
+            id: vendor.UserSettings.id,
+          },
         },
       },
     });
 
-    if (!userSettings?.OfficeLocation.length) {
-      throw new Error("Office location not found");
-    }
-
-    // Create opening hours with default values for optional fields
+    // Create opening hours
     const hours = await prisma.openingHours.create({
       data: {
-        ...data,
+        mondayToThursday: data.mondayToThursday,
+        friday: data.friday,
         saturdaySunday: data.saturdaySunday || "Closed",
         publicHolidays: data.publicHolidays || "Closed",
-        officeLocationId,
+        officeLocationId: hoursOfficeLocation.id,
+      },
+      include: {
+        officeLocation: {
+          select: {
+            id: true,
+            city: true,
+          },
+        },
+      },
+    });
+
+    // Get all hours for this vendor
+    const allHours = await prisma.openingHours.findMany({
+      where: {
+        officeLocation: {
+          userSettings: {
+            id: vendor.UserSettings.id,
+          },
+        },
+      },
+      include: {
+        officeLocation: {
+          select: {
+            id: true,
+            city: true,
+          },
+        },
+      },
+      orderBy: {
+        officeLocation: {
+          city: "asc",
+        },
       },
     });
 
     return {
       success: true,
-      data: [hours],
+      data: allHours,
     };
   } catch (error) {
     console.error("Error creating opening hours:", error);
@@ -112,8 +176,7 @@ export async function updateOpeningHours(
     if (user.role !== "VENDOR")
       throw new Error("Only vendors can manage opening hours");
 
-    // Verify ownership
-    const openingHours = await prisma.openingHours.findUnique({
+    const currentHours = await prisma.openingHours.findUnique({
       where: { id },
       include: {
         officeLocation: {
@@ -127,24 +190,56 @@ export async function updateOpeningHours(
     });
 
     if (
-      !openingHours ||
-      openingHours.officeLocation.userSettings.userId !== user.id
+      !currentHours ||
+      currentHours.officeLocation.userSettings.userId !== user.id
     ) {
       throw new Error("Opening hours not found or unauthorized");
     }
 
-    const updated = await prisma.openingHours.update({
+    // Update hours office location
+    await prisma.hoursOfficeLocation.update({
+      where: { id: currentHours.officeLocationId },
+      data: { city: data.city },
+    });
+
+    // Update opening hours
+    await prisma.openingHours.update({
       where: { id },
       data: {
-        ...data,
-        saturdaySunday: data.saturdaySunday || openingHours.saturdaySunday,
-        publicHolidays: data.publicHolidays || openingHours.publicHolidays,
+        mondayToThursday: data.mondayToThursday,
+        friday: data.friday,
+        saturdaySunday: data.saturdaySunday || currentHours.saturdaySunday,
+        publicHolidays: data.publicHolidays || currentHours.publicHolidays,
+      },
+    });
+
+    // Get updated list
+    const allHours = await prisma.openingHours.findMany({
+      where: {
+        officeLocation: {
+          userSettings: {
+            userId: user.id,
+          },
+        },
+      },
+      include: {
+        officeLocation: {
+          select: {
+            id: true,
+            city: true,
+          },
+        },
+      },
+      orderBy: {
+        officeLocation: {
+          city: "asc",
+        },
       },
     });
 
     return {
       success: true,
-      data: [updated],
+      data: allHours,
     };
   } catch (error) {
     console.error("Error updating opening hours:", error);
@@ -165,8 +260,7 @@ export async function deleteOpeningHours(
     if (user.role !== "VENDOR")
       throw new Error("Only vendors can manage opening hours");
 
-    // Verify ownership
-    const openingHours = await prisma.openingHours.findUnique({
+    const currentHours = await prisma.openingHours.findUnique({
       where: { id },
       include: {
         officeLocation: {
@@ -180,19 +274,49 @@ export async function deleteOpeningHours(
     });
 
     if (
-      !openingHours ||
-      openingHours.officeLocation.userSettings.userId !== user.id
+      !currentHours ||
+      currentHours.officeLocation.userSettings.userId !== user.id
     ) {
       throw new Error("Opening hours not found or unauthorized");
     }
 
+    // Delete opening hours first (due to foreign key constraints)
     await prisma.openingHours.delete({
       where: { id },
     });
 
+    // Delete the associated hours office location
+    await prisma.hoursOfficeLocation.delete({
+      where: { id: currentHours.officeLocationId },
+    });
+
+    // Get remaining hours
+    const remainingHours = await prisma.openingHours.findMany({
+      where: {
+        officeLocation: {
+          userSettings: {
+            userId: user.id,
+          },
+        },
+      },
+      include: {
+        officeLocation: {
+          select: {
+            id: true,
+            city: true,
+          },
+        },
+      },
+      orderBy: {
+        officeLocation: {
+          city: "asc",
+        },
+      },
+    });
+
     return {
       success: true,
-      data: [],
+      data: remainingHours,
     };
   } catch (error) {
     console.error("Error deleting opening hours:", error);
@@ -203,24 +327,3 @@ export async function deleteOpeningHours(
     };
   }
 }
-
-export const getVendorOpeningHoursBySlug = cache(
-  async (officeLocationId: string): Promise<OpeningHoursActionResult> => {
-    try {
-      const hours = await getCachedOpeningHours(officeLocationId);
-      return {
-        success: true,
-        data: hours ? [hours] : [],
-      };
-    } catch (error) {
-      console.error("Error getting vendor opening hours:", error);
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred",
-      };
-    }
-  }
-);
