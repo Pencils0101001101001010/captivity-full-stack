@@ -15,6 +15,9 @@ import {
 } from "./VendorProductSelectors";
 import VendorProductImage from "./VendorProductImage";
 import { Button } from "@/components/ui/button";
+import { ShoppingCart } from "lucide-react";
+import VendorAddToCartButton from "../cart/addToCart";
+import { useParams } from "next/navigation";
 
 const transformVendorProductForImage = (
   product: VendorProductWithRelations
@@ -47,6 +50,9 @@ const VendorProductDetails: React.FC<Props> = ({ product, vendorWebsite }) => {
   const [recommendedBranding, setRecommendedBranding] = useState<string | null>(
     null
   );
+
+  const params = useParams();
+  const link = params?.vendor_website as string;
 
   const calculateDynamicPrice = useCallback(
     (quantity: number) => {
@@ -126,35 +132,6 @@ const VendorProductDetails: React.FC<Props> = ({ product, vendorWebsite }) => {
     setQuantity(Math.min(newQuantity, selectedVariation?.quantity || 1));
   };
 
-  const handleAddToCart = () => {
-    if (!selectedVariation) {
-      console.log("Please select a variation first");
-      return;
-    }
-
-    const cartItem = {
-      productId: product.id,
-      productName: product.productName,
-      variation: {
-        id: selectedVariation.id,
-        color: selectedVariation.color,
-        size: selectedVariation.size,
-        sku: selectedVariation.sku,
-        sku2: selectedVariation.sku2,
-        quantity: quantity,
-        variationImageURL: selectedVariation.variationImageURL,
-      },
-      price: currentPrice,
-      totalPrice: currentPrice * quantity,
-      image:
-        selectedVariation.variationImageURL || product.featuredImage?.medium,
-      originalPrice: product.sellingPrice,
-      priceDiscount: product.sellingPrice - currentPrice,
-    };
-
-    console.log("Adding to cart:", cartItem);
-  };
-
   const transformedProduct = transformVendorProductForImage(product);
 
   const getDynamicPricingInfo = () => {
@@ -179,6 +156,17 @@ const VendorProductDetails: React.FC<Props> = ({ product, vendorWebsite }) => {
 
   return (
     <div className="max-w-4xl mx-auto p-3 bg-card my-8 shadow-2xl shadow-black rounded-lg border border-border mb-20">
+      {/* View Cart Link - Top Right */}
+      <div className="flex justify-end mb-4">
+        <Link
+          href={`/vendor/${vendorWebsite}/shop_product/cart`}
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-card-foreground transition-colors"
+        >
+          <ShoppingCart className="w-5 h-5" />
+          View Cart
+        </Link>
+      </div>
+
       <div className="flex flex-col md:flex-row mb-4">
         <VendorProductImage
           selectedVariation={selectedVariation}
@@ -201,7 +189,7 @@ const VendorProductDetails: React.FC<Props> = ({ product, vendorWebsite }) => {
             </p>
             {currentPrice !== product.sellingPrice && (
               <p className="text-sm text-muted-foreground line-through">
-                Discounted: R{product.sellingPrice.toFixed(2)}
+                Original: R{product.sellingPrice.toFixed(2)}
               </p>
             )}
             {getDynamicPricingInfo()}
@@ -232,17 +220,16 @@ const VendorProductDetails: React.FC<Props> = ({ product, vendorWebsite }) => {
           </p>
 
           <div className="space-y-2">
-            <Button
-              onClick={handleAddToCart}
-              className="w-full h-12 bg-[#2c3e50] text-white hover:bg-[#34495e]"
+            <VendorAddToCartButton
+              selectedVariation={selectedVariation}
+              quantity={quantity}
               disabled={!selectedVariation || quantity < 1}
-            >
-              Add to Cart
-            </Button>
+              className="h-12 bg-primary hover:bg-primary/90"
+            />
 
             <Button asChild variant="destructive" className="w-full h-12">
-              <Link href={`/vendor/${vendorWebsite}/shopping/checkout`}>
-                Proceed to Checkout
+              <Link href={`/vendor/${vendorWebsite}/shopping/cart`}>
+                View Cart & Checkout
               </Link>
             </Button>
 
