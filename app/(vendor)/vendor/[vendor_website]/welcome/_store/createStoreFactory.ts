@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { useEffect } from "react";
+import { useEffect, useCallback, useMemo, useRef } from "react";
 
 interface BaseItem {
   url: string;
@@ -48,16 +48,25 @@ interface UseStoreDataReturn<T extends BaseItem> {
   error: string | null;
 }
 
+type Store<T extends BaseItem> = StoreState<T> & StoreActions<T>;
+
 interface StoreFactoryReturn<T extends BaseItem> {
-  useStore: () => StoreState<T> & StoreActions<T>;
+  useStore: {
+    (): Store<T>;
+    <U>(selector: (state: Store<T>) => U): U;
+    <U>(
+      selector: (state: Store<T>) => U,
+      equalityFn: (a: U, b: U) => boolean
+    ): U;
+  };
   useItems: () => T[];
   useLoading: () => boolean;
   useError: () => string | null;
   useData: (storeSlug?: string) => UseStoreDataReturn<T>;
 }
 
-const DEFAULT_CACHE_DURATION = 60000; // 1 minute
-const DEFAULT_DEBOUNCE_DELAY = 300; // 300ms
+const DEFAULT_CACHE_DURATION = 60000;
+const DEFAULT_DEBOUNCE_DELAY = 300;
 
 export const createStoreFactory = <T extends BaseItem>({
   name,
@@ -65,12 +74,10 @@ export const createStoreFactory = <T extends BaseItem>({
   debounceDelay = DEFAULT_DEBOUNCE_DELAY,
   api,
 }: StoreConfig<T>): StoreFactoryReturn<T> => {
-  type Store = StoreState<T> & StoreActions<T>;
+  const debounceTimerRef = { current: null as NodeJS.Timeout | null };
+  const activeControllerRef = { current: null as AbortController | null };
 
-  let debounceTimer: NodeJS.Timeout | null = null;
-  let activeController: AbortController | null = null;
-
-  const store = create<Store>((set, get) => {
+  const store = create<Store<T>>((set, get) => {
     const shouldFetch = () => {
       const now = Date.now();
       const state = get();
@@ -82,8 +89,8 @@ export const createStoreFactory = <T extends BaseItem>({
     };
 
     const debounce = (fn: Function) => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => fn(), debounceDelay);
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = setTimeout(() => fn(), debounceDelay);
     };
 
     const updateState = (updates: Partial<StoreState<T>>) => {
@@ -95,13 +102,13 @@ export const createStoreFactory = <T extends BaseItem>({
     };
 
     const cleanupFetch = () => {
-      if (activeController) {
-        activeController.abort();
-        activeController = null;
+      if (activeControllerRef.current) {
+        activeControllerRef.current.abort();
+        activeControllerRef.current = null;
       }
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-        debounceTimer = null;
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
       }
     };
 
@@ -127,7 +134,8 @@ export const createStoreFactory = <T extends BaseItem>({
       },
 
       upload: async (formData: FormData) => {
-        if (get().isLoading) return;
+        const state = get();
+        if (state.isLoading) return;
 
         updateState({ isLoading: true, error: null });
         try {
@@ -149,9 +157,10 @@ export const createStoreFactory = <T extends BaseItem>({
       },
 
       remove: async (url: string) => {
-        if (get().isLoading) return;
+        const state = get();
+        if (state.isLoading) return;
 
-        const previousItems = get().items;
+        const previousItems = state.items;
         updateState({
           items: previousItems.filter(item => item.url !== url),
           isLoading: true,
@@ -178,21 +187,20 @@ export const createStoreFactory = <T extends BaseItem>({
       },
 
       fetch: async () => {
-        if (!shouldFetch()) return;
-        if (get().isLoading) return;
+        if (!shouldFetch() || get().isLoading) return;
 
         cleanupFetch();
-        activeController = new AbortController();
+        activeControllerRef.current = new AbortController();
 
         updateState({
-          currentFetch: activeController,
+          currentFetch: activeControllerRef.current,
           isLoading: true,
           error: null,
         });
 
         try {
           const result = await api.getAll();
-          if (activeController?.signal.aborted) return;
+          if (activeControllerRef.current?.signal.aborted) return;
 
           if (!result.success) throw new Error(result.error);
           updateState({
@@ -214,21 +222,20 @@ export const createStoreFactory = <T extends BaseItem>({
       },
 
       fetchBySlug: async (slug: string) => {
-        if (!shouldFetch()) return;
-        if (get().isLoading) return;
+        if (!shouldFetch() || get().isLoading) return;
 
         cleanupFetch();
-        activeController = new AbortController();
+        activeControllerRef.current = new AbortController();
 
         updateState({
-          currentFetch: activeController,
+          currentFetch: activeControllerRef.current,
           isLoading: true,
           error: null,
         });
 
         try {
           const result = await api.getBySlug(slug);
-          if (activeController?.signal.aborted) return;
+          if (activeControllerRef.current?.signal.aborted) return;
 
           if (!result.success) throw new Error(result.error);
           updateState({
@@ -252,19 +259,41 @@ export const createStoreFactory = <T extends BaseItem>({
   });
 
   const useData = (storeSlug?: string): UseStoreDataReturn<T> => {
-    const state = store();
+    const mountedRef = useRef(true);
+    const slugRef = useRef(storeSlug);
+
+    const selector = useCallback(
+      (state: Store<T>) => ({
+        items: state.items,
+        isLoading: state.isLoading,
+        error: state.error,
+      }),
+      []
+    );
+
+    const state = store(selector);
+
+    const actions = useMemo(
+      () => ({
+        fetch: store.getState().fetch,
+        fetchBySlug: store.getState().fetchBySlug,
+        resetState: store.getState().resetState,
+      }),
+      []
+    );
 
     useEffect(() => {
-      let mounted = true;
+      mountedRef.current = true;
+      slugRef.current = storeSlug;
 
       const fetchData = async () => {
-        if (!mounted) return;
+        if (!mountedRef.current) return;
 
         try {
-          if (storeSlug) {
-            await state.fetchBySlug(storeSlug);
+          if (slugRef.current) {
+            await actions.fetchBySlug(slugRef.current);
           } else {
-            await state.fetch();
+            await actions.fetch();
           }
         } catch (error) {
           // Error handling is done in the store actions
@@ -274,20 +303,16 @@ export const createStoreFactory = <T extends BaseItem>({
       fetchData();
 
       return () => {
-        mounted = false;
-        state.resetState();
+        mountedRef.current = false;
+        actions.resetState();
       };
-    }, [storeSlug, state]);
+    }, [storeSlug, actions]);
 
-    return {
-      items: state.items,
-      isLoading: state.isLoading,
-      error: state.error,
-    };
+    return state;
   };
 
   return {
-    useStore: () => store(),
+    useStore: store,
     useItems: () => store(state => state.items),
     useLoading: () => store(state => state.isLoading),
     useError: () => store(state => state.error),
