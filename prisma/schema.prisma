@@ -287,6 +287,7 @@ model UserSettings {
   CategoryImage    CategoryImage[]
   OfficeLocation   OfficeLocation[]
   storeDescription StoreDescription?
+  OpeningHours     OpeningHours[]
 
   @@map("user_settings")
 }
@@ -335,27 +336,28 @@ model CategoryImage {
 }
 
 model OfficeLocation {
-  id             String        @id @default(cuid())
+  id             String       @id @default(cuid())
   city           String
   telephone      String
   general        String
   websiteQueries String
   logoUrl        String? // Added this field
-  openingHours   OpeningHours?
-  userSettings   UserSettings  @relation(fields: [userSettingsId], references: [id], onDelete: Cascade)
+  userSettings   UserSettings @relation(fields: [userSettingsId], references: [id], onDelete: Cascade)
   userSettingsId String
 
   @@map("office_locations")
 }
 
 model OpeningHours {
-  id               String         @id @default(cuid())
+  id               String @id @default(cuid())
+  city             String
   mondayToThursday String
   friday           String
-  saturdaySunday   String         @default("Closed")
-  publicHolidays   String         @default("Closed")
-  officeLocation   OfficeLocation @relation(fields: [officeLocationId], references: [id], onDelete: Cascade)
-  officeLocationId String         @unique
+  saturdaySunday   String @default("Closed")
+  publicHolidays   String @default("Closed")
+
+  userSettingsId String
+  userSettings   UserSettings @relation(fields: [userSettingsId], references: [id], onDelete: Cascade)
 
   @@map("opening_hours")
 }
