@@ -26,7 +26,7 @@ export default async function VendorLayout({
       <Toaster />
       <div className="flex min-h-screen flex-col">
         <Navbar />
-        <div className="flex-grow">{children}</div>
+        <div className="flex-grow p-2">{children}</div>
       </div>
     </SessionProvider>
   );

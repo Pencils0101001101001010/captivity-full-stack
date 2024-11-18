@@ -295,7 +295,7 @@ const Navbar = () => {
 
   return (
     <div className="sticky top-0 z-50">
-      <nav className="bg-black text-white p-5">
+      <nav className="bg-black text-white p-9">
         <div className="mx-auto w-full py-6 px-4 md:px-8">
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center justify-between">
