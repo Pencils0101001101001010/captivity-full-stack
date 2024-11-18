@@ -11,6 +11,8 @@ import {
   ClipboardList,
   PlusCircle,
   Menu,
+  Search,
+  X,
 } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
@@ -59,13 +61,14 @@ const Navbar = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   const defaultLogoUrl = "/captivity-logo-white.png";
-
   const isVendor = session?.user?.role === "VENDOR";
-  const isVendorCustomer =
-    session?.user?.role === "VENDORCUSTOMER" ||
-    session?.user?.role === "APPROVEDVENDORCUSTOMER";
+  const isVendorCustomer = [
+    "VENDORCUSTOMER",
+    "APPROVEDVENDORCUSTOMER",
+  ].includes(session?.user?.role || "");
 
   useEffect(() => {
     const fetchLogo = async () => {
@@ -76,17 +79,12 @@ const Navbar = () => {
 
       try {
         setIsLogoLoading(true);
-
-        if (session.user.role === "VENDOR") {
+        if (isVendor) {
           const result = await getLogo();
           if (result.success && result.url) {
             setLogoUrl(result.url);
           }
-        } else if (
-          (session.user.role === "VENDORCUSTOMER" ||
-            session.user.role === "APPROVEDVENDORCUSTOMER") &&
-          vendorWebsite
-        ) {
+        } else if (isVendorCustomer && vendorWebsite) {
           const result = await getVendorLogoBySlug(vendorWebsite);
           if (result.success && result.url) {
             setLogoUrl(result.url);
@@ -100,7 +98,7 @@ const Navbar = () => {
     };
 
     fetchLogo();
-  }, [session?.user, vendorWebsite]);
+  }, [session?.user, vendorWebsite, isVendor, isVendorCustomer]);
 
   const handleLogoUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -151,14 +149,14 @@ const Navbar = () => {
     }
   };
 
-  const logoSection = session?.user ? (
+  const LogoSection = () => (
     <div
-      className={`relative w-[170px] h-[54px] group ${isVendor ? "cursor-pointer" : ""}`}
+      className="relative w-[170px] h-[54px] group"
       onMouseEnter={() => isVendor && logoUrl && setShowRemoveButton(true)}
       onMouseLeave={() => setShowRemoveButton(false)}
     >
       {isLogoLoading ? (
-        <div className="w-full h-full bg-gray-800 animate-pulse rounded"></div>
+        <div className="w-full h-full bg-gray-800 animate-pulse rounded" />
       ) : logoUrl ? (
         <Link
           href={isVendor || isVendorCustomer ? `/vendor/${vendorWebsite}` : "#"}
@@ -225,104 +223,96 @@ const Navbar = () => {
         />
       )}
     </div>
-  ) : (
-    <Link href="/vendor_admin" className="w-[170px] h-[54px]">
-      <Image
-        src={defaultLogoUrl}
-        alt="captivityLogo"
-        width={331}
-        height={54}
-        className="h-auto border border-white hover:opacity-80 hover:border-2"
-        priority
+  );
+
+  const NavigationButtons = () => (
+    <div className="flex flex-col md:flex-row gap-2 md:gap-3">
+      <Button asChild className="bg-blue-300 w-full md:w-auto">
+        <Link href={`/vendor/${vendorWebsite}/welcome`}>Back</Link>
+      </Button>
+      <Button asChild variant="secondary" className="w-full md:w-auto">
+        <Link href={`/vendor/${vendorWebsite}`}>Home</Link>
+      </Button>
+      <Button asChild variant="destructive" className="w-full md:w-auto">
+        <Link
+          href={`/vendor/${vendorWebsite}/shopping/product_categories/summer`}
+        >
+          Shop
+        </Link>
+      </Button>
+    </div>
+  );
+
+  const SearchBar = () => (
+    <div className="flex w-full md:w-auto">
+      <input
+        type="text"
+        placeholder="Search for product"
+        className="px-2 w-full md:w-[150px] py-2 rounded-l-sm bg-white text-black"
       />
-    </Link>
+      <button className="bg-red-600 text-sm rounded-r-sm text-white px-4 py-2 hover:bg-red-500 whitespace-nowrap">
+        SEARCH
+      </button>
+    </div>
   );
 
   const VendorNavItems = () => {
     if (!isVendor) return null;
 
+    const navItems = [
+      {
+        href: `/vendor/${vendorWebsite}/add-product`,
+        icon: <PlusCircle size={18} />,
+        label: "Add Product",
+      },
+      {
+        href: "/vendor/users",
+        icon: <Users size={18} />,
+        label: "Users",
+      },
+      {
+        href: "/vendor/orders",
+        icon: <ClipboardList size={18} />,
+        label: "Orders",
+      },
+    ];
+
     return (
-      <div
-        className={`${isMobileMenuOpen ? "flex flex-col space-y-4" : "hidden md:flex"} items-center space-x-6 mr-6`}
-      >
-        <Link
-          href={`/vendor/${vendorWebsite}/add-product`}
-          className="flex items-center space-x-2 hover:text-gray-300"
-        >
-          <PlusCircle size={18} />
-          <span>Add Product</span>
-        </Link>
-        <Link
-          href="/vendor/users"
-          className="flex items-center space-x-2 hover:text-gray-300"
-        >
-          <Users size={18} />
-          <span>Users</span>
-        </Link>
-        <Link
-          href="/vendor/orders"
-          className="flex items-center space-x-2 hover:text-gray-300"
-        >
-          <ClipboardList size={18} />
-          <span>Orders</span>
-        </Link>
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+        {navItems.map(item => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="flex items-center gap-2 hover:text-gray-300 transition-colors"
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </Link>
+        ))}
       </div>
     );
   };
 
   return (
-    <>
-      <div className="sticky top-0 z-50">
-        <nav className="bg-black text-white">
-          <div className="flex items-center justify-between text-xs mx-auto w-full py-6 px-8">
-            {/* Logo Section */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center">{logoSection}</div>
-              <Button asChild className="bg-blue-300">
-                <Link href={`/vendor/${vendorWebsite}/welcome`}>Back</Link>
-              </Button>
-              <Button asChild variant={"secondary"}>
-                <Link href={`/vendor/${vendorWebsite}`}>Home</Link>
-              </Button>
-              <Button asChild variant={"destructive"}>
-                <Link
-                  href={`/vendor/${vendorWebsite}/shopping/product_categories/summer`}
-                >
-                  Shop
-                </Link>
-              </Button>
+    <div className="sticky top-0 z-50">
+      <nav className="bg-black text-white">
+        <div className="mx-auto w-full py-6 px-4 md:px-8">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <LogoSection />
+              <NavigationButtons />
             </div>
 
-            {/* Navigation and Search Section - Always Right Aligned */}
-            <div className="hidden md:flex items-center justify-end flex-1 ml-6">
-              {/* Vendor Navigation Items - Only show for vendors */}
+            <div className="flex items-center gap-6">
               {isVendor && <VendorNavItems />}
+              <SearchBar />
 
-              {/* Search and User Controls - Always right aligned */}
-              <div className="flex items-center space-x-6">
-                <div className="flex">
-                  <input
-                    type="text"
-                    placeholder="Search for product"
-                    className="px-2 w-[150px] py-2 rounded-l-sm bg-white text-black"
-                  />
-                  <button className="bg-red-600 text-sm rounded-r-sm text-white px-2 py-2 hover:bg-red-500">
-                    SEARCH
-                  </button>
-                </div>
+              <div className="flex items-center gap-4">
                 {session?.user ? (
-                  <div className="flex items-center space-x-4">
+                  <>
                     <UserButton className="text-lg" />
-                    <button
-                      onClick={() => setIsCartOpen(true)}
-                      className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
-                    >
-                      <ShoppingCart className="w-6 h-6" />
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                        0
-                      </span>
-                    </button>
-                  </div>
+                  </>
                 ) : (
                   <>
                     <Link href="/login" className="hover:text-gray-300">
@@ -332,90 +322,81 @@ const Navbar = () => {
                     <Link href="/signup" className="hover:text-gray-300">
                       Register
                     </Link>
-                    <button
-                      onClick={() => setIsCartOpen(true)}
-                      className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
-                    >
-                      <ShoppingCart className="w-6 h-6" />
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                        0
-                      </span>
-                    </button>
                   </>
                 )}
+                <button
+                  onClick={() => setIsCartOpen(true)}
+                  className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
+                >
+                  <ShoppingCart className="w-6 h-6" />
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    0
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Navigation */}
+          <div className="md:hidden">
+            <div className="flex items-center justify-between mb-4">
+              <LogoSection />
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setShowMobileSearch(!showMobileSearch)}
+                  className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+                >
+                  {showMobileSearch ? <X size={24} /> : <Search size={24} />}
+                </button>
+                {isVendor && (
+                  <button
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+                  >
+                    {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                  </button>
+                )}
+                {session?.user ? (
+                  <UserButton className="text-lg" />
+                ) : (
+                  <Link href="/login" className="font-bold hover:text-gray-300">
+                    Login
+                  </Link>
+                )}
+                <button
+                  onClick={() => setIsCartOpen(true)}
+                  className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
+                >
+                  <ShoppingCart className="w-6 h-6" />
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    0
+                  </span>
+                </button>
               </div>
             </div>
 
-            {/* Mobile Menu */}
-            <div className="md:hidden flex items-center space-x-4">
-              {isVendor && (
-                <button
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="p-2 hover:bg-gray-800 rounded-full transition-colors"
-                >
-                  <Menu size={24} />
-                </button>
-              )}
-              {session?.user ? (
-                <>
-                  <UserButton className="text-lg" />
-                  <button
-                    onClick={() => setIsCartOpen(true)}
-                    className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
-                  >
-                    <ShoppingCart className="w-6 h-6" />
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      0
-                    </span>
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="font-bold text-lg hover:text-gray-300"
-                  >
-                    Login
-                  </Link>
-                  <button
-                    onClick={() => setIsCartOpen(true)}
-                    className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
-                  >
-                    <ShoppingCart className="w-6 h-6" />
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      0
-                    </span>
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
+            {/* Mobile Search */}
+            {showMobileSearch && (
+              <div className="mb-4">
+                <SearchBar />
+              </div>
+            )}
 
-          {/* Mobile Vendor Menu */}
-          {isMobileMenuOpen && isVendor && (
-            <div className="md:hidden bg-black border-t border-gray-800 px-8 py-4">
-              <VendorNavItems />
-            </div>
-          )}
-        </nav>
+            {/* Mobile Navigation Buttons */}
+            <NavigationButtons />
 
-        {/* Mobile search bar */}
-        <div className="md:hidden bg-white">
-          <div className="flex items-center justify-center border-b-2 p-2">
-            <input
-              type="text"
-              placeholder="Search for product"
-              className="px-2 w-[150px] py-2 bg-white rounded-l-sm text-black border-2"
-            />
-            <button className="bg-red-600 hover:bg-red-500 rounded-r-sm text-white px-2 py-2">
-              SEARCH
-            </button>
+            {/* Mobile Vendor Menu */}
+            {isMobileMenuOpen && isVendor && (
+              <div className="mt-4 border-t border-gray-800 pt-4">
+                <VendorNavItems />
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      </nav>
 
       <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-    </>
+    </div>
   );
 };
 
