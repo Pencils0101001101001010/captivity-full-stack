@@ -1,4 +1,5 @@
-// _store/storeFactory.ts
+"use client";
+
 import { create } from "zustand";
 import { useEffect } from "react";
 
@@ -41,6 +42,20 @@ interface StoreConfig<T extends BaseItem> {
   };
 }
 
+interface UseStoreDataReturn<T extends BaseItem> {
+  items: T[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+interface StoreFactoryReturn<T extends BaseItem> {
+  useStore: () => StoreState<T> & StoreActions<T>;
+  useItems: () => T[];
+  useLoading: () => boolean;
+  useError: () => string | null;
+  useData: (storeSlug?: string) => UseStoreDataReturn<T>;
+}
+
 const DEFAULT_CACHE_DURATION = 60000; // 1 minute
 const DEFAULT_DEBOUNCE_DELAY = 300; // 300ms
 
@@ -49,12 +64,13 @@ export const createStoreFactory = <T extends BaseItem>({
   cacheDuration = DEFAULT_CACHE_DURATION,
   debounceDelay = DEFAULT_DEBOUNCE_DELAY,
   api,
-}: StoreConfig<T>) => {
+}: StoreConfig<T>): StoreFactoryReturn<T> => {
   type Store = StoreState<T> & StoreActions<T>;
 
   let debounceTimer: NodeJS.Timeout | null = null;
+  let activeController: AbortController | null = null;
 
-  const useStore = create<Store>((set, get) => {
+  const store = create<Store>((set, get) => {
     const shouldFetch = () => {
       const now = Date.now();
       const state = get();
@@ -78,6 +94,17 @@ export const createStoreFactory = <T extends BaseItem>({
       }));
     };
 
+    const cleanupFetch = () => {
+      if (activeController) {
+        activeController.abort();
+        activeController = null;
+      }
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+        debounceTimer = null;
+      }
+    };
+
     return {
       // Initial state
       items: [],
@@ -88,13 +115,7 @@ export const createStoreFactory = <T extends BaseItem>({
       currentFetch: null,
 
       resetState: () => {
-        const { currentFetch } = get();
-        if (currentFetch) {
-          currentFetch.abort();
-        }
-        if (debounceTimer) {
-          clearTimeout(debounceTimer);
-        }
+        cleanupFetch();
         set({
           items: [],
           isLoading: false,
@@ -106,8 +127,7 @@ export const createStoreFactory = <T extends BaseItem>({
       },
 
       upload: async (formData: FormData) => {
-        const state = get();
-        if (state.isLoading) return;
+        if (get().isLoading) return;
 
         updateState({ isLoading: true, error: null });
         try {
@@ -117,25 +137,23 @@ export const createStoreFactory = <T extends BaseItem>({
             isLoading: false,
             items: result.items,
             error: null,
+            initialized: true,
           });
         } catch (error) {
-          console.error(`Error uploading ${name}:`, error);
           updateState({
             isLoading: false,
-            error: error instanceof Error ? error.message : `Upload failed`,
+            error: error instanceof Error ? error.message : "Upload failed",
           });
           throw error;
         }
       },
 
       remove: async (url: string) => {
-        const state = get();
-        if (state.isLoading) return;
+        if (get().isLoading) return;
 
-        // Optimistic update
-        const previousItems = state.items;
+        const previousItems = get().items;
         updateState({
-          items: state.items.filter(item => item.url !== url),
+          items: previousItems.filter(item => item.url !== url),
           isLoading: true,
           error: null,
         });
@@ -147,13 +165,13 @@ export const createStoreFactory = <T extends BaseItem>({
             isLoading: false,
             items: result.items,
             error: null,
+            initialized: true,
           });
         } catch (error) {
-          // Revert on error
           updateState({
             items: previousItems,
             isLoading: false,
-            error: error instanceof Error ? error.message : `Remove failed`,
+            error: error instanceof Error ? error.message : "Remove failed",
           });
           throw error;
         }
@@ -161,120 +179,118 @@ export const createStoreFactory = <T extends BaseItem>({
 
       fetch: async () => {
         if (!shouldFetch()) return;
+        if (get().isLoading) return;
 
-        const fetch = async () => {
-          const state = get();
-          if (state.isLoading) return;
+        cleanupFetch();
+        activeController = new AbortController();
 
-          if (state.currentFetch) {
-            state.currentFetch.abort();
-          }
+        updateState({
+          currentFetch: activeController,
+          isLoading: true,
+          error: null,
+        });
 
-          const controller = new AbortController();
+        try {
+          const result = await api.getAll();
+          if (activeController?.signal.aborted) return;
+
+          if (!result.success) throw new Error(result.error);
           updateState({
-            currentFetch: controller,
-            isLoading: true,
+            items: result.items,
+            isLoading: false,
+            initialized: true,
+            currentFetch: null,
             error: null,
           });
-
-          try {
-            const result = await api.getAll();
-
-            if (controller.signal.aborted) return;
-
-            if (!result.success) throw new Error(result.error);
-            updateState({
-              items: result.items,
-              isLoading: false,
-              initialized: true,
-              currentFetch: null,
-              error: null,
-            });
-          } catch (error) {
-            if (error instanceof Error && error.name === "AbortError") return;
-            console.error(`Error fetching ${name}:`, error);
-            updateState({
-              isLoading: false,
-              error: error instanceof Error ? error.message : `Fetch failed`,
-              currentFetch: null,
-            });
-          }
-        };
-
-        debounce(fetch);
+        } catch (error) {
+          if (error instanceof Error && error.name === "AbortError") return;
+          console.error(`Error fetching ${name}:`, error);
+          updateState({
+            isLoading: false,
+            error: error instanceof Error ? error.message : "Fetch failed",
+            currentFetch: null,
+          });
+        }
       },
 
       fetchBySlug: async (slug: string) => {
         if (!shouldFetch()) return;
+        if (get().isLoading) return;
 
-        const fetch = async () => {
-          const state = get();
-          if (state.isLoading) return;
+        cleanupFetch();
+        activeController = new AbortController();
 
-          if (state.currentFetch) {
-            state.currentFetch.abort();
-          }
+        updateState({
+          currentFetch: activeController,
+          isLoading: true,
+          error: null,
+        });
 
-          const controller = new AbortController();
+        try {
+          const result = await api.getBySlug(slug);
+          if (activeController?.signal.aborted) return;
+
+          if (!result.success) throw new Error(result.error);
           updateState({
-            currentFetch: controller,
-            isLoading: true,
+            items: result.items,
+            isLoading: false,
+            initialized: true,
+            currentFetch: null,
             error: null,
           });
-
-          try {
-            const result = await api.getBySlug(slug);
-
-            if (controller.signal.aborted) return;
-
-            if (!result.success) throw new Error(result.error);
-            updateState({
-              items: result.items,
-              isLoading: false,
-              initialized: true,
-              currentFetch: null,
-              error: null,
-            });
-          } catch (error) {
-            if (error instanceof Error && error.name === "AbortError") return;
-            console.error(`Error fetching ${name} by slug:`, error);
-            updateState({
-              isLoading: false,
-              error: error instanceof Error ? error.message : `Fetch failed`,
-              currentFetch: null,
-            });
-          }
-        };
-
-        debounce(fetch);
+        } catch (error) {
+          if (error instanceof Error && error.name === "AbortError") return;
+          console.error(`Error fetching ${name} by slug:`, error);
+          updateState({
+            isLoading: false,
+            error: error instanceof Error ? error.message : "Fetch failed",
+            currentFetch: null,
+          });
+        }
       },
     };
   });
 
-  return {
-    useStore,
-    useItems: () => useStore(state => state.items),
-    useLoading: () => useStore(state => state.isLoading),
-    useError: () => useStore(state => state.error),
-    useData: (storeSlug?: string) => {
-      const store = useStore();
-      const items = useStore(state => state.items);
-      const isLoading = useStore(state => state.isLoading);
-      const error = useStore(state => state.error);
+  const useData = (storeSlug?: string): UseStoreDataReturn<T> => {
+    const state = store();
 
-      useEffect(() => {
-        if (storeSlug) {
-          store.fetchBySlug(storeSlug);
-        } else {
-          store.fetch();
+    useEffect(() => {
+      let mounted = true;
+
+      const fetchData = async () => {
+        if (!mounted) return;
+
+        try {
+          if (storeSlug) {
+            await state.fetchBySlug(storeSlug);
+          } else {
+            await state.fetch();
+          }
+        } catch (error) {
+          // Error handling is done in the store actions
         }
+      };
 
-        return () => {
-          store.resetState();
-        };
-      }, [storeSlug, store]);
+      fetchData();
 
-      return { items, isLoading, error };
-    },
+      return () => {
+        mounted = false;
+        state.resetState();
+      };
+    }, [storeSlug, state]);
+
+    return {
+      items: state.items,
+      isLoading: state.isLoading,
+      error: state.error,
+    };
+  };
+
+  return {
+    useStore: () => store(),
+    useItems: () => store(state => state.items),
+    useLoading: () => store(state => state.isLoading),
+    useError: () => store(state => state.error),
+    useData,
   };
 };
