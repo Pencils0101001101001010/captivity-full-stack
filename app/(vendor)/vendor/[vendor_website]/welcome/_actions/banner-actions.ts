@@ -3,7 +3,6 @@
 import { put, del } from "@vercel/blob";
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/auth";
-import { revalidatePath } from "next/cache";
 import { cache } from "react";
 
 interface BannerActionResult {
@@ -101,8 +100,6 @@ export async function uploadBanner(
       },
     });
 
-    revalidatePath("/vendor/[vendor_website]/welcome");
-
     return {
       success: true,
       url: blob.url,
@@ -158,8 +155,6 @@ export async function removeBanner(url: string): Promise<BannerActionResult> {
         },
       },
     });
-
-    revalidatePath("/vendor/[vendor_website]/welcome");
 
     return {
       success: true,

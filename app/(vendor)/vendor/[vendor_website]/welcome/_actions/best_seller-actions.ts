@@ -106,8 +106,6 @@ export async function uploadBestSeller(
       },
     });
 
-    revalidatePath("/vendor/[vendor_website]/welcome");
-
     return {
       success: true,
       url: blob.url,
@@ -169,8 +167,6 @@ export async function removeBestSeller(
         },
       },
     });
-
-    revalidatePath("/vendor/[vendor_website]/welcome");
 
     return {
       success: true,

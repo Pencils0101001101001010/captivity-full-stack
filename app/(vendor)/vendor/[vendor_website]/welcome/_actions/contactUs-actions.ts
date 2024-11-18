@@ -2,9 +2,8 @@
 
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/auth";
-import { revalidatePath } from "next/cache";
 import { cache } from "react";
-import { Prisma, UserSettings as PrismaUserSettings } from "@prisma/client";
+import { UserSettings as PrismaUserSettings } from "@prisma/client";
 
 interface ContactInfo {
   id: string;
@@ -178,13 +177,6 @@ export async function createContactInfo(
       });
     }
 
-    if (updatedSettings?.user?.storeSlug) {
-      revalidatePath(
-        `/vendor/${updatedSettings.user.storeSlug}/welcome`,
-        "page"
-      );
-    }
-
     return {
       success: true,
       data: updatedSettings?.OfficeLocation || [],
@@ -232,13 +224,6 @@ export async function updateContactInfo(
       },
     });
 
-    if (updatedSettings?.user?.storeSlug) {
-      revalidatePath(
-        `/vendor/${updatedSettings.user.storeSlug}/welcome`,
-        "page"
-      );
-    }
-
     return {
       success: true,
       data: updatedSettings?.OfficeLocation || [],
@@ -283,13 +268,6 @@ export async function deleteContactInfo(
         },
       },
     });
-
-    if (updatedSettings?.user?.storeSlug) {
-      revalidatePath(
-        `/vendor/${updatedSettings.user.storeSlug}/welcome`,
-        "page"
-      );
-    }
 
     return {
       success: true,

@@ -3,7 +3,6 @@
 import { put, del } from "@vercel/blob";
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/auth";
-import { revalidatePath } from "next/cache";
 import { cache } from "react";
 
 interface CategoryActionResult {
@@ -106,8 +105,6 @@ export async function uploadCategory(
       },
     });
 
-    revalidatePath("/vendor/[vendor_website]/welcome");
-
     return {
       success: true,
       url: blob.url,
@@ -168,8 +165,6 @@ export async function removeCategory(
         },
       },
     });
-
-    revalidatePath("/vendor/[vendor_website]/welcome");
 
     return {
       success: true,
