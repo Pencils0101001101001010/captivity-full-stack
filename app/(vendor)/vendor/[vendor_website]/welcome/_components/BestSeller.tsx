@@ -4,9 +4,15 @@ import Image from "next/image";
 import { useEffect, useRef, useState, useCallback, memo, useMemo } from "react";
 import { Trash2, Plus } from "lucide-react";
 import { RiStarSFill } from "react-icons/ri";
-import { useBestSellerStore } from "../_store/BestSellerStore";
 import { useParams } from "next/navigation";
 import { useSession } from "@/app/(vendor)/SessionProvider";
+import {
+  useBestSellerStore,
+  useBestSellers,
+  useBestSellerLoading,
+  useBestSellerError,
+  useBestSellerData,
+} from "../_store/BestSellerStore";
 
 interface BestSellerItem {
   url: string;
@@ -150,7 +156,13 @@ const FilledBlock = memo(
 
 FilledBlock.displayName = "FilledBlock";
 
-export default function BestSeller() {
+const BestSellerGrid = memo(() => {
+  const bestSellers = useBestSellers();
+  const { upload: uploadBestSeller, remove: removeBestSeller } =
+    useBestSellerStore();
+  const { user } = useSession();
+  const isVendor = user?.role === "VENDOR";
+
   const ref1 = useRef<HTMLInputElement>(null);
   const ref2 = useRef<HTMLInputElement>(null);
   const ref3 = useRef<HTMLInputElement>(null);
@@ -158,22 +170,6 @@ export default function BestSeller() {
   const fileInputRefs = useMemo(() => [ref1, ref2, ref3, ref4], []);
 
   const [productNames, setProductNames] = useState<string[]>(["", "", "", ""]);
-  const { user } = useSession();
-  const params = useParams();
-  const vendorWebsite =
-    typeof params?.vendor_website === "string" ? params.vendor_website : "";
-
-  const {
-    bestSellers,
-    isLoading,
-    error,
-    uploadBestSeller,
-    removeBestSeller,
-    fetchBestSellers,
-    fetchVendorBestSellers,
-  } = useBestSellerStore();
-
-  const isVendor = user?.role === "VENDOR";
 
   const handleProductNameChange = useCallback((index: number, name: string) => {
     setProductNames(prev => {
@@ -181,7 +177,7 @@ export default function BestSeller() {
       newNames[index] = name;
       return newNames;
     });
-  }, []);
+  }, []); // No dependencies needed as it uses function form of setState
 
   const handleFileSelect = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
@@ -204,20 +200,28 @@ export default function BestSeller() {
       const formData = new FormData();
       formData.append("bestSeller", file);
       formData.append("productName", productName);
-      await uploadBestSeller(formData);
 
-      if (fileInputRefs[index]?.current) {
-        fileInputRefs[index].current.value = "";
+      try {
+        await uploadBestSeller(formData);
+
+        if (fileInputRefs[index]?.current) {
+          fileInputRefs[index].current.value = "";
+        }
+
+        setProductNames(prev => {
+          const newNames = [...prev];
+          newNames[index] = "";
+          return newNames;
+        });
+      } catch (error) {
+        console.error("Error uploading best seller:", error);
       }
-
-      handleProductNameChange(index, "");
     },
     [
       isVendor,
       bestSellers.length,
       productNames,
       uploadBestSeller,
-      handleProductNameChange,
       fileInputRefs,
     ]
   );
@@ -231,29 +235,15 @@ export default function BestSeller() {
           "Are you sure you want to remove this best seller image?"
         )
       ) {
-        await removeBestSeller(url);
+        try {
+          await removeBestSeller(url);
+        } catch (error) {
+          console.error("Error removing best seller:", error);
+        }
       }
     },
     [isVendor, removeBestSeller]
   );
-
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchData = async () => {
-      try {
-        if (user.role === "VENDOR") {
-          await fetchBestSellers();
-        } else if (user.role === "VENDORCUSTOMER" && vendorWebsite) {
-          await fetchVendorBestSellers(vendorWebsite);
-        }
-      } catch (error) {
-        console.error("Error fetching best sellers:", error);
-      }
-    };
-
-    fetchData();
-  }, [user, vendorWebsite, fetchBestSellers, fetchVendorBestSellers]);
 
   const renderBlock = useCallback(
     (index: number) => {
@@ -295,6 +285,36 @@ export default function BestSeller() {
     ]
   );
 
+  return (
+    <div className="lg:ml-11 lg:mr-12 px-12 mb-4 grid xl:grid-cols-4 lg:grid-cols-4 md:grid-cols-4 sm:grid-cols-1 grid-cols-2 sm:gap-4 gap-2 justify-center items-center">
+      {[0, 1, 2, 3].map(renderBlock)}
+    </div>
+  );
+});
+
+BestSellerGrid.displayName = "BestSellerGrid";
+
+// Type guard for checking if user has role
+const isVendorUser = (user: any): user is { role: "VENDOR" } => {
+  return user?.role === "VENDOR";
+};
+
+export default function BestSeller() {
+  const isLoading = useBestSellerLoading();
+  const error = useBestSellerError();
+  const { user } = useSession();
+  const params = useParams();
+  const vendorWebsite =
+    typeof params?.vendor_website === "string" ? params.vendor_website : "";
+
+  // Type guard usage
+  const isVendor: boolean = isVendorUser(user);
+
+  // Use the new data hook for fetching
+  useBestSellerData(
+    user?.role === "VENDORCUSTOMER" ? vendorWebsite : undefined
+  );
+
   if (isLoading) {
     return (
       <div className="w-full flex items-center justify-center py-12">
@@ -312,9 +332,7 @@ export default function BestSeller() {
           </h2>
         </div>
 
-        <div className="lg:ml-11 lg:mr-12 px-12 mb-4 grid xl:grid-cols-4 lg:grid-cols-4 md:grid-cols-4 sm:grid-cols-1 grid-cols-2 sm:gap-4 gap-2 justify-center items-center">
-          {[0, 1, 2, 3].map(renderBlock)}
-        </div>
+        <BestSellerGrid />
 
         {isVendor && error && (
           <div className="fixed top-4 right-4 bg-red-500 text-white px-3 py-2 rounded-md text-sm">

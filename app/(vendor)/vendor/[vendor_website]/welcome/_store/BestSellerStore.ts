@@ -1,14 +1,16 @@
+// _store/BestSellerStore.ts
 "use client";
 
 import { create } from "zustand";
 import {
-  uploadBestSeller,
-  removeBestSeller,
+  uploadBestSeller as uploadBestSellerAction,
+  removeBestSeller as removeBestSellerAction,
   getBestSellers,
   getVendorBestSellersBySlug,
 } from "../_actions/best_seller-actions";
+import { useEffect } from "react";
 
-interface BestSellerItem {
+export interface BestSellerItem {
   url: string;
   productName: string;
 }
@@ -17,132 +19,112 @@ interface BestSellerStore {
   bestSellers: BestSellerItem[];
   isLoading: boolean;
   error: string | null;
-  lastFetch: number;
-  uploadBestSeller: (formData: FormData) => Promise<void>;
-  removeBestSeller: (url: string) => Promise<void>;
+  // Match the component usage with upload/remove
+  upload: (formData: FormData) => Promise<void>;
+  remove: (url: string) => Promise<void>;
   fetchBestSellers: () => Promise<void>;
   fetchVendorBestSellers: (storeSlug: string) => Promise<void>;
 }
 
-const CACHE_DURATION = 60000; // 1 minute cache
-const DEBOUNCE_DELAY = 300; // 300ms debounce
+export const useBestSellerStore = create<BestSellerStore>(set => ({
+  bestSellers: [],
+  isLoading: false,
+  error: null,
 
-export const useBestSellerStore = create<BestSellerStore>((set, get) => {
-  let debounceTimer: NodeJS.Timeout | null = null;
-
-  const shouldFetch = () => {
-    const now = Date.now();
-    return !get().lastFetch || now - get().lastFetch > CACHE_DURATION;
-  };
-
-  const debounce = (fn: Function) => {
-    if (debounceTimer) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => fn(), DEBOUNCE_DELAY);
-  };
-
-  const updateState = (
-    loading: boolean,
-    error: string | null = null,
-    bestSellers?: BestSellerItem[]
-  ) => {
-    const updates: Partial<BestSellerStore> = { isLoading: loading };
-    if (error !== undefined) updates.error = error;
-    if (bestSellers !== undefined) {
-      updates.bestSellers = bestSellers;
-      updates.lastFetch = Date.now();
+  upload: async (formData: FormData) => {
+    set({ isLoading: true, error: null });
+    try {
+      const result = await uploadBestSellerAction(formData);
+      if (!result.success) throw new Error(result.error);
+      set({
+        bestSellers: result.urls || [],
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Upload failed",
+      });
+      throw error;
     }
-    set(updates);
-  };
+  },
 
-  return {
-    bestSellers: [],
-    isLoading: false,
-    error: null,
-    lastFetch: 0,
+  remove: async (url: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const result = await removeBestSellerAction(url);
+      if (!result.success) throw new Error(result.error);
+      set({
+        bestSellers: result.urls || [],
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Remove failed",
+      });
+      throw error;
+    }
+  },
 
-    uploadBestSeller: async (formData: FormData) => {
-      updateState(true, null);
-      try {
-        const result = await uploadBestSeller(formData);
-        if (!result.success) throw new Error(result.error);
-        updateState(false, null, result.urls || []);
-      } catch (error) {
-        updateState(
-          false,
-          error instanceof Error ? error.message : "Upload failed"
-        );
-      }
-    },
+  fetchBestSellers: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const result = await getBestSellers();
+      if (!result.success) throw new Error(result.error);
+      set({
+        bestSellers: result.urls || [],
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Fetch failed",
+      });
+    }
+  },
 
-    removeBestSeller: async (url: string) => {
-      updateState(true, null);
-      try {
-        const result = await removeBestSeller(url);
-        if (!result.success) throw new Error(result.error);
-        updateState(false, null, result.urls || []);
-      } catch (error) {
-        updateState(
-          false,
-          error instanceof Error ? error.message : "Removal failed"
-        );
-      }
-    },
+  fetchVendorBestSellers: async (storeSlug: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const result = await getVendorBestSellersBySlug(storeSlug);
+      if (!result.success) throw new Error(result.error);
+      set({
+        bestSellers: result.urls || [],
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Fetch failed",
+      });
+    }
+  },
+}));
 
-    fetchBestSellers: async () => {
-      if (!shouldFetch()) return;
-
-      const fetch = async () => {
-        if (get().isLoading) return;
-
-        updateState(true, null);
-        try {
-          const result = await getBestSellers();
-          if (!result.success) throw new Error(result.error);
-          updateState(false, null, result.urls || []);
-        } catch (error) {
-          updateState(
-            false,
-            error instanceof Error ? error.message : "Fetch failed"
-          );
-        }
-      };
-
-      debounce(fetch);
-    },
-
-    fetchVendorBestSellers: async (storeSlug: string) => {
-      if (!shouldFetch()) return;
-
-      const fetch = async () => {
-        if (get().isLoading) return;
-
-        updateState(true, null);
-        try {
-          const result = await getVendorBestSellersBySlug(storeSlug);
-          if (!result.success) throw new Error(result.error);
-          updateState(false, null, result.urls || []);
-        } catch (error) {
-          updateState(
-            false,
-            error instanceof Error ? error.message : "Fetch failed"
-          );
-        }
-      };
-
-      debounce(fetch);
-    },
-  };
-});
-
-// Optional: Add selector hooks for better performance
-export const useBestSellerData = () =>
+// Selector hooks that match your component usage
+export const useBestSellers = () =>
   useBestSellerStore(state => state.bestSellers);
 export const useBestSellerLoading = () =>
   useBestSellerStore(state => state.isLoading);
 export const useBestSellerError = () =>
   useBestSellerStore(state => state.error);
 
-// Example usage in component:
-// const bestSellers = useBestSellerData();
-// const isLoading = useBestSellerLoading();
-// const error = useBestSellerError();
+export const useBestSellerData = (storeSlug?: string) => {
+  const fetchBestSellers = useBestSellerStore(state => state.fetchBestSellers);
+  const fetchVendorBestSellers = useBestSellerStore(
+    state => state.fetchVendorBestSellers
+  );
+
+  useEffect(() => {
+    if (storeSlug) {
+      fetchVendorBestSellers(storeSlug);
+    } else {
+      fetchBestSellers();
+    }
+  }, [storeSlug, fetchBestSellers, fetchVendorBestSellers]);
+};

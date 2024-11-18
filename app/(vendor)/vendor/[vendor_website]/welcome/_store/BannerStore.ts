@@ -1,3 +1,4 @@
+// _store/BannerStore.ts
 "use client";
 
 import { create } from "zustand";
@@ -7,102 +8,127 @@ import {
   getBanners,
   getVendorBannersBySlug,
 } from "../_actions/banner-actions";
+import { useEffect } from "react";
+
+interface BannerItem {
+  url: string;
+}
+
+interface BannerActionResult {
+  success: boolean;
+  urls?: string[];
+  url?: string;
+  error?: string;
+}
 
 interface BannerStore {
-  banners: string[];
+  banners: BannerItem[];
   isLoading: boolean;
   error: string | null;
-  lastFetch: number;
-  uploadBanner: (formData: FormData) => Promise<void>;
-  removeBanner: (url: string) => Promise<void>;
+  upload: (formData: FormData) => Promise<void>;
+  remove: (url: string) => Promise<void>;
   fetchBanners: () => Promise<void>;
   fetchVendorBanners: (storeSlug: string) => Promise<void>;
 }
 
-const CACHE_DURATION = 60000; // 1 minute cache
+const mapUrlsToBannerItems = (urls: string[] = []): BannerItem[] => {
+  return urls.map(url => ({ url }));
+};
 
-export const useBannerStore = create<BannerStore>((set, get) => {
-  const shouldFetch = () => {
-    const now = Date.now();
-    return !get().lastFetch || now - get().lastFetch > CACHE_DURATION;
-  };
+export const useBannerStore = create<BannerStore>(set => ({
+  banners: [],
+  isLoading: false,
+  error: null,
 
-  return {
-    banners: [],
-    isLoading: false,
-    error: null,
-    lastFetch: 0,
+  upload: async (formData: FormData) => {
+    set({ isLoading: true, error: null });
+    try {
+      const result = await uploadBanner(formData);
+      if (!result.success) throw new Error(result.error);
+      set({
+        banners: mapUrlsToBannerItems(result.urls),
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Upload failed",
+      });
+      throw error;
+    }
+  },
 
-    uploadBanner: async (formData: FormData) => {
-      set({ isLoading: true, error: null });
-      try {
-        const result = await uploadBanner(formData);
-        if (!result.success) throw new Error(result.error);
-        set({
-          banners: result.urls || [],
-          lastFetch: Date.now(),
-        });
-      } catch (error) {
-        set({
-          error: error instanceof Error ? error.message : "Upload failed",
-        });
-      } finally {
-        set({ isLoading: false });
-      }
-    },
+  remove: async (url: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const result = await removeBanner(url);
+      if (!result.success) throw new Error(result.error);
+      set({
+        banners: mapUrlsToBannerItems(result.urls),
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Remove failed",
+      });
+      throw error;
+    }
+  },
 
-    removeBanner: async (url: string) => {
-      set({ isLoading: true, error: null });
-      try {
-        const result = await removeBanner(url);
-        if (!result.success) throw new Error(result.error);
-        set({
-          banners: result.urls || [],
-          lastFetch: Date.now(),
-        });
-      } catch (error) {
-        set({
-          error: error instanceof Error ? error.message : "Removal failed",
-        });
-      } finally {
-        set({ isLoading: false });
-      }
-    },
+  fetchBanners: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const result = await getBanners();
+      if (!result.success) throw new Error(result.error);
+      set({
+        banners: mapUrlsToBannerItems(result.urls),
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Fetch failed",
+      });
+    }
+  },
 
-    fetchBanners: async () => {
-      if (!shouldFetch()) return;
+  fetchVendorBanners: async (storeSlug: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const result = await getVendorBannersBySlug(storeSlug);
+      if (!result.success) throw new Error(result.error);
+      set({
+        banners: mapUrlsToBannerItems(result.urls),
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Fetch failed",
+      });
+    }
+  },
+}));
 
-      set({ isLoading: true, error: null });
-      try {
-        const result = await getBanners();
-        if (!result.success) throw new Error(result.error);
-        set({
-          banners: result.urls || [],
-          lastFetch: Date.now(),
-        });
-      } catch (error) {
-        set({ error: error instanceof Error ? error.message : "Fetch failed" });
-      } finally {
-        set({ isLoading: false });
-      }
-    },
+// Export the selector hooks
+export const useBanners = () => useBannerStore(state => state.banners);
+export const useBannerLoading = () => useBannerStore(state => state.isLoading);
+export const useBannerError = () => useBannerStore(state => state.error);
 
-    fetchVendorBanners: async (storeSlug: string) => {
-      if (!shouldFetch()) return;
+export const useBannerData = (storeSlug?: string) => {
+  const fetchBanners = useBannerStore(state => state.fetchBanners);
+  const fetchVendorBanners = useBannerStore(state => state.fetchVendorBanners);
 
-      set({ isLoading: true, error: null });
-      try {
-        const result = await getVendorBannersBySlug(storeSlug);
-        if (!result.success) throw new Error(result.error);
-        set({
-          banners: result.urls || [],
-          lastFetch: Date.now(),
-        });
-      } catch (error) {
-        set({ error: error instanceof Error ? error.message : "Fetch failed" });
-      } finally {
-        set({ isLoading: false });
-      }
-    },
-  };
-});
+  useEffect(() => {
+    if (storeSlug) {
+      fetchVendorBanners(storeSlug);
+    } else {
+      fetchBanners();
+    }
+  }, [storeSlug, fetchBanners, fetchVendorBanners]);
+};
