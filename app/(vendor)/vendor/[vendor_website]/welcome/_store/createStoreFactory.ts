@@ -22,6 +22,7 @@ interface StoreActions<T extends BaseItem> {
   fetch: () => Promise<void>;
   fetchBySlug: (slug: string) => Promise<void>;
   resetState: () => void;
+  shouldFetch: () => boolean;
 }
 
 interface ApiResponse<T extends BaseItem> {
@@ -74,31 +75,63 @@ export const createStoreFactory = <T extends BaseItem>({
   debounceDelay = DEFAULT_DEBOUNCE_DELAY,
   api,
 }: StoreConfig<T>): StoreFactoryReturn<T> => {
+  const STORAGE_KEY = `store_${name}`;
   const debounceTimerRef = { current: null as NodeJS.Timeout | null };
   const activeControllerRef = { current: null as AbortController | null };
 
-  const store = create<Store<T>>((set, get) => {
-    const shouldFetch = () => {
-      const now = Date.now();
-      const state = get();
-      return (
-        !state.initialized ||
-        !state.lastFetch ||
-        now - state.lastFetch > cacheDuration
+  // Helper functions for localStorage
+  const saveToStorage = (data: Partial<StoreState<T>>) => {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          items: data.items,
+          lastFetch: data.lastFetch || Date.now(),
+        })
       );
-    };
+    } catch (error) {
+      console.error("Error saving to localStorage:", error);
+    }
+  };
 
-    const debounce = (fn: Function) => {
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = setTimeout(() => fn(), debounceDelay);
+  const loadFromStorage = (): Partial<StoreState<T>> | null => {
+    if (typeof window === "undefined") return null;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return null;
+      return JSON.parse(stored);
+    } catch (error) {
+      console.error("Error loading from localStorage:", error);
+      return null;
+    }
+  };
+
+  const store = create<Store<T>>((set, get) => {
+    // Initialize state from localStorage if available
+    const storedData = loadFromStorage();
+    const initialState: StoreState<T> = {
+      items: storedData?.items || [],
+      isLoading: false,
+      error: null,
+      lastFetch: storedData?.lastFetch || 0,
+      initialized: !!storedData,
+      currentFetch: null,
     };
 
     const updateState = (updates: Partial<StoreState<T>>) => {
-      set(state => ({
-        ...state,
-        ...updates,
-        lastFetch: updates.items ? Date.now() : state.lastFetch,
-      }));
+      set(state => {
+        const newState = {
+          ...state,
+          ...updates,
+          lastFetch: updates.items ? Date.now() : state.lastFetch,
+        };
+        // Save to localStorage when items or lastFetch changes
+        if (updates.items || updates.lastFetch) {
+          saveToStorage(newState);
+        }
+        return newState;
+      });
     };
 
     const cleanupFetch = () => {
@@ -113,16 +146,21 @@ export const createStoreFactory = <T extends BaseItem>({
     };
 
     return {
-      // Initial state
-      items: [],
-      isLoading: false,
-      error: null,
-      lastFetch: 0,
-      initialized: false,
-      currentFetch: null,
+      ...initialState,
+
+      shouldFetch: () => {
+        const state = get();
+        const now = Date.now();
+        return (
+          !state.initialized ||
+          !state.lastFetch ||
+          now - state.lastFetch > cacheDuration
+        );
+      },
 
       resetState: () => {
         cleanupFetch();
+        localStorage.removeItem(STORAGE_KEY);
         set({
           items: [],
           isLoading: false,
@@ -187,7 +225,7 @@ export const createStoreFactory = <T extends BaseItem>({
       },
 
       fetch: async () => {
-        if (!shouldFetch() || get().isLoading) return;
+        if (!get().shouldFetch() || get().isLoading) return;
 
         cleanupFetch();
         activeControllerRef.current = new AbortController();
@@ -222,7 +260,7 @@ export const createStoreFactory = <T extends BaseItem>({
       },
 
       fetchBySlug: async (slug: string) => {
-        if (!shouldFetch() || get().isLoading) return;
+        if (!get().shouldFetch() || get().isLoading) return;
 
         cleanupFetch();
         activeControllerRef.current = new AbortController();
@@ -300,11 +338,13 @@ export const createStoreFactory = <T extends BaseItem>({
         }
       };
 
-      fetchData();
+      // Only fetch if there's no cached data or if the cache has expired
+      if (store.getState().shouldFetch()) {
+        fetchData();
+      }
 
       return () => {
         mountedRef.current = false;
-        actions.resetState();
       };
     }, [storeSlug, actions]);
 
