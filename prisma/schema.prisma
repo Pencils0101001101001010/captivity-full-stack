@@ -160,7 +160,7 @@ model FeaturedImage {
   @@map("featured_images")
 }
 
-// ORER SYSTEM
+// ORDER SYSTEM
 model Cart {
   id        String     @id @default(uuid())
   userId    String     @unique
