@@ -253,6 +253,7 @@ model UserSettings {
   OfficeLocation   OfficeLocation[]
   OpeningHours     OpeningHours[]
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  SocialMediaLink  SocialMediaLink[]
 
   @@map("user_settings")
 }
@@ -324,6 +325,16 @@ model OpeningHours {
   userSettings     UserSettings @relation(fields: [userSettingsId], references: [id], onDelete: Cascade)
 
   @@map("opening_hours")
+}
+
+model SocialMediaLink {
+  id             String       @id @default(cuid())
+  platform       String
+  url            String
+  userSettingsId String
+  userSettings   UserSettings @relation(fields: [userSettingsId], references: [id], onDelete: Cascade)
+
+  @@map("social_media_links")
 }
 
 // VENDOR MODEL AND RELATIONS
