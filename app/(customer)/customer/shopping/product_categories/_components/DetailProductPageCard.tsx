@@ -5,7 +5,6 @@ import { ProductWithRelations } from "../types";
 import { Variation } from "@prisma/client";
 
 import { ProductImage, ProductPrice } from "./ProductCardComponents";
-import { StarRating } from "./StarRating";
 
 import { QuantitySelector, SizeSelector } from "../../[id]/ProductSelectors";
 import AddToCartButton from "../../[id]/AddToCartButton";
@@ -13,6 +12,9 @@ import ColorPicker from "../../[id]/DetailPageColorPicker";
 import { useColorStore } from "../../../_store/useColorStore";
 import { Button } from "@/components/ui/button";
 import ViewMore from "@/app/(customer)/_components/ViewMore";
+import ReviewSection from "./ReviewsComponent";
+import { getProductReviews } from "@/app/actions/reviews";
+import { Review } from "../types";
 
 interface DetailedProductCardProps {
   product: ProductWithRelations;
@@ -25,6 +27,9 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
   selectedColor,
   onColorChange,
 }) => {
+  // Reviews
+  const [reviews, setReviews] = useState<Review[]>([]);
+
   const setGlobalSelectedColor = useColorStore(state => state.setSelectedColor);
 
   // Find initial variation based on selected color
@@ -96,6 +101,17 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
     }
   };
 
+  //reviews
+  // useEffect(() => {
+  //   const fetchReviews = async () => {
+  //     const result = await getProductReviews(product.id);
+  //     if (result.success) {
+  //       setReviews(result.data);
+  //     }
+  //   };
+  //   fetchReviews();
+  // }, [product.id]);
+
   return (
     <Card className="flex flex-col md:flex-row gap-6 p-6 shadow-2xl">
       <div className="relative w-full md:w-1/3">
@@ -124,10 +140,6 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
           </div>
         </div>
 
-        <div className="mb-4">
-          <StarRating />
-        </div>
-
         <ProductPrice
           dynamicPricing={product.dynamicPricing}
           sellingPrice={product.sellingPrice}
@@ -151,6 +163,12 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
             maxQuantity={selectedVariation?.quantity || 1}
             onQuantityChange={e => setQuantity(parseInt(e.target.value))}
           />
+          <Card className="p-6 shadow-2xl">
+            <ReviewSection
+              productId={product.id}
+              initialReviews={product.reviews || []}
+            />
+          </Card>
 
           <AddToCartButton
             selectedVariation={selectedVariation}
