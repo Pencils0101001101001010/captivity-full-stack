@@ -1,4 +1,5 @@
 "use client";
+
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,15 +10,28 @@ import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { VendorProductFormData, vendorProductFormSchema } from "./types";
+import { createVendorProduct } from "./actions";
+import { useSession } from "@/app/(vendor)/SessionProvider";
+import { useParams, useRouter } from "next/navigation";
 import BasicInfoTab from "./_components/BasicInfoTab";
 import DynamicPricingTab from "./_components/DynamicPricingTab";
 import VariationsTab from "./_components/VariationsTab";
 import FeaturedImageTab from "./_components/FeaturedImageTab";
-import { createVendorProduct } from "./actions";
 
 const VendorProductForm = () => {
+  const params = useParams();
+  const vendorWebsite = params?.vendor_website as string;
+  const session = useSession();
+  const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  // Redirect if no session or not a vendor
+  React.useEffect(() => {
+    if (!session || session?.user?.role !== "VENDOR") {
+      router.push(`/vendor/${vendorWebsite}`);
+    }
+  }, [session, router, vendorWebsite]);
 
   const form = useForm<VendorProductFormData>({
     resolver: zodResolver(vendorProductFormSchema),
@@ -61,9 +75,21 @@ const VendorProductForm = () => {
   });
 
   const onSubmit = async (data: VendorProductFormData) => {
+    if (!session?.user?.id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create products",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       const formData = new FormData();
+
+      // Add vendor ID from session
+      formData.append("vendorId", session.user.id);
 
       // Add basic info
       formData.append("productName", data.productName);
@@ -123,6 +149,7 @@ const VendorProductForm = () => {
           description: "Product created successfully",
         });
         form.reset();
+        router.push("/vendor/products"); // Redirect to products list
       } else {
         toast({
           title: "Error",
@@ -160,6 +187,11 @@ const VendorProductForm = () => {
       }
     };
   }, [form]);
+
+  // If not authenticated or not a vendor, don't render the form
+  if (!session || session?.user?.role !== "VENDOR") {
+    return null;
+  }
 
   return (
     <Card className="w-full max-w-3xl mx-auto my-5 shadow-2xl shadow-black">
