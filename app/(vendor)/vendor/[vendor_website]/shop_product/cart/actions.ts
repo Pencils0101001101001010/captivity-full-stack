@@ -2,36 +2,21 @@
 
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import { Cart, VendorVariation, VendorProduct } from "@prisma/client";
 
-// Define a CartItem type that matches your database schema
-type VendorCartItem = {
-  id: string;
-  cartId: string;
-  variationId: string;
-  quantity: number;
-  variation: VendorVariation & {
-    vendorProduct: VendorProduct;
-  };
+type VendorCartActionResult = {
+  success: boolean;
+  data?: any;
+  error?: string;
 };
-
-// Merging the models for Vendor Cart
-type VendorCartWithItems = Cart & {
-  cartItems: Array<VendorCartItem>;
-};
-
-type VendorCartActionResult =
-  | { success: true; data: VendorCartWithItems }
-  | { success: false; error: string };
 
 // Helper function to get or create vendor cart
-async function getOrCreateVendorCart(userId: string): Promise<Cart> {
-  let cart = await prisma.cart.findUnique({
+async function getOrCreateVendorCart(userId: string) {
+  let cart = await prisma.vendorCart.findUnique({
     where: { userId },
   });
 
   if (!cart) {
-    cart = await prisma.cart.create({
+    cart = await prisma.vendorCart.create({
       data: { userId },
     });
   }
@@ -63,7 +48,12 @@ export async function addToVendorCart(
     const variation = await prisma.vendorVariation.findUnique({
       where: { id: variationId },
       include: {
-        vendorProduct: true,
+        vendorProduct: {
+          include: {
+            dynamicPricing: true,
+            featuredImage: true,
+          },
+        },
       },
     });
 
@@ -75,10 +65,10 @@ export async function addToVendorCart(
       return { success: false, error: "Insufficient stock available" };
     }
 
-    const existingCartItem = await prisma.cartItem.findFirst({
+    const existingCartItem = await prisma.vendorCartItem.findFirst({
       where: {
-        cartId: cart.id,
-        variationId,
+        vendorCartId: cart.id,
+        vendorVariationId: variationId,
       },
     });
 
@@ -91,15 +81,15 @@ export async function addToVendorCart(
         };
       }
 
-      await prisma.cartItem.update({
+      await prisma.vendorCartItem.update({
         where: { id: existingCartItem.id },
         data: { quantity: newQuantity },
       });
     } else {
-      await prisma.cartItem.create({
+      await prisma.vendorCartItem.create({
         data: {
-          cartId: cart.id,
-          variationId,
+          vendorCartId: cart.id,
+          vendorVariationId: variationId,
           quantity,
         },
       });
@@ -134,15 +124,10 @@ export async function updateVendorCartItemQuantity(
       };
     }
 
-    // First get the cart item to check the associated variation
-    const cartItem = await prisma.cartItem.findUnique({
+    const cartItem = await prisma.vendorCartItem.findUnique({
       where: { id: cartItemId },
       include: {
-        variation: {
-          select: {
-            quantity: true,
-          },
-        },
+        vendorVariation: true,
       },
     });
 
@@ -150,11 +135,11 @@ export async function updateVendorCartItemQuantity(
       return { success: false, error: "Cart item not found" };
     }
 
-    if (quantity > cartItem.variation.quantity) {
+    if (quantity > cartItem.vendorVariation.quantity) {
       return { success: false, error: "Cannot add more than available stock" };
     }
 
-    await prisma.cartItem.update({
+    await prisma.vendorCartItem.update({
       where: { id: cartItemId },
       data: { quantity },
     });
@@ -187,7 +172,7 @@ export async function removeFromVendorCart(
       };
     }
 
-    await prisma.cartItem.delete({
+    await prisma.vendorCartItem.delete({
       where: { id: cartItemId },
     });
 
@@ -217,14 +202,19 @@ export async function fetchVendorCart(): Promise<VendorCartActionResult> {
       };
     }
 
-    const cart = await prisma.cart.findUnique({
+    const cart = await prisma.vendorCart.findUnique({
       where: { userId: user.id },
       include: {
-        cartItems: {
+        vendorCartItems: {
           include: {
-            variation: {
+            vendorVariation: {
               include: {
-                product: true, // This matches your schema relation
+                vendorProduct: {
+                  include: {
+                    featuredImage: true,
+                    dynamicPricing: true,
+                  },
+                },
               },
             },
           },
@@ -236,8 +226,7 @@ export async function fetchVendorCart(): Promise<VendorCartActionResult> {
       return { success: false, error: "Cart not found" };
     }
 
-    // Cast the cart to the expected type
-    return { success: true, data: cart as unknown as VendorCartWithItems };
+    return { success: true, data: cart };
   } catch (error) {
     console.error("Error fetching vendor cart:", error);
     return {
@@ -263,8 +252,8 @@ export async function clearVendorCart(): Promise<VendorCartActionResult> {
       };
     }
 
-    await prisma.cartItem.deleteMany({
-      where: { cart: { userId: user.id } },
+    await prisma.vendorCartItem.deleteMany({
+      where: { vendorCart: { userId: user.id } },
     });
 
     return await fetchVendorCart();

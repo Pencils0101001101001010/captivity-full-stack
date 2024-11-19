@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useSession } from "@/app/(vendor)/SessionProvider";
 import useVendorCartStore from "./useCartStore";
 import {
-  Cart,
+  VendorCart,
   VendorVariation,
   VendorProduct,
   VendorDynamicPricing,
@@ -26,14 +26,14 @@ type VendorVariationWithProduct = VendorVariation & {
 
 type VendorCartItem = {
   id: string;
-  cartId: string;
-  variationId: string;
+  vendorCartId: string;
+  vendorVariationId: string;
   quantity: number;
-  variation: VendorVariationWithProduct;
+  vendorVariation: VendorVariationWithProduct;
 };
 
-type VendorCartWithItems = Cart & {
-  cartItems: VendorCartItem[];
+type VendorCartWithItems = VendorCart & {
+  vendorCartItems: VendorCartItem[];
 };
 
 interface User {
@@ -72,7 +72,7 @@ const VendorViewCart = () => {
     );
   }
 
-  if (!cart || !cart.cartItems || cart.cartItems.length === 0) {
+  if (!cart || !cart.vendorCartItems || cart.vendorCartItems.length === 0) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-semibold mb-4">
@@ -88,11 +88,11 @@ const VendorViewCart = () => {
     );
   }
 
-  const cartItems = (cart as VendorCartWithItems).cartItems;
+  const cartItems = (cart as VendorCartWithItems).vendorCartItems;
 
   const calculateItemPrice = (item: VendorCartItem) => {
-    const basePrice = item.variation.vendorProduct.sellingPrice;
-    const dynamicPricing = item.variation.vendorProduct.dynamicPricing;
+    const basePrice = item.vendorVariation.vendorProduct.sellingPrice;
+    const dynamicPricing = item.vendorVariation.vendorProduct.dynamicPricing;
 
     if (!dynamicPricing?.length) return basePrice * item.quantity;
 
@@ -158,7 +158,7 @@ const VendorViewCart = () => {
         <div className="lg:col-span-2 space-y-4">
           {cartItems.map(item => {
             const itemTotal = calculateItemPrice(item);
-            const basePrice = item.variation.vendorProduct.sellingPrice;
+            const basePrice = item.vendorVariation.vendorProduct.sellingPrice;
             const hasDiscount = itemTotal < basePrice * item.quantity;
 
             return (
@@ -169,10 +169,10 @@ const VendorViewCart = () => {
                 <div className="relative w-32 h-32">
                   <Image
                     src={
-                      item.variation.variationImageURL ||
+                      item.vendorVariation.variationImageURL ||
                       "/api/placeholder/100/100"
                     }
-                    alt={item.variation.vendorProduct.productName}
+                    alt={item.vendorVariation.vendorProduct.productName}
                     fill
                     className="object-cover rounded"
                   />
@@ -180,15 +180,16 @@ const VendorViewCart = () => {
 
                 <div className="flex-1">
                   <h3 className="text-xl font-medium text-card-foreground">
-                    {item.variation.vendorProduct.productName}
+                    {item.vendorVariation.vendorProduct.productName}
                   </h3>
                   <p className="text-muted-foreground mb-2">
-                    {item.variation.color} / {item.variation.size}
+                    {item.vendorVariation.color} / {item.vendorVariation.size}
                   </p>
 
                   <p className="text-sm text-muted-foreground">
-                    SKU: {item.variation.sku}
-                    {item.variation.sku2 && ` / ${item.variation.sku2}`}
+                    SKU: {item.vendorVariation.sku}
+                    {item.vendorVariation.sku2 &&
+                      ` / ${item.vendorVariation.sku2}`}
                   </p>
 
                   <div className="flex justify-between items-center mt-4">
@@ -201,11 +202,13 @@ const VendorViewCart = () => {
                         disabled={updatingItems.has(item.id)}
                         className="border rounded-md px-3 py-2 bg-background text-foreground"
                       >
-                        {[...Array(item.variation.quantity)].map((_, i) => (
-                          <option key={i + 1} value={i + 1}>
-                            {i + 1}
-                          </option>
-                        ))}
+                        {[...Array(item.vendorVariation.quantity)].map(
+                          (_, i) => (
+                            <option key={i + 1} value={i + 1}>
+                              {i + 1}
+                            </option>
+                          )
+                        )}
                       </select>
 
                       <button

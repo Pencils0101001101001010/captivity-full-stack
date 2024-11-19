@@ -70,6 +70,7 @@ model User {
   UserSettings       UserSettings?
   vendorOrders       VendorOrder[]
   vendorProducts     VendorProduct[]
+  VendorCart         VendorCart?
 
   @@map("users")
 }
@@ -381,6 +382,7 @@ model VendorVariation {
   vendorProductId   String
   vendorOrderItems  VendorOrderItem[]
   vendorProduct     VendorProduct     @relation(fields: [vendorProductId], references: [id], onDelete: Cascade)
+  VendorCartItem    VendorCartItem[]
 
   @@map("vendor_variations")
 }
@@ -437,6 +439,28 @@ model VendorOrderItem {
   vendorVariation   VendorVariation @relation(fields: [vendorVariationId], references: [id], onDelete: Cascade)
 
   @@map("vendor_order_items")
+}
+
+model VendorCart {
+  id              String           @id @default(uuid())
+  userId          String           @unique
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  vendorCartItems VendorCartItem[]
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("vendor_carts")
+}
+
+model VendorCartItem {
+  id                String          @id @default(uuid())
+  vendorCartId      String
+  vendorVariationId String
+  quantity          Int
+  vendorCart        VendorCart      @relation(fields: [vendorCartId], references: [id], onDelete: Cascade)
+  vendorVariation   VendorVariation @relation(fields: [vendorVariationId], references: [id], onDelete: Cascade)
+
+  @@map("vendor_cart_items")
 }
 
 // ENUMS

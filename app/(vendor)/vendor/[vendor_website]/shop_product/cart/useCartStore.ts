@@ -6,27 +6,33 @@ import {
   fetchVendorCart as fetchVendorCartAction,
   clearVendorCart as clearVendorCartAction,
 } from "./actions";
-import { Cart, VendorVariation, VendorProduct } from "@prisma/client";
+import { VendorCart, VendorVariation, VendorProduct } from "@prisma/client";
 
 // Define the extended types
-type VendorProductWithImage = VendorProduct & {
+type VendorProductWithDetails = VendorProduct & {
   featuredImage?: {
     medium: string;
   };
+  dynamicPricing: Array<{
+    from: string;
+    to: string;
+    type: string;
+    amount: string;
+  }>;
 };
 
 type VendorCartItem = {
   id: string;
-  cartId: string;
-  variationId: string;
+  vendorCartId: string;
+  vendorVariationId: string;
   quantity: number;
-  variation: VendorVariation & {
-    vendorProduct: VendorProductWithImage;
+  vendorVariation: VendorVariation & {
+    vendorProduct: VendorProductWithDetails;
   };
 };
 
-type VendorCartWithItems = Cart & {
-  cartItems: VendorCartItem[];
+type VendorCartWithItems = VendorCart & {
+  vendorCartItems: VendorCartItem[];
 };
 
 interface VendorCartStore {
@@ -60,7 +66,7 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
 
   fetchCart: async () => {
     const currentCart = get().cart;
-    if (currentCart?.cartItems.length === 0) {
+    if (currentCart?.vendorCartItems.length === 0) {
       return;
     }
 
@@ -145,21 +151,42 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
   // Computed properties
   get totalItems() {
     return (
-      get().cart?.cartItems.reduce((sum, item) => sum + item.quantity, 0) || 0
+      get().cart?.vendorCartItems.reduce(
+        (sum, item) => sum + item.quantity,
+        0
+      ) || 0
     );
   },
 
   get subtotal() {
     return (
-      get().cart?.cartItems.reduce((sum, item) => {
-        const price = item.variation.vendorProduct.sellingPrice;
-        return sum + price * item.quantity;
+      get().cart?.vendorCartItems.reduce((sum, item) => {
+        const basePrice = item.vendorVariation.vendorProduct.sellingPrice;
+        const dynamicPricing =
+          item.vendorVariation.vendorProduct.dynamicPricing;
+
+        if (!dynamicPricing?.length) return sum + basePrice * item.quantity;
+
+        const applicableRule = dynamicPricing.find(rule => {
+          const from = parseInt(rule.from);
+          const to = parseInt(rule.to);
+          return item.quantity >= from && item.quantity <= to;
+        });
+
+        if (!applicableRule) return sum + basePrice * item.quantity;
+
+        if (applicableRule.type === "fixed_price") {
+          return sum + parseFloat(applicableRule.amount) * item.quantity;
+        } else {
+          const discount = parseFloat(applicableRule.amount) / 100;
+          return sum + basePrice * item.quantity * (1 - discount);
+        }
       }, 0) || 0
     );
   },
 
   get isEmpty() {
-    return !get().cart?.cartItems.length;
+    return !get().cart?.vendorCartItems.length;
   },
 }));
 

@@ -29,7 +29,11 @@ const VendorAddToCartButton: React.FC<VendorAddToCartButtonProps> = ({
   disabled,
   className = "",
 }) => {
-  const addToCart = useVendorCartStore(state => state.addToCart);
+  const { addToCart, isLoading, error } = useVendorCartStore(state => ({
+    addToCart: state.addToCart,
+    isLoading: state.isLoading,
+    error: state.error,
+  }));
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { user } = useSession() as SessionData;
 
@@ -60,6 +64,16 @@ const VendorAddToCartButton: React.FC<VendorAddToCartButtonProps> = ({
       try {
         setIsAddingToCart(true);
         await addToCart(selectedVariation.id, quantity);
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: error,
+            variant: "destructive",
+          });
+          return;
+        }
+
         toast({
           title: "Success",
           description: "Item added to cart successfully",
@@ -80,6 +94,7 @@ const VendorAddToCartButton: React.FC<VendorAddToCartButtonProps> = ({
   const isButtonDisabled =
     disabled ||
     isAddingToCart ||
+    isLoading ||
     !selectedVariation ||
     quantity < 1 ||
     (selectedVariation && quantity > selectedVariation.quantity);
@@ -91,7 +106,7 @@ const VendorAddToCartButton: React.FC<VendorAddToCartButtonProps> = ({
       onClick={handleAddToCart}
       variant="default"
     >
-      {isAddingToCart ? (
+      {isAddingToCart || isLoading ? (
         <span className="flex items-center justify-center">
           <svg
             className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
