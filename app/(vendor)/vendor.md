@@ -7,3 +7,5 @@
 [x] The social Link is not showing for the vendor-customer
 
 [x] The vendor customer cant see the product categories that the vendor created.
+
+[] Dynamic Pricing is not working on the create product form
