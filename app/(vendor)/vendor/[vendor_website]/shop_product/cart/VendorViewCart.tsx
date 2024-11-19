@@ -1,41 +1,58 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "@/app/(vendor)/SessionProvider";
 import useVendorCartStore from "./useCartStore";
-import {
+
+// Import exact types from your prisma client
+import type {
   VendorCart,
   VendorVariation,
   VendorProduct,
   VendorDynamicPricing,
 } from "@prisma/client";
 
-type VendorProductWithDetails = VendorProduct & {
+// Dynamic pricing rule type
+interface DynamicPricingRule {
+  id: string;
+  vendorProductId: string;
+  from: string;
+  to: string;
+  type: "fixed_price" | "percentage";
+  amount: string;
+}
+
+// Product details
+interface VendorProductWithDetails extends VendorProduct {
   featuredImage?: {
     medium: string;
   } | null;
-  dynamicPricing: VendorDynamicPricing[];
-};
+  dynamicPricing: DynamicPricingRule[];
+}
 
-type VendorVariationWithProduct = VendorVariation & {
+// Variation with product
+interface VendorVariationWithProduct extends VendorVariation {
   vendorProduct: VendorProductWithDetails;
-};
+}
 
-type VendorCartItem = {
+// Cart item
+interface VendorCartItem {
   id: string;
   vendorCartId: string;
   vendorVariationId: string;
   quantity: number;
   vendorVariation: VendorVariationWithProduct;
-};
+}
 
-type VendorCartWithItems = VendorCart & {
+// Cart with items
+interface VendorCartWithItems extends VendorCart {
   vendorCartItems: VendorCartItem[];
-};
+}
 
+// User and session types
 interface User {
   id: string;
   username: string;
@@ -47,11 +64,46 @@ interface SessionData {
   user: User | null;
 }
 
-const VendorViewCart = () => {
-  const { cart, updateCartItemQuantity, removeFromCart } = useVendorCartStore();
+// Calculate price helper
+const calculateItemPrice = (item: VendorCartItem): number => {
+  const basePrice = item.vendorVariation.vendorProduct.sellingPrice;
+  const dynamicPricing = item.vendorVariation.vendorProduct.dynamicPricing;
+
+  if (!dynamicPricing?.length) return basePrice * item.quantity;
+
+  const applicableRule = dynamicPricing.find(rule => {
+    const from = parseInt(rule.from);
+    const to = parseInt(rule.to);
+    return item.quantity >= from && item.quantity <= to;
+  });
+
+  if (!applicableRule) return basePrice * item.quantity;
+
+  if (applicableRule.type === "fixed_price") {
+    return parseFloat(applicableRule.amount) * item.quantity;
+  } else {
+    const discount = parseFloat(applicableRule.amount) / 100;
+    return basePrice * item.quantity * (1 - discount);
+  }
+};
+
+const VendorViewCart: React.FC = () => {
+  const cart = useVendorCartStore(
+    state => state.cart
+  ) as VendorCartWithItems | null;
+  const fetchCart = useVendorCartStore(state => state.fetchCart);
+  const updateCartItemQuantity = useVendorCartStore(
+    state => state.updateCartItemQuantity
+  );
+  const removeFromCart = useVendorCartStore(state => state.removeFromCart);
+
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
   const { user } = useSession() as SessionData;
+
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
 
   if (
     !user ||
@@ -72,7 +124,15 @@ const VendorViewCart = () => {
     );
   }
 
-  if (!cart || !cart.vendorCartItems || cart.vendorCartItems.length === 0) {
+  if (cart === null) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <h1 className="text-3xl font-semibold mb-4">Loading cart...</h1>
+      </div>
+    );
+  }
+
+  if (!cart.vendorCartItems || cart.vendorCartItems.length === 0) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-semibold mb-4">
@@ -88,31 +148,7 @@ const VendorViewCart = () => {
     );
   }
 
-  const cartItems = (cart as VendorCartWithItems).vendorCartItems;
-
-  const calculateItemPrice = (item: VendorCartItem) => {
-    const basePrice = item.vendorVariation.vendorProduct.sellingPrice;
-    const dynamicPricing = item.vendorVariation.vendorProduct.dynamicPricing;
-
-    if (!dynamicPricing?.length) return basePrice * item.quantity;
-
-    const applicableRule = dynamicPricing.find(rule => {
-      const from = parseInt(rule.from);
-      const to = parseInt(rule.to);
-      return item.quantity >= from && item.quantity <= to;
-    });
-
-    if (!applicableRule) return basePrice * item.quantity;
-
-    if (applicableRule.type === "fixed_price") {
-      return parseFloat(applicableRule.amount) * item.quantity;
-    } else {
-      const discount = parseFloat(applicableRule.amount) / 100;
-      return basePrice * item.quantity * (1 - discount);
-    }
-  };
-
-  const subtotal = cartItems.reduce(
+  const subtotal = cart.vendorCartItems.reduce(
     (sum, item) => sum + calculateItemPrice(item),
     0
   );
@@ -154,9 +190,8 @@ const VendorViewCart = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Cart Items Section */}
         <div className="lg:col-span-2 space-y-4">
-          {cartItems.map(item => {
+          {cart.vendorCartItems.map(item => {
             const itemTotal = calculateItemPrice(item);
             const basePrice = item.vendorVariation.vendorProduct.sellingPrice;
             const hasDiscount = itemTotal < basePrice * item.quantity;
@@ -247,7 +282,6 @@ const VendorViewCart = () => {
           })}
         </div>
 
-        {/* Cart Summary Section */}
         <div className="lg:col-span-1">
           <div className="bg-card rounded-lg shadow p-6 sticky top-4">
             <h2 className="text-2xl font-semibold mb-6">Order Summary</h2>

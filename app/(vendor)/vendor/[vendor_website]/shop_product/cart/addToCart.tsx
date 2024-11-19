@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { VendorVariation } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/app/(vendor)/SessionProvider";
@@ -29,15 +29,15 @@ const VendorAddToCartButton: React.FC<VendorAddToCartButtonProps> = ({
   disabled,
   className = "",
 }) => {
-  const { addToCart, isLoading, error } = useVendorCartStore(state => ({
-    addToCart: state.addToCart,
-    isLoading: state.isLoading,
-    error: state.error,
-  }));
+  // Get store values without subscribing to all changes
+  const addToCart = useVendorCartStore(state => state.addToCart);
+  const isLoading = useVendorCartStore(state => state.isLoading);
+  const error = useVendorCartStore(state => state.error);
+
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { user } = useSession() as SessionData;
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = useCallback(async () => {
     if (!user) {
       toast({
         title: "Authentication Required",
@@ -60,37 +60,37 @@ const VendorAddToCartButton: React.FC<VendorAddToCartButtonProps> = ({
       return;
     }
 
-    if (selectedVariation) {
-      try {
-        setIsAddingToCart(true);
-        await addToCart(selectedVariation.id, quantity);
+    if (!selectedVariation) return;
 
-        if (error) {
-          toast({
-            title: "Error",
-            description: error,
-            variant: "destructive",
-          });
-          return;
-        }
+    try {
+      setIsAddingToCart(true);
+      await addToCart(selectedVariation.id, quantity);
 
-        toast({
-          title: "Success",
-          description: "Item added to cart successfully",
-        });
-      } catch (error) {
+      if (error) {
         toast({
           title: "Error",
-          description: "Failed to add item to cart. Please try again.",
+          description: error,
           variant: "destructive",
         });
-      } finally {
-        setIsAddingToCart(false);
+        return;
       }
-    }
-  };
 
-  // If no variation is selected or quantity is 0, button should be disabled
+      toast({
+        title: "Success",
+        description: "Item added to cart successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingToCart(false);
+    }
+  }, [user, selectedVariation, quantity, addToCart, error]);
+
+  // Memoize the button disabled state
   const isButtonDisabled =
     disabled ||
     isAddingToCart ||

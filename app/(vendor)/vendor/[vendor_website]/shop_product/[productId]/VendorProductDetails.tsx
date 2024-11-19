@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { VendorVariation } from "@prisma/client";
 import {
   VendorProductWithRelations,
@@ -44,18 +44,23 @@ type Props = {
 };
 
 const VendorProductDetails: React.FC<Props> = ({ product, vendorWebsite }) => {
+  // Memoize initial variation
+  const initialVariation = useMemo(
+    () => product.variations[0] || null,
+    [product.variations]
+  );
+
   const [selectedVariation, setSelectedVariation] =
-    useState<VendorVariation | null>(product.variations[0] || null);
+    useState<VendorVariation | null>(initialVariation);
   const [quantity, setQuantity] = useState(1);
   const [recommendedBranding, setRecommendedBranding] = useState<string | null>(
     null
   );
 
   const params = useParams();
-  const link = params?.vendor_website as string;
 
   const calculateDynamicPrice = useCallback(
-    (quantity: number) => {
+    (qty: number) => {
       if (!product.dynamicPricing || product.dynamicPricing.length === 0) {
         return product.sellingPrice;
       }
@@ -64,7 +69,7 @@ const VendorProductDetails: React.FC<Props> = ({ product, vendorWebsite }) => {
         (rule: VendorDynamicPricingRule) => {
           const from = parseInt(rule.from);
           const to = parseInt(rule.to);
-          return quantity >= from && quantity <= to;
+          return qty >= from && qty <= to;
         }
       );
 
@@ -82,10 +87,13 @@ const VendorProductDetails: React.FC<Props> = ({ product, vendorWebsite }) => {
     [product.dynamicPricing, product.sellingPrice]
   );
 
-  const [currentPrice, setCurrentPrice] = useState(() =>
-    calculateDynamicPrice(quantity)
+  // Memoize current price
+  const currentPrice = useMemo(
+    () => calculateDynamicPrice(quantity),
+    [calculateDynamicPrice, quantity]
   );
 
+  // Parse recommended branding from description
   useEffect(() => {
     const match = product.description.match(
       /<strong><em>(.*?)<\/em><\/strong>/
@@ -95,44 +103,58 @@ const VendorProductDetails: React.FC<Props> = ({ product, vendorWebsite }) => {
     }
   }, [product.description]);
 
-  useEffect(() => {
-    const newPrice = calculateDynamicPrice(quantity);
-    setCurrentPrice(newPrice);
-  }, [quantity, calculateDynamicPrice]);
-
-  const uniqueColors = Array.from(
-    new Set(product.variations.map(v => v.color))
+  // Memoize unique colors and sizes
+  const uniqueColors = useMemo(
+    () => Array.from(new Set(product.variations.map(v => v.color))),
+    [product.variations]
   );
 
-  const uniqueSizes = Array.from(new Set(product.variations.map(v => v.size)));
+  const uniqueSizes = useMemo(
+    () => Array.from(new Set(product.variations.map(v => v.size))),
+    [product.variations]
+  );
 
-  const handleColorSelect = (color: string) => {
-    const newVariation = product.variations.find(
-      v => v.color === color && v.size === selectedVariation?.size
-    );
-    if (newVariation) {
-      setSelectedVariation(newVariation);
+  const handleColorSelect = useCallback(
+    (color: string) => {
+      setSelectedVariation(prev => {
+        const newVariation = product.variations.find(
+          v => v.color === color && v.size === prev?.size
+        );
+        return newVariation || prev;
+      });
       setQuantity(1);
-    }
-  };
+    },
+    [product.variations]
+  );
 
-  const handleSizeSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const size = e.target.value;
-    const newVariation = product.variations.find(
-      v => v.size === size && v.color === selectedVariation?.color
-    );
-    if (newVariation) {
-      setSelectedVariation(newVariation);
+  const handleSizeSelect = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const size = e.target.value;
+      setSelectedVariation(prev => {
+        const newVariation = product.variations.find(
+          v => v.size === size && v.color === prev?.color
+        );
+        return newVariation || prev;
+      });
       setQuantity(1);
-    }
-  };
+    },
+    [product.variations]
+  );
 
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newQuantity = parseInt(e.target.value);
-    setQuantity(Math.min(newQuantity, selectedVariation?.quantity || 1));
-  };
+  const handleQuantityChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newQuantity = parseInt(e.target.value);
+      setQuantity(prev =>
+        Math.min(newQuantity, selectedVariation?.quantity || 1)
+      );
+    },
+    [selectedVariation]
+  );
 
-  const transformedProduct = transformVendorProductForImage(product);
+  const transformedProduct = useMemo(
+    () => transformVendorProductForImage(product),
+    [product]
+  );
 
   const getDynamicPricingInfo = () => {
     if (!product.dynamicPricing || product.dynamicPricing.length === 0) {
@@ -196,7 +218,6 @@ const VendorProductDetails: React.FC<Props> = ({ product, vendorWebsite }) => {
 
   return (
     <div className="max-w-4xl mx-auto p-3 bg-card my-8 shadow-2xl shadow-black rounded-lg border border-border mb-20">
-      {/* View Cart Link - Top Right */}
       <div className="flex justify-end mb-4">
         <Link
           href={`/vendor/${vendorWebsite}/shop_product/cart`}

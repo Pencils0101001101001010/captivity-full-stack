@@ -1,3 +1,5 @@
+"use client";
+
 import { create } from "zustand";
 import {
   addToVendorCart as addToVendorCartAction,
@@ -8,11 +10,10 @@ import {
 } from "./actions";
 import { VendorCart, VendorVariation, VendorProduct } from "@prisma/client";
 
-// Define the extended types
 type VendorProductWithDetails = VendorProduct & {
   featuredImage?: {
     medium: string;
-  };
+  } | null;
   dynamicPricing: Array<{
     from: string;
     to: string;
@@ -35,10 +36,13 @@ type VendorCartWithItems = VendorCart & {
   vendorCartItems: VendorCartItem[];
 };
 
-interface VendorCartStore {
+interface VendorCartState {
   cart: VendorCartWithItems | null;
   isLoading: boolean;
   error: string | null;
+}
+
+interface VendorCartActions {
   fetchCart: () => Promise<void>;
   addToCart: (variationId: string, quantity: number) => Promise<void>;
   updateCartItemQuantity: (
@@ -48,28 +52,67 @@ interface VendorCartStore {
   removeFromCart: (cartItemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
   setCart: (cart: VendorCartWithItems | null) => void;
+}
 
-  // Additional vendor-specific computed properties
+interface VendorCartSelectors {
   totalItems: number;
   subtotal: number;
   isEmpty: boolean;
 }
 
+type VendorCartStore = VendorCartState &
+  VendorCartActions &
+  VendorCartSelectors;
+
+// Calculate derived values outside of the store
+const calculateTotalItems = (cart: VendorCartWithItems | null): number => {
+  return (
+    cart?.vendorCartItems?.reduce((sum, item) => sum + item.quantity, 0) || 0
+  );
+};
+
+const calculateSubtotal = (cart: VendorCartWithItems | null): number => {
+  if (!cart?.vendorCartItems) return 0;
+
+  return cart.vendorCartItems.reduce((sum, item) => {
+    const basePrice = item.vendorVariation.vendorProduct.sellingPrice;
+    const dynamicPricing = item.vendorVariation.vendorProduct.dynamicPricing;
+
+    if (!dynamicPricing?.length) return sum + basePrice * item.quantity;
+
+    const applicableRule = dynamicPricing.find(rule => {
+      const from = parseInt(rule.from);
+      const to = parseInt(rule.to);
+      return item.quantity >= from && item.quantity <= to;
+    });
+
+    if (!applicableRule) return sum + basePrice * item.quantity;
+
+    if (applicableRule.type === "fixed_price") {
+      return sum + parseFloat(applicableRule.amount) * item.quantity;
+    } else {
+      const discount = parseFloat(applicableRule.amount) / 100;
+      return sum + basePrice * item.quantity * (1 - discount);
+    }
+  }, 0);
+};
+
+const isCartEmpty = (cart: VendorCartWithItems | null): boolean => {
+  return !cart?.vendorCartItems?.length;
+};
+
 const useVendorCartStore = create<VendorCartStore>((set, get) => ({
+  // Initial state
   cart: null,
   isLoading: false,
   error: null,
 
+  // Actions
   setCart: cart => {
     set({ cart });
   },
 
   fetchCart: async () => {
-    const currentCart = get().cart;
-    if (currentCart?.vendorCartItems.length === 0) {
-      return;
-    }
-
     set({ isLoading: true, error: null });
     try {
       const result = await fetchVendorCartAction();
@@ -148,45 +191,17 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
     }
   },
 
-  // Computed properties
+  // Computed values (selectors)
   get totalItems() {
-    return (
-      get().cart?.vendorCartItems.reduce(
-        (sum, item) => sum + item.quantity,
-        0
-      ) || 0
-    );
+    return calculateTotalItems(get().cart);
   },
 
   get subtotal() {
-    return (
-      get().cart?.vendorCartItems.reduce((sum, item) => {
-        const basePrice = item.vendorVariation.vendorProduct.sellingPrice;
-        const dynamicPricing =
-          item.vendorVariation.vendorProduct.dynamicPricing;
-
-        if (!dynamicPricing?.length) return sum + basePrice * item.quantity;
-
-        const applicableRule = dynamicPricing.find(rule => {
-          const from = parseInt(rule.from);
-          const to = parseInt(rule.to);
-          return item.quantity >= from && item.quantity <= to;
-        });
-
-        if (!applicableRule) return sum + basePrice * item.quantity;
-
-        if (applicableRule.type === "fixed_price") {
-          return sum + parseFloat(applicableRule.amount) * item.quantity;
-        } else {
-          const discount = parseFloat(applicableRule.amount) / 100;
-          return sum + basePrice * item.quantity * (1 - discount);
-        }
-      }, 0) || 0
-    );
+    return calculateSubtotal(get().cart);
   },
 
   get isEmpty() {
-    return !get().cart?.vendorCartItems.length;
+    return isCartEmpty(get().cart);
   },
 }));
 
