@@ -1,5 +1,3 @@
-// Color filter schema
-
 import {
   Product,
   DynamicPricing,
