@@ -15,6 +15,8 @@ type VendorProductWithDetails = VendorProduct & {
     medium: string;
   } | null;
   dynamicPricing: Array<{
+    id: string;
+    vendorProductId: string;
     from: string;
     to: string;
     type: string;
@@ -22,14 +24,16 @@ type VendorProductWithDetails = VendorProduct & {
   }>;
 };
 
+type VendorVariationWithProduct = VendorVariation & {
+  vendorProduct: VendorProductWithDetails;
+};
+
 type VendorCartItem = {
   id: string;
   vendorCartId: string;
   vendorVariationId: string;
   quantity: number;
-  vendorVariation: VendorVariation & {
-    vendorProduct: VendorProductWithDetails;
-  };
+  vendorVariation: VendorVariationWithProduct;
 };
 
 type VendorCartWithItems = VendorCart & {
@@ -39,6 +43,7 @@ type VendorCartWithItems = VendorCart & {
 interface VendorCartState {
   cart: VendorCartWithItems | null;
   isLoading: boolean;
+  isInitialized: boolean;
   error: string | null;
 }
 
@@ -105,6 +110,7 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
   // Initial state
   cart: null,
   isLoading: false,
+  isInitialized: false,
   error: null,
 
   // Actions
@@ -113,20 +119,36 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
   },
 
   fetchCart: async () => {
+    if (get().isLoading) return;
+
     set({ isLoading: true, error: null });
     try {
       const result = await fetchVendorCartAction();
       if (result.success) {
-        set({ cart: result.data, isLoading: false });
+        set({
+          cart: result.data,
+          isLoading: false,
+          isInitialized: true,
+        });
       } else {
-        set({ error: result.error, isLoading: false });
+        set({
+          error: result.error,
+          isLoading: false,
+          isInitialized: true,
+        });
       }
     } catch (error) {
-      set({ error: "Failed to fetch vendor cart", isLoading: false });
+      set({
+        error: "Failed to fetch vendor cart",
+        isLoading: false,
+        isInitialized: true,
+      });
     }
   },
 
   addToCart: async (variationId: string, quantity: number) => {
+    if (get().isLoading) return;
+
     set({ isLoading: true, error: null });
     try {
       const result = await addToVendorCartAction(variationId, quantity);
@@ -141,6 +163,8 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
   },
 
   updateCartItemQuantity: async (cartItemId: string, quantity: number) => {
+    if (get().isLoading) return;
+
     set({ isLoading: true, error: null });
     try {
       const result = await updateVendorCartItemQuantityAction(
@@ -161,6 +185,8 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
   },
 
   removeFromCart: async (cartItemId: string) => {
+    if (get().isLoading) return;
+
     set({ isLoading: true, error: null });
     try {
       const result = await removeFromVendorCartAction(cartItemId);
@@ -178,6 +204,8 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
   },
 
   clearCart: async () => {
+    if (get().isLoading) return;
+
     set({ isLoading: true, error: null });
     try {
       const result = await clearVendorCartAction();

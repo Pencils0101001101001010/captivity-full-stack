@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -13,6 +14,9 @@ import {
   Menu,
   Search,
   X,
+  Home,
+  Store,
+  Loader2,
 } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
@@ -23,8 +27,9 @@ import {
   getVendorLogoBySlug,
 } from "../actions";
 import { useParams } from "next/navigation";
-import CartSidebar from "./CartSidebar";
 import { Button } from "@/components/ui/button";
+import useVendorCartStore from "../vendor/[vendor_website]/shop_product/cart/useCartStore";
+import VendorCartSidebar from "./CartSidebar";
 
 type UserRole =
   | "USER"
@@ -54,14 +59,26 @@ const Navbar = () => {
   const params = useParams();
   const vendorWebsite =
     typeof params?.vendor_website === "string" ? params.vendor_website : "";
+
+  // Logo states
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isLogoLoading, setIsLogoLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [showRemoveButton, setShowRemoveButton] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // UI states
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+
+  // Cart states
+  const cart = useVendorCartStore(state => state.cart);
+  const isCartInitialized = useVendorCartStore(state => state.isInitialized);
+  const fetchCart = useVendorCartStore(state => state.fetchCart);
+  const cartItemCount =
+    cart?.vendorCartItems.reduce((total, item) => total + item.quantity, 0) ||
+    0;
 
   const defaultLogoUrl = "/captivity-logo-white.png";
   const isVendor = session?.user?.role === "VENDOR";
@@ -70,6 +87,14 @@ const Navbar = () => {
     "APPROVEDVENDORCUSTOMER",
   ].includes(session?.user?.role || "");
 
+  // Initialize cart
+  useEffect(() => {
+    if (session?.user && (isVendor || isVendorCustomer)) {
+      fetchCart();
+    }
+  }, [fetchCart, session?.user, isVendor, isVendorCustomer]);
+
+  // Fetch logo
   useEffect(() => {
     const fetchLogo = async () => {
       if (!session?.user) {
@@ -227,13 +252,34 @@ const Navbar = () => {
 
   const NavigationButtons = () => (
     <div className="flex flex-col md:flex-row gap-2 md:gap-3">
-      <Button asChild className="bg-blue-300 w-full md:w-auto">
-        <Link href={`/vendor/${vendorWebsite}/welcome`}>Back</Link>
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full md:w-auto flex items-center gap-2"
+        asChild
+      >
+        <Link href={`/vendor/${vendorWebsite}/welcome`}>
+          <Home className="w-4 h-4" />
+          <span className="hidden md:inline">Back</span>
+        </Link>
       </Button>
-      <Button asChild variant="secondary" className="w-full md:w-auto">
-        <Link href={`/vendor/${vendorWebsite}`}>Home</Link>
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-full md:w-auto flex items-center gap-2"
+        asChild
+      >
+        <Link href={`/vendor/${vendorWebsite}`}>
+          <Store className="w-4 h-4" />
+          <span className="hidden md:inline">Home</span>
+        </Link>
       </Button>
-      <Button asChild variant="destructive" className="w-full md:w-auto">
+      <Button
+        variant="destructive"
+        size="sm"
+        className="w-full md:w-auto"
+        asChild
+      >
         <Link
           href={`/vendor/${vendorWebsite}/shopping/product_categories/summer`}
         >
@@ -248,10 +294,10 @@ const Navbar = () => {
       <input
         type="text"
         placeholder="Search for product"
-        className="px-2 w-full md:w-[150px] py-2 rounded-l-sm bg-white text-black"
+        className="px-4 py-2 w-full md:w-[200px] lg:w-[300px] rounded-l-md border border-r-0 border-input bg-background text-foreground"
       />
-      <button className="bg-red-600 text-sm rounded-r-sm text-white px-4 py-2 hover:bg-red-500 whitespace-nowrap">
-        SEARCH
+      <button className="px-4 py-2 bg-primary text-primary-foreground rounded-r-md hover:bg-primary/90 transition-colors">
+        Search
       </button>
     </div>
   );
@@ -283,20 +329,41 @@ const Navbar = () => {
           <Link
             key={item.href}
             href={item.href}
-            className="flex items-center gap-2 hover:text-gray-300 transition-colors"
+            className="flex items-center gap-2 hover:text-primary/80 transition-colors"
           >
             {item.icon}
-            <span>{item.label}</span>
+            <span className="md:hidden lg:inline">{item.label}</span>
           </Link>
         ))}
       </div>
     );
   };
 
+  const CartButton = () => (
+    <button
+      onClick={() => setIsCartOpen(true)}
+      className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
+      disabled={!isCartInitialized}
+    >
+      <ShoppingCart className="w-6 h-6" />
+      {!isCartInitialized ? (
+        <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center">
+          <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+        </span>
+      ) : (
+        cartItemCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            {cartItemCount}
+          </span>
+        )
+      )}
+    </button>
+  );
+
   return (
     <div className="sticky top-0 z-50">
       <nav className="bg-black text-white">
-        <div className="mx-auto w-full py-6 px-4 md:px-8">
+        <div className="mx-auto w-full py-4 px-4 md:px-8">
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center justify-between">
             <div className="flex items-center gap-6">
@@ -324,24 +391,16 @@ const Navbar = () => {
                     </Link>
                   </>
                 )}
-                <button
-                  onClick={() => setIsCartOpen(true)}
-                  className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
-                >
-                  <ShoppingCart className="w-6 h-6" />
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    0
-                  </span>
-                </button>
+                <CartButton />
               </div>
             </div>
           </div>
 
           {/* Mobile Navigation */}
           <div className="md:hidden">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between">
               <LogoSection />
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <button
                   onClick={() => setShowMobileSearch(!showMobileSearch)}
                   className="p-2 hover:bg-gray-800 rounded-full transition-colors"
@@ -363,27 +422,21 @@ const Navbar = () => {
                     Login
                   </Link>
                 )}
-                <button
-                  onClick={() => setIsCartOpen(true)}
-                  className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
-                >
-                  <ShoppingCart className="w-6 h-6" />
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    0
-                  </span>
-                </button>
+                <CartButton />
               </div>
             </div>
 
             {/* Mobile Search */}
             {showMobileSearch && (
-              <div className="mb-4">
+              <div className="mt-4">
                 <SearchBar />
               </div>
             )}
 
             {/* Mobile Navigation Buttons */}
-            <NavigationButtons />
+            <div className="mt-4">
+              <NavigationButtons />
+            </div>
 
             {/* Mobile Vendor Menu */}
             {isMobileMenuOpen && isVendor && (
@@ -395,7 +448,12 @@ const Navbar = () => {
         </div>
       </nav>
 
-      <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      {/* Cart Sidebar */}
+      <VendorCartSidebar
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        vendorWebsite={vendorWebsite}
+      />
     </div>
   );
 };

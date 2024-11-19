@@ -1,13 +1,84 @@
 "use client";
-import { ShoppingBag, X } from "lucide-react";
-import { cn } from "@/lib/utils";
 
-interface CartSidebarProps {
+import { ShoppingBag, X, Trash2, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
+import useVendorCartStore from "../vendor/[vendor_website]/shop_product/cart/useCartStore";
+
+interface VendorCartSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  vendorWebsite: string;
 }
 
-const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
+const VendorCartSidebar = ({
+  isOpen,
+  onClose,
+  vendorWebsite,
+}: VendorCartSidebarProps) => {
+  const { cart, updateCartItemQuantity, removeFromCart } = useVendorCartStore();
+  const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+  const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
+  const [updateSuccess, setUpdateSuccess] = useState<Set<string>>(new Set());
+
+  const handleUpdateQuantity = async (
+    cartItemId: string,
+    newQuantity: number
+  ) => {
+    setUpdatingItems(prev => new Set(prev).add(cartItemId));
+    await updateCartItemQuantity(cartItemId, newQuantity);
+    setUpdatingItems(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(cartItemId);
+      return newSet;
+    });
+
+    setUpdateSuccess(prev => new Set(prev).add(cartItemId));
+    setTimeout(() => {
+      setUpdateSuccess(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(cartItemId);
+        return newSet;
+      });
+    }, 1000);
+  };
+
+  const handleRemoveItem = async (cartItemId: string) => {
+    setRemovingItems(prev => new Set(prev).add(cartItemId));
+    await removeFromCart(cartItemId);
+    setRemovingItems(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(cartItemId);
+      return newSet;
+    });
+  };
+
+  const cartItems = cart?.vendorCartItems || [];
+  const subtotal =
+    cart?.vendorCartItems?.reduce((sum, item) => {
+      const basePrice = item.vendorVariation.vendorProduct.sellingPrice;
+      const dynamicPricing = item.vendorVariation.vendorProduct.dynamicPricing;
+
+      if (!dynamicPricing?.length) return sum + basePrice * item.quantity;
+
+      const applicableRule = dynamicPricing.find(rule => {
+        const from = parseInt(rule.from);
+        const to = parseInt(rule.to);
+        return item.quantity >= from && item.quantity <= to;
+      });
+
+      if (!applicableRule) return sum + basePrice * item.quantity;
+
+      if (applicableRule.type === "fixed_price") {
+        return sum + parseFloat(applicableRule.amount) * item.quantity;
+      } else {
+        const discount = parseFloat(applicableRule.amount) / 100;
+        return sum + basePrice * item.quantity * (1 - discount);
+      }
+    }, 0) || 0;
+
   return (
     <>
       {/* Overlay */}
@@ -23,7 +94,7 @@ const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
       <div
         className={cn(
           "fixed top-0 right-0 h-full bg-background shadow-xl transform transition-transform duration-300 ease-in-out z-50",
-          "w-[300px] sm:w-[350px] md:w-[450px]", // Responsive widths
+          "w-[300px] sm:w-[350px] md:w-[450px]",
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
@@ -43,36 +114,158 @@ const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
         </div>
 
         {/* Cart content */}
-        <div className="flex flex-col h-[calc(100%-140px_sm:calc(100%-180px)] overflow-y-auto">
-          {/* Empty state */}
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16 mb-3 sm:mb-4" />
-            <p className="text-base sm:text-lg">Your cart is empty</p>
-          </div>
+        <div className="flex flex-col h-[calc(100%-140px)] sm:h-[calc(100%-180px)] overflow-y-auto">
+          {cartItems.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+              <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16 mb-3 sm:mb-4" />
+              <p className="text-base sm:text-lg">Your cart is empty</p>
+            </div>
+          ) : (
+            <div className="p-4 space-y-4">
+              {cartItems.map(item => {
+                const basePrice =
+                  item.vendorVariation.vendorProduct.sellingPrice;
+                const dynamicPricing =
+                  item.vendorVariation.vendorProduct.dynamicPricing;
+                let itemTotal = basePrice * item.quantity;
+
+                const applicableRule = dynamicPricing?.find(rule => {
+                  const from = parseInt(rule.from);
+                  const to = parseInt(rule.to);
+                  return item.quantity >= from && item.quantity <= to;
+                });
+
+                if (applicableRule) {
+                  if (applicableRule.type === "fixed_price") {
+                    itemTotal =
+                      parseFloat(applicableRule.amount) * item.quantity;
+                  } else {
+                    const discount = parseFloat(applicableRule.amount) / 100;
+                    itemTotal = basePrice * item.quantity * (1 - discount);
+                  }
+                }
+
+                const hasDiscount = itemTotal < basePrice * item.quantity;
+
+                return (
+                  <div key={item.id} className="flex gap-4 border-b pb-4">
+                    <div className="relative w-20 h-20">
+                      <Image
+                        src={
+                          item.vendorVariation.variationImageURL ||
+                          "/api/placeholder/100/100"
+                        }
+                        alt={item.vendorVariation.vendorProduct.productName}
+                        fill
+                        className="object-cover rounded"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-foreground">
+                        {item.vendorVariation.vendorProduct.productName}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {item.vendorVariation.color} /{" "}
+                        {item.vendorVariation.size}
+                      </p>
+                      <div className="flex items-center mt-2 gap-2">
+                        <select
+                          value={item.quantity}
+                          onChange={e =>
+                            handleUpdateQuantity(
+                              item.id,
+                              Number(e.target.value)
+                            )
+                          }
+                          disabled={updatingItems.has(item.id)}
+                          className="text-sm border rounded px-2 py-1"
+                        >
+                          {[...Array(item.vendorVariation.quantity)].map(
+                            (_, i) => (
+                              <option key={i + 1} value={i + 1}>
+                                {i + 1}
+                              </option>
+                            )
+                          )}
+                        </select>
+
+                        {updatingItems.has(item.id) && (
+                          <span className="text-sm text-blue-500 animate-pulse">
+                            Updating...
+                          </span>
+                        )}
+                        {updateSuccess.has(item.id) &&
+                          !updatingItems.has(item.id) && (
+                            <span className="text-sm text-green-500 flex items-center gap-1">
+                              <Check size={16} />
+                              Updated
+                            </span>
+                          )}
+
+                        <div className="ml-auto text-right">
+                          <p className="font-medium">R{itemTotal.toFixed(2)}</p>
+                          {hasDiscount && (
+                            <p className="text-sm text-muted-foreground line-through">
+                              R{(basePrice * item.quantity).toFixed(2)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      className="text-destructive hover:text-destructive/90 disabled:opacity-50"
+                      onClick={() => handleRemoveItem(item.id)}
+                      disabled={
+                        removingItems.has(item.id) || updatingItems.has(item.id)
+                      }
+                    >
+                      {removingItems.has(item.id) ? (
+                        <span className="text-sm">Removing...</span>
+                      ) : (
+                        <Trash2 size={20} />
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Footer */}
         <div className="absolute bottom-0 left-0 right-0 border-t bg-background p-3 sm:p-4 space-y-3 sm:space-y-4">
           <div className="flex justify-between text-base sm:text-lg font-semibold">
             <span>Total</span>
-            <span>$0.00</span>
+            <span>R{subtotal.toFixed(2)}</span>
           </div>
-          <button
-            className={cn(
-              "w-full bg-primary text-primary-foreground py-2.5 sm:py-3 rounded-md",
-              "hover:bg-primary/90 transition-colors",
-              "text-sm sm:text-base font-medium"
-            )}
-            onClick={() => {
-              /* Handle checkout */
-            }}
-          >
-            Checkout
-          </button>
+          <div className="space-y-2">
+            <Link
+              href={`/vendor/${vendorWebsite}/shopping/checkout`}
+              className={cn(
+                "block w-full bg-primary text-primary-foreground text-center py-2.5 sm:py-3 rounded-md",
+                "hover:bg-primary/90 transition-colors",
+                "text-sm sm:text-base font-medium"
+              )}
+              onClick={onClose}
+            >
+              Checkout
+            </Link>
+            <Link
+              href={`/vendor/${vendorWebsite}/shopping/cart`}
+              className={cn(
+                "block w-full bg-secondary text-secondary-foreground text-center py-2.5 sm:py-3 rounded-md",
+                "hover:bg-secondary/90 transition-colors",
+                "text-sm sm:text-base font-medium"
+              )}
+              onClick={onClose}
+            >
+              View Cart
+            </Link>
+          </div>
         </div>
       </div>
     </>
   );
 };
 
-export default CartSidebar;
+export default VendorCartSidebar;
