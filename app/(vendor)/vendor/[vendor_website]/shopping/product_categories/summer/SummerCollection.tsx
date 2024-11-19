@@ -9,12 +9,14 @@ import Link from "next/link";
 import { useVendorCollectionsStore } from "../_store/useVendorCollectionsStore";
 import { useParams } from "next/navigation";
 import { StarRating } from "../_components/StarRating";
+import { useSession } from "@/app/(vendor)/SessionProvider";
 
 const ITEMS_PER_PAGE = 12;
 
 const VendorSummerCollection: React.FC = () => {
   const params = useParams();
   const vendorWebsite = params?.vendor_website as string;
+  const { user } = useSession();
   const [currentPage, setCurrentPage] = useState(1);
   const { collections, counts, isLoading, error, fetchCollections } =
     useVendorCollectionsStore();
@@ -22,11 +24,15 @@ const VendorSummerCollection: React.FC = () => {
   const initializationRef = useRef(false);
 
   useEffect(() => {
-    if (!collections && !initializationRef.current) {
+    if (!collections && !initializationRef.current && vendorWebsite) {
       initializationRef.current = true;
-      fetchCollections();
+      if (user?.role === "VENDOR") {
+        fetchCollections();
+      } else if (user?.role === "VENDORCUSTOMER") {
+        fetchCollections(vendorWebsite);
+      }
     }
-  }, [collections, fetchCollections]);
+  }, [collections, fetchCollections, vendorWebsite, user?.role]);
 
   if (isLoading)
     return (
@@ -46,11 +52,13 @@ const VendorSummerCollection: React.FC = () => {
     return (
       <div className="text-center py-8">
         <h2 className="text-2xl font-bold text-foreground">
-          No products found in your summer collection.
+          No products found in summer collection.
         </h2>
-        <p className="text-muted-foreground mt-2">
-          Add some summer products to see them here.
-        </p>
+        {user?.role === "VENDOR" && (
+          <p className="text-muted-foreground mt-2">
+            Add some summer products to see them here.
+          </p>
+        )}
       </div>
     );
   }

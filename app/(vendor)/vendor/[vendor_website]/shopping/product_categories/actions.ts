@@ -53,12 +53,39 @@ export type FetchVendorCollectionsResult =
     }
   | { success: false; error: string };
 
-export async function fetchVendorCollections(): Promise<FetchVendorCollectionsResult> {
+async function getVendorIdByWebsite(websiteAddress: string) {
+  const vendorUser = await prisma.user.findFirst({
+    where: {
+      OR: [{ website: websiteAddress }, { storeSlug: websiteAddress }],
+      role: "VENDOR",
+    },
+    select: { id: true },
+  });
+  return vendorUser?.id;
+}
+
+export async function fetchVendorCollections(
+  vendorWebsite?: string
+): Promise<FetchVendorCollectionsResult> {
   try {
     const { user } = await validateRequest();
-
     if (!user) {
       throw new Error("Authentication required");
+    }
+
+    // Determine which userId to use for the query
+    let queryUserId: string;
+
+    if (user.role === "VENDOR") {
+      queryUserId = user.id;
+    } else if (user.role === "VENDORCUSTOMER" && vendorWebsite) {
+      const vendorId = await getVendorIdByWebsite(vendorWebsite);
+      if (!vendorId) {
+        throw new Error("Vendor not found");
+      }
+      queryUserId = vendorId;
+    } else {
+      throw new Error("Unauthorized access");
     }
 
     const [
@@ -76,78 +103,89 @@ export async function fetchVendorCollections(): Promise<FetchVendorCollectionsRe
     ] = await Promise.all([
       prisma.vendorProduct.findMany({
         where: {
-          userId: user.id,
+          userId: queryUserId,
           category: { has: "african-collection" },
+          isPublished: true, // Only show published products to customers
         },
         include: { featuredImage: true },
       }),
       prisma.vendorProduct.findMany({
         where: {
-          userId: user.id,
+          userId: queryUserId,
           category: { has: "baseball-collection" },
+          isPublished: true,
         },
         include: { featuredImage: true },
       }),
       prisma.vendorProduct.findMany({
         where: {
-          userId: user.id,
+          userId: queryUserId,
           category: { has: "camo-collection" },
+          isPublished: true,
         },
         include: { featuredImage: true },
       }),
       prisma.vendorProduct.findMany({
         where: {
-          userId: user.id,
+          userId: queryUserId,
           category: { has: "fashion-collection" },
+          isPublished: true,
         },
         include: { featuredImage: true },
       }),
       prisma.vendorProduct.findMany({
         where: {
-          userId: user.id,
+          userId: queryUserId,
           category: { has: "industrial-collection" },
+          isPublished: true,
         },
         include: { featuredImage: true },
       }),
       prisma.vendorProduct.findMany({
         where: {
-          userId: user.id,
+          userId: queryUserId,
           category: { has: "kids-collection" },
+          isPublished: true,
         },
         include: { featuredImage: true },
       }),
       prisma.vendorProduct.findMany({
         where: {
-          userId: user.id,
+          userId: queryUserId,
           category: { has: "leisure-collection" },
+          isPublished: true,
         },
         include: { featuredImage: true },
       }),
       prisma.vendorProduct.findMany({
         where: {
-          userId: user.id,
+          userId: queryUserId,
           category: { has: "signature-collection" },
+          isPublished: true,
         },
         include: { featuredImage: true },
       }),
       prisma.vendorProduct.findMany({
         where: {
-          userId: user.id,
+          userId: queryUserId,
           category: { has: "sport-collection" },
+          isPublished: true,
         },
         include: { featuredImage: true },
       }),
       prisma.vendorProduct.findMany({
         where: {
-          userId: user.id,
+          userId: queryUserId,
           category: { has: "summer-collection" },
+          isPublished: true,
         },
         include: { featuredImage: true },
       }),
       prisma.vendorProduct.findMany({
         where: {
-          userId: user.id,
+          userId: queryUserId,
           category: { has: "winter-collection" },
+          isPublished: true,
         },
         include: { featuredImage: true },
       }),

@@ -6,4 +6,4 @@
 
 [x] The social Link is not showing for the vendor-customer
 
-[] The vendor customer cant see the product categories that the vendor created.
+[x] The vendor customer cant see the product categories that the vendor created.

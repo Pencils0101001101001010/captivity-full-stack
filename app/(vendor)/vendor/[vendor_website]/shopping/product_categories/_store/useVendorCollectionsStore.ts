@@ -53,7 +53,7 @@ interface VendorCollectionsStore {
   isLoading: boolean;
   error: string | null;
   isFetched: boolean;
-  fetchCollections: () => Promise<void>;
+  fetchCollections: (vendorWebsite?: string) => Promise<void>;
 }
 
 export const useVendorCollectionsStore = create<VendorCollectionsStore>(
@@ -63,13 +63,13 @@ export const useVendorCollectionsStore = create<VendorCollectionsStore>(
     isLoading: false,
     error: null,
     isFetched: false,
-    fetchCollections: async () => {
+    fetchCollections: async (vendorWebsite?: string) => {
       // Prevent multiple fetches
       if (get().isLoading || get().isFetched) return;
 
       try {
         set({ isLoading: true, error: null });
-        const result = await fetchVendorCollections();
+        const result = await fetchVendorCollections(vendorWebsite);
 
         if (result.success) {
           set({
