@@ -253,7 +253,7 @@ const Navbar = () => {
   const NavigationButtons = () => (
     <div className="flex flex-col md:flex-row gap-2 md:gap-3">
       <Button
-        variant="outline"
+        variant="default"
         size="sm"
         className="w-full md:w-auto flex items-center gap-2"
         asChild
