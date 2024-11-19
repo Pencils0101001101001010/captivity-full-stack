@@ -4,7 +4,6 @@ import prisma from "@/lib/prisma";
 import { validateRequest } from "@/auth";
 import { put } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
-import { Prisma } from "@prisma/client";
 
 interface ImageUrls {
   thumbnail: string;
@@ -101,36 +100,7 @@ export async function createVendorProduct(formData: FormData) {
       featuredImageUrls = await uploadFeaturedImages(featuredImageFile);
     }
 
-    // Process variations and their images
-    const variationEntries = Array.from(formData.entries()).filter(([key]) =>
-      key.startsWith("variations")
-    );
-
-    const variationCount = variationEntries.reduce((max, [key]) => {
-      const match = key.match(/variations\.(\d+)\./);
-      return match ? Math.max(max, parseInt(match[1]) + 1) : max;
-    }, 0);
-
-    // Upload variation images
-    const variationImages: string[] = [];
-    for (let i = 0; i < variationCount; i++) {
-      const variationImageFile = formData.get(`variations.${i}.image`);
-      if (variationImageFile instanceof File && variationImageFile.size > 0) {
-        try {
-          const fileExt = variationImageFile.name.split(".").pop() || "jpg";
-          const url = await uploadImage(
-            variationImageFile,
-            `vendor-products/variations/variation_${i}_${Date.now()}.${fileExt}`
-          );
-          variationImages[i] = url;
-        } catch (error) {
-          console.error(`Error uploading variation image ${i}:`, error);
-          throw error;
-        }
-      }
-    }
-
-    // Create product first
+    // Create the main product first
     const product = await prisma.vendorProduct.create({
       data: {
         user: {
@@ -155,8 +125,78 @@ export async function createVendorProduct(formData: FormData) {
       },
     });
 
-    // Process and create variations
+    // Process variations and their images
+    const variationEntries = Array.from(formData.entries()).filter(([key]) =>
+      key.startsWith("variations")
+    );
+
+    const variationCount = variationEntries.reduce((max, [key]) => {
+      const match = key.match(/variations\.(\d+)\./);
+      return match ? Math.max(max, parseInt(match[1]) + 1) : max;
+    }, 0);
+
+    // Process dynamic pricing entries
+    const dynamicPricingEntries = Array.from(formData.entries()).filter(
+      ([key]) => key.startsWith("dynamicPricing")
+    );
+
+    const dynamicPricingCount = dynamicPricingEntries.reduce((max, [key]) => {
+      const match = key.match(/dynamicPricing\.(\d+)\./);
+      return match ? Math.max(max, parseInt(match[1]) + 1) : max;
+    }, 0);
+
+    // Create dynamic pricing entries
+    const dynamicPricingPromises = [];
+    for (let i = 0; i < dynamicPricingCount; i++) {
+      const from = formData.get(`dynamicPricing.${i}.from`);
+      const to = formData.get(`dynamicPricing.${i}.to`);
+      const type = formData.get(`dynamicPricing.${i}.type`);
+      const amount = formData.get(`dynamicPricing.${i}.amount`);
+
+      if (from && to && type && amount) {
+        dynamicPricingPromises.push(
+          prisma.vendorDynamicPricing.create({
+            data: {
+              from: from.toString(),
+              to: to.toString(),
+              type: type.toString(),
+              amount: amount.toString(),
+              vendorProduct: {
+                connect: {
+                  id: product.id,
+                },
+              },
+            },
+          })
+        );
+      }
+    }
+
+    // Wait for all dynamic pricing entries to be created
+    await Promise.all(dynamicPricingPromises);
+
+    // Upload variation images and create variations
+    const variationImages: string[] = [];
+    const variationPromises = [];
+
     for (let i = 0; i < variationCount; i++) {
+      const variationImageFile = formData.get(`variations.${i}.image`);
+      let imageUrl = "";
+
+      if (variationImageFile instanceof File && variationImageFile.size > 0) {
+        try {
+          const fileExt = variationImageFile.name.split(".").pop() || "jpg";
+          imageUrl = await uploadImage(
+            variationImageFile,
+            `vendor-products/variations/variation_${i}_${Date.now()}.${fileExt}`
+          );
+          variationImages[i] = imageUrl;
+        } catch (error) {
+          console.error(`Error uploading variation image ${i}:`, error);
+          throw error;
+        }
+      }
+
       const sizesEntries = Array.from(formData.entries()).filter(([key]) =>
         key.startsWith(`variations.${i}.sizes.`)
       );
@@ -171,57 +211,47 @@ export async function createVendorProduct(formData: FormData) {
       );
 
       for (const sizeIndex of sizeIndices) {
-        await prisma.vendorVariation.create({
-          data: {
-            name: formData.get(`variations.${i}.name`) as string,
-            color: (formData.get(`variations.${i}.color`) as string) || "",
-            variationImageURL: variationImages[i] || "",
-            size:
-              (
-                formData.get(
-                  `variations.${i}.sizes.${sizeIndex}.size`
-                ) as string
-              )?.trim() || "",
-            quantity:
-              Number(
-                formData.get(`variations.${i}.sizes.${sizeIndex}.quantity`)
-              ) || 0,
-            sku:
-              (
-                formData.get(`variations.${i}.sizes.${sizeIndex}.sku`) as string
-              )?.trim() || "",
-            sku2:
-              (
-                formData.get(
-                  `variations.${i}.sizes.${sizeIndex}.sku2`
-                ) as string
-              )?.trim() || "",
-            vendorProduct: {
-              connect: {
-                id: product.id,
+        variationPromises.push(
+          prisma.vendorVariation.create({
+            data: {
+              name: formData.get(`variations.${i}.name`) as string,
+              color: (formData.get(`variations.${i}.color`) as string) || "",
+              variationImageURL: imageUrl,
+              size:
+                (
+                  formData.get(
+                    `variations.${i}.sizes.${sizeIndex}.size`
+                  ) as string
+                )?.trim() || "",
+              quantity:
+                Number(
+                  formData.get(`variations.${i}.sizes.${sizeIndex}.quantity`)
+                ) || 0,
+              sku:
+                (
+                  formData.get(
+                    `variations.${i}.sizes.${sizeIndex}.sku`
+                  ) as string
+                )?.trim() || "",
+              sku2:
+                (
+                  formData.get(
+                    `variations.${i}.sizes.${sizeIndex}.sku2`
+                  ) as string
+                )?.trim() || "",
+              vendorProduct: {
+                connect: {
+                  id: product.id,
+                },
               },
             },
-          },
-        });
+          })
+        );
       }
     }
 
-    // Create dynamic pricing
-    for (let i = 0; i < formData.getAll("dynamicPricing.0.from").length; i++) {
-      await prisma.vendorDynamicPricing.create({
-        data: {
-          from: formData.get(`dynamicPricing.${i}.from`) as string,
-          to: formData.get(`dynamicPricing.${i}.to`) as string,
-          type: formData.get(`dynamicPricing.${i}.type`) as string,
-          amount: formData.get(`dynamicPricing.${i}.amount`) as string,
-          vendorProduct: {
-            connect: {
-              id: product.id,
-            },
-          },
-        },
-      });
-    }
+    // Wait for all variations to be created
+    await Promise.all(variationPromises);
 
     // Get the complete product with all relations
     const completeProduct = await prisma.vendorProduct.findUnique({

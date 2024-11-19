@@ -1,5 +1,6 @@
+// DynamicPricingTab.tsx
 import React from "react";
-import { Control, useFieldArray } from "react-hook-form";
+import { Control, useFieldArray, useFormContext } from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
 import {
   FormControl,
@@ -7,9 +8,17 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { VendorProductFormData } from "../types";
 
 interface DynamicPricingTabProps {
@@ -17,6 +26,7 @@ interface DynamicPricingTabProps {
 }
 
 const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
+  const { watch } = useFormContext<VendorProductFormData>();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "dynamicPricing",
@@ -89,29 +99,51 @@ const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
 
           <FormField
             control={control}
+            name={`dynamicPricing.${index}.type`}
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormLabel>Price Type</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select price type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="fixed_price">Fixed Price</SelectItem>
+                    <SelectItem value="percentage">Percentage Off</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={control}
             name={`dynamicPricing.${index}.amount`}
             render={({ field }) => (
               <FormItem className="flex-1">
-                <FormLabel>Price per item</FormLabel>
+                <FormLabel>Amount</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="Price for this range"
+                    placeholder="Price/Percentage"
                   />
                 </FormControl>
+                {field.value &&
+                  watch(`dynamicPricing.${index}.type`) === "percentage" && (
+                    <FormDescription>{field.value}% off</FormDescription>
+                  )}
                 <FormMessage />
               </FormItem>
             )}
-          />
-
-          {/* Hidden field for type */}
-          <input
-            type="hidden"
-            {...control.register(`dynamicPricing.${index}.type`)}
-            value="fixed_price"
           />
 
           <Button
@@ -129,12 +161,12 @@ const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
       <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mt-6">
         <p className="text-sm text-yellow-800">
           <strong>Note:</strong> Set different prices for different quantity
-          ranges. For example, if you want to give a discount for bulk orders:
+          ranges. For example:
           <br />
           • 1-10 items: Regular price
           <br />
-          • 11-50 items: Slightly reduced price
-          <br />• 51+ items: Best bulk price
+          • 11-50 items: Fixed price $X per item
+          <br />• 51+ items: X% off per item
         </p>
       </div>
     </div>

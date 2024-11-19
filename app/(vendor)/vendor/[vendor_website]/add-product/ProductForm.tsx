@@ -84,12 +84,15 @@ const VendorProductForm = () => {
       return;
     }
 
+    console.log("Raw form data received:", data);
+
     try {
       setIsSubmitting(true);
       const formData = new FormData();
 
       // Add vendor ID from session
       formData.append("vendorId", session.user.id);
+      console.log("Added vendor ID:", session.user.id);
 
       // Add basic info
       formData.append("productName", data.productName);
@@ -98,28 +101,66 @@ const VendorProductForm = () => {
       formData.append("isPublished", data.isPublished.toString());
       data.category.forEach(cat => formData.append("category[]", cat));
 
+      console.log("Basic info added:", {
+        productName: data.productName,
+        description: data.description,
+        sellingPrice: data.sellingPrice,
+        isPublished: data.isPublished,
+        categories: data.category,
+      });
+
       // Add featured image if exists
       if (data.featuredImage.file) {
         formData.append("featuredImage", data.featuredImage.file);
+        console.log("Featured image added:", {
+          fileName: data.featuredImage.file.name,
+          fileSize: data.featuredImage.file.size,
+          fileType: data.featuredImage.file.type,
+        });
       }
 
       // Add dynamic pricing
+      console.log(
+        "Dynamic pricing data before processing:",
+        data.dynamicPricing
+      );
+
       data.dynamicPricing.forEach((price, index) => {
         formData.append(`dynamicPricing.${index}.from`, price.from);
         formData.append(`dynamicPricing.${index}.to`, price.to);
         formData.append(`dynamicPricing.${index}.type`, price.type);
         formData.append(`dynamicPricing.${index}.amount`, price.amount);
+
+        console.log(`Dynamic pricing range ${index} added:`, {
+          from: price.from,
+          to: price.to,
+          type: price.type,
+          amount: price.amount,
+        });
       });
 
       // Add variations with all sizes
+      console.log("Variations data before processing:", data.variations);
+
       data.variations.forEach((variation, vIndex) => {
         formData.append(`variations.${vIndex}.name`, variation.name);
         formData.append(`variations.${vIndex}.color`, variation.color || "");
+
+        console.log(`Variation ${vIndex} basic info added:`, {
+          name: variation.name,
+          color: variation.color,
+        });
+
         if (variation.variationImage) {
           formData.append(
             `variations.${vIndex}.image`,
             variation.variationImage
           );
+          console.log(`Variation ${vIndex} image added:`, {
+            fileName: variation.variationImage.name,
+            fileSize: variation.variationImage.size,
+            fileType: variation.variationImage.type,
+          });
         }
 
         variation.sizes.forEach((size, sIndex) => {
@@ -138,10 +179,24 @@ const VendorProductForm = () => {
               size.sku2
             );
           }
+
+          console.log(`Variation ${vIndex} size ${sIndex} added:`, {
+            size: size.size,
+            quantity: size.quantity,
+            sku: size.sku,
+            sku2: size.sku2,
+          });
         });
       });
 
+      // Log final FormData contents
+      console.log("Final FormData entries:");
+      for (const pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
+
       const result = await createVendorProduct(formData);
+      console.log("Server response:", result);
 
       if (result.success) {
         toast({
