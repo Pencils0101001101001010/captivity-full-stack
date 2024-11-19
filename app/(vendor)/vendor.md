@@ -8,4 +8,4 @@
 
 [x] The vendor customer cant see the product categories that the vendor created.
 
-[] Dynamic Pricing is not working on the create product form
+[x] Dynamic Pricing is not working on the create product form
