@@ -1,11 +1,12 @@
 import { create } from "zustand";
+import { useEffect } from "react";
 import {
   createSocialLink,
   deleteSocialLink,
   getSocialLinks,
+  getVendorSocialLinks,
   updateSocialLink,
 } from "../_actions/social-actions";
-import { useEffect } from "react";
 
 export interface SocialLink {
   id: string;
@@ -23,6 +24,7 @@ interface SocialLinkStore {
   initialized: boolean;
   currentFetch: AbortController | null;
   fetchLinks: () => Promise<void>;
+  fetchVendorLinks: (vendorWebsite: string) => Promise<void>;
   updateLink: (id: string, data: SocialLinkFormData) => Promise<void>;
   createLink: (data: SocialLinkFormData) => Promise<void>;
   deleteLink: (id: string) => Promise<void>;
@@ -90,6 +92,46 @@ export const useSocialLinkStore = create<SocialLinkStore>((set, get) => ({
     }
   },
 
+  fetchVendorLinks: async (vendorWebsite: string) => {
+    const state = get();
+    if (state.isLoading || state.initialized) return;
+
+    if (state.currentFetch) {
+      state.currentFetch.abort();
+    }
+
+    const controller = new AbortController();
+    set({ currentFetch: controller, isLoading: true, error: null });
+
+    try {
+      const result = await getVendorSocialLinks(vendorWebsite);
+
+      if (controller.signal.aborted) return;
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      set({ links: result.data || [], initialized: true });
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
+      set({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch vendor social links",
+      });
+    } finally {
+      set(state => ({
+        isLoading: false,
+        currentFetch:
+          state.currentFetch === controller ? null : state.currentFetch,
+      }));
+    }
+  },
+
   updateLink: async (id: string, data: SocialLinkFormData) => {
     set({ isLoading: true, error: null });
 
@@ -98,7 +140,7 @@ export const useSocialLinkStore = create<SocialLinkStore>((set, get) => ({
       if (!result.success) {
         throw new Error(result.error);
       }
-      set({ links: result.data });
+      set({ links: result.data || [] });
     } catch (error) {
       set({
         error:
@@ -120,7 +162,7 @@ export const useSocialLinkStore = create<SocialLinkStore>((set, get) => ({
       if (!result.success) {
         throw new Error(result.error);
       }
-      set({ links: result.data });
+      set({ links: result.data || [] });
     } catch (error) {
       set({
         error:
@@ -142,7 +184,7 @@ export const useSocialLinkStore = create<SocialLinkStore>((set, get) => ({
       if (!result.success) {
         throw new Error(result.error);
       }
-      set({ links: result.data });
+      set({ links: result.data || [] });
     } catch (error) {
       set({
         error:

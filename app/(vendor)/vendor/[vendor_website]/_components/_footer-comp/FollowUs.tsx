@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Pencil, Save, X, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "@/app/(vendor)/SessionProvider";
+import { useParams } from "next/navigation";
 import {
   FaFacebook,
   FaInstagram,
@@ -66,7 +67,7 @@ const RenderLink: React.FC<RenderLinkProps> = ({
           href={link.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="px-2 hover:text-red-600"
+          className="px-2 text-white hover:text-red-600"
         >
           {link.platform}
         </a>
@@ -76,12 +77,14 @@ const RenderLink: React.FC<RenderLinkProps> = ({
           <button
             onClick={() => onEdit(link)}
             className="p-1.5 rounded hover:bg-gray-700 transition-colors"
+            title="Edit link"
           >
             <Pencil size={16} className="text-white" />
           </button>
           <button
             onClick={() => onDelete(link.id)}
             className="p-1.5 rounded hover:bg-gray-700 transition-colors"
+            title="Delete link"
           >
             <Trash2 size={16} className="text-white" />
           </button>
@@ -126,6 +129,7 @@ const RenderForm: React.FC<RenderFormProps> = ({
         value={data.url}
         onChange={onChange}
         className="mt-1 w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:ring-2 focus:ring-red-500"
+        placeholder="https://..."
         required
       />
     </div>
@@ -151,26 +155,47 @@ const RenderForm: React.FC<RenderFormProps> = ({
 
 const SocialLinks: React.FC = () => {
   const { user } = useSession();
+  const params = useParams();
+  const vendorWebsite =
+    typeof params?.vendor_website === "string" ? params.vendor_website : "";
+
   const {
     links,
     isLoading,
     error,
+    initialized,
     fetchLinks,
+    fetchVendorLinks,
     createLink,
     updateLink,
     deleteLink,
   } = useSocialLinkStore();
+
   const [isEditing, setIsEditing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | undefined>();
+  const [editingId, setEditingId] = useState<string | undefined>(undefined);
   const [formData, setFormData] = useState<SocialLinkFormData>({
     platform: "",
     url: "",
   });
 
+  const initializeData = useCallback(async () => {
+    if (!user || initialized) return;
+
+    try {
+      if (user.role === "VENDOR") {
+        await fetchLinks();
+      } else if (user.role === "VENDORCUSTOMER" && vendorWebsite) {
+        await fetchVendorLinks(vendorWebsite);
+      }
+    } catch (error) {
+      console.error("Error initializing data:", error);
+    }
+  }, [user, vendorWebsite, initialized, fetchLinks, fetchVendorLinks]);
+
   useEffect(() => {
-    fetchLinks();
-  }, [fetchLinks]);
+    initializeData();
+  }, [initializeData]);
 
   useEffect(() => {
     if (error) {
@@ -195,7 +220,10 @@ const SocialLinks: React.FC = () => {
   };
 
   const handleAdd = () => {
-    setFormData({ platform: "", url: "" });
+    setFormData({
+      platform: "",
+      url: "",
+    });
     setShowAddForm(true);
   };
 
@@ -203,7 +231,10 @@ const SocialLinks: React.FC = () => {
     setIsEditing(false);
     setShowAddForm(false);
     setEditingId(undefined);
-    setFormData({ platform: "", url: "" });
+    setFormData({
+      platform: "",
+      url: "",
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -218,9 +249,10 @@ const SocialLinks: React.FC = () => {
       }
       handleCancel();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to save social link"
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to save social link";
+      console.error("Error saving social link:", error);
+      toast.error(errorMessage);
     }
   };
 
@@ -294,7 +326,7 @@ const SocialLinks: React.FC = () => {
           <p className="text-gray-400">
             {user?.role === "VENDOR"
               ? "No social links added yet. Add your first social media link."
-              : "No social media links available."}
+              : "No social media links available from the vendor."}
           </p>
           {user?.role === "VENDOR" && (
             <button
