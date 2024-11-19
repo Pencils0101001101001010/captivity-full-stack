@@ -15,18 +15,43 @@ type VendorProductWithRelations = VendorProduct & {
   featuredImage: VendorFeaturedImage | null;
 };
 
-type FetchVendorProductResult =
-  | { success: true; data: VendorProductWithRelations }
-  | { success: false; error: string };
+async function getVendorByWebsite(websiteAddress: string) {
+  const vendor = await prisma.user.findFirst({
+    where: {
+      OR: [{ website: websiteAddress }, { storeSlug: websiteAddress }],
+      role: "VENDOR",
+    },
+    select: { id: true },
+  });
+  return vendor;
+}
 
 export async function fetchVendorProductById(
-  productId: string
-): Promise<FetchVendorProductResult> {
+  productId: string,
+  vendorWebsite?: string
+): Promise<
+  | { success: true; data: VendorProductWithRelations }
+  | { success: false; error: string }
+> {
   try {
-    // Validate user session
     const { user } = await validateRequest();
     if (!user) {
       throw new Error("Unauthorized. Please log in.");
+    }
+
+    let queryUserId: string;
+
+    // Determine which user's products to query
+    if (user.role === "VENDOR") {
+      queryUserId = user.id;
+    } else if (user.role === "VENDORCUSTOMER" && vendorWebsite) {
+      const vendor = await getVendorByWebsite(vendorWebsite);
+      if (!vendor) {
+        throw new Error("Vendor not found");
+      }
+      queryUserId = vendor.id;
+    } else {
+      throw new Error("Unauthorized access");
     }
 
     // Fetch the vendor product with all relations
@@ -45,9 +70,19 @@ export async function fetchVendorProductById(
       throw new Error("Product not found");
     }
 
-    // Verify the product belongs to the vendor
-    if (product.userId !== user.id) {
+    // For vendors, verify ownership
+    if (user.role === "VENDOR" && product.userId !== user.id) {
       throw new Error("Unauthorized. This product belongs to another vendor.");
+    }
+
+    // For vendor customers, verify the product belongs to the correct vendor
+    if (user.role === "VENDORCUSTOMER" && product.userId !== queryUserId) {
+      throw new Error("Product not found in vendor's catalog.");
+    }
+
+    // For vendor customers, only return published products
+    if (user.role === "VENDORCUSTOMER" && !product.isPublished) {
+      throw new Error("This product is currently unavailable.");
     }
 
     return { success: true, data: product };

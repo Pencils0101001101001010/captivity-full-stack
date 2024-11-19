@@ -10,14 +10,14 @@ interface VendorProductPageProps {
   };
 }
 
-// Type guard to check if the pricing type is valid
+// Type guard for pricing type
 function isValidPricingType(
   type: string
 ): type is "fixed_price" | "percentage" {
   return type === "fixed_price" || type === "percentage";
 }
 
-// Function to validate and transform the dynamic pricing data
+// Validate dynamic pricing
 function validateDynamicPricing(pricing: any[]): VendorDynamicPricingRule[] {
   return pricing.map(rule => {
     if (!isValidPricingType(rule.type)) {
@@ -34,12 +34,11 @@ function validateDynamicPricing(pricing: any[]): VendorDynamicPricingRule[] {
   });
 }
 
-// Function to validate and transform the product data
+// Validate product data
 function validateProductData(data: any): VendorProductWithRelations {
   return {
     ...data,
     dynamicPricing: validateDynamicPricing(data.dynamicPricing),
-    // Ensure other required properties are present
     variations: data.variations || [],
     featuredImage: data.featuredImage || null,
   };
@@ -54,32 +53,13 @@ export default async function VendorProductPage({
     notFound();
   }
 
-  const result = await fetchVendorProductById(productId);
+  const result = await fetchVendorProductById(productId, vendorWebsite);
 
   if (!result.success) {
-    // Handle various error cases
     if (result.error === "Unauthorized. Please log in.") {
       return (
         <div className="flex items-center justify-center min-h-[400px] text-lg">
           Please log in to view this product.
-        </div>
-      );
-    }
-
-    if (result.error === "Unauthorized. Vendor access required.") {
-      return (
-        <div className="flex items-center justify-center min-h-[400px] text-lg text-red-500">
-          Only vendors can access this page.
-        </div>
-      );
-    }
-
-    if (
-      result.error === "Unauthorized. This product belongs to another vendor."
-    ) {
-      return (
-        <div className="flex items-center justify-center min-h-[400px] text-lg text-red-500">
-          You dont have permission to view this product.
         </div>
       );
     }
@@ -92,7 +72,6 @@ export default async function VendorProductPage({
   }
 
   try {
-    // Validate and transform the data
     const validatedData = validateProductData(result.data);
 
     return (
