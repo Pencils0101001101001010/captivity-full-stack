@@ -154,6 +154,46 @@ const VendorProductDetails: React.FC<Props> = ({ product, vendorWebsite }) => {
     );
   };
 
+  const renderPricing = () => {
+    const isDynamicPrice = currentPrice !== product.sellingPrice;
+    const hasMetQuantityThreshold = product.dynamicPricing?.some(
+      rule => quantity >= parseInt(rule.from) && quantity <= parseInt(rule.to)
+    );
+
+    return (
+      <div className="mb-2">
+        {isDynamicPrice ? (
+          <>
+            {hasMetQuantityThreshold ? (
+              <>
+                <p className="text-sm text-muted-foreground line-through">
+                  Original: R{product.sellingPrice.toFixed(2)}
+                </p>
+                <p className="text-2xl font-bold text-card-foreground">
+                  R{currentPrice.toFixed(2)}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-2xl font-bold text-card-foreground">
+                  R{product.sellingPrice.toFixed(2)}
+                </p>
+                <p className="text-sm text-red-500">
+                  Bulk Price Available: R{currentPrice.toFixed(2)}
+                </p>
+              </>
+            )}
+          </>
+        ) : (
+          <p className="text-2xl font-bold text-card-foreground">
+            R{currentPrice.toFixed(2)}
+          </p>
+        )}
+        {getDynamicPricingInfo()}
+      </div>
+    );
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-3 bg-card my-8 shadow-2xl shadow-black rounded-lg border border-border mb-20">
       {/* View Cart Link - Top Right */}
@@ -183,17 +223,7 @@ const VendorProductDetails: React.FC<Props> = ({ product, vendorWebsite }) => {
             dangerouslySetInnerHTML={{ __html: product.description }}
             className="mb-4 text-muted-foreground"
           />
-          <div className="mb-2">
-            <p className="text-2xl font-bold text-card-foreground">
-              R{currentPrice.toFixed(2)}
-            </p>
-            {currentPrice !== product.sellingPrice && (
-              <p className="text-sm text-muted-foreground line-through">
-                Original: R{product.sellingPrice.toFixed(2)}
-              </p>
-            )}
-            {getDynamicPricingInfo()}
-          </div>
+          {renderPricing()}
 
           <VendorColorSelector
             colors={uniqueColors}

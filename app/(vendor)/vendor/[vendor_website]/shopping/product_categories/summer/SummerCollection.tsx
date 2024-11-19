@@ -24,29 +24,50 @@ const VendorSummerCollection: React.FC = () => {
   const initializationRef = useRef(false);
 
   useEffect(() => {
-    if (!collections && !initializationRef.current && vendorWebsite) {
-      initializationRef.current = true;
-      if (user?.role === "VENDOR") {
-        fetchCollections();
-      } else if (user?.role === "VENDORCUSTOMER") {
-        fetchCollections(vendorWebsite);
+    const initializeData = async () => {
+      if (!user || !vendorWebsite || initializationRef.current || collections) {
+        return;
       }
-    }
-  }, [collections, fetchCollections, vendorWebsite, user?.role]);
 
-  if (isLoading)
+      initializationRef.current = true;
+
+      try {
+        if (user.role === "VENDOR") {
+          await fetchCollections();
+        } else if (user.role === "VENDORCUSTOMER") {
+          await fetchCollections(vendorWebsite);
+        }
+      } catch (error) {
+        console.error("Error fetching collections:", error);
+      }
+    };
+
+    initializeData();
+  }, [collections, fetchCollections, vendorWebsite, user]);
+
+  if (!user || !vendorWebsite) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        Loading...
+      </div>
+    );
+  }
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         Loading summer collection...
       </div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
       <div className="text-red-500 text-center min-h-[400px] flex items-center justify-center">
         Error: {error}
       </div>
     );
+  }
 
   if (!collections?.summer || collections.summer.length === 0) {
     return (
