@@ -10,13 +10,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { VendorProductFormData } from "../types";
 
 interface DynamicPricingTabProps {
@@ -32,7 +25,7 @@ const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Dynamic Pricing</h3>
+        <h3 className="text-lg font-medium">Bulk Pricing</h3>
         <Button
           type="button"
           variant="outline"
@@ -47,20 +40,28 @@ const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
           }
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Pricing Rule
+          Add Quantity Range
         </Button>
       </div>
 
       {fields.map((field, index) => (
-        <div key={field.id} className="flex gap-4 items-start">
+        <div
+          key={field.id}
+          className="flex gap-4 items-start bg-accent/50 p-4 rounded-lg"
+        >
           <FormField
             control={control}
             name={`dynamicPricing.${index}.from`}
             render={({ field }) => (
               <FormItem className="flex-1">
-                <FormLabel>From</FormLabel>
+                <FormLabel>Quantity From</FormLabel>
                 <FormControl>
-                  <Input {...field} type="number" min="0" placeholder="0" />
+                  <Input
+                    {...field}
+                    type="number"
+                    min="1"
+                    placeholder="Minimum quantity"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -72,35 +73,15 @@ const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
             name={`dynamicPricing.${index}.to`}
             render={({ field }) => (
               <FormItem className="flex-1">
-                <FormLabel>To</FormLabel>
+                <FormLabel>Quantity To</FormLabel>
                 <FormControl>
-                  <Input {...field} type="number" min="0" placeholder="0" />
+                  <Input
+                    {...field}
+                    type="number"
+                    min="1"
+                    placeholder="Maximum quantity"
+                  />
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={control}
-            name={`dynamicPricing.${index}.type`}
-            render={({ field }) => (
-              <FormItem className="flex-1">
-                <FormLabel>Type</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="fixed_price">Fixed Price</SelectItem>
-                    <SelectItem value="percentage">Percentage</SelectItem>
-                  </SelectContent>
-                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -111,19 +92,26 @@ const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
             name={`dynamicPricing.${index}.amount`}
             render={({ field }) => (
               <FormItem className="flex-1">
-                <FormLabel>Amount</FormLabel>
+                <FormLabel>Price per item</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="0.00"
+                    placeholder="Price for this range"
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
+          />
+
+          {/* Hidden field for type */}
+          <input
+            type="hidden"
+            {...control.register(`dynamicPricing.${index}.type`)}
+            value="fixed_price"
           />
 
           <Button
@@ -137,6 +125,18 @@ const DynamicPricingTab: React.FC<DynamicPricingTabProps> = ({ control }) => {
           </Button>
         </div>
       ))}
+
+      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mt-6">
+        <p className="text-sm text-yellow-800">
+          <strong>Note:</strong> Set different prices for different quantity
+          ranges. For example, if you want to give a discount for bulk orders:
+          <br />
+          • 1-10 items: Regular price
+          <br />
+          • 11-50 items: Slightly reduced price
+          <br />• 51+ items: Best bulk price
+        </p>
+      </div>
     </div>
   );
 };
