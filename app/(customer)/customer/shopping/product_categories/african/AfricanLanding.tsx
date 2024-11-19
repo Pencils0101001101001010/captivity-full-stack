@@ -8,9 +8,6 @@ import {
   useAfricanLoading,
   useAfricanProducts,
 } from "../../../_store/useAfricanStore";
-import { ProductWithRelations } from "./actions";
-import FilterProductCard from "../_components/FilterProductCard";
-import { Variation } from "@prisma/client";
 import ColorPicker from "../_components/ColorPicker";
 import ProductCardColorPicker from "../_components/ProductCardColorPicker";
 

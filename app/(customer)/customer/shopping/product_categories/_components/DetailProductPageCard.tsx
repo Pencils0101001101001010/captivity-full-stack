@@ -1,20 +1,14 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useEffect, useState, useCallback } from "react";
+import { Card } from "@/components/ui/card";
 import { ProductWithRelations } from "../types";
 import { Variation } from "@prisma/client";
-
 import { ProductImage, ProductPrice } from "./ProductCardComponents";
-
 import { QuantitySelector, SizeSelector } from "../../[id]/ProductSelectors";
 import AddToCartButton from "../../[id]/AddToCartButton";
 import ColorPicker from "../../[id]/DetailPageColorPicker";
 import { useColorStore } from "../../../_store/useColorStore";
-import { Button } from "@/components/ui/button";
 import ViewMore from "@/app/(customer)/_components/ViewMore";
-import ReviewSection from "./ReviewsComponent";
-import { getProductReviews } from "@/app/actions/reviews";
-import { Review } from "../types";
 
 interface DetailedProductCardProps {
   product: ProductWithRelations;
@@ -27,39 +21,75 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
   selectedColor,
   onColorChange,
 }) => {
-  // Reviews
-  const [reviews, setReviews] = useState<Review[]>([]);
-
+  // const [reviews, setReviews] = useState<Review[]>([]);
+  // const [isLoadingReviews, setIsLoadingReviews] = useState(true);
   const setGlobalSelectedColor = useColorStore(state => state.setSelectedColor);
 
-  // Find initial variation based on selected color
   const defaultVariation = product.variations[0];
   const initialVariation = selectedColor
-    ? product.variations.find(
+    ? (product.variations.find(
         v => v.color.toLowerCase() === selectedColor.toLowerCase()
-      )
+      ) ?? defaultVariation)
     : defaultVariation;
 
-  const [selectedVariation, setSelectedVariation] = useState<Variation | null>(
-    initialVariation || null
-  );
+  const [selectedVariation, setSelectedVariation] =
+    useState<Variation>(initialVariation);
   const [quantity, setQuantity] = useState(1);
 
-  // Update local state when global color filter changes
-  useEffect(() => {
-    if (selectedColor) {
-      const variation = product.variations.find(
-        v => v.color.toLowerCase() === selectedColor.toLowerCase()
-      );
-      if (variation) {
-        setSelectedVariation(variation);
-        setQuantity(1);
-      }
-    } else {
-      setSelectedVariation(defaultVariation || null);
+  // useEffect(() => {
+  //   let isMounted = true;
+
+  //   const loadReviews = async () => {
+  //     const result = await getProductReviews(product.id);
+  //     if (result.success && isMounted) {
+  //       const reviewsWithDates = result.data.map(review => ({
+  //         ...review,
+  //         createdAt: new Date(review.createdAt),
+  //         updatedAt: new Date(review.updatedAt),
+  //       }));
+  //       setReviews(reviewsWithDates);
+  //       setIsLoadingReviews(false);
+  //     }
+  //   };
+
+  //   loadReviews();
+  //   return () => {
+  //     isMounted = false;
+  //   };
+  // }, [product.id]);
+
+  // const handleReviewAdded = (newReview: Review) => {
+  //   setReviews(prevReviews => [newReview, ...prevReviews]);
+  // };
+
+  const handleColorChange = useCallback(
+    (newColor: string | null) => {
+      const variation = newColor
+        ? (product.variations.find(
+            v => v.color.toLowerCase() === newColor.toLowerCase()
+          ) ?? defaultVariation)
+        : defaultVariation;
+
+      setSelectedVariation(variation);
       setQuantity(1);
-    }
-  }, [selectedColor, product.variations, defaultVariation]);
+
+      onColorChange?.(newColor);
+      if (newColor) {
+        setGlobalSelectedColor(product.id, newColor);
+      }
+    },
+    [
+      product.id,
+      product.variations,
+      defaultVariation,
+      onColorChange,
+      setGlobalSelectedColor,
+    ]
+  );
+
+  useEffect(() => {
+    handleColorChange(selectedColor);
+  }, [selectedColor, handleColorChange]);
 
   const totalStock = product.variations.reduce(
     (sum, variation) => sum + variation.quantity,
@@ -67,11 +97,10 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
   );
 
   const handleColorSelect = (color: string | null) => {
-    // Update global color filter
     onColorChange?.(color);
 
     if (!color) {
-      setSelectedVariation(defaultVariation || null);
+      setSelectedVariation(defaultVariation);
       return;
     }
 
@@ -100,17 +129,6 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
       setQuantity(1);
     }
   };
-
-  //reviews
-  // useEffect(() => {
-  //   const fetchReviews = async () => {
-  //     const result = await getProductReviews(product.id);
-  //     if (result.success) {
-  //       setReviews(result.data);
-  //     }
-  //   };
-  //   fetchReviews();
-  // }, [product.id]);
 
   return (
     <Card className="flex flex-col md:flex-row gap-6 p-6 shadow-2xl">
@@ -163,12 +181,15 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
             maxQuantity={selectedVariation?.quantity || 1}
             onQuantityChange={e => setQuantity(parseInt(e.target.value))}
           />
-          <Card className="p-6 shadow-2xl">
+
+          {/* <Card className="p-6 shadow-2xl">
             <ReviewSection
               productId={product.id}
-              initialReviews={product.reviews || []}
+              initialReviews={reviews}
+              onReviewAdded={handleReviewAdded}
+              isLoading={isLoadingReviews}
             />
-          </Card>
+          </Card> */}
 
           <AddToCartButton
             selectedVariation={selectedVariation}

@@ -11,7 +11,7 @@ export type ProductWithRelations = Product & {
   dynamicPricing: DynamicPricing[]; // Assuming a product has multiple dynamic pricing records
   featuredImage: FeaturedImage | null; // A product may or may not have a featured image
   variations: Variation[]; // A product can have multiple variations
-  reviews: Review[];
+  // reviews: Review[];
 };
 export type UserRole =
   | "USER"
