@@ -132,8 +132,6 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
               className="w-full flex items-center justify-between"
             >
               <div className="flex items-center gap-2">
-                <span className=" hidden sm:block">Reviews</span> (
-                {reviews.length})
                 <div className="flex">
                   {[1, 2, 3, 4, 5].map(star => (
                     <StarIcon
@@ -158,7 +156,8 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
                   <form onSubmit={handleSubmitReview}>
                     <CardHeader>
                       <CardTitle className="text-base sm:text-lg">
-                        Write a Review
+                        <span className=" hidden sm:block">Reviews</span> (
+                        {reviews.length})
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
