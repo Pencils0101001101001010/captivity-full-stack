@@ -114,8 +114,8 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
     "/placeholder.jpg";
 
   return (
-    <Card className="p-6">
-      <div className="flex flex-col md:flex-row gap-6">
+    <Card className="p-3 shadow-2xl shadow-black transition-transform duration-300 hover:scale-95">
+      <div className="flex flex-col md:flex-row gap-6 p-3">
         {/* Left Column - Images */}
         <div className="w-full md:w-1/3 space-y-4">
           <div className="relative aspect-square w-full overflow-hidden rounded-lg">

@@ -104,68 +104,88 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
   };
 
   return (
-    <Card className="flex flex-col md:flex-row gap-6 p-6 shadow-2xl">
-      <div className="relative w-full md:w-1/3">
-        <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
-          Total Stock: {totalStock}
-        </div>
-        <ProductImage
-          imageSrc={
-            selectedVariation?.variationImageURL || product.featuredImage?.large
-          }
-          alt={product.productName}
-        />
-      </div>
-
-      <div className="flex-1">
-        <h2 className="text-xl font-semibold mb-2">{product.productName}</h2>
-
-        <div className="flex justify-between items-center mb-2">
-          <div className="text-sm text-gray-600">Total Stock: {totalStock}</div>
-          <div className="text-sm text-gray-600">
-            {selectedVariation && (
-              <span>
-                {selectedVariation.color} Stock: {selectedVariation.quantity}
-              </span>
-            )}
+    <Card className=" shadow-2xl shadow-black transition-transform duration-300 hover:scale-95 p-3">
+      <div className="flex flex-col md:flex-row gap-6  p-3">
+        {/* Left Column - Product Image */}
+        <div className="w-full md:w-1/3 space-y-4">
+          <div className="relative aspect-square w-full overflow-hidden rounded-lg">
+            <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
+              Total Stock: {totalStock}
+            </div>
+            <ProductImage
+              imageSrc={
+                selectedVariation?.variationImageURL ||
+                product.featuredImage?.large
+              }
+              alt={product.productName}
+            />
           </div>
         </div>
 
-        <ProductPrice
-          dynamicPricing={product.dynamicPricing}
-          sellingPrice={product.sellingPrice}
-        />
+        {/* Right Column - Product Info */}
+        <div className="flex-1 space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold mb-2">
+              {product.productName}
+            </h2>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm space-y-1">
+                <div className="text-muted-foreground">
+                  Total Stock: {totalStock}
+                </div>
+                {selectedVariation && (
+                  <div className="text-muted-foreground">
+                    Selected Color: {selectedVariation.color}
+                    <div>Color Stock: {selectedVariation.quantity}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
-        <div className="space-y-4 mt-4">
-          <ColorPicker
-            colors={Array.from(new Set(product.variations.map(v => v.color)))}
-            selectedColor={selectedVariation?.color || null}
-            onColorChange={handleColorSelect}
+          <ProductPrice
+            dynamicPricing={product.dynamicPricing}
+            sellingPrice={product.sellingPrice}
           />
 
-          <SizeSelector
-            sizes={Array.from(new Set(product.variations.map(v => v.size)))}
-            selectedSize={selectedVariation?.size}
-            onSizeSelect={handleSizeSelect}
-          />
+          <div className="space-y-4">
+            <ColorPicker
+              colors={Array.from(new Set(product.variations.map(v => v.color)))}
+              selectedColor={selectedVariation?.color || null}
+              onColorChange={handleColorSelect}
+            />
 
-          <QuantitySelector
-            quantity={quantity}
-            maxQuantity={selectedVariation?.quantity || 1}
-            onQuantityChange={e => setQuantity(parseInt(e.target.value))}
-          />
+            <SizeSelector
+              sizes={Array.from(new Set(product.variations.map(v => v.size)))}
+              selectedSize={selectedVariation?.size}
+              onSizeSelect={handleSizeSelect}
+            />
 
-          <DetailedReviewCard product={product} />
+            <QuantitySelector
+              quantity={quantity}
+              maxQuantity={selectedVariation?.quantity || 1}
+              onQuantityChange={e => setQuantity(parseInt(e.target.value))}
+            />
 
-          <AddToCartButton
-            selectedVariation={selectedVariation}
-            quantity={quantity}
-            disabled={!selectedVariation || selectedVariation.quantity < 1}
-          />
+            <DetailedReviewCard product={product} />
 
-          <ViewMore href={viewMoreUrl} variant="default" size="md">
-            View More Details
-          </ViewMore>
+            <div className="space-y-2">
+              <AddToCartButton
+                selectedVariation={selectedVariation}
+                quantity={quantity}
+                disabled={!selectedVariation || selectedVariation.quantity < 1}
+              />
+
+              <ViewMore
+                href={viewMoreUrl}
+                variant="default"
+                size="md"
+                className="w-full"
+              >
+                View More Details
+              </ViewMore>
+            </div>
+          </div>
         </div>
       </div>
     </Card>
