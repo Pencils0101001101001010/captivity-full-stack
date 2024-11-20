@@ -88,12 +88,13 @@ const ProductCard: React.FC<ProductCardProps> = memo(
                 )}
               </div>
             </div>
-            {/* <DetailedReviewCard product={product} /> */}
 
             <ProductPrice
               dynamicPricing={product.dynamicPricing}
               sellingPrice={product.sellingPrice}
             />
+
+            <DetailedReviewCard product={product} />
 
             <div className="grid grid-cols-2 gap-2">
               <Button

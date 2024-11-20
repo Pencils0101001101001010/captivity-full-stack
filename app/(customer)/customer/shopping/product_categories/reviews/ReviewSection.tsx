@@ -26,7 +26,7 @@ const DetailedReviewCard: React.FC<DetailedReviewCardProps> = ({ product }) => {
 
   return (
     <div>
-      <Card className="">
+      <Card className="mb-5">
         <ReviewSection
           productId={product.id}
           initialReviews={productReviews}

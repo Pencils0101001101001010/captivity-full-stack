@@ -1,6 +1,6 @@
 "use client";
 import React, { memo, useEffect, useState } from "react";
-import { StarIcon } from "lucide-react";
+import { StarIcon, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -19,7 +19,9 @@ import {
 import { toast } from "sonner";
 import { addReview, updateHelpful } from "./actions";
 import { useSession } from "@/app/(customer)/SessionProvider";
+import { Review } from "../types";
 
+// ... (previous interfaces remain the same)
 interface ReviewUser {
   firstName: string;
   lastName: string;
@@ -31,18 +33,7 @@ interface ReviewSectionProps {
   isLoading: boolean;
 }
 
-interface Review {
-  id: string;
-  rating: number;
-  comment: string | null;
-  productId: string;
-  userId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  helpful: number;
-  notHelpful: number;
-  user: ReviewUser;
-}
+const REVIEWS_PER_PAGE = 5;
 
 const ReviewSection: React.FC<ReviewSectionProps> = ({
   productId,
@@ -57,14 +48,21 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
   const [hoveredStar, setHoveredStar] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [visibleReviews, setVisibleReviews] = useState(REVIEWS_PER_PAGE);
 
   const hasUserReviewed =
     user && reviews.some(review => review.userId === user.id);
+  const hasMoreReviews = reviews.length > visibleReviews;
 
   useEffect(() => {
     setReviews(initialReviews);
   }, [initialReviews]);
 
+  const loadMoreReviews = () => {
+    setVisibleReviews(prev => prev + REVIEWS_PER_PAGE);
+  };
+
+  // ... (handleSubmitReview and handleHelpful remain the same)
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -116,7 +114,6 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
       );
     }
   };
-
   const averageRating = reviews.length
     ? (
         reviews.reduce((acc, rev) => acc + rev.rating, 0) / reviews.length
@@ -130,30 +127,39 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
       ) : (
         <>
           <CollapsibleTrigger asChild>
-            <Button variant="outline" className="w-full">
-              Reviews ({reviews.length}) - Average Rating: {averageRating}
-              <div className="flex ml-2">
-                {[1, 2, 3, 4, 5].map(star => (
-                  <StarIcon
-                    key={star}
-                    className={`h-4 w-4 ${
-                      star <= Number(averageRating)
-                        ? "text-yellow-400 fill-yellow-400"
-                        : "text-gray-300"
-                    }`}
-                  />
-                ))}
+            <Button
+              variant="outline"
+              className="w-full flex items-center justify-between"
+            >
+              <div className="flex items-center gap-2">
+                <span className="hidden sm:inline">Reviews</span> (
+                {reviews.length})
+                <div className="flex">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <StarIcon
+                      key={star}
+                      className={`h-4 w-4 ${
+                        star <= Number(averageRating)
+                          ? "text-yellow-400 fill-yellow-400"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  ))}
+                </div>
               </div>
+              <span className="text-sm sm:text-base">{averageRating}</span>
             </Button>
           </CollapsibleTrigger>
 
           <CollapsibleContent>
-            <div className="space-y-6 min-h-[200px] max-h-[300px] overflow-y-scroll">
+            <div className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
               {user && !hasUserReviewed && (
-                <Card>
+                <Card className="sticky top-0 bg-background z-10">
                   <form onSubmit={handleSubmitReview}>
                     <CardHeader>
-                      <CardTitle>Write a Review</CardTitle>
+                      <CardTitle className="text-base sm:text-lg">
+                        Write a Review
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex gap-1">
@@ -166,7 +172,7 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
                             onMouseLeave={() => setHoveredStar(0)}
                           >
                             <StarIcon
-                              className={`h-6 w-6 transition-colors ${
+                              className={`h-5 w-5 sm:h-6 sm:w-6 transition-colors ${
                                 star <= (hoveredStar || rating)
                                   ? "text-yellow-400 fill-yellow-400"
                                   : "text-gray-300"
@@ -176,16 +182,17 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
                         ))}
                       </div>
                       <Textarea
-                        placeholder="Share your experience with this product..."
+                        placeholder="Share your experience..."
                         value={comment}
                         onChange={e => setComment(e.target.value)}
-                        className="min-h-[100px]"
+                        className="min-h-[80px] sm:min-h-[100px]"
                       />
                     </CardContent>
                     <CardFooter>
                       <Button
                         type="submit"
                         disabled={!rating || !comment.trim() || isSubmitting}
+                        size="sm"
                       >
                         {isSubmitting ? "Submitting..." : "Submit Review"}
                       </Button>
@@ -194,20 +201,20 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
                 </Card>
               )}
 
-              <div className="space-y-4">
-                {reviews.map(review => (
-                  <Card key={review.id}>
-                    <CardHeader>
+              <div className="space-y-3">
+                {reviews.slice(0, visibleReviews).map(review => (
+                  <Card key={review.id} className="text-sm sm:text-base">
+                    <CardHeader className="p-3 sm:p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <CardTitle>
+                          <CardTitle className="text-sm sm:text-base">
                             {review.user.firstName} {review.user.lastName}
                           </CardTitle>
                           <div className="flex">
                             {[1, 2, 3, 4, 5].map(star => (
                               <StarIcon
                                 key={star}
-                                className={`h-4 w-4 ${
+                                className={`h-3 w-3 sm:h-4 sm:w-4 ${
                                   star <= review.rating
                                     ? "text-yellow-400 fill-yellow-400"
                                     : "text-gray-300"
@@ -216,35 +223,51 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
                             ))}
                           </div>
                         </div>
-                        <CardDescription>
+                        <CardDescription className="text-xs sm:text-sm">
                           {new Date(review.createdAt).toLocaleDateString()}
                         </CardDescription>
                       </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-3 sm:p-4">
                       <p className="text-gray-700">{review.comment}</p>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="p-3 sm:p-4">
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleHelpful(review.id, true)}
+                          className="text-xs sm:text-sm"
                         >
-                          👍 Helpful ({review.helpful})
+                          👍 ({review.helpful})
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleHelpful(review.id, false)}
+                          className="text-xs sm:text-sm"
                         >
-                          👎 Not Helpful ({review.notHelpful})
+                          👎 ({review.notHelpful})
                         </Button>
                       </div>
                     </CardFooter>
                   </Card>
                 ))}
               </div>
+
+              {hasMoreReviews && (
+                <div className="flex justify-center pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={loadMoreReviews}
+                    className="w-full sm:w-auto"
+                  >
+                    Load More Reviews
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           </CollapsibleContent>
         </>

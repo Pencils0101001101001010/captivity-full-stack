@@ -1,4 +1,3 @@
-// _store/useReviewStore.ts
 import { create } from "zustand";
 import { Review } from "../types";
 import { getProductReviews } from "./actions";
