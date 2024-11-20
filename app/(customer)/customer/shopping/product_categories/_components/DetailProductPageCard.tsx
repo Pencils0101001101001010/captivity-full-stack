@@ -9,6 +9,7 @@ import AddToCartButton from "../../[id]/AddToCartButton";
 import ColorPicker from "../../[id]/DetailPageColorPicker";
 import { useColorStore } from "../../../_store/useColorStore";
 import ViewMore from "@/app/(customer)/_components/ViewMore";
+import DetailedReviewCard from "../reviews/ReviewSection";
 
 interface DetailedProductCardProps {
   product: ProductWithRelations;
@@ -21,8 +22,6 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
   selectedColor,
   onColorChange,
 }) => {
-  // const [reviews, setReviews] = useState<Review[]>([]);
-  // const [isLoadingReviews, setIsLoadingReviews] = useState(true);
   const setGlobalSelectedColor = useColorStore(state => state.setSelectedColor);
 
   const defaultVariation = product.variations[0];
@@ -35,32 +34,6 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
   const [selectedVariation, setSelectedVariation] =
     useState<Variation>(initialVariation);
   const [quantity, setQuantity] = useState(1);
-
-  // useEffect(() => {
-  //   let isMounted = true;
-
-  //   const loadReviews = async () => {
-  //     const result = await getProductReviews(product.id);
-  //     if (result.success && isMounted) {
-  //       const reviewsWithDates = result.data.map(review => ({
-  //         ...review,
-  //         createdAt: new Date(review.createdAt),
-  //         updatedAt: new Date(review.updatedAt),
-  //       }));
-  //       setReviews(reviewsWithDates);
-  //       setIsLoadingReviews(false);
-  //     }
-  //   };
-
-  //   loadReviews();
-  //   return () => {
-  //     isMounted = false;
-  //   };
-  // }, [product.id]);
-
-  // const handleReviewAdded = (newReview: Review) => {
-  //   setReviews(prevReviews => [newReview, ...prevReviews]);
-  // };
 
   const handleColorChange = useCallback(
     (newColor: string | null) => {
@@ -182,14 +155,7 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
             onQuantityChange={e => setQuantity(parseInt(e.target.value))}
           />
 
-          {/* <Card className="p-6 shadow-2xl">
-            <ReviewSection
-              productId={product.id}
-              initialReviews={reviews}
-              onReviewAdded={handleReviewAdded}
-              isLoading={isLoadingReviews}
-            />
-          </Card> */}
+          <DetailedReviewCard product={product} />
 
           <AddToCartButton
             selectedVariation={selectedVariation}

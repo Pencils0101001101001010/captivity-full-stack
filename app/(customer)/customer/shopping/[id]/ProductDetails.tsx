@@ -15,6 +15,7 @@ import Link from "next/link";
 import ViewMore from "@/app/(customer)/_components/ViewMore";
 import { useColorStore } from "../../_store/useColorStore";
 import ColorPicker from "./DetailPageColorPicker";
+import DetailedReviewCard from "../product_categories/reviews/ReviewSection";
 
 // Helper function to transform product data for ProductImage component
 const transformProductForImage = (
@@ -167,6 +168,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           <p className="mb-4 text-muted-foreground">
             {selectedVariation?.quantity || 0} in stock
           </p>
+          {/* <DetailedReviewCard product={product.id} /> */}
 
           <div className="space-y-2">
             <AddToCartButton

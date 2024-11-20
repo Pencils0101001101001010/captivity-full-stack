@@ -106,7 +106,13 @@ export default async function Layout({
 
             {/* Filters */}
             <div className="sticky top-4">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-3 sm:mb-4">
+                Categories
+              </h1>
               <FilterSidebar />
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-3 sm:mb-4 mt-3 sm:mt4">
+                Filters
+              </h1>
 
               {/* New Products Carousel */}
               {newProducts.length > 0 && (

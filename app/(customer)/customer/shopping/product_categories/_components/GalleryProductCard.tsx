@@ -11,6 +11,7 @@ import ColorPicker from "../../[id]/DetailPageColorPicker";
 import { QuantitySelector, SizeSelector } from "../../[id]/ProductSelectors";
 import AddToCartButton from "../../[id]/AddToCartButton";
 import { ProductWithRelations } from "../types";
+import DetailedReviewCard from "../reviews/ReviewSection";
 
 interface GalleryProductCardProps {
   product: ProductWithRelations;
@@ -122,6 +123,7 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
               src={mainImageSrc}
               alt={product.productName}
               fill
+              sizes="300"
               className="object-cover"
               priority
             />
@@ -143,6 +145,7 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
                   src={image}
                   alt={`${product.productName} view ${index + 1}`}
                   fill
+                  sizes="60"
                   className="object-cover"
                 />
               </button>
@@ -157,7 +160,6 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
               {product.productName}
             </h2>
             <div className="flex items-center justify-between mb-2">
-              <StarRating />
               <div className="text-sm space-y-1">
                 <div className="text-muted-foreground">
                   Total Stock: {totalStock}
@@ -195,6 +197,8 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
               maxQuantity={selectedVariation?.quantity || 1}
               onQuantityChange={e => setQuantity(parseInt(e.target.value))}
             />
+
+            <DetailedReviewCard product={product} />
 
             <div className="space-y-2">
               <AddToCartButton

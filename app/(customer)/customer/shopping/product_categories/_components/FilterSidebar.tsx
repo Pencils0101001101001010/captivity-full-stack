@@ -1,6 +1,21 @@
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const COLLECTIONS = [
   "Winter",
@@ -18,11 +33,11 @@ const COLLECTIONS = [
 
 type Collection = (typeof COLLECTIONS)[number];
 
-const FilterSidebar = () => {
+const CollectionDropdown = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
 
-  // Memoize getCurrentCollection to fix dependency warning
   const getCurrentCollection = useCallback((): Collection | null => {
     if (!pathname) return null;
     const pathLower = pathname.toLowerCase();
@@ -33,18 +48,13 @@ const FilterSidebar = () => {
     useState<Collection | null>(() => getCurrentCollection());
 
   const handleCollectionChange = (value: Collection) => {
-    // Update state immediately
     setSelectedCollection(value);
-
-    // Use shallow routing for faster navigation
+    setOpen(false);
     const basePath = "/customer/shopping/product_categories";
     const newPath = `${basePath}/${value.toLowerCase()}`;
-
-    // Use shallow: true for faster route updates when possible
     router.push(newPath, { scroll: false });
   };
 
-  // Update selected collection when path changes
   useEffect(() => {
     const currentCollection = getCurrentCollection();
     if (currentCollection !== selectedCollection) {
@@ -53,34 +63,45 @@ const FilterSidebar = () => {
   }, [getCurrentCollection, selectedCollection]);
 
   return (
-    <div className="bg-card p-4 rounded-lg shadow-2xl shadow-black dark:shadow-none">
-      <div className="text-2xl font-semibold mb-4 text-foreground">
-        Collections
-      </div>
-
-      {/* Collections */}
-      <div className="flex flex-col space-y-4" role="radiogroup">
-        {COLLECTIONS.map(collection => (
-          <label
-            key={collection}
-            className="flex items-center space-x-3 cursor-pointer group"
-          >
-            <input
-              type="radio"
-              name="collection"
-              value={collection}
-              checked={selectedCollection === collection}
-              onChange={() => handleCollectionChange(collection)}
-              className="w-4 h-4 text-primary border-gray-300 focus:ring-primary"
-            />
-            <span className="text-base group-hover:text-primary transition-colors">
-              {collection}
-            </span>
-          </label>
-        ))}
-      </div>
-    </div>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between"
+        >
+          {selectedCollection ?? "Select collection..."}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-full p-0">
+        <Command>
+          <CommandInput placeholder="Search collections..." />
+          <CommandEmpty>No collection found.</CommandEmpty>
+          <CommandGroup>
+            {COLLECTIONS.map(collection => (
+              <CommandItem
+                key={collection}
+                value={collection}
+                onSelect={() => handleCollectionChange(collection)}
+              >
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    selectedCollection === collection
+                      ? "opacity-100"
+                      : "opacity-0"
+                  )}
+                />
+                {collection}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 };
 
-export default FilterSidebar;
+export default CollectionDropdown;
