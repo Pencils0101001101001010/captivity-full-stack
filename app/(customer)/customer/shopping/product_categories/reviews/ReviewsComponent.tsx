@@ -132,7 +132,7 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
               className="w-full flex items-center justify-between"
             >
               <div className="flex items-center gap-2">
-                <span className="hidden sm:inline">Reviews</span> (
+                <span className=" hidden sm:block">Reviews</span> (
                 {reviews.length})
                 <div className="flex">
                   {[1, 2, 3, 4, 5].map(star => (
