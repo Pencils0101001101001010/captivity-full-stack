@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { RxDividerVertical } from "react-icons/rx";
@@ -49,77 +49,75 @@ interface Session {
   user: User | null;
 }
 
-const Navbar = () => {
-  const session = useSession() as Session;
-  const params = useParams();
-  const vendorWebsite =
-    typeof params?.vendor_website === "string" ? params.vendor_website : "";
+// Memoized Cart Button Component
+const CartButton = React.memo(
+  ({
+    onClick,
+    cartItemCount,
+    isCartInitialized,
+  }: {
+    onClick: () => void;
+    cartItemCount: number;
+    isCartInitialized: boolean;
+  }) => (
+    <button
+      onClick={onClick}
+      className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
+      disabled={!isCartInitialized}
+    >
+      <ShoppingCart className="w-6 h-6" />
+      {!isCartInitialized ? (
+        <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center">
+          <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+        </span>
+      ) : (
+        cartItemCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            {cartItemCount}
+          </span>
+        )
+      )}
+    </button>
+  )
+);
 
-  // UI states
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const [showRemoveButton, setShowRemoveButton] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+CartButton.displayName = "CartButton";
 
-  // Cart states
-  const cart = useVendorCartStore(state => state.cart);
-  const isCartInitialized = useVendorCartStore(state => state.isInitialized);
-  const cartItemCount =
-    cart?.vendorCartItems.reduce((total, item) => total + item.quantity, 0) ||
-    0;
-
-  const defaultLogoUrl = "/captivity-logo-white.png";
-  const isVendor = session?.user?.role === "VENDOR";
-  const isVendorCustomer = [
-    "VENDORCUSTOMER",
-    "APPROVEDVENDORCUSTOMER",
-  ].includes(session?.user?.role || "");
-
-  // Logo handling
-  const {
+// Memoized Logo Section Component
+const LogoSection = React.memo(
+  ({
     logoUrl,
-    isLoading: isLogoLoading,
-    upload,
-    remove,
-  } = useLogoData(vendorWebsite);
-
-  const handleLogoUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    if (!isVendor) return;
-
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const formData = new FormData();
-      formData.append("logo", file);
-      await upload(formData);
-    } catch (error) {
-      console.error("Error uploading logo:", error);
-    }
-  };
-
-  const handleRemoveLogo = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!isVendor) return;
-
-    if (window.confirm("Are you sure you want to remove your logo?")) {
-      try {
-        await remove();
-        setShowRemoveButton(false);
-      } catch (error) {
-        console.error("Error removing logo:", error);
-      }
-    }
-  };
-
-  const LogoSection = () => (
+    isLogoLoading,
+    isVendor,
+    isVendorCustomer,
+    vendorWebsite,
+    showRemoveButton,
+    defaultLogoUrl,
+    handleLogoUpload,
+    handleRemoveLogo,
+    fileInputRef,
+    onMouseEnter,
+    onMouseLeave,
+  }: {
+    logoUrl: string | null;
+    isLogoLoading: boolean;
+    isVendor: boolean;
+    isVendorCustomer: boolean;
+    vendorWebsite: string;
+    showRemoveButton: boolean;
+    defaultLogoUrl: string;
+    handleLogoUpload: (
+      event: React.ChangeEvent<HTMLInputElement>
+    ) => Promise<void>;
+    handleRemoveLogo: (e: React.MouseEvent) => Promise<void>;
+    fileInputRef: React.RefObject<HTMLInputElement>;
+    onMouseEnter: () => void;
+    onMouseLeave: () => void;
+  }) => (
     <div
       className="relative w-[170px] h-[54px] group"
-      onMouseEnter={() => isVendor && logoUrl && setShowRemoveButton(true)}
-      onMouseLeave={() => setShowRemoveButton(false)}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       {isLogoLoading ? (
         <div className="w-full h-full bg-gray-800 animate-pulse rounded" />
@@ -186,9 +184,14 @@ const Navbar = () => {
         />
       )}
     </div>
-  );
+  )
+);
 
-  const NavigationButtons = () => (
+LogoSection.displayName = "LogoSection";
+
+// Memoized Navigation Buttons Component
+const NavigationButtons = React.memo(
+  ({ vendorWebsite }: { vendorWebsite: string }) => (
     <div className="flex flex-col md:flex-row gap-2 md:gap-3">
       <Button
         variant="default"
@@ -225,24 +228,30 @@ const Navbar = () => {
         </Link>
       </Button>
     </div>
-  );
+  )
+);
 
-  const SearchBar = () => (
-    <div className="flex w-full md:w-auto">
-      <input
-        type="text"
-        placeholder="Search for product"
-        className="px-4 py-2 w-full md:w-[200px] lg:w-[300px] rounded-l-md border border-r-0 border-input bg-background text-foreground"
-      />
-      <button className="px-4 py-2 bg-primary text-primary-foreground rounded-r-md hover:bg-primary/90 transition-colors">
-        Search
-      </button>
-    </div>
-  );
+NavigationButtons.displayName = "NavigationButtons";
 
-  const VendorNavItems = () => {
-    if (!isVendor) return null;
+// Memoized Search Bar Component
+const SearchBar = React.memo(() => (
+  <div className="flex w-full md:w-auto">
+    <input
+      type="text"
+      placeholder="Search for product"
+      className="px-4 py-2 w-full md:w-[200px] lg:w-[300px] rounded-l-md border border-r-0 border-input bg-background text-foreground"
+    />
+    <button className="px-4 py-2 bg-primary text-primary-foreground rounded-r-md hover:bg-primary/90 transition-colors">
+      Search
+    </button>
+  </div>
+));
 
+SearchBar.displayName = "SearchBar";
+
+// Memoized Vendor Nav Items Component
+const VendorNavItems = React.memo(
+  ({ vendorWebsite }: { vendorWebsite: string }) => {
     const navItems = [
       {
         href: `/vendor/${vendorWebsite}/add-product`,
@@ -275,28 +284,109 @@ const Navbar = () => {
         ))}
       </div>
     );
-  };
+  }
+);
 
-  const CartButton = () => (
-    <button
-      onClick={() => setIsCartOpen(true)}
-      className="relative p-2 hover:bg-gray-800 rounded-full transition-colors"
-      disabled={!isCartInitialized}
-    >
-      <ShoppingCart className="w-6 h-6" />
-      {!isCartInitialized ? (
-        <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center">
-          <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-        </span>
-      ) : (
-        cartItemCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-            {cartItemCount}
-          </span>
-        )
-      )}
-    </button>
+VendorNavItems.displayName = "VendorNavItems";
+
+const Navbar = () => {
+  const session = useSession() as Session;
+  const params = useParams();
+  const vendorWebsite =
+    typeof params?.vendor_website === "string" ? params.vendor_website : "";
+
+  // UI states
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [showRemoveButton, setShowRemoveButton] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Cart states
+  const cart = useVendorCartStore(useCallback(state => state.cart, []));
+  const isCartInitialized = useVendorCartStore(
+    useCallback(state => state.isInitialized, [])
   );
+  const fetchCart = useVendorCartStore(
+    useCallback(state => state.fetchCart, [])
+  );
+
+  const cartItemCount =
+    cart?.vendorCartItems?.reduce(
+      (total, item) => total + (item?.quantity || 0),
+      0
+    ) || 0;
+
+  const defaultLogoUrl = "/captivity-logo-white.png";
+  const isVendor = session?.user?.role === "VENDOR";
+  const isVendorCustomer = [
+    "VENDORCUSTOMER",
+    "APPROVEDVENDORCUSTOMER",
+  ].includes(session?.user?.role || "");
+
+  // Initialize cart
+  useEffect(() => {
+    if (session?.user && (isVendor || isVendorCustomer) && !isCartInitialized) {
+      fetchCart();
+    }
+  }, [session?.user, isVendor, isVendorCustomer, fetchCart, isCartInitialized]);
+
+  // Logo handling
+  const {
+    logoUrl,
+    isLoading: isLogoLoading,
+    upload,
+    remove,
+  } = useLogoData(vendorWebsite);
+
+  const handleLogoUpload = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (!isVendor) return;
+
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      try {
+        const formData = new FormData();
+        formData.append("logo", file);
+        await upload(formData);
+      } catch (error) {
+        console.error("Error uploading logo:", error);
+      }
+    },
+    [isVendor, upload]
+  );
+
+  const handleRemoveLogo = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault();
+      if (!isVendor) return;
+
+      if (window.confirm("Are you sure you want to remove your logo?")) {
+        try {
+          await remove();
+          setShowRemoveButton(false);
+        } catch (error) {
+          console.error("Error removing logo:", error);
+        }
+      }
+    },
+    [isVendor, remove]
+  );
+
+  const handleCartClick = useCallback(() => {
+    setIsCartOpen(true);
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    if (isVendor && logoUrl) {
+      setShowRemoveButton(true);
+    }
+  }, [isVendor, logoUrl]);
+
+  const handleMouseLeave = useCallback(() => {
+    setShowRemoveButton(false);
+  }, []);
 
   return (
     <div className="sticky top-0 z-50">
@@ -305,12 +395,25 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <LogoSection />
-              <NavigationButtons />
+              <LogoSection
+                logoUrl={logoUrl}
+                isLogoLoading={isLogoLoading}
+                isVendor={isVendor}
+                isVendorCustomer={isVendorCustomer}
+                vendorWebsite={vendorWebsite}
+                showRemoveButton={showRemoveButton}
+                defaultLogoUrl={defaultLogoUrl}
+                handleLogoUpload={handleLogoUpload}
+                handleRemoveLogo={handleRemoveLogo}
+                fileInputRef={fileInputRef}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+              />
+              <NavigationButtons vendorWebsite={vendorWebsite} />
             </div>
 
             <div className="flex items-center gap-6">
-              {isVendor && <VendorNavItems />}
+              {isVendor && <VendorNavItems vendorWebsite={vendorWebsite} />}
               <SearchBar />
 
               <div className="flex items-center gap-4">
@@ -329,15 +432,31 @@ const Navbar = () => {
                     </Link>
                   </>
                 )}
-                <CartButton />
+                <CartButton
+                  onClick={handleCartClick}
+                  cartItemCount={cartItemCount}
+                  isCartInitialized={isCartInitialized}
+                />
               </div>
             </div>
           </div>
-
           {/* Mobile Navigation */}
           <div className="md:hidden">
             <div className="flex items-center justify-between">
-              <LogoSection />
+              <LogoSection
+                logoUrl={logoUrl}
+                isLogoLoading={isLogoLoading}
+                isVendor={isVendor}
+                isVendorCustomer={isVendorCustomer}
+                vendorWebsite={vendorWebsite}
+                showRemoveButton={showRemoveButton}
+                defaultLogoUrl={defaultLogoUrl}
+                handleLogoUpload={handleLogoUpload}
+                handleRemoveLogo={handleRemoveLogo}
+                fileInputRef={fileInputRef}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+              />
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setShowMobileSearch(!showMobileSearch)}
@@ -360,7 +479,11 @@ const Navbar = () => {
                     Login
                   </Link>
                 )}
-                <CartButton />
+                <CartButton
+                  onClick={handleCartClick}
+                  cartItemCount={cartItemCount}
+                  isCartInitialized={isCartInitialized}
+                />
               </div>
             </div>
 
@@ -373,13 +496,13 @@ const Navbar = () => {
 
             {/* Mobile Navigation Buttons */}
             <div className="mt-4">
-              <NavigationButtons />
+              <NavigationButtons vendorWebsite={vendorWebsite} />
             </div>
 
             {/* Mobile Vendor Menu */}
             {isMobileMenuOpen && isVendor && (
               <div className="mt-4 border-t border-gray-800 pt-4">
-                <VendorNavItems />
+                <VendorNavItems vendorWebsite={vendorWebsite} />
               </div>
             )}
           </div>
