@@ -11,7 +11,7 @@ import { useParams } from "next/navigation";
 import { StarRating } from "../_components/StarRating";
 import { useSession } from "@/app/(vendor)/SessionProvider";
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 4;
 
 const VendorSummerCollection: React.FC = () => {
   const params = useParams();
@@ -99,7 +99,7 @@ const VendorSummerCollection: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Product Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
         {currentProducts.map(product => (
           <Card
             key={product.id}
