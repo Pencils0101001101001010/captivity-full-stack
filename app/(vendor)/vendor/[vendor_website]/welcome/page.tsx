@@ -23,7 +23,7 @@ const SectionLoader = () => (
 const WelcomePage = () => {
   return (
     <div className="my-4 space-y-8">
-      <ErrorBoundary>
+      {/* <ErrorBoundary>
         <Suspense fallback={<CarouselLoader />}>
           <CarouselPlugin />
         </Suspense>
@@ -39,7 +39,7 @@ const WelcomePage = () => {
         <Suspense fallback={<SectionLoader />}>
           <CategoryImages />
         </Suspense>
-      </ErrorBoundary>
+      </ErrorBoundary> */}
     </div>
   );
 };

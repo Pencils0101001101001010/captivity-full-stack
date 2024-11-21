@@ -33,7 +33,7 @@ export default async function VendorLayout({
     <SessionProvider value={session}>
       <Toaster />
       <div className="flex min-h-screen flex-col">
-        {/* <Navbar /> */}
+        <Navbar />
         <div className="flex-grow p-2">{children}</div>
       </div>
     </SessionProvider>

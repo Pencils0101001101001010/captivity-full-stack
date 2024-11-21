@@ -1,15 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { RxDividerVertical } from "react-icons/rx";
 import {
   ShoppingCart,
   Trash2,
-  Package,
-  Users,
-  ClipboardList,
   PlusCircle,
   Menu,
   Search,
@@ -17,19 +14,17 @@ import {
   Home,
   Store,
   Loader2,
+  Users,
+  ClipboardList,
 } from "lucide-react";
 import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
-import {
-  uploadLogo,
-  removeLogo,
-  getLogo,
-  getVendorLogoBySlug,
-} from "../actions";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import useVendorCartStore from "../vendor/[vendor_website]/shop_product/cart/useCartStore";
 import VendorCartSidebar from "./CartSidebar";
+import { useRef } from "react";
+import { useLogoData } from "../vendor/[vendor_website]/welcome/_store/LogoStore";
 
 type UserRole =
   | "USER"
@@ -60,22 +55,16 @@ const Navbar = () => {
   const vendorWebsite =
     typeof params?.vendor_website === "string" ? params.vendor_website : "";
 
-  // Logo states
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [isLogoLoading, setIsLogoLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [showRemoveButton, setShowRemoveButton] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   // UI states
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [showRemoveButton, setShowRemoveButton] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Cart states
   const cart = useVendorCartStore(state => state.cart);
   const isCartInitialized = useVendorCartStore(state => state.isInitialized);
-  const fetchCart = useVendorCartStore(state => state.fetchCart);
   const cartItemCount =
     cart?.vendorCartItems.reduce((total, item) => total + item.quantity, 0) ||
     0;
@@ -87,43 +76,13 @@ const Navbar = () => {
     "APPROVEDVENDORCUSTOMER",
   ].includes(session?.user?.role || "");
 
-  // Initialize cart
-  useEffect(() => {
-    if (session?.user && (isVendor || isVendorCustomer)) {
-      fetchCart();
-    }
-  }, [fetchCart, session?.user, isVendor, isVendorCustomer]);
-
-  // Fetch logo
-  useEffect(() => {
-    const fetchLogo = async () => {
-      if (!session?.user) {
-        setIsLogoLoading(false);
-        return;
-      }
-
-      try {
-        setIsLogoLoading(true);
-        if (isVendor) {
-          const result = await getLogo();
-          if (result.success && result.url) {
-            setLogoUrl(result.url);
-          }
-        } else if (isVendorCustomer && vendorWebsite) {
-          const result = await getVendorLogoBySlug(vendorWebsite);
-          if (result.success && result.url) {
-            setLogoUrl(result.url);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching logo:", error);
-      } finally {
-        setIsLogoLoading(false);
-      }
-    };
-
-    fetchLogo();
-  }, [session?.user, vendorWebsite, isVendor, isVendorCustomer]);
+  // Logo handling
+  const {
+    logoUrl,
+    isLoading: isLogoLoading,
+    upload,
+    remove,
+  } = useLogoData(vendorWebsite);
 
   const handleLogoUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -134,42 +93,24 @@ const Navbar = () => {
     if (!file) return;
 
     try {
-      setUploading(true);
       const formData = new FormData();
       formData.append("logo", file);
-
-      const result = await uploadLogo(formData);
-      if (result.success && result.url) {
-        setLogoUrl(result.url);
-      } else {
-        alert(result.error || "Failed to upload logo");
-      }
+      await upload(formData);
     } catch (error) {
       console.error("Error uploading logo:", error);
-      alert("Failed to upload logo");
-    } finally {
-      setUploading(false);
     }
   };
 
-  const handleRemoveLogo = async () => {
+  const handleRemoveLogo = async (e: React.MouseEvent) => {
+    e.preventDefault();
     if (!isVendor) return;
 
     if (window.confirm("Are you sure you want to remove your logo?")) {
       try {
-        setUploading(true);
-        const result = await removeLogo();
-        if (result.success) {
-          setLogoUrl(null);
-        } else {
-          alert(result.error || "Failed to remove logo");
-        }
+        await remove();
+        setShowRemoveButton(false);
       } catch (error) {
         console.error("Error removing logo:", error);
-        alert("Failed to remove logo");
-      } finally {
-        setUploading(false);
-        setShowRemoveButton(false);
       }
     }
   };
@@ -200,12 +141,9 @@ const Navbar = () => {
               }}
               priority
             />
-            {isVendor && showRemoveButton && !uploading && (
+            {isVendor && showRemoveButton && !isLogoLoading && (
               <button
-                onClick={e => {
-                  e.preventDefault();
-                  handleRemoveLogo();
-                }}
+                onClick={handleRemoveLogo}
                 className="absolute top-0 right-0 bg-red-500 p-1 rounded-bl-md hover:bg-red-600 transition-colors"
                 title="Remove logo"
               >
@@ -220,7 +158,7 @@ const Navbar = () => {
           onClick={() => fileInputRef.current?.click()}
         >
           <span className="text-sm text-center">
-            {uploading ? "Uploading..." : "Click to upload logo"}
+            {isLogoLoading ? "Uploading..." : "Click to upload logo"}
           </span>
         </div>
       ) : (
@@ -244,7 +182,7 @@ const Navbar = () => {
           accept="image/*"
           className="hidden"
           onChange={handleLogoUpload}
-          disabled={uploading}
+          disabled={isLogoLoading}
         />
       )}
     </div>
