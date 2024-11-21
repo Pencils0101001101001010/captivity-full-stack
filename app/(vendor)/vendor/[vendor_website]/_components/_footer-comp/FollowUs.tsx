@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { Pencil, Save, X, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "@/app/(vendor)/SessionProvider";
@@ -14,6 +14,7 @@ import {
 } from "react-icons/fa";
 import {
   SocialLink,
+  useSocialLinkData,
   useSocialLinkStore,
 } from "../../welcome/_store/SocialStore";
 
@@ -22,10 +23,7 @@ interface IconProps {
   className?: string;
 }
 
-type SocialLinkFormData = {
-  platform: string;
-  url: string;
-};
+type SocialLinkFormData = Omit<SocialLink, "id" | "userSettingsId">;
 
 interface RenderLinkProps {
   link: SocialLink;
@@ -159,17 +157,8 @@ const SocialLinks: React.FC = () => {
   const vendorWebsite =
     typeof params?.vendor_website === "string" ? params.vendor_website : "";
 
-  const {
-    links,
-    isLoading,
-    error,
-    initialized,
-    fetchLinks,
-    fetchVendorLinks,
-    createLink,
-    updateLink,
-    deleteLink,
-  } = useSocialLinkStore();
+  const { links, isLoading, error } = useSocialLinkData(vendorWebsite);
+  const { update, create, remove } = useSocialLinkStore();
 
   const [isEditing, setIsEditing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -179,25 +168,7 @@ const SocialLinks: React.FC = () => {
     url: "",
   });
 
-  const initializeData = useCallback(async () => {
-    if (!user || initialized) return;
-
-    try {
-      if (user.role === "VENDOR") {
-        await fetchLinks();
-      } else if (user.role === "VENDORCUSTOMER" && vendorWebsite) {
-        await fetchVendorLinks(vendorWebsite);
-      }
-    } catch (error) {
-      console.error("Error initializing data:", error);
-    }
-  }, [user, vendorWebsite, initialized, fetchLinks, fetchVendorLinks]);
-
-  useEffect(() => {
-    initializeData();
-  }, [initializeData]);
-
-  useEffect(() => {
+  React.useEffect(() => {
     if (error) {
       toast.error(error);
     }
@@ -241,10 +212,10 @@ const SocialLinks: React.FC = () => {
     e.preventDefault();
     try {
       if (editingId) {
-        await updateLink(editingId, formData);
+        await update(editingId, formData);
         toast.success("Social link updated successfully");
       } else {
-        await createLink(formData);
+        await create(formData);
         toast.success("Social link added successfully");
       }
       handleCancel();
@@ -259,7 +230,7 @@ const SocialLinks: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this social link?")) {
       try {
-        await deleteLink(id);
+        await remove(id);
         toast.success("Social link deleted successfully");
       } catch (error) {
         toast.error("Failed to delete social link");

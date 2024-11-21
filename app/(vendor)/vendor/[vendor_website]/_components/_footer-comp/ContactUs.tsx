@@ -1,22 +1,17 @@
-// ContactUs.tsx
 "use client";
 
-import React, { useEffect, useCallback, useState } from "react";
+import React, { useState } from "react";
 import { useSession } from "@/app/(vendor)/SessionProvider";
 import { Pencil, Save, X, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
 import {
-  useContactStore,
   ContactInfo,
+  useContactData,
+  useContactStore,
 } from "../../welcome/_store/contactUsStore";
 
-type ContactFormData = {
-  city: string;
-  telephone: string;
-  general: string;
-  websiteQueries: string;
-};
+type ContactFormData = Omit<ContactInfo, "id" | "userSettingsId">;
 
 interface RenderContactProps {
   contact: ContactInfo;
@@ -168,22 +163,12 @@ const ContactUs: React.FC = () => {
   const vendorWebsite =
     typeof params?.vendor_website === "string" ? params.vendor_website : "";
 
-  const {
-    contacts,
-    isLoading,
-    error,
-    initialized,
-    fetchContacts,
-    fetchVendorContacts,
-    updateContact,
-    createContact,
-    deleteContact,
-  } = useContactStore();
+  const { contacts, isLoading, error } = useContactData(vendorWebsite);
+  const { update, create, remove } = useContactStore();
 
   const [isEditing, setIsEditing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | undefined>(undefined);
-
   const [formData, setFormData] = useState<ContactFormData>({
     city: "",
     telephone: "",
@@ -191,25 +176,7 @@ const ContactUs: React.FC = () => {
     websiteQueries: "",
   });
 
-  const initializeData = useCallback(async () => {
-    if (!user || initialized) return;
-
-    try {
-      if (user.role === "VENDOR") {
-        await fetchContacts();
-      } else if (user.role === "VENDORCUSTOMER" && vendorWebsite) {
-        await fetchVendorContacts(vendorWebsite);
-      }
-    } catch (error) {
-      console.error("Error initializing data:", error);
-    }
-  }, [user, vendorWebsite, initialized, fetchContacts, fetchVendorContacts]);
-
-  useEffect(() => {
-    initializeData();
-  }, [initializeData]);
-
-  useEffect(() => {
+  React.useEffect(() => {
     if (error) {
       toast.error(error);
     }
@@ -257,10 +224,10 @@ const ContactUs: React.FC = () => {
     e.preventDefault();
     try {
       if (editingId) {
-        await updateContact(editingId, formData);
+        await update(editingId, formData);
         toast.success("Contact information updated successfully");
       } else {
-        await createContact(formData);
+        await create(formData);
         toast.success("Contact information added successfully");
       }
       handleCancel();
@@ -281,7 +248,7 @@ const ContactUs: React.FC = () => {
       )
     ) {
       try {
-        await deleteContact(id);
+        await remove(id);
         toast.success("Contact information deleted successfully");
       } catch (error) {
         toast.error("Failed to delete contact information");

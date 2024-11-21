@@ -1,5 +1,7 @@
-// contactUsStore.ts
+"use client";
+
 import { create } from "zustand";
+import { useCallback, useEffect } from "react";
 import {
   getContactInfo,
   updateContactInfo,
@@ -7,7 +9,6 @@ import {
   deleteContactInfo,
   getVendorContactsBySlug,
 } from "../_actions/contactUs-actions";
-import { useState, useEffect, useCallback } from "react";
 
 export interface ContactInfo {
   id: string;
@@ -24,24 +25,28 @@ interface ContactStore {
   contacts: ContactInfo[];
   isLoading: boolean;
   error: string | null;
-  initialized: boolean;
+  lastFetched: number;
   currentFetch: AbortController | null;
-  fetchContacts: () => Promise<void>;
-  fetchVendorContacts: (vendorWebsite: string) => Promise<void>;
-  updateContact: (id: string, data: ContactFormData) => Promise<void>;
-  createContact: (data: ContactFormData) => Promise<void>;
-  deleteContact: (id: string) => Promise<void>;
-  resetState: () => void;
 }
 
-export const useContactStore = create<ContactStore>((set, get) => ({
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+export const useContactStore = create<
+  ContactStore & {
+    update: (id: string, data: ContactFormData) => Promise<void>;
+    create: (data: ContactFormData) => Promise<void>;
+    remove: (id: string) => Promise<void>;
+    fetchContacts: (vendorWebsite?: string) => Promise<void>;
+    reset: () => void;
+  }
+>((set, get) => ({
   contacts: [],
   isLoading: false,
   error: null,
-  initialized: false,
+  lastFetched: 0,
   currentFetch: null,
 
-  resetState: () => {
+  reset: () => {
     const { currentFetch } = get();
     if (currentFetch) {
       currentFetch.abort();
@@ -50,176 +55,158 @@ export const useContactStore = create<ContactStore>((set, get) => ({
       contacts: [],
       isLoading: false,
       error: null,
-      initialized: false,
+      lastFetched: 0,
       currentFetch: null,
     });
   },
 
-  fetchContacts: async () => {
-    const state = get();
-    if (state.isLoading || state.initialized) return;
-
-    // Cancel any existing fetch
-    if (state.currentFetch) {
-      state.currentFetch.abort();
-    }
-
-    const controller = new AbortController();
-    set({ currentFetch: controller, isLoading: true, error: null });
-
-    try {
-      const result = await getContactInfo();
-
-      // Check if request was aborted
-      if (controller.signal.aborted) return;
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      set({ contacts: result.data || [], initialized: true });
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        return;
-      }
-      set({
-        error:
-          error instanceof Error ? error.message : "Failed to fetch contacts",
-      });
-    } finally {
-      set(state => ({
-        isLoading: false,
-        currentFetch:
-          state.currentFetch === controller ? null : state.currentFetch,
-      }));
-    }
-  },
-
-  fetchVendorContacts: async (vendorWebsite: string) => {
-    const state = get();
-    if (state.isLoading || state.initialized) return;
-
-    // Cancel any existing fetch
-    if (state.currentFetch) {
-      state.currentFetch.abort();
-    }
-
-    const controller = new AbortController();
-    set({ currentFetch: controller, isLoading: true, error: null });
-
-    try {
-      const result = await getVendorContactsBySlug(vendorWebsite);
-
-      // Check if request was aborted
-      if (controller.signal.aborted) return;
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      set({ contacts: result.data || [], initialized: true });
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        return;
-      }
-      set({
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch vendor contacts",
-      });
-    } finally {
-      set(state => ({
-        isLoading: false,
-        currentFetch:
-          state.currentFetch === controller ? null : state.currentFetch,
-      }));
-    }
-  },
-
-  updateContact: async (id: string, data: ContactFormData) => {
+  update: async (id: string, data: ContactFormData) => {
     set({ isLoading: true, error: null });
-
     try {
       const result = await updateContactInfo(id, data);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      set({ contacts: result.data });
+      if (!result.success) throw new Error(result.error || "Update failed");
+
+      set({
+        contacts: result.data,
+        isLoading: false,
+        error: null,
+        lastFetched: Date.now(),
+      });
     } catch (error) {
       set({
-        error:
-          error instanceof Error ? error.message : "Failed to update contact",
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Update failed",
       });
       throw error;
-    } finally {
-      set({ isLoading: false });
     }
   },
 
-  createContact: async (data: ContactFormData) => {
+  create: async (data: ContactFormData) => {
     set({ isLoading: true, error: null });
-
     try {
       const result = await createContactInfo(data);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      set({ contacts: result.data });
+      if (!result.success) throw new Error(result.error || "Creation failed");
+
+      set({
+        contacts: result.data,
+        isLoading: false,
+        error: null,
+        lastFetched: Date.now(),
+      });
     } catch (error) {
       set({
-        error:
-          error instanceof Error ? error.message : "Failed to create contact",
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Creation failed",
       });
       throw error;
-    } finally {
-      set({ isLoading: false });
     }
   },
 
-  deleteContact: async (id: string) => {
+  remove: async (id: string) => {
     set({ isLoading: true, error: null });
-
     try {
       const result = await deleteContactInfo(id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      set({ contacts: result.data });
+      if (!result.success) throw new Error(result.error || "Deletion failed");
+
+      set({
+        contacts: result.data,
+        isLoading: false,
+        error: null,
+        lastFetched: Date.now(),
+      });
     } catch (error) {
       set({
-        error:
-          error instanceof Error ? error.message : "Failed to delete contact",
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Deletion failed",
       });
       throw error;
+    }
+  },
+
+  fetchContacts: async (vendorWebsite?: string) => {
+    const { lastFetched, isLoading, currentFetch } = get();
+
+    // Prevent multiple simultaneous fetches
+    if (isLoading) return;
+
+    // Check if data is fresh
+    if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) return;
+
+    // Cancel any existing fetch
+    if (currentFetch) {
+      currentFetch.abort();
+    }
+
+    const controller = new AbortController();
+    set({ currentFetch: controller, isLoading: true, error: null });
+
+    try {
+      const result = vendorWebsite
+        ? await getVendorContactsBySlug(vendorWebsite)
+        : await getContactInfo();
+
+      // Check if request was aborted
+      if (controller.signal.aborted) return;
+
+      if (!result.success) throw new Error(result.error || "Fetch failed");
+
+      set({
+        contacts: result.data || [],
+        isLoading: false,
+        error: null,
+        lastFetched: Date.now(),
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Fetch failed",
+      });
     } finally {
-      set({ isLoading: false });
+      set(state => ({
+        isLoading: false,
+        currentFetch:
+          state.currentFetch === controller ? null : state.currentFetch,
+      }));
     }
   },
 }));
 
-// Custom hook for managing contact data fetching
+// Memoized selector hooks
+export const useContacts = () => {
+  const contacts = useContactStore(state => state.contacts);
+  return contacts;
+};
+
+export const useContactLoading = () => {
+  const isLoading = useContactStore(state => state.isLoading);
+  return isLoading;
+};
+
+export const useContactError = () => {
+  const error = useContactStore(state => state.error);
+  return error;
+};
+
 export const useContactData = (vendorWebsite?: string) => {
-  const {
-    fetchContacts,
-    fetchVendorContacts,
-    resetState,
-    contacts,
-    isLoading,
-    error,
-  } = useContactStore();
+  const fetchContacts = useContactStore(state => state.fetchContacts);
+  const reset = useContactStore(state => state.reset);
+
+  // Use useCallback to memoize the fetch function
+  const memoizedFetch = useCallback(() => {
+    fetchContacts(vendorWebsite);
+  }, [vendorWebsite, fetchContacts]);
 
   useEffect(() => {
-    if (vendorWebsite) {
-      fetchVendorContacts(vendorWebsite);
-    } else {
-      fetchContacts();
-    }
-
+    memoizedFetch();
     return () => {
-      resetState();
+      reset();
     };
-  }, [vendorWebsite, fetchContacts, fetchVendorContacts, resetState]);
+  }, [memoizedFetch, reset]);
+
+  const contacts = useContacts();
+  const isLoading = useContactLoading();
+  const error = useContactError();
 
   return { contacts, isLoading, error };
 };
