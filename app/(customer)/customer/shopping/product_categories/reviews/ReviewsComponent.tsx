@@ -129,7 +129,7 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
           <CollapsibleTrigger asChild>
             <Button
               variant="outline"
-              className="w-full flex items-center justify-between"
+              className="w-full border-none flex items-center justify-between"
             >
               <div className="flex items-center gap-2">
                 <div className="flex">
