@@ -31,7 +31,7 @@ export default async function VendorWebsiteLayout({
   return (
     <>
       <div className="max-w-[1903px] mx-auto px-4">{children}</div>
-      {/* <Footer /> */}
+      <Footer />
     </>
   );
 }
