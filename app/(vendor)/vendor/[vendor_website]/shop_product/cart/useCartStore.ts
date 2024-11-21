@@ -8,40 +8,10 @@ import {
   fetchVendorCart as fetchVendorCartAction,
   clearVendorCart as clearVendorCartAction,
 } from "./actions";
-import { VendorCart, VendorVariation, VendorProduct } from "@prisma/client";
-
-type VendorProductWithDetails = VendorProduct & {
-  featuredImage?: {
-    medium: string;
-  } | null;
-  dynamicPricing: Array<{
-    id: string;
-    vendorProductId: string;
-    from: string;
-    to: string;
-    type: string;
-    amount: string;
-  }>;
-};
-
-type VendorVariationWithProduct = VendorVariation & {
-  vendorProduct: VendorProductWithDetails;
-};
-
-type VendorCartItem = {
-  id: string;
-  vendorCartId: string;
-  vendorVariationId: string;
-  quantity: number;
-  vendorVariation: VendorVariationWithProduct;
-};
-
-type VendorCartWithItems = VendorCart & {
-  vendorCartItems: VendorCartItem[];
-};
+import { VendorCart } from "../checkout/_lib/types";
 
 interface VendorCartState {
-  cart: VendorCartWithItems | null;
+  cart: VendorCart | null;
   isLoading: boolean;
   isInitialized: boolean;
   error: string | null;
@@ -56,7 +26,7 @@ interface VendorCartActions {
   ) => Promise<void>;
   removeFromCart: (cartItemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
-  setCart: (cart: VendorCartWithItems | null) => void;
+  setCart: (cart: VendorCart | null) => void;
 }
 
 interface VendorCartSelectors {
@@ -70,13 +40,13 @@ type VendorCartStore = VendorCartState &
   VendorCartSelectors;
 
 // Calculate derived values outside of the store
-const calculateTotalItems = (cart: VendorCartWithItems | null): number => {
+const calculateTotalItems = (cart: VendorCart | null): number => {
   return (
     cart?.vendorCartItems?.reduce((sum, item) => sum + item.quantity, 0) || 0
   );
 };
 
-const calculateSubtotal = (cart: VendorCartWithItems | null): number => {
+const calculateSubtotal = (cart: VendorCart | null): number => {
   if (!cart?.vendorCartItems) return 0;
 
   return cart.vendorCartItems.reduce((sum, item) => {
@@ -102,7 +72,7 @@ const calculateSubtotal = (cart: VendorCartWithItems | null): number => {
   }, 0);
 };
 
-const isCartEmpty = (cart: VendorCartWithItems | null): boolean => {
+const isCartEmpty = (cart: VendorCart | null): boolean => {
   return !cart?.vendorCartItems?.length;
 };
 
@@ -126,7 +96,7 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
       const result = await fetchVendorCartAction();
       if (result.success) {
         set({
-          cart: result.data,
+          cart: result.data as VendorCart,
           isLoading: false,
           isInitialized: true,
         });
@@ -153,7 +123,7 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
     try {
       const result = await addToVendorCartAction(variationId, quantity);
       if (result.success) {
-        set({ cart: result.data, isLoading: false });
+        set({ cart: result.data as VendorCart, isLoading: false });
       } else {
         set({ error: result.error, isLoading: false });
       }
@@ -172,7 +142,7 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
         quantity
       );
       if (result.success) {
-        set({ cart: result.data, isLoading: false });
+        set({ cart: result.data as VendorCart, isLoading: false });
       } else {
         set({ error: result.error, isLoading: false });
       }
@@ -191,7 +161,7 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
     try {
       const result = await removeFromVendorCartAction(cartItemId);
       if (result.success) {
-        set({ cart: result.data, isLoading: false });
+        set({ cart: result.data as VendorCart, isLoading: false });
       } else {
         set({ error: result.error, isLoading: false });
       }
@@ -210,7 +180,7 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
     try {
       const result = await clearVendorCartAction();
       if (result.success) {
-        set({ cart: result.data, isLoading: false });
+        set({ cart: result.data as VendorCart, isLoading: false });
       } else {
         set({ error: result.error, isLoading: false });
       }

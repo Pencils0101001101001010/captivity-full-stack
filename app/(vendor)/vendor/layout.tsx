@@ -4,22 +4,30 @@ import { redirect } from "next/navigation";
 import { Toaster } from "@/components/ui/toaster";
 import SessionProvider from "../SessionProvider";
 import Navbar from "../_components/Navbar";
+import { unstable_noStore as noStore } from "next/cache";
 
+// Only the top-level vendor layout should be dynamic
 export const dynamic = "force-dynamic";
 
-export default async function VendorLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+async function validateVendorSession() {
   const session = await validateRequest();
-
   if (
     !session.user ||
     (session.user.role !== "VENDOR" && session.user.role !== "VENDORCUSTOMER")
   ) {
     redirect("/vendor_auth");
   }
+  return session;
+}
+
+export default async function VendorLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  noStore();
+
+  const session = await validateVendorSession();
 
   return (
     <SessionProvider value={session}>

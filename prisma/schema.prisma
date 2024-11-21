@@ -401,7 +401,7 @@ model VendorFeaturedImage {
 model VendorOrder {
   id                  String            @id @default(uuid())
   userId              String
-  captivityBranch     String
+  vendorBranch        String
   methodOfCollection  String
   salesRep            String?
   referenceNumber     String?

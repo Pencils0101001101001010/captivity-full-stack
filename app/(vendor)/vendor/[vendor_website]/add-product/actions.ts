@@ -263,7 +263,7 @@ export async function createVendorProduct(formData: FormData) {
       },
     });
 
-    revalidatePath("/vendor/products");
+    revalidatePath("/vendor");
 
     return {
       success: true,

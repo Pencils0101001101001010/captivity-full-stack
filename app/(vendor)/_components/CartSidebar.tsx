@@ -240,7 +240,7 @@ const VendorCartSidebar = ({
           </div>
           <div className="space-y-2">
             <Link
-              href={`/vendor/${vendorWebsite}/shopping/checkout`}
+              href={`/vendor/${vendorWebsite}/shop_product/checkout`}
               className={cn(
                 "block w-full bg-primary text-primary-foreground text-center py-2.5 sm:py-3 rounded-md",
                 "hover:bg-primary/90 transition-colors",
