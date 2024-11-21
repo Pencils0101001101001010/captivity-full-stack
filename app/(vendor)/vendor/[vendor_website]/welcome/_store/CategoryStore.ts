@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { useCallback, useEffect } from "react";
 import {
   uploadCategory,
   removeCategory,
@@ -17,129 +18,123 @@ interface CategoryStore {
   categories: CategoryItem[];
   isLoading: boolean;
   error: string | null;
-  lastFetch: number;
-  uploadCategory: (formData: FormData) => Promise<void>;
-  removeCategory: (url: string) => Promise<void>;
-  fetchCategories: () => Promise<void>;
-  fetchVendorCategories: (storeSlug: string) => Promise<void>;
+  lastFetched: number;
 }
 
-const CACHE_DURATION = 60000; // 1 minute cache
-const DEBOUNCE_DELAY = 300; // 300ms debounce
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-export const useCategoryStore = create<CategoryStore>((set, get) => {
-  let debounceTimer: NodeJS.Timeout | null = null;
+export const useCategoryStore = create<
+  CategoryStore & {
+    upload: (formData: FormData) => Promise<void>;
+    remove: (url: string) => Promise<void>;
+    fetchCategories: (storeSlug?: string) => Promise<void>;
+  }
+>((set, get) => ({
+  categories: [],
+  isLoading: false,
+  error: null,
+  lastFetched: 0,
 
-  // Check if we need to fetch new data
-  const shouldFetch = () => {
-    const now = Date.now();
-    return !get().lastFetch || now - get().lastFetch > CACHE_DURATION;
-  };
+  upload: async (formData: FormData) => {
+    set({ isLoading: true, error: null });
+    try {
+      const result = await uploadCategory(formData);
+      if (!result.success) throw new Error(result.error || "Upload failed");
 
-  // Debounce helper
-  const debounce = (fn: Function) => {
-    if (debounceTimer) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => fn(), DEBOUNCE_DELAY);
-  };
-
-  // Helper to batch state updates
-  const updateState = (
-    loading: boolean,
-    error: string | null = null,
-    categories?: CategoryItem[]
-  ) => {
-    const updates: Partial<CategoryStore> = { isLoading: loading };
-    if (error !== undefined) updates.error = error;
-    if (categories !== undefined) {
-      updates.categories = categories;
-      updates.lastFetch = Date.now();
+      set({
+        categories: result.categories || [],
+        isLoading: false,
+        error: null,
+        lastFetched: Date.now(),
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Upload failed",
+      });
+      throw error;
     }
-    set(updates);
-  };
+  },
 
-  return {
-    categories: [],
-    isLoading: false,
-    error: null,
-    lastFetch: 0,
+  remove: async (url: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const result = await removeCategory(url);
+      if (!result.success) throw new Error(result.error || "Remove failed");
 
-    uploadCategory: async (formData: FormData) => {
-      updateState(true, null);
-      try {
-        const result = await uploadCategory(formData);
-        if (!result.success) throw new Error(result.error);
-        updateState(false, null, result.categories || []);
-      } catch (error) {
-        updateState(
-          false,
-          error instanceof Error ? error.message : "Upload failed"
-        );
-      }
-    },
+      set({
+        categories: result.categories || [],
+        isLoading: false,
+        error: null,
+        lastFetched: Date.now(),
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Remove failed",
+      });
+      throw error;
+    }
+  },
 
-    removeCategory: async (url: string) => {
-      updateState(true, null);
-      try {
-        const result = await removeCategory(url);
-        if (!result.success) throw new Error(result.error);
-        updateState(false, null, result.categories || []);
-      } catch (error) {
-        updateState(
-          false,
-          error instanceof Error ? error.message : "Removal failed"
-        );
-      }
-    },
+  fetchCategories: async (storeSlug?: string) => {
+    const { lastFetched, isLoading } = get();
 
-    fetchCategories: async () => {
-      if (!shouldFetch()) return;
+    // Prevent multiple simultaneous fetches
+    if (isLoading) return;
 
-      const fetch = async () => {
-        if (get().isLoading) return;
+    // Check if data is fresh
+    if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) return;
 
-        updateState(true, null);
-        try {
-          const result = await getCategories();
-          if (!result.success) throw new Error(result.error);
-          updateState(false, null, result.categories || []);
-        } catch (error) {
-          updateState(
-            false,
-            error instanceof Error ? error.message : "Fetch failed"
-          );
-        }
-      };
+    set({ isLoading: true, error: null });
 
-      debounce(fetch);
-    },
+    try {
+      const result = storeSlug
+        ? await getVendorCategoriesBySlug(storeSlug)
+        : await getCategories();
 
-    fetchVendorCategories: async (storeSlug: string) => {
-      if (!shouldFetch()) return;
+      if (!result.success) throw new Error(result.error || "Fetch failed");
 
-      const fetch = async () => {
-        if (get().isLoading) return;
+      set({
+        categories: result.categories || [],
+        isLoading: false,
+        error: null,
+        lastFetched: Date.now(),
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Fetch failed",
+      });
+    }
+  },
+}));
 
-        updateState(true, null);
-        try {
-          const result = await getVendorCategoriesBySlug(storeSlug);
-          if (!result.success) throw new Error(result.error);
-          updateState(false, null, result.categories || []);
-        } catch (error) {
-          updateState(
-            false,
-            error instanceof Error ? error.message : "Fetch failed"
-          );
-        }
-      };
+// Memoized selector hooks
+export const useCategories = () => {
+  const categories = useCategoryStore(state => state.categories);
+  return categories;
+};
 
-      debounce(fetch);
-    },
-  };
-});
+export const useCategoryLoading = () => {
+  const isLoading = useCategoryStore(state => state.isLoading);
+  return isLoading;
+};
 
-// Optional: Add selector hooks for better performance
-export const useCategoryData = () =>
-  useCategoryStore(state => state.categories);
-export const useCategoryLoading = () =>
-  useCategoryStore(state => state.isLoading);
-export const useCategoryError = () => useCategoryStore(state => state.error);
+export const useCategoryError = () => {
+  const error = useCategoryStore(state => state.error);
+  return error;
+};
+
+export const useCategoryData = (storeSlug?: string) => {
+  const fetchCategories = useCategoryStore(state => state.fetchCategories);
+
+  // Use useCallback to memoize the effect
+  const memoizedFetch = useCallback(() => {
+    fetchCategories(storeSlug);
+  }, [storeSlug, fetchCategories]);
+
+  useEffect(() => {
+    memoizedFetch();
+  }, [memoizedFetch]);
+};

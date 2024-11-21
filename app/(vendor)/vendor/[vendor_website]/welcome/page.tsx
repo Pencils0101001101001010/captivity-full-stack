@@ -35,11 +35,11 @@ const WelcomePage = () => {
         </Suspense>
       </ErrorBoundary>
 
-      {/* <ErrorBoundary>
+      <ErrorBoundary>
         <Suspense fallback={<SectionLoader />}>
           <CategoryImages />
         </Suspense>
-      </ErrorBoundary> */}
+      </ErrorBoundary>
     </div>
   );
 };
