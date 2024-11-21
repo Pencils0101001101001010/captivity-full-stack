@@ -8,7 +8,7 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { createVendorOrder, getVendorUserDetails } from "../actions";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { VendorFormValues } from "../_lib/types";
 import { vendorFormSchema } from "../_lib/validation";
 import useVendorCartStore from "../../cart/useCartStore";
@@ -93,6 +93,8 @@ const NavigationButtons = React.memo(
 NavigationButtons.displayName = "NavigationButtons";
 
 const CheckoutForm = () => {
+  const params = useParams();
+  const vendorWebsite = params?.vendor_website as string;
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -154,7 +156,9 @@ const CheckoutForm = () => {
             description: "Order placed successfully!",
           });
           // Use replace instead of push to prevent back navigation to the checkout page
-          router.replace(`/vendor/order-success/${result.data.id}`);
+          router.replace(
+            `/vendor/${vendorWebsite}/order-success/${result.data.id}`
+          );
         } else {
           toast({
             title: "Error",
@@ -172,7 +176,7 @@ const CheckoutForm = () => {
         setIsSubmitting(false);
       }
     },
-    [router, setCart, toast, isSubmitting] // Add isSubmitting to dependencies
+    [isSubmitting, setCart, toast, router, vendorWebsite] // Add isSubmitting to dependencies
   );
 
   // Load user data
