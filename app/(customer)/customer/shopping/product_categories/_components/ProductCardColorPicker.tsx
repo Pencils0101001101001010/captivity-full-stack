@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import VariationDetails from "../../[id]/[variationId]/VariationDetails";
+import DetailedReviewCard from "../reviews/ReviewSection";
 
 interface ProductCardProps {
   product: ProductWithRelations;
@@ -92,9 +93,9 @@ const ProductCard: React.FC<ProductCardProps> = memo(
               dynamicPricing={product.dynamicPricing}
               sellingPrice={product.sellingPrice}
             />
-            <div className="mb-4">
-              <StarRating />
-            </div>
+
+            <DetailedReviewCard product={product} />
+
             <div className="grid grid-cols-2 gap-2">
               <Button
                 onClick={handleViewMore}
