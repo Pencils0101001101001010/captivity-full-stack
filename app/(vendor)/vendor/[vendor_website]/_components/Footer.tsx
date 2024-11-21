@@ -11,7 +11,7 @@ const Footer = () => {
         <Information />
         {/* <OpeningHours /> */}
         <ContactUs />
-        {/* <FollowUs /> */}
+        <FollowUs />
       </div>
     </footer>
   );

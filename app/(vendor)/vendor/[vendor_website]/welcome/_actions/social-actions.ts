@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/auth";
-import { cache } from "react";
+import { revalidateTag, unstable_cache } from "next/cache";
 
 export interface SocialLink {
   id: string;
@@ -22,34 +22,53 @@ interface SocialLinkActionResult {
   error?: string;
 }
 
-const getCachedSocialLinks = cache(async (userId: string) => {
-  const settings = await prisma.userSettings.findUnique({
-    where: { userId },
-    include: {
-      SocialMediaLink: {
-        orderBy: { platform: "asc" },
-      },
-    },
-  });
-  return settings;
-});
+// Cache key functions
+const getUserCacheKey = (userId: string) => `social_links_${userId}`;
+const getVendorCacheKey = (websiteAddress: string) =>
+  `vendor_social_links_${websiteAddress}`;
 
-const getVendorSettings = cache(async (websiteAddress: string) => {
-  const settings = await prisma.userSettings.findFirst({
-    where: {
-      user: {
-        OR: [{ website: websiteAddress }, { storeSlug: websiteAddress }],
-        role: "VENDOR",
+// Cached query for user's social links
+const getCachedSocialLinks = unstable_cache(
+  async (userId: string) => {
+    return await prisma.userSettings.findUnique({
+      where: { userId },
+      include: {
+        SocialMediaLink: {
+          orderBy: { platform: "asc" },
+        },
       },
-    },
-    include: {
-      SocialMediaLink: {
-        orderBy: { platform: "asc" },
+    });
+  },
+  [],
+  {
+    tags: ["social-links"],
+    revalidate: 30, // Cache for 30 seconds
+  }
+);
+
+// Cached query for vendor's social links
+const getVendorSettings = unstable_cache(
+  async (websiteAddress: string) => {
+    return await prisma.userSettings.findFirst({
+      where: {
+        user: {
+          OR: [{ website: websiteAddress }, { storeSlug: websiteAddress }],
+          role: "VENDOR",
+        },
       },
-    },
-  });
-  return settings;
-});
+      include: {
+        SocialMediaLink: {
+          orderBy: { platform: "asc" },
+        },
+      },
+    });
+  },
+  [],
+  {
+    tags: ["vendor-social-links"],
+    revalidate: 30, // Cache for 30 seconds
+  }
+);
 
 export async function getSocialLinks(): Promise<SocialLinkActionResult> {
   try {
@@ -75,9 +94,6 @@ export async function getVendorSocialLinks(
   websiteAddress: string
 ): Promise<SocialLinkActionResult> {
   try {
-    const { user } = await validateRequest();
-    if (!user) return { success: false, error: "Unauthorized access" };
-
     const vendorSettings = await getVendorSettings(websiteAddress);
     if (!vendorSettings) {
       return { success: false, error: "Vendor not found" };
@@ -104,7 +120,10 @@ export async function createSocialLink(
     const { user } = await validateRequest();
     if (!user) throw new Error("Unauthorized access");
 
-    const userSettings = await getCachedSocialLinks(user.id);
+    const userSettings = await prisma.userSettings.findUnique({
+      where: { userId: user.id },
+    });
+
     if (!userSettings) {
       await prisma.userSettings.create({
         data: {
@@ -120,6 +139,9 @@ export async function createSocialLink(
         },
       });
     }
+
+    // Revalidate cache
+    revalidateTag("social-links");
 
     const updatedSettings = await getCachedSocialLinks(user.id);
     return {
@@ -144,13 +166,19 @@ export async function updateSocialLink(
     const { user } = await validateRequest();
     if (!user) throw new Error("Unauthorized access");
 
-    const userSettings = await getCachedSocialLinks(user.id);
+    const userSettings = await prisma.userSettings.findUnique({
+      where: { userId: user.id },
+    });
+
     if (!userSettings) throw new Error("User settings not found");
 
     await prisma.socialMediaLink.update({
       where: { id, userSettingsId: userSettings.id },
       data,
     });
+
+    // Revalidate cache
+    revalidateTag("social-links");
 
     const updatedSettings = await getCachedSocialLinks(user.id);
     return {
@@ -174,12 +202,18 @@ export async function deleteSocialLink(
     const { user } = await validateRequest();
     if (!user) throw new Error("Unauthorized access");
 
-    const userSettings = await getCachedSocialLinks(user.id);
+    const userSettings = await prisma.userSettings.findUnique({
+      where: { userId: user.id },
+    });
+
     if (!userSettings) throw new Error("User settings not found");
 
     await prisma.socialMediaLink.delete({
       where: { id, userSettingsId: userSettings.id },
     });
+
+    // Revalidate cache
+    revalidateTag("social-links");
 
     const updatedSettings = await getCachedSocialLinks(user.id);
     return {

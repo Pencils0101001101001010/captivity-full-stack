@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { useCallback, useEffect } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import {
   createSocialLink,
   deleteSocialLink,
@@ -24,10 +24,18 @@ interface SocialLinkStore {
   isLoading: boolean;
   error: string | null;
   lastFetched: number;
-  currentFetch: AbortController | null;
+  isFetching: boolean;
 }
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+const initialState: SocialLinkStore = {
+  links: [],
+  isLoading: false,
+  error: null,
+  lastFetched: 0,
+  isFetching: false,
+};
 
 export const useSocialLinkStore = create<
   SocialLinkStore & {
@@ -38,34 +46,26 @@ export const useSocialLinkStore = create<
     reset: () => void;
   }
 >((set, get) => ({
-  links: [],
-  isLoading: false,
-  error: null,
-  lastFetched: 0,
-  currentFetch: null,
+  ...initialState,
 
   reset: () => {
-    const { currentFetch } = get();
-    if (currentFetch) {
-      currentFetch.abort();
+    const currentState = get();
+    if (currentState.isFetching || currentState.isLoading) {
+      return;
     }
-    set({
-      links: [],
-      isLoading: false,
-      error: null,
-      lastFetched: 0,
-      currentFetch: null,
-    });
+    set(initialState);
   },
 
   update: async (id: string, data: SocialLinkFormData) => {
+    if (get().isLoading) return;
     set({ isLoading: true, error: null });
+
     try {
       const result = await updateSocialLink(id, data);
       if (!result.success) throw new Error(result.error || "Update failed");
 
       set({
-        links: result.data || [],
+        links: result.data,
         isLoading: false,
         error: null,
         lastFetched: Date.now(),
@@ -80,13 +80,15 @@ export const useSocialLinkStore = create<
   },
 
   create: async (data: SocialLinkFormData) => {
+    if (get().isLoading) return;
     set({ isLoading: true, error: null });
+
     try {
       const result = await createSocialLink(data);
       if (!result.success) throw new Error(result.error || "Creation failed");
 
       set({
-        links: result.data || [],
+        links: result.data,
         isLoading: false,
         error: null,
         lastFetched: Date.now(),
@@ -101,13 +103,15 @@ export const useSocialLinkStore = create<
   },
 
   remove: async (id: string) => {
+    if (get().isLoading) return;
     set({ isLoading: true, error: null });
+
     try {
       const result = await deleteSocialLink(id);
       if (!result.success) throw new Error(result.error || "Deletion failed");
 
       set({
-        links: result.data || [],
+        links: result.data,
         isLoading: false,
         error: null,
         lastFetched: Date.now(),
@@ -122,89 +126,76 @@ export const useSocialLinkStore = create<
   },
 
   fetchLinks: async (vendorWebsite?: string) => {
-    const { lastFetched, isLoading, currentFetch } = get();
+    const { lastFetched, isFetching, isLoading } = get();
 
-    // Prevent multiple simultaneous fetches
-    if (isLoading) return;
-
-    // Check if data is fresh
-    if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) return;
-
-    // Cancel any existing fetch
-    if (currentFetch) {
-      currentFetch.abort();
+    if (isFetching || isLoading) return;
+    if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) {
+      return;
     }
 
-    const controller = new AbortController();
-    set({ currentFetch: controller, isLoading: true, error: null });
+    set(state => ({
+      ...state,
+      isFetching: true,
+      isLoading: true,
+      error: null,
+    }));
 
     try {
       const result = vendorWebsite
         ? await getVendorSocialLinks(vendorWebsite)
         : await getSocialLinks();
 
-      // Check if request was aborted
-      if (controller.signal.aborted) return;
+      const currentState = get();
+      if (!currentState.isFetching) return;
 
       if (!result.success) throw new Error(result.error || "Fetch failed");
 
-      set({
+      set(state => ({
+        ...state,
         links: result.data || [],
         isLoading: false,
         error: null,
         lastFetched: Date.now(),
-      });
+        isFetching: false,
+      }));
     } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") return;
-      set({
+      set(state => ({
+        ...state,
         isLoading: false,
         error: error instanceof Error ? error.message : "Fetch failed",
-      });
-    } finally {
-      set(state => ({
-        isLoading: false,
-        currentFetch:
-          state.currentFetch === controller ? null : state.currentFetch,
+        isFetching: false,
       }));
     }
   },
 }));
 
-// Memoized selector hooks
-export const useSocialLinks = () => {
-  const links = useSocialLinkStore(state => state.links);
-  return links;
-};
-
-export const useSocialLinkLoading = () => {
-  const isLoading = useSocialLinkStore(state => state.isLoading);
-  return isLoading;
-};
-
-export const useSocialLinkError = () => {
-  const error = useSocialLinkStore(state => state.error);
-  return error;
-};
-
 export const useSocialLinkData = (vendorWebsite?: string) => {
   const fetchLinks = useSocialLinkStore(state => state.fetchLinks);
-  const reset = useSocialLinkStore(state => state.reset);
+  const lastFetched = useSocialLinkStore(state => state.lastFetched);
+  const links = useSocialLinkStore(state => state.links);
+  const isLoading = useSocialLinkStore(state => state.isLoading);
+  const isFetching = useSocialLinkStore(state => state.isFetching);
+  const error = useSocialLinkStore(state => state.error);
+  const mountedRef = useRef(false);
 
-  // Use useCallback to memoize the fetch function
-  const memoizedFetch = useCallback(() => {
-    fetchLinks(vendorWebsite);
-  }, [vendorWebsite, fetchLinks]);
+  const checkAndFetchData = useCallback(() => {
+    if (!lastFetched || Date.now() - lastFetched >= CACHE_DURATION) {
+      fetchLinks(vendorWebsite);
+    }
+  }, [fetchLinks, lastFetched, vendorWebsite]);
 
   useEffect(() => {
-    memoizedFetch();
+    mountedRef.current = true;
+    checkAndFetchData();
+
     return () => {
-      reset();
+      mountedRef.current = false;
     };
-  }, [memoizedFetch, reset]);
+  }, [checkAndFetchData]);
 
-  const links = useSocialLinks();
-  const isLoading = useSocialLinkLoading();
-  const error = useSocialLinkError();
-
-  return { links, isLoading, error };
+  return {
+    links,
+    isLoading: isLoading || isFetching,
+    error,
+  };
 };
