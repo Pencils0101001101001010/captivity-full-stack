@@ -9,7 +9,7 @@ const Footer = () => {
     <footer className="bg-black text-gray-400 font-sans text-xs py-20 w-full">
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 px-4">
         <Information />
-        {/* <OpeningHours /> */}
+        <OpeningHours />
         <ContactUs />
         <FollowUs />
       </div>

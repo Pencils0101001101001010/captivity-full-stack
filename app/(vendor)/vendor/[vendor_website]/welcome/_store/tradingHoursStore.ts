@@ -1,4 +1,5 @@
-// openingHoursStore.ts
+"use client";
+
 import { create } from "zustand";
 import {
   createOpeningHours,
@@ -7,7 +8,7 @@ import {
   getVendorOpeningHoursBySlug,
   updateOpeningHours,
 } from "../_actions/tradingHours-actions";
-import { useEffect } from "react";
+import React from "react";
 
 export interface OpeningHoursInfo {
   id: string;
@@ -26,209 +27,221 @@ interface OpeningHoursStore {
   isLoading: boolean;
   error: string | null;
   initialized: boolean;
-  currentFetch: AbortController | null;
-  fetchOpeningHours: () => Promise<void>;
-  fetchVendorOpeningHours: (vendorWebsite: string) => Promise<void>;
-  updateOpeningHour: (id: string, data: OpeningHoursFormData) => Promise<void>;
-  createOpeningHour: (data: OpeningHoursFormData) => Promise<void>;
-  deleteOpeningHour: (id: string) => Promise<void>;
-  resetState: () => void;
+  isFetching: boolean;
 }
 
-export const useOpeningHoursStore = create<OpeningHoursStore>((set, get) => ({
+const initialState = {
   openingHours: [],
   isLoading: false,
   error: null,
   initialized: false,
-  currentFetch: null,
+  isFetching: false,
+};
 
-  resetState: () => {
-    const { currentFetch } = get();
-    if (currentFetch) {
-      currentFetch.abort();
-    }
-    set({
-      openingHours: [],
-      isLoading: false,
-      error: null,
-      initialized: false,
-      currentFetch: null,
-    });
+export const useOpeningHoursStore = create<
+  OpeningHoursStore & {
+    updateOpeningHour: (
+      id: string,
+      data: OpeningHoursFormData
+    ) => Promise<void>;
+    createOpeningHour: (data: OpeningHoursFormData) => Promise<void>;
+    deleteOpeningHour: (id: string) => Promise<void>;
+    fetchOpeningHours: () => Promise<void>;
+    fetchVendorOpeningHours: (vendorWebsite: string) => Promise<void>;
+    reset: () => void;
+  }
+>((set, get) => ({
+  ...initialState,
+
+  reset: () => {
+    const { isLoading, isFetching } = get();
+    if (isLoading || isFetching) return;
+    set(initialState);
   },
 
   fetchOpeningHours: async () => {
-    const state = get();
-    if (state.isLoading || state.initialized) return;
+    const { isFetching, initialized } = get();
+    if (isFetching || initialized) return;
 
-    // Cancel any existing fetch
-    if (state.currentFetch) {
-      state.currentFetch.abort();
-    }
-
-    const controller = new AbortController();
-    set({ currentFetch: controller, isLoading: true, error: null });
+    set({ isFetching: true, isLoading: true, error: null });
 
     try {
       const result = await getOpeningHours();
+      if (!result.success) throw new Error(result.error);
 
-      // Check if request was aborted
-      if (controller.signal.aborted) return;
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      set({ openingHours: result.data || [], initialized: true });
+      set({
+        openingHours: result.data || [],
+        initialized: true,
+        isLoading: false,
+        isFetching: false,
+        error: null,
+      });
     } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        return;
-      }
       set({
         error:
           error instanceof Error
             ? error.message
             : "Failed to fetch opening hours",
-      });
-    } finally {
-      set(state => ({
         isLoading: false,
-        currentFetch:
-          state.currentFetch === controller ? null : state.currentFetch,
-      }));
+        isFetching: false,
+      });
     }
   },
 
   fetchVendorOpeningHours: async (vendorWebsite: string) => {
-    const state = get();
-    if (state.isLoading || state.initialized) return;
+    const { isFetching, initialized } = get();
+    if (isFetching || initialized) return;
 
-    // Cancel any existing fetch
-    if (state.currentFetch) {
-      state.currentFetch.abort();
-    }
-
-    const controller = new AbortController();
-    set({ currentFetch: controller, isLoading: true, error: null });
+    set({ isFetching: true, isLoading: true, error: null });
 
     try {
       const result = await getVendorOpeningHoursBySlug(vendorWebsite);
+      if (!result.success) throw new Error(result.error);
 
-      // Check if request was aborted
-      if (controller.signal.aborted) return;
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      set({ openingHours: result.data || [], initialized: true });
+      set({
+        openingHours: result.data || [],
+        initialized: true,
+        isLoading: false,
+        isFetching: false,
+        error: null,
+      });
     } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        return;
-      }
       set({
         error:
           error instanceof Error
             ? error.message
             : "Failed to fetch vendor opening hours",
-      });
-    } finally {
-      set(state => ({
         isLoading: false,
-        currentFetch:
-          state.currentFetch === controller ? null : state.currentFetch,
-      }));
+        isFetching: false,
+      });
     }
   },
 
   updateOpeningHour: async (id: string, data: OpeningHoursFormData) => {
-    set({ isLoading: true, error: null });
+    const { isLoading } = get();
+    if (isLoading) return;
 
+    set({ isLoading: true, error: null });
     try {
       const result = await updateOpeningHours(id, data);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      set({ openingHours: result.data });
+      if (!result.success) throw new Error(result.error);
+
+      set({
+        openingHours: result.data,
+        isLoading: false,
+        error: null,
+      });
     } catch (error) {
       set({
         error:
           error instanceof Error
             ? error.message
             : "Failed to update opening hours",
+        isLoading: false,
       });
       throw error;
-    } finally {
-      set({ isLoading: false });
     }
   },
 
   createOpeningHour: async (data: OpeningHoursFormData) => {
-    set({ isLoading: true, error: null });
+    const { isLoading } = get();
+    if (isLoading) return;
 
+    set({ isLoading: true, error: null });
     try {
       const result = await createOpeningHours(data);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      set({ openingHours: result.data });
+      if (!result.success) throw new Error(result.error);
+
+      set({
+        openingHours: result.data,
+        isLoading: false,
+        error: null,
+      });
     } catch (error) {
       set({
         error:
           error instanceof Error
             ? error.message
             : "Failed to create opening hours",
+        isLoading: false,
       });
       throw error;
-    } finally {
-      set({ isLoading: false });
     }
   },
 
   deleteOpeningHour: async (id: string) => {
-    set({ isLoading: true, error: null });
+    const { isLoading } = get();
+    if (isLoading) return;
 
+    set({ isLoading: true, error: null });
     try {
       const result = await deleteOpeningHours(id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      set({ openingHours: result.data });
+      if (!result.success) throw new Error(result.error);
+
+      set({
+        openingHours: result.data,
+        isLoading: false,
+        error: null,
+      });
     } catch (error) {
       set({
         error:
           error instanceof Error
             ? error.message
             : "Failed to delete opening hours",
+        isLoading: false,
       });
       throw error;
-    } finally {
-      set({ isLoading: false });
     }
   },
 }));
 
-// Custom hook for managing opening hours data fetching
 export const useOpeningHoursData = (vendorWebsite?: string) => {
-  const {
-    fetchOpeningHours,
-    fetchVendorOpeningHours,
-    resetState,
-    openingHours,
-    isLoading,
-    error,
-  } = useOpeningHoursStore();
+  const openingHours = useOpeningHoursStore(state => state.openingHours);
+  const isLoading = useOpeningHoursStore(
+    state => state.isLoading || state.isFetching
+  );
+  const error = useOpeningHoursStore(state => state.error);
+  const initialized = useOpeningHoursStore(state => state.initialized);
+  const fetchOpeningHours = useOpeningHoursStore(
+    state => state.fetchOpeningHours
+  );
+  const fetchVendorOpeningHours = useOpeningHoursStore(
+    state => state.fetchVendorOpeningHours
+  );
+  const reset = useOpeningHoursStore(state => state.reset);
 
-  useEffect(() => {
-    if (vendorWebsite) {
-      fetchVendorOpeningHours(vendorWebsite);
-    } else {
-      fetchOpeningHours();
+  React.useEffect(() => {
+    if (!initialized) {
+      if (vendorWebsite) {
+        fetchVendorOpeningHours(vendorWebsite);
+      } else {
+        fetchOpeningHours();
+      }
     }
 
     return () => {
-      resetState();
+      if (vendorWebsite) {
+        reset();
+      }
     };
-  }, [vendorWebsite, fetchOpeningHours, fetchVendorOpeningHours, resetState]);
+  }, [
+    vendorWebsite,
+    initialized,
+    fetchOpeningHours,
+    fetchVendorOpeningHours,
+    reset,
+  ]);
 
-  return { openingHours, isLoading, error };
+  return {
+    openingHours,
+    isLoading,
+    error,
+    initialized,
+    fetchOpeningHours,
+    fetchVendorOpeningHours,
+    updateOpeningHour: useOpeningHoursStore(state => state.updateOpeningHour),
+    createOpeningHour: useOpeningHoursStore(state => state.createOpeningHour),
+    deleteOpeningHour: useOpeningHoursStore(state => state.deleteOpeningHour),
+  };
 };
