@@ -1,5 +1,4 @@
 import React from "react";
-import Link from "next/link";
 import FollowUs from "./_footer-comp/FollowUs";
 import Information from "./_footer-comp/Information";
 import ContactUs from "./_footer-comp/ContactUs";
@@ -12,7 +11,7 @@ const Footer = () => {
         <Information />
         {/* <OpeningHours /> */}
         <ContactUs />
-        <FollowUs />
+        {/* <FollowUs /> */}
       </div>
     </footer>
   );

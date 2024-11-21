@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import {
   getContactInfo,
   updateContactInfo,
@@ -27,6 +27,7 @@ interface ContactStore {
   error: string | null;
   lastFetched: number;
   currentFetch: AbortController | null;
+  isFetching: boolean;
 }
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -45,6 +46,7 @@ export const useContactStore = create<
   error: null,
   lastFetched: 0,
   currentFetch: null,
+  isFetching: false,
 
   reset: () => {
     const { currentFetch } = get();
@@ -57,6 +59,7 @@ export const useContactStore = create<
       error: null,
       lastFetched: 0,
       currentFetch: null,
+      isFetching: false,
     });
   },
 
@@ -124,29 +127,22 @@ export const useContactStore = create<
   },
 
   fetchContacts: async (vendorWebsite?: string) => {
-    const { lastFetched, isLoading, currentFetch } = get();
+    const { lastFetched, isFetching } = get();
 
-    // Prevent multiple simultaneous fetches
-    if (isLoading) return;
+    // Prevent multiple fetches
+    if (isFetching) return;
 
-    // Check if data is fresh
-    if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) return;
-
-    // Cancel any existing fetch
-    if (currentFetch) {
-      currentFetch.abort();
+    // Check cache
+    if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) {
+      return;
     }
 
-    const controller = new AbortController();
-    set({ currentFetch: controller, isLoading: true, error: null });
+    set({ isFetching: true, isLoading: true, error: null });
 
     try {
       const result = vendorWebsite
         ? await getVendorContactsBySlug(vendorWebsite)
         : await getContactInfo();
-
-      // Check if request was aborted
-      if (controller.signal.aborted) return;
 
       if (!result.success) throw new Error(result.error || "Fetch failed");
 
@@ -155,58 +151,32 @@ export const useContactStore = create<
         isLoading: false,
         error: null,
         lastFetched: Date.now(),
+        isFetching: false,
       });
     } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") return;
       set({
         isLoading: false,
         error: error instanceof Error ? error.message : "Fetch failed",
+        isFetching: false,
       });
-    } finally {
-      set(state => ({
-        isLoading: false,
-        currentFetch:
-          state.currentFetch === controller ? null : state.currentFetch,
-      }));
     }
   },
 }));
 
-// Memoized selector hooks
-export const useContacts = () => {
-  const contacts = useContactStore(state => state.contacts);
-  return contacts;
-};
-
-export const useContactLoading = () => {
-  const isLoading = useContactStore(state => state.isLoading);
-  return isLoading;
-};
-
-export const useContactError = () => {
-  const error = useContactStore(state => state.error);
-  return error;
-};
-
 export const useContactData = (vendorWebsite?: string) => {
   const fetchContacts = useContactStore(state => state.fetchContacts);
-  const reset = useContactStore(state => state.reset);
-
-  // Use useCallback to memoize the fetch function
-  const memoizedFetch = useCallback(() => {
-    fetchContacts(vendorWebsite);
-  }, [vendorWebsite, fetchContacts]);
+  const contacts = useContactStore(state => state.contacts);
+  const isLoading = useContactStore(state => state.isLoading);
+  const error = useContactStore(state => state.error);
+  const lastFetched = useContactStore(state => state.lastFetched);
 
   useEffect(() => {
-    memoizedFetch();
-    return () => {
-      reset();
-    };
-  }, [memoizedFetch, reset]);
-
-  const contacts = useContacts();
-  const isLoading = useContactLoading();
-  const error = useContactError();
+    // Only fetch if we haven't fetched before or cache is expired
+    if (!lastFetched || Date.now() - lastFetched >= CACHE_DURATION) {
+      fetchContacts(vendorWebsite);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vendorWebsite]); // Only re-run if vendorWebsite changes
 
   return { contacts, isLoading, error };
 };
