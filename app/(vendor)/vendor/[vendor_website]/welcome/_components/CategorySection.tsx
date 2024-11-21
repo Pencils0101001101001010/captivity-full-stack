@@ -183,10 +183,9 @@ export default function CategoryImages() {
     categories,
     isLoading,
     error,
-    uploadCategory,
-    removeCategory,
+    upload: uploadCategory,
+    remove: removeCategory,
     fetchCategories,
-    fetchVendorCategories,
   } = useCategoryStore();
 
   const isVendor = user?.role === "VENDOR";
@@ -212,17 +211,22 @@ export default function CategoryImages() {
       const formData = new FormData();
       formData.append("category", file);
       formData.append("categoryName", categoryName);
-      await uploadCategory(formData);
 
-      if (fileInputRefs.current[index]) {
-        fileInputRefs.current[index]!.value = "";
+      try {
+        await uploadCategory(formData);
+
+        if (fileInputRefs.current[index]) {
+          fileInputRefs.current[index]!.value = "";
+        }
+
+        setCategoryNames(prev => {
+          const newNames = [...prev];
+          newNames[index] = "";
+          return newNames;
+        });
+      } catch (error) {
+        console.error("Error uploading category:", error);
       }
-
-      setCategoryNames(prev => {
-        const newNames = [...prev];
-        newNames[index] = "";
-        return newNames;
-      });
     },
     [isVendor, categories.length, categoryNames, uploadCategory]
   );
@@ -245,7 +249,12 @@ export default function CategoryImages() {
         !window.confirm("Are you sure you want to remove this category?")
       )
         return;
-      await removeCategory(url);
+
+      try {
+        await removeCategory(url);
+      } catch (error) {
+        console.error("Error removing category:", error);
+      }
     },
     [isVendor, removeCategory]
   );
@@ -271,18 +280,14 @@ export default function CategoryImages() {
 
     const fetchData = async () => {
       try {
-        if (user.role === "VENDOR") {
-          await fetchCategories();
-        } else if (user.role === "VENDORCUSTOMER" && vendorWebsite) {
-          await fetchVendorCategories(vendorWebsite);
-        }
+        await fetchCategories(vendorWebsite);
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
     };
 
     fetchData();
-  }, [user, vendorWebsite, fetchCategories, fetchVendorCategories]);
+  }, [user, vendorWebsite, fetchCategories]);
 
   if (isLoading) {
     return (
