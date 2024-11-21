@@ -130,28 +130,31 @@ export default function CarouselPlugin() {
   const { user } = useSession();
   const params = useParams();
   const vendorWebsite =
-    typeof params?.vendor_website === "string" ? params.vendor_website : "";
+    typeof params?.vendor_website === "string"
+      ? params.vendor_website
+      : undefined;
 
-  // Use factory store hooks
+  // Memoized data fetching
   const banners = useBanners();
   const isLoading = useBannerLoading();
   const error = useBannerError();
   const { upload, remove } = useBannerStore();
 
-  // Use the data hook for fetching
+  // Only fetch if user is a vendor customer and we have a vendor website
   useBannerData(user?.role === "VENDORCUSTOMER" ? vendorWebsite : undefined);
 
-  // Get the banner URLs for the UI
   const bannerUrls = useMemo(
     () => banners.map(banner => banner.url),
     [banners]
   );
 
   const isVendor = useMemo(() => user?.role === "VENDOR", [user?.role]);
+
   const showUploadSlot = useMemo(
     () => isVendor && bannerUrls.length < MAX_BANNERS,
     [isVendor, bannerUrls.length]
   );
+
   const allSlides = useMemo(
     () => (showUploadSlot ? [...bannerUrls, "upload-slot"] : bannerUrls),
     [bannerUrls, showUploadSlot]

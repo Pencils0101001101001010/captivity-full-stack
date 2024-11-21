@@ -1,54 +1,50 @@
-// _store/BannerStore.ts
 "use client";
 
 import { create } from "zustand";
+import { useCallback, useEffect } from "react";
 import {
   uploadBanner,
   removeBanner,
   getBanners,
   getVendorBannersBySlug,
 } from "../_actions/banner-actions";
-import { useEffect } from "react";
 
 interface BannerItem {
   url: string;
-}
-
-interface BannerActionResult {
-  success: boolean;
-  urls?: string[];
-  url?: string;
-  error?: string;
 }
 
 interface BannerStore {
   banners: BannerItem[];
   isLoading: boolean;
   error: string | null;
-  upload: (formData: FormData) => Promise<void>;
-  remove: (url: string) => Promise<void>;
-  fetchBanners: () => Promise<void>;
-  fetchVendorBanners: (storeSlug: string) => Promise<void>;
+  lastFetched: number;
 }
 
-const mapUrlsToBannerItems = (urls: string[] = []): BannerItem[] => {
-  return urls.map(url => ({ url }));
-};
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-export const useBannerStore = create<BannerStore>(set => ({
+export const useBannerStore = create<
+  BannerStore & {
+    upload: (formData: FormData) => Promise<void>;
+    remove: (url: string) => Promise<void>;
+    fetchBanners: (storeSlug?: string) => Promise<void>;
+  }
+>((set, get) => ({
   banners: [],
   isLoading: false,
   error: null,
+  lastFetched: 0,
 
   upload: async (formData: FormData) => {
     set({ isLoading: true, error: null });
     try {
       const result = await uploadBanner(formData);
-      if (!result.success) throw new Error(result.error);
+      if (!result.success) throw new Error(result.error || "Upload failed");
+
       set({
-        banners: mapUrlsToBannerItems(result.urls),
+        banners: (result.urls || []).map(url => ({ url })),
         isLoading: false,
         error: null,
+        lastFetched: Date.now(),
       });
     } catch (error) {
       set({
@@ -63,11 +59,13 @@ export const useBannerStore = create<BannerStore>(set => ({
     set({ isLoading: true, error: null });
     try {
       const result = await removeBanner(url);
-      if (!result.success) throw new Error(result.error);
+      if (!result.success) throw new Error(result.error || "Remove failed");
+
       set({
-        banners: mapUrlsToBannerItems(result.urls),
+        banners: (result.urls || []).map(url => ({ url })),
         isLoading: false,
         error: null,
+        lastFetched: Date.now(),
       });
     } catch (error) {
       set({
@@ -78,33 +76,29 @@ export const useBannerStore = create<BannerStore>(set => ({
     }
   },
 
-  fetchBanners: async () => {
-    set({ isLoading: true, error: null });
-    try {
-      const result = await getBanners();
-      if (!result.success) throw new Error(result.error);
-      set({
-        banners: mapUrlsToBannerItems(result.urls),
-        isLoading: false,
-        error: null,
-      });
-    } catch (error) {
-      set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : "Fetch failed",
-      });
-    }
-  },
+  fetchBanners: async (storeSlug?: string) => {
+    const { lastFetched, isLoading } = get();
 
-  fetchVendorBanners: async (storeSlug: string) => {
+    // Prevent multiple simultaneous fetches
+    if (isLoading) return;
+
+    // Check if data is fresh
+    if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) return;
+
     set({ isLoading: true, error: null });
+
     try {
-      const result = await getVendorBannersBySlug(storeSlug);
-      if (!result.success) throw new Error(result.error);
+      const result = storeSlug
+        ? await getVendorBannersBySlug(storeSlug)
+        : await getBanners();
+
+      if (!result.success) throw new Error(result.error || "Fetch failed");
+
       set({
-        banners: mapUrlsToBannerItems(result.urls),
+        banners: (result.urls || []).map(url => ({ url })),
         isLoading: false,
         error: null,
+        lastFetched: Date.now(),
       });
     } catch (error) {
       set({
@@ -115,20 +109,31 @@ export const useBannerStore = create<BannerStore>(set => ({
   },
 }));
 
-// Export the selector hooks
-export const useBanners = () => useBannerStore(state => state.banners);
-export const useBannerLoading = () => useBannerStore(state => state.isLoading);
-export const useBannerError = () => useBannerStore(state => state.error);
+// Memoized selector hooks
+export const useBanners = () => {
+  const banners = useBannerStore(state => state.banners);
+  return banners;
+};
+
+export const useBannerLoading = () => {
+  const isLoading = useBannerStore(state => state.isLoading);
+  return isLoading;
+};
+
+export const useBannerError = () => {
+  const error = useBannerStore(state => state.error);
+  return error;
+};
 
 export const useBannerData = (storeSlug?: string) => {
   const fetchBanners = useBannerStore(state => state.fetchBanners);
-  const fetchVendorBanners = useBannerStore(state => state.fetchVendorBanners);
+
+  // Use useCallback to memoize the effect
+  const memoizedFetch = useCallback(() => {
+    fetchBanners(storeSlug);
+  }, [storeSlug, fetchBanners]);
 
   useEffect(() => {
-    if (storeSlug) {
-      fetchVendorBanners(storeSlug);
-    } else {
-      fetchBanners();
-    }
-  }, [storeSlug, fetchBanners, fetchVendorBanners]);
+    memoizedFetch();
+  }, [memoizedFetch]);
 };

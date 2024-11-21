@@ -1,14 +1,13 @@
-// _store/BestSellerStore.ts
 "use client";
 
 import { create } from "zustand";
+import { useCallback, useEffect } from "react";
 import {
   uploadBestSeller as uploadBestSellerAction,
   removeBestSeller as removeBestSellerAction,
   getBestSellers,
   getVendorBestSellersBySlug,
 } from "../_actions/best_seller-actions";
-import { useEffect } from "react";
 
 export interface BestSellerItem {
   url: string;
@@ -19,27 +18,34 @@ interface BestSellerStore {
   bestSellers: BestSellerItem[];
   isLoading: boolean;
   error: string | null;
-  // Match the component usage with upload/remove
-  upload: (formData: FormData) => Promise<void>;
-  remove: (url: string) => Promise<void>;
-  fetchBestSellers: () => Promise<void>;
-  fetchVendorBestSellers: (storeSlug: string) => Promise<void>;
+  lastFetched: number;
 }
 
-export const useBestSellerStore = create<BestSellerStore>(set => ({
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+export const useBestSellerStore = create<
+  BestSellerStore & {
+    upload: (formData: FormData) => Promise<void>;
+    remove: (url: string) => Promise<void>;
+    fetchBestSellers: (storeSlug?: string) => Promise<void>;
+  }
+>((set, get) => ({
   bestSellers: [],
   isLoading: false,
   error: null,
+  lastFetched: 0,
 
   upload: async (formData: FormData) => {
     set({ isLoading: true, error: null });
     try {
       const result = await uploadBestSellerAction(formData);
-      if (!result.success) throw new Error(result.error);
+      if (!result.success) throw new Error(result.error || "Upload failed");
+
       set({
         bestSellers: result.urls || [],
         isLoading: false,
         error: null,
+        lastFetched: Date.now(),
       });
     } catch (error) {
       set({
@@ -54,11 +60,13 @@ export const useBestSellerStore = create<BestSellerStore>(set => ({
     set({ isLoading: true, error: null });
     try {
       const result = await removeBestSellerAction(url);
-      if (!result.success) throw new Error(result.error);
+      if (!result.success) throw new Error(result.error || "Remove failed");
+
       set({
         bestSellers: result.urls || [],
         isLoading: false,
         error: null,
+        lastFetched: Date.now(),
       });
     } catch (error) {
       set({
@@ -69,33 +77,29 @@ export const useBestSellerStore = create<BestSellerStore>(set => ({
     }
   },
 
-  fetchBestSellers: async () => {
-    set({ isLoading: true, error: null });
-    try {
-      const result = await getBestSellers();
-      if (!result.success) throw new Error(result.error);
-      set({
-        bestSellers: result.urls || [],
-        isLoading: false,
-        error: null,
-      });
-    } catch (error) {
-      set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : "Fetch failed",
-      });
-    }
-  },
+  fetchBestSellers: async (storeSlug?: string) => {
+    const { lastFetched, isLoading } = get();
 
-  fetchVendorBestSellers: async (storeSlug: string) => {
+    // Prevent multiple simultaneous fetches
+    if (isLoading) return;
+
+    // Check if data is fresh
+    if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) return;
+
     set({ isLoading: true, error: null });
+
     try {
-      const result = await getVendorBestSellersBySlug(storeSlug);
-      if (!result.success) throw new Error(result.error);
+      const result = storeSlug
+        ? await getVendorBestSellersBySlug(storeSlug)
+        : await getBestSellers();
+
+      if (!result.success) throw new Error(result.error || "Fetch failed");
+
       set({
         bestSellers: result.urls || [],
         isLoading: false,
         error: null,
+        lastFetched: Date.now(),
       });
     } catch (error) {
       set({
@@ -106,25 +110,31 @@ export const useBestSellerStore = create<BestSellerStore>(set => ({
   },
 }));
 
-// Selector hooks that match your component usage
-export const useBestSellers = () =>
-  useBestSellerStore(state => state.bestSellers);
-export const useBestSellerLoading = () =>
-  useBestSellerStore(state => state.isLoading);
-export const useBestSellerError = () =>
-  useBestSellerStore(state => state.error);
+// Memoized selector hooks
+export const useBestSellers = () => {
+  const bestSellers = useBestSellerStore(state => state.bestSellers);
+  return bestSellers;
+};
+
+export const useBestSellerLoading = () => {
+  const isLoading = useBestSellerStore(state => state.isLoading);
+  return isLoading;
+};
+
+export const useBestSellerError = () => {
+  const error = useBestSellerStore(state => state.error);
+  return error;
+};
 
 export const useBestSellerData = (storeSlug?: string) => {
   const fetchBestSellers = useBestSellerStore(state => state.fetchBestSellers);
-  const fetchVendorBestSellers = useBestSellerStore(
-    state => state.fetchVendorBestSellers
-  );
+
+  // Use useCallback to memoize the effect
+  const memoizedFetch = useCallback(() => {
+    fetchBestSellers(storeSlug);
+  }, [storeSlug, fetchBestSellers]);
 
   useEffect(() => {
-    if (storeSlug) {
-      fetchVendorBestSellers(storeSlug);
-    } else {
-      fetchBestSellers();
-    }
-  }, [storeSlug, fetchBestSellers, fetchVendorBestSellers]);
+    memoizedFetch();
+  }, [memoizedFetch]);
 };
