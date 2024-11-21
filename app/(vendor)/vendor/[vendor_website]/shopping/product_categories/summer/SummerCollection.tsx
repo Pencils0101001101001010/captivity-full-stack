@@ -118,7 +118,7 @@ const VendorSummerCollection: React.FC = () => {
               <h3 className="font-medium text-lg mb-1 line-clamp-1">
                 {product.productName}
               </h3>
-              <p className="text-muted-foreground mb-1 text-sm line-clamp-2">
+              <p className="text-muted-foreground mb-1 text-sm line-clamp-1">
                 {product.description}
               </p>
               <p className="font-bold text-lg mb-2">

@@ -251,7 +251,7 @@ const VendorCartSidebar = ({
               Checkout
             </Link>
             <Link
-              href={`/vendor/${vendorWebsite}/shopping/cart`}
+              href={`/vendor/${vendorWebsite}/shop_product/cart`}
               className={cn(
                 "block w-full bg-secondary text-secondary-foreground text-center py-2.5 sm:py-3 rounded-md",
                 "hover:bg-secondary/90 transition-colors",
