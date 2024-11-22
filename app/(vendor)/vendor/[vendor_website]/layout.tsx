@@ -2,7 +2,6 @@
 import type { Metadata } from "next";
 import { validateRequest } from "@/auth";
 import React from "react";
-import Footer from "./_components/Footer";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -31,7 +30,6 @@ export default async function VendorWebsiteLayout({
   return (
     <>
       <div className="max-w-[1903px] mx-auto px-4">{children}</div>
-      <Footer />
     </>
   );
 }

@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import SessionProvider from "../SessionProvider";
 import Navbar from "../_components/Navbar";
 import { unstable_noStore as noStore } from "next/cache";
+import Footer from "./[vendor_website]/_components/Footer";
 
 // Only the top-level vendor layout should be dynamic
 export const dynamic = "force-dynamic";
@@ -33,9 +34,8 @@ export default async function VendorLayout({
       <Toaster />
       <div className="flex min-h-screen flex-col">
         <Navbar />
-        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          {children}
-        </main>
+        <main>{children}</main>
+        <Footer />
       </div>
     </SessionProvider>
   );

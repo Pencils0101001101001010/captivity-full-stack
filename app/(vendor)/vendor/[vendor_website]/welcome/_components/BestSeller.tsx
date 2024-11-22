@@ -105,7 +105,7 @@ const EmptyBlock = memo(
               className="w-full p-2 mb-2 rounded border border-gray-400 text-center text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
             />
             {!productName.trim() && (
-              <div className="absolute -top-2 right-2 transform translate-y-[-50%]">
+              <div className="absolute line-clamp-1 hover:line-clamp-none -top-2 right-2 transform translate-y-[-50%]">
                 <span className="text-[10px] text-red-500 bg-white px-1">
                   Required
                 </span>
