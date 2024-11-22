@@ -119,7 +119,7 @@ const Navbar = () => {
 
   return (
     <div className="sticky top-0 z-50">
-      <nav className="bg-black text-white">
+      <nav className="bg-black text-white p-2">
         <div className="mx-auto w-full py-4 px-4 md:px-8">
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center justify-between">
