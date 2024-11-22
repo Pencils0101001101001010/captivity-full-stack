@@ -13,7 +13,7 @@ import { useSession } from "@/app/(vendor)/SessionProvider";
 
 const ITEMS_PER_PAGE = 4;
 
-const VendorSummerCollection: React.FC = () => {
+const VendorAfricanCollection: React.FC = () => {
   const params = useParams();
   const vendorWebsite = params?.vendor_website as string;
   const { user } = useSession();
@@ -56,7 +56,7 @@ const VendorSummerCollection: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        Loading summer collection...
+        Loading African collection...
       </div>
     );
   }
@@ -69,15 +69,15 @@ const VendorSummerCollection: React.FC = () => {
     );
   }
 
-  if (!collections?.summer || collections.summer.length === 0) {
+  if (!collections?.african || collections.african.length === 0) {
     return (
       <div className="text-center py-8">
         <h2 className="text-2xl font-bold text-foreground">
-          No products found in summer collection.
+          No products found in African collection.
         </h2>
         {user?.role === "VENDOR" && (
           <p className="text-muted-foreground mt-2">
-            Add some summer products to see them here.
+            Add some African products to see them here.
           </p>
         )}
       </div>
@@ -87,11 +87,11 @@ const VendorSummerCollection: React.FC = () => {
   // Pagination calculations
   const totalPages = Math.max(
     1,
-    Math.ceil(collections.summer.length / ITEMS_PER_PAGE)
+    Math.ceil(collections.african.length / ITEMS_PER_PAGE)
   );
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
-  const currentProducts = collections.summer.slice(
+  const currentProducts = collections.african.slice(
     startIndex,
     startIndex + ITEMS_PER_PAGE
   );
@@ -193,11 +193,11 @@ const VendorSummerCollection: React.FC = () => {
 
       <div className="text-sm text-muted-foreground text-center mt-4">
         Showing {startIndex + 1}-
-        {Math.min(startIndex + ITEMS_PER_PAGE, collections.summer.length)} of{" "}
-        {collections.summer.length} products
+        {Math.min(startIndex + ITEMS_PER_PAGE, collections.african.length)} of{" "}
+        {collections.african.length} products
       </div>
     </div>
   );
 };
 
-export default VendorSummerCollection;
+export default VendorAfricanCollection;
