@@ -172,7 +172,7 @@ const Navbar = () => {
 
           {/* Mobile Navigation */}
           <div className="md:hidden">
-            <div className="flex gap-3">
+            <div className="flex gap-1">
               <LogoSection
                 logoUrl={logoUrl}
                 isLogoLoading={isLogoLoading}
@@ -187,7 +187,7 @@ const Navbar = () => {
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
               />
-              <div className="flex items-center gap-3">
+              <div className="flex gap-3">
                 <button
                   onClick={() => setShowMobileSearch(!showMobileSearch)}
                   className="p-2 hover:bg-gray-800 rounded-full transition-colors"
