@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   uploadLogo,
   removeLogo,
@@ -17,6 +17,7 @@ interface LogoState {
   error: string | null;
   lastFetched: number;
   isHydrated: boolean;
+  initialized: boolean;
 }
 
 interface LogoActions {
@@ -25,20 +26,26 @@ interface LogoActions {
   fetchLogo: (vendorWebsite?: string) => Promise<void>;
   setLogo: (url: string | null) => void;
   setHydrated: (state: boolean) => void;
+  reset: () => void;
 }
 
 type LogoStore = LogoState & LogoActions;
 
 const CACHE_DURATION = 365 * 24 * 60 * 60 * 1000; // 1 year
 
+const initialState: LogoState = {
+  logoUrl: null,
+  isLoading: false,
+  error: null,
+  lastFetched: 0,
+  isHydrated: false,
+  initialized: false,
+};
+
 export const useLogoStore = create<LogoStore>()(
   persist(
     (set, get) => ({
-      logoUrl: null,
-      isLoading: false,
-      error: null,
-      lastFetched: 0,
-      isHydrated: false,
+      ...initialState,
 
       setHydrated: (state: boolean) => set({ isHydrated: state }),
 
@@ -46,16 +53,27 @@ export const useLogoStore = create<LogoStore>()(
         set({ logoUrl: url, lastFetched: Date.now() });
       },
 
+      reset: () => {
+        const { isLoading } = get();
+        if (isLoading) return;
+        set(initialState);
+      },
+
       upload: async (formData: FormData) => {
+        const { isLoading } = get();
+        if (isLoading) return;
+
         set({ isLoading: true, error: null });
         try {
           const result = await uploadLogo(formData);
           if (!result.success) throw new Error(result.error || "Upload failed");
+
           set({
             logoUrl: result.url || null,
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
@@ -67,15 +85,20 @@ export const useLogoStore = create<LogoStore>()(
       },
 
       remove: async () => {
+        const { isLoading } = get();
+        if (isLoading) return;
+
         set({ isLoading: true, error: null });
         try {
           const result = await removeLogo();
           if (!result.success) throw new Error(result.error || "Remove failed");
+
           set({
             logoUrl: null,
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
@@ -87,11 +110,16 @@ export const useLogoStore = create<LogoStore>()(
       },
 
       fetchLogo: async (vendorWebsite?: string) => {
-        const { isLoading, lastFetched } = get();
-        if (isLoading) return;
+        const { isLoading, lastFetched, initialized, isHydrated } = get();
 
-        // Check if cache is still valid
-        if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) {
+        // Don't fetch if not hydrated, loading, or cache is still valid
+        if (
+          !isHydrated ||
+          isLoading ||
+          (initialized &&
+            lastFetched &&
+            Date.now() - lastFetched < CACHE_DURATION)
+        ) {
           return;
         }
 
@@ -109,6 +137,7 @@ export const useLogoStore = create<LogoStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
@@ -125,6 +154,7 @@ export const useLogoStore = create<LogoStore>()(
       partialize: state => ({
         logoUrl: state.logoUrl,
         lastFetched: state.lastFetched,
+        initialized: state.initialized,
       }),
       onRehydrateStorage: () => state => {
         state?.setHydrated(true);
@@ -138,21 +168,27 @@ export const useLogo = () => useLogoStore(state => state.logoUrl);
 export const useLogoLoading = () => useLogoStore(state => state.isLoading);
 export const useLogoError = () => useLogoStore(state => state.error);
 export const useLogoHydrated = () => useLogoStore(state => state.isHydrated);
+export const useLogoInitialized = () =>
+  useLogoStore(state => state.initialized);
 
 export const useLogoData = (vendorWebsite?: string) => {
   const fetchLogo = useLogoStore(state => state.fetchLogo);
   const logoUrl = useLogo();
   const isHydrated = useLogoHydrated();
+  const initialized = useLogoInitialized();
   const lastFetched = useLogoStore(state => state.lastFetched);
 
   useEffect(() => {
+    // Only fetch if hydrated and either not initialized or cache expired
     if (
       isHydrated &&
-      (!logoUrl || !lastFetched || Date.now() - lastFetched >= CACHE_DURATION)
+      (!initialized ||
+        !lastFetched ||
+        Date.now() - lastFetched >= CACHE_DURATION)
     ) {
       fetchLogo(vendorWebsite);
     }
-  }, [isHydrated, logoUrl, lastFetched, fetchLogo, vendorWebsite]);
+  }, [isHydrated, initialized, lastFetched, fetchLogo, vendorWebsite]);
 
   return {
     logoUrl,
