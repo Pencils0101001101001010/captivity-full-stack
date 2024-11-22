@@ -1,22 +1,16 @@
 "use client";
 
-import React, { useEffect, useCallback, useState } from "react";
+import React, { useState } from "react";
 import { useSession } from "@/app/(vendor)/SessionProvider";
 import { Pencil, Save, X, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
 import {
   OpeningHoursInfo,
-  useOpeningHoursStore,
+  useOpeningHoursData,
 } from "../../welcome/_store/tradingHoursStore";
 
-type OpeningHoursFormData = {
-  city: string;
-  mondayToThursday: string;
-  friday: string;
-  saturdaySunday: string;
-  publicHolidays: string;
-};
+type OpeningHoursFormData = Omit<OpeningHoursInfo, "id" | "userSettingsId">;
 
 interface RenderOpeningHoursProps {
   hours: OpeningHoursInfo;
@@ -172,22 +166,12 @@ const OpeningHours: React.FC = () => {
   const vendorWebsite =
     typeof params?.vendor_website === "string" ? params.vendor_website : "";
 
-  const {
-    openingHours,
-    isLoading,
-    error,
-    initialized,
-    fetchOpeningHours,
-    fetchVendorOpeningHours,
-    updateOpeningHour,
-    createOpeningHour,
-    deleteOpeningHour,
-  } = useOpeningHoursStore();
+  const { openingHours, isLoading, error, update, create, remove } =
+    useOpeningHoursData(vendorWebsite);
 
   const [isEditing, setIsEditing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | undefined>(undefined);
-
   const [formData, setFormData] = useState<OpeningHoursFormData>({
     city: "",
     mondayToThursday: "",
@@ -196,31 +180,7 @@ const OpeningHours: React.FC = () => {
     publicHolidays: "",
   });
 
-  const initializeData = useCallback(async () => {
-    if (!user || initialized) return;
-
-    try {
-      if (user.role === "VENDOR") {
-        await fetchOpeningHours();
-      } else if (user.role === "VENDORCUSTOMER" && vendorWebsite) {
-        await fetchVendorOpeningHours(vendorWebsite);
-      }
-    } catch (error) {
-      console.error("Error initializing data:", error);
-    }
-  }, [
-    user,
-    vendorWebsite,
-    initialized,
-    fetchOpeningHours,
-    fetchVendorOpeningHours,
-  ]);
-
-  useEffect(() => {
-    initializeData();
-  }, [initializeData]);
-
-  useEffect(() => {
+  React.useEffect(() => {
     if (error) {
       toast.error(error);
     }
@@ -271,10 +231,10 @@ const OpeningHours: React.FC = () => {
     e.preventDefault();
     try {
       if (editingId) {
-        await updateOpeningHour(editingId, formData);
+        await update(editingId, formData);
         toast.success("Opening hours updated successfully");
       } else {
-        await createOpeningHour(formData);
+        await create(formData);
         toast.success("Opening hours added successfully");
       }
       handleCancel();
@@ -291,7 +251,7 @@ const OpeningHours: React.FC = () => {
       window.confirm("Are you sure you want to delete these opening hours?")
     ) {
       try {
-        await deleteOpeningHour(id);
+        await remove(id);
         toast.success("Opening hours deleted successfully");
       } catch (error) {
         toast.error("Failed to delete opening hours");
@@ -332,7 +292,7 @@ const OpeningHours: React.FC = () => {
       )}
 
       <div className="space-y-4">
-        {openingHours.map((hours: OpeningHoursInfo) => (
+        {openingHours?.map((hours: OpeningHoursInfo) => (
           <div key={hours.id}>
             {editingId === hours.id ? (
               <RenderForm
@@ -353,7 +313,7 @@ const OpeningHours: React.FC = () => {
         ))}
       </div>
 
-      {!openingHours.length && !showAddForm && (
+      {(!openingHours || openingHours.length === 0) && !showAddForm && (
         <div className="text-center py-8 bg-gray-800 rounded-lg">
           <p className="text-gray-400">
             {user?.role === "VENDOR"

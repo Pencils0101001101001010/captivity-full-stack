@@ -1,6 +1,8 @@
+"use client";
+
 import { create } from "zustand";
-import { persist, createJSONStorage, PersistOptions } from "zustand/middleware";
-import { useCallback, useEffect } from "react";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { useEffect, useState } from "react";
 import {
   uploadLogo,
   removeLogo,
@@ -8,8 +10,6 @@ import {
   getVendorLogoBySlug,
   type LogoActionResult,
 } from "@/app/(vendor)/actions";
-
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 interface LogoState {
   logoUrl: string | null;
@@ -28,32 +28,17 @@ interface LogoActions {
 }
 
 type LogoStore = LogoState & LogoActions;
-type LogoStorePersist = Pick<LogoStore, "logoUrl" | "lastFetched">;
 
-const initialState: LogoState = {
-  logoUrl: null,
-  isLoading: false,
-  error: null,
-  lastFetched: 0,
-  isHydrated: false,
-};
-
-const persistOptions: PersistOptions<LogoStore, LogoStorePersist> = {
-  name: "vendor-logo-storage",
-  storage: createJSONStorage(() => localStorage),
-  partialize: state => ({
-    logoUrl: state.logoUrl,
-    lastFetched: state.lastFetched,
-  }),
-  onRehydrateStorage: () => state => {
-    state?.setHydrated(true);
-  },
-};
+const CACHE_DURATION = 365 * 24 * 60 * 60 * 1000; // 1 year
 
 export const useLogoStore = create<LogoStore>()(
   persist(
     (set, get) => ({
-      ...initialState,
+      logoUrl: null,
+      isLoading: false,
+      error: null,
+      lastFetched: 0,
+      isHydrated: false,
 
       setHydrated: (state: boolean) => set({ isHydrated: state }),
 
@@ -66,7 +51,6 @@ export const useLogoStore = create<LogoStore>()(
         try {
           const result = await uploadLogo(formData);
           if (!result.success) throw new Error(result.error || "Upload failed");
-
           set({
             logoUrl: result.url || null,
             isLoading: false,
@@ -87,7 +71,6 @@ export const useLogoStore = create<LogoStore>()(
         try {
           const result = await removeLogo();
           if (!result.success) throw new Error(result.error || "Remove failed");
-
           set({
             logoUrl: null,
             isLoading: false,
@@ -104,15 +87,10 @@ export const useLogoStore = create<LogoStore>()(
       },
 
       fetchLogo: async (vendorWebsite?: string) => {
-        const { lastFetched, isLoading, isHydrated } = get();
-
-        // Don't fetch if not hydrated yet
-        if (!isHydrated) return;
-
-        // Don't fetch if already loading
+        const { isLoading, lastFetched } = get();
         if (isLoading) return;
 
-        // Check cache
+        // Check if cache is still valid
         if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) {
           return;
         }
@@ -136,15 +114,26 @@ export const useLogoStore = create<LogoStore>()(
           set({
             isLoading: false,
             error: error instanceof Error ? error.message : "Fetch failed",
+            lastFetched: Date.now(),
           });
         }
       },
     }),
-    persistOptions
+    {
+      name: "vendor-logo-storage",
+      storage: createJSONStorage(() => localStorage),
+      partialize: state => ({
+        logoUrl: state.logoUrl,
+        lastFetched: state.lastFetched,
+      }),
+      onRehydrateStorage: () => state => {
+        state?.setHydrated(true);
+      },
+    }
   )
 );
 
-// Selector hooks for better performance
+// Selector hooks
 export const useLogo = () => useLogoStore(state => state.logoUrl);
 export const useLogoLoading = () => useLogoStore(state => state.isLoading);
 export const useLogoError = () => useLogoStore(state => state.error);
@@ -152,22 +141,21 @@ export const useLogoHydrated = () => useLogoStore(state => state.isHydrated);
 
 export const useLogoData = (vendorWebsite?: string) => {
   const fetchLogo = useLogoStore(state => state.fetchLogo);
-  const lastFetched = useLogoStore(state => state.lastFetched);
   const logoUrl = useLogo();
   const isHydrated = useLogoHydrated();
+  const lastFetched = useLogoStore(state => state.lastFetched);
 
   useEffect(() => {
-    // Only fetch if store is hydrated and we either don't have a logo or cache is expired
     if (
       isHydrated &&
       (!logoUrl || !lastFetched || Date.now() - lastFetched >= CACHE_DURATION)
     ) {
       fetchLogo(vendorWebsite);
     }
-  }, [fetchLogo, lastFetched, logoUrl, vendorWebsite, isHydrated]);
+  }, [isHydrated, logoUrl, lastFetched, fetchLogo, vendorWebsite]);
 
   return {
-    logoUrl: useLogo(),
+    logoUrl,
     isLoading: useLogoLoading(),
     error: useLogoError(),
     upload: useLogoStore(state => state.upload),

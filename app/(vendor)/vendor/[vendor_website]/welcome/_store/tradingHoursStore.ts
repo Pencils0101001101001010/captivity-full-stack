@@ -1,6 +1,8 @@
 "use client";
 
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { useEffect } from "react";
 import {
   createOpeningHours,
   deleteOpeningHours,
@@ -8,7 +10,6 @@ import {
   getVendorOpeningHoursBySlug,
   updateOpeningHours,
 } from "../_actions/tradingHours-actions";
-import React from "react";
 
 export interface OpeningHoursInfo {
   id: string;
@@ -22,226 +23,237 @@ export interface OpeningHoursInfo {
 
 type OpeningHoursFormData = Omit<OpeningHoursInfo, "id" | "userSettingsId">;
 
-interface OpeningHoursStore {
+interface OpeningHoursState {
   openingHours: OpeningHoursInfo[];
   isLoading: boolean;
   error: string | null;
-  initialized: boolean;
-  isFetching: boolean;
+  lastFetched: number;
+  isHydrated: boolean;
 }
 
-const initialState = {
+interface OpeningHoursActions {
+  update: (id: string, data: OpeningHoursFormData) => Promise<void>;
+  create: (data: OpeningHoursFormData) => Promise<void>;
+  remove: (id: string) => Promise<void>;
+  fetchOpeningHours: (vendorWebsite?: string) => Promise<void>;
+  setOpeningHours: (openingHours: OpeningHoursInfo[]) => void;
+  setHydrated: (state: boolean) => void;
+  reset: () => void;
+}
+
+type OpeningHoursStore = OpeningHoursState & OpeningHoursActions;
+
+const CACHE_DURATION = 365 * 24 * 60 * 60 * 1000; // 1 year
+
+const initialState: OpeningHoursState = {
   openingHours: [],
   isLoading: false,
   error: null,
-  initialized: false,
-  isFetching: false,
+  lastFetched: 0,
+  isHydrated: false,
 };
 
-export const useOpeningHoursStore = create<
-  OpeningHoursStore & {
-    updateOpeningHour: (
-      id: string,
-      data: OpeningHoursFormData
-    ) => Promise<void>;
-    createOpeningHour: (data: OpeningHoursFormData) => Promise<void>;
-    deleteOpeningHour: (id: string) => Promise<void>;
-    fetchOpeningHours: () => Promise<void>;
-    fetchVendorOpeningHours: (vendorWebsite: string) => Promise<void>;
-    reset: () => void;
-  }
->((set, get) => ({
-  ...initialState,
+export const useOpeningHoursStore = create<OpeningHoursStore>()(
+  persist(
+    (set, get) => ({
+      ...initialState,
 
-  reset: () => {
-    const { isLoading, isFetching } = get();
-    if (isLoading || isFetching) return;
-    set(initialState);
-  },
+      setHydrated: (state: boolean) => set({ isHydrated: state }),
 
-  fetchOpeningHours: async () => {
-    const { isFetching, initialized } = get();
-    if (isFetching || initialized) return;
+      setOpeningHours: (openingHours: OpeningHoursInfo[]) => {
+        set({ openingHours, lastFetched: Date.now() });
+      },
 
-    set({ isFetching: true, isLoading: true, error: null });
+      reset: () => {
+        const { isLoading } = get();
+        if (isLoading) return;
+        set(initialState);
+      },
 
-    try {
-      const result = await getOpeningHours();
-      if (!result.success) throw new Error(result.error);
+      update: async (id: string, data: OpeningHoursFormData) => {
+        const { isLoading } = get();
+        if (isLoading) return;
 
-      set({
-        openingHours: result.data || [],
-        initialized: true,
-        isLoading: false,
-        isFetching: false,
-        error: null,
-      });
-    } catch (error) {
-      set({
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch opening hours",
-        isLoading: false,
-        isFetching: false,
-      });
+        set({ isLoading: true, error: null });
+        try {
+          const result = await updateOpeningHours(id, data);
+          if (!result.success) throw new Error(result.error || "Update failed");
+
+          // Ensure we always have an array of OpeningHoursInfo
+          const updatedData = Array.isArray(result.data)
+            ? result.data
+            : result.data
+              ? [result.data]
+              : [];
+
+          set({
+            openingHours: updatedData,
+            isLoading: false,
+            error: null,
+            lastFetched: Date.now(),
+          });
+        } catch (error) {
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : "Update failed",
+          });
+          throw error;
+        }
+      },
+
+      create: async (data: OpeningHoursFormData) => {
+        const { isLoading } = get();
+        if (isLoading) return;
+
+        set({ isLoading: true, error: null });
+        try {
+          const result = await createOpeningHours(data);
+          if (!result.success)
+            throw new Error(result.error || "Creation failed");
+
+          // Ensure we always have an array of OpeningHoursInfo
+          const newData = Array.isArray(result.data)
+            ? result.data
+            : result.data
+              ? [result.data]
+              : [];
+
+          set({
+            openingHours: newData,
+            isLoading: false,
+            error: null,
+            lastFetched: Date.now(),
+          });
+        } catch (error) {
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : "Creation failed",
+          });
+          throw error;
+        }
+      },
+
+      remove: async (id: string) => {
+        const { isLoading } = get();
+        if (isLoading) return;
+
+        set({ isLoading: true, error: null });
+        try {
+          const result = await deleteOpeningHours(id);
+          if (!result.success)
+            throw new Error(result.error || "Deletion failed");
+
+          // Ensure we always have an array
+          const remainingData = Array.isArray(result.data) ? result.data : [];
+
+          set({
+            openingHours: remainingData,
+            isLoading: false,
+            error: null,
+            lastFetched: Date.now(),
+          });
+        } catch (error) {
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : "Deletion failed",
+          });
+          throw error;
+        }
+      },
+
+      fetchOpeningHours: async (vendorWebsite?: string) => {
+        const { isLoading, lastFetched, isHydrated } = get();
+
+        // Don't fetch if not hydrated, loading, or cache is still valid
+        if (
+          !isHydrated ||
+          isLoading ||
+          (lastFetched && Date.now() - lastFetched < CACHE_DURATION)
+        ) {
+          return;
+        }
+
+        set({ isLoading: true, error: null });
+        try {
+          const result = vendorWebsite
+            ? await getVendorOpeningHoursBySlug(vendorWebsite)
+            : await getOpeningHours();
+
+          if (!result.success) throw new Error(result.error || "Fetch failed");
+
+          // Ensure we always have an array
+          const fetchedData = Array.isArray(result.data) ? result.data : [];
+
+          set({
+            openingHours: fetchedData,
+            isLoading: false,
+            error: null,
+            lastFetched: Date.now(),
+          });
+        } catch (error) {
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : "Fetch failed",
+          });
+        }
+      },
+    }),
+    {
+      name: "vendor-opening-hours-storage",
+      storage: createJSONStorage(() => localStorage),
+      partialize: state => ({
+        openingHours: state.openingHours,
+        lastFetched: state.lastFetched,
+      }),
+      onRehydrateStorage: () => state => {
+        state?.setHydrated(true);
+      },
     }
-  },
+  )
+);
 
-  fetchVendorOpeningHours: async (vendorWebsite: string) => {
-    const { isFetching, initialized } = get();
-    if (isFetching || initialized) return;
-
-    set({ isFetching: true, isLoading: true, error: null });
-
-    try {
-      const result = await getVendorOpeningHoursBySlug(vendorWebsite);
-      if (!result.success) throw new Error(result.error);
-
-      set({
-        openingHours: result.data || [],
-        initialized: true,
-        isLoading: false,
-        isFetching: false,
-        error: null,
-      });
-    } catch (error) {
-      set({
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch vendor opening hours",
-        isLoading: false,
-        isFetching: false,
-      });
-    }
-  },
-
-  updateOpeningHour: async (id: string, data: OpeningHoursFormData) => {
-    const { isLoading } = get();
-    if (isLoading) return;
-
-    set({ isLoading: true, error: null });
-    try {
-      const result = await updateOpeningHours(id, data);
-      if (!result.success) throw new Error(result.error);
-
-      set({
-        openingHours: result.data,
-        isLoading: false,
-        error: null,
-      });
-    } catch (error) {
-      set({
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to update opening hours",
-        isLoading: false,
-      });
-      throw error;
-    }
-  },
-
-  createOpeningHour: async (data: OpeningHoursFormData) => {
-    const { isLoading } = get();
-    if (isLoading) return;
-
-    set({ isLoading: true, error: null });
-    try {
-      const result = await createOpeningHours(data);
-      if (!result.success) throw new Error(result.error);
-
-      set({
-        openingHours: result.data,
-        isLoading: false,
-        error: null,
-      });
-    } catch (error) {
-      set({
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to create opening hours",
-        isLoading: false,
-      });
-      throw error;
-    }
-  },
-
-  deleteOpeningHour: async (id: string) => {
-    const { isLoading } = get();
-    if (isLoading) return;
-
-    set({ isLoading: true, error: null });
-    try {
-      const result = await deleteOpeningHours(id);
-      if (!result.success) throw new Error(result.error);
-
-      set({
-        openingHours: result.data,
-        isLoading: false,
-        error: null,
-      });
-    } catch (error) {
-      set({
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to delete opening hours",
-        isLoading: false,
-      });
-      throw error;
-    }
-  },
-}));
+// Selector hooks
+export const useOpeningHours = () =>
+  useOpeningHoursStore(state => state.openingHours);
+export const useOpeningHoursLoading = () =>
+  useOpeningHoursStore(state => state.isLoading);
+export const useOpeningHoursError = () =>
+  useOpeningHoursStore(state => state.error);
+export const useOpeningHoursHydrated = () =>
+  useOpeningHoursStore(state => state.isHydrated);
 
 export const useOpeningHoursData = (vendorWebsite?: string) => {
-  const openingHours = useOpeningHoursStore(state => state.openingHours);
-  const isLoading = useOpeningHoursStore(
-    state => state.isLoading || state.isFetching
-  );
-  const error = useOpeningHoursStore(state => state.error);
-  const initialized = useOpeningHoursStore(state => state.initialized);
   const fetchOpeningHours = useOpeningHoursStore(
     state => state.fetchOpeningHours
   );
-  const fetchVendorOpeningHours = useOpeningHoursStore(
-    state => state.fetchVendorOpeningHours
-  );
-  const reset = useOpeningHoursStore(state => state.reset);
+  const openingHours = useOpeningHours();
+  const isHydrated = useOpeningHoursHydrated();
+  const lastFetched = useOpeningHoursStore(state => state.lastFetched);
 
-  React.useEffect(() => {
-    if (!initialized) {
-      if (vendorWebsite) {
-        fetchVendorOpeningHours(vendorWebsite);
-      } else {
-        fetchOpeningHours();
-      }
+  useEffect(() => {
+    // Only fetch if hydrated and either no data or cache expired
+    if (
+      isHydrated &&
+      (!openingHours.length ||
+        !lastFetched ||
+        Date.now() - lastFetched >= CACHE_DURATION)
+    ) {
+      fetchOpeningHours(vendorWebsite);
     }
-
-    return () => {
-      if (vendorWebsite) {
-        reset();
-      }
-    };
   }, [
-    vendorWebsite,
-    initialized,
+    isHydrated,
+    openingHours.length,
+    lastFetched,
     fetchOpeningHours,
-    fetchVendorOpeningHours,
-    reset,
+    vendorWebsite,
   ]);
 
   return {
     openingHours,
-    isLoading,
-    error,
-    initialized,
-    fetchOpeningHours,
-    fetchVendorOpeningHours,
-    updateOpeningHour: useOpeningHoursStore(state => state.updateOpeningHour),
-    createOpeningHour: useOpeningHoursStore(state => state.createOpeningHour),
-    deleteOpeningHour: useOpeningHoursStore(state => state.deleteOpeningHour),
+    isLoading: useOpeningHoursLoading(),
+    error: useOpeningHoursError(),
+    update: useOpeningHoursStore(state => state.update),
+    create: useOpeningHoursStore(state => state.create),
+    remove: useOpeningHoursStore(state => state.remove),
   };
 };

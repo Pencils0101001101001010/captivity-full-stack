@@ -1,5 +1,7 @@
+"use client";
+
 import { create } from "zustand";
-import { persist, PersistOptions } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { useEffect } from "react";
 import {
   getContactInfo,
@@ -20,58 +22,57 @@ export interface ContactInfo {
 
 type ContactFormData = Omit<ContactInfo, "id" | "userSettingsId">;
 
-interface ContactStore {
+interface ContactState {
   contacts: ContactInfo[];
   isLoading: boolean;
   error: string | null;
   lastFetched: number;
-  currentFetch: AbortController | null;
-  isFetching: boolean;
+  isHydrated: boolean;
+}
+
+interface ContactActions {
   update: (id: string, data: ContactFormData) => Promise<void>;
   create: (data: ContactFormData) => Promise<void>;
   remove: (id: string) => Promise<void>;
   fetchContacts: (vendorWebsite?: string) => Promise<void>;
+  setContacts: (contacts: ContactInfo[]) => void;
+  setHydrated: (state: boolean) => void;
   reset: () => void;
 }
 
-type ContactStorePersist = Pick<ContactStore, "contacts" | "lastFetched">;
+type ContactStore = ContactState & ContactActions;
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 365 * 24 * 60 * 60 * 1000; // 1 year
 
-const persistOptions: PersistOptions<ContactStore, ContactStorePersist> = {
-  name: "contact-store",
-  partialize: state => ({
-    contacts: state.contacts,
-    lastFetched: state.lastFetched,
-  }),
+const initialState: ContactState = {
+  contacts: [],
+  isLoading: false,
+  error: null,
+  lastFetched: 0,
+  isHydrated: false,
 };
 
 export const useContactStore = create<ContactStore>()(
   persist(
     (set, get) => ({
-      contacts: [],
-      isLoading: false,
-      error: null,
-      lastFetched: 0,
-      currentFetch: null,
-      isFetching: false,
+      ...initialState,
+
+      setHydrated: (state: boolean) => set({ isHydrated: state }),
+
+      setContacts: (contacts: ContactInfo[]) => {
+        set({ contacts, lastFetched: Date.now() });
+      },
 
       reset: () => {
-        const { currentFetch } = get();
-        if (currentFetch) {
-          currentFetch.abort();
-        }
-        set({
-          contacts: [],
-          isLoading: false,
-          error: null,
-          lastFetched: 0,
-          currentFetch: null,
-          isFetching: false,
-        });
+        const { isLoading } = get();
+        if (isLoading) return;
+        set(initialState);
       },
 
       update: async (id: string, data: ContactFormData) => {
+        const { isLoading } = get();
+        if (isLoading) return;
+
         set({ isLoading: true, error: null });
         try {
           const result = await updateContactInfo(id, data);
@@ -93,6 +94,9 @@ export const useContactStore = create<ContactStore>()(
       },
 
       create: async (data: ContactFormData) => {
+        const { isLoading } = get();
+        if (isLoading) return;
+
         set({ isLoading: true, error: null });
         try {
           const result = await createContactInfo(data);
@@ -115,6 +119,9 @@ export const useContactStore = create<ContactStore>()(
       },
 
       remove: async (id: string) => {
+        const { isLoading } = get();
+        if (isLoading) return;
+
         set({ isLoading: true, error: null });
         try {
           const result = await deleteContactInfo(id);
@@ -137,18 +144,15 @@ export const useContactStore = create<ContactStore>()(
       },
 
       fetchContacts: async (vendorWebsite?: string) => {
-        const { lastFetched, isFetching } = get();
+        const { isLoading, lastFetched } = get();
+        if (isLoading) return;
 
-        // Prevent multiple fetches
-        if (isFetching) return;
-
-        // Check cache
+        // Check if cache is still valid
         if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) {
           return;
         }
 
-        set({ isFetching: true, isLoading: true, error: null });
-
+        set({ isLoading: true, error: null });
         try {
           const result = vendorWebsite
             ? await getVendorContactsBySlug(vendorWebsite)
@@ -161,35 +165,60 @@ export const useContactStore = create<ContactStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
-            isFetching: false,
           });
         } catch (error) {
           set({
             isLoading: false,
             error: error instanceof Error ? error.message : "Fetch failed",
-            isFetching: false,
           });
         }
       },
     }),
-    persistOptions
+    {
+      name: "vendor-contact-storage",
+      storage: createJSONStorage(() => localStorage),
+      partialize: state => ({
+        contacts: state.contacts,
+        lastFetched: state.lastFetched,
+      }),
+      onRehydrateStorage: () => state => {
+        state?.setHydrated(true);
+      },
+    }
   )
 );
 
+// Selector hooks
+export const useContacts = () => useContactStore(state => state.contacts);
+export const useContactLoading = () =>
+  useContactStore(state => state.isLoading);
+export const useContactError = () => useContactStore(state => state.error);
+export const useContactHydrated = () =>
+  useContactStore(state => state.isHydrated);
+
 export const useContactData = (vendorWebsite?: string) => {
   const fetchContacts = useContactStore(state => state.fetchContacts);
-  const contacts = useContactStore(state => state.contacts);
-  const isLoading = useContactStore(state => state.isLoading);
-  const error = useContactStore(state => state.error);
+  const contacts = useContacts();
+  const isHydrated = useContactHydrated();
   const lastFetched = useContactStore(state => state.lastFetched);
 
   useEffect(() => {
-    // Only fetch if we haven't fetched before or cache is expired
-    if (!lastFetched || Date.now() - lastFetched >= CACHE_DURATION) {
+    if (
+      isHydrated &&
+      (!contacts.length ||
+        !lastFetched ||
+        Date.now() - lastFetched >= CACHE_DURATION)
+    ) {
       fetchContacts(vendorWebsite);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vendorWebsite]); // Only re-run if vendorWebsite changes
+  }, [isHydrated, contacts.length, lastFetched, fetchContacts, vendorWebsite]);
 
-  return { contacts, isLoading, error };
+  return {
+    contacts,
+    isLoading: useContactLoading(),
+    error: useContactError(),
+    update: useContactStore(state => state.update),
+    create: useContactStore(state => state.create),
+    remove: useContactStore(state => state.remove),
+  };
 };
