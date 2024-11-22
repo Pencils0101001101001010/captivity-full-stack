@@ -172,7 +172,7 @@ const Navbar = () => {
 
           {/* Mobile Navigation */}
           <div className="md:hidden">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
               <LogoSection
                 logoUrl={logoUrl}
                 isLogoLoading={isLogoLoading}
