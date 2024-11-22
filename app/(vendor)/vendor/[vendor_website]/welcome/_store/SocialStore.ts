@@ -1,6 +1,5 @@
-"use client";
-
 import { create } from "zustand";
+import { persist, PersistOptions } from "zustand/middleware";
 import { useEffect, useRef, useCallback } from "react";
 import {
   createSocialLink,
@@ -25,11 +24,27 @@ interface SocialLinkStore {
   error: string | null;
   lastFetched: number;
   isFetching: boolean;
+  update: (id: string, data: SocialLinkFormData) => Promise<void>;
+  create: (data: SocialLinkFormData) => Promise<void>;
+  remove: (id: string) => Promise<void>;
+  fetchLinks: (vendorWebsite?: string) => Promise<void>;
+  reset: () => void;
 }
+
+type SocialLinkStorePersist = Pick<SocialLinkStore, "links" | "lastFetched">;
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-const initialState: SocialLinkStore = {
+const persistOptions: PersistOptions<SocialLinkStore, SocialLinkStorePersist> =
+  {
+    name: "social-link-store",
+    partialize: state => ({
+      links: state.links,
+      lastFetched: state.lastFetched,
+    }),
+  };
+
+const initialState = {
   links: [],
   isLoading: false,
   error: null,
@@ -37,137 +52,126 @@ const initialState: SocialLinkStore = {
   isFetching: false,
 };
 
-export const useSocialLinkStore = create<
-  SocialLinkStore & {
-    update: (id: string, data: SocialLinkFormData) => Promise<void>;
-    create: (data: SocialLinkFormData) => Promise<void>;
-    remove: (id: string) => Promise<void>;
-    fetchLinks: (vendorWebsite?: string) => Promise<void>;
-    reset: () => void;
-  }
->((set, get) => ({
-  ...initialState,
+export const useSocialLinkStore = create<SocialLinkStore>()(
+  persist(
+    (set, get) => ({
+      ...initialState,
 
-  reset: () => {
-    const currentState = get();
-    if (currentState.isFetching || currentState.isLoading) {
-      return;
-    }
-    set(initialState);
-  },
+      reset: () => {
+        const currentState = get();
+        if (currentState.isFetching || currentState.isLoading) {
+          return;
+        }
+        set(initialState);
+      },
 
-  update: async (id: string, data: SocialLinkFormData) => {
-    if (get().isLoading) return;
-    set({ isLoading: true, error: null });
+      update: async (id: string, data: SocialLinkFormData) => {
+        if (get().isLoading) return;
+        set({ isLoading: true, error: null });
 
-    try {
-      const result = await updateSocialLink(id, data);
-      if (!result.success) throw new Error(result.error || "Update failed");
+        try {
+          const result = await updateSocialLink(id, data);
+          if (!result.success) throw new Error(result.error || "Update failed");
 
-      set({
-        links: result.data,
-        isLoading: false,
-        error: null,
-        lastFetched: Date.now(),
-      });
-    } catch (error) {
-      set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : "Update failed",
-      });
-      throw error;
-    }
-  },
+          set({
+            links: result.data,
+            isLoading: false,
+            error: null,
+            lastFetched: Date.now(),
+          });
+        } catch (error) {
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : "Update failed",
+          });
+          throw error;
+        }
+      },
 
-  create: async (data: SocialLinkFormData) => {
-    if (get().isLoading) return;
-    set({ isLoading: true, error: null });
+      create: async (data: SocialLinkFormData) => {
+        if (get().isLoading) return;
+        set({ isLoading: true, error: null });
 
-    try {
-      const result = await createSocialLink(data);
-      if (!result.success) throw new Error(result.error || "Creation failed");
+        try {
+          const result = await createSocialLink(data);
+          if (!result.success)
+            throw new Error(result.error || "Creation failed");
 
-      set({
-        links: result.data,
-        isLoading: false,
-        error: null,
-        lastFetched: Date.now(),
-      });
-    } catch (error) {
-      set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : "Creation failed",
-      });
-      throw error;
-    }
-  },
+          set({
+            links: result.data,
+            isLoading: false,
+            error: null,
+            lastFetched: Date.now(),
+          });
+        } catch (error) {
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : "Creation failed",
+          });
+          throw error;
+        }
+      },
 
-  remove: async (id: string) => {
-    if (get().isLoading) return;
-    set({ isLoading: true, error: null });
+      remove: async (id: string) => {
+        if (get().isLoading) return;
+        set({ isLoading: true, error: null });
 
-    try {
-      const result = await deleteSocialLink(id);
-      if (!result.success) throw new Error(result.error || "Deletion failed");
+        try {
+          const result = await deleteSocialLink(id);
+          if (!result.success)
+            throw new Error(result.error || "Deletion failed");
 
-      set({
-        links: result.data,
-        isLoading: false,
-        error: null,
-        lastFetched: Date.now(),
-      });
-    } catch (error) {
-      set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : "Deletion failed",
-      });
-      throw error;
-    }
-  },
+          set({
+            links: result.data,
+            isLoading: false,
+            error: null,
+            lastFetched: Date.now(),
+          });
+        } catch (error) {
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : "Deletion failed",
+          });
+          throw error;
+        }
+      },
 
-  fetchLinks: async (vendorWebsite?: string) => {
-    const { lastFetched, isFetching, isLoading } = get();
+      fetchLinks: async (vendorWebsite?: string) => {
+        const { lastFetched, isFetching, isLoading } = get();
 
-    if (isFetching || isLoading) return;
-    if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) {
-      return;
-    }
+        if (isFetching || isLoading) return;
+        if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) {
+          return;
+        }
 
-    set(state => ({
-      ...state,
-      isFetching: true,
-      isLoading: true,
-      error: null,
-    }));
+        set({ isFetching: true, isLoading: true, error: null });
 
-    try {
-      const result = vendorWebsite
-        ? await getVendorSocialLinks(vendorWebsite)
-        : await getSocialLinks();
+        try {
+          const result = vendorWebsite
+            ? await getVendorSocialLinks(vendorWebsite)
+            : await getSocialLinks();
 
-      const currentState = get();
-      if (!currentState.isFetching) return;
+          if (!result.success) throw new Error(result.error || "Fetch failed");
 
-      if (!result.success) throw new Error(result.error || "Fetch failed");
-
-      set(state => ({
-        ...state,
-        links: result.data || [],
-        isLoading: false,
-        error: null,
-        lastFetched: Date.now(),
-        isFetching: false,
-      }));
-    } catch (error) {
-      set(state => ({
-        ...state,
-        isLoading: false,
-        error: error instanceof Error ? error.message : "Fetch failed",
-        isFetching: false,
-      }));
-    }
-  },
-}));
+          set({
+            links: result.data || [],
+            isLoading: false,
+            error: null,
+            lastFetched: Date.now(),
+            isFetching: false,
+          });
+        } catch (error) {
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : "Fetch failed",
+            isFetching: false,
+          });
+        }
+      },
+    }),
+    persistOptions
+  )
+);
 
 export const useSocialLinkData = (vendorWebsite?: string) => {
   const fetchLinks = useSocialLinkStore(state => state.fetchLinks);

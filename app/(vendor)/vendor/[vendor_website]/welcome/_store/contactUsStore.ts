@@ -1,6 +1,5 @@
-"use client";
-
 import { create } from "zustand";
+import { persist, PersistOptions } from "zustand/middleware";
 import { useEffect } from "react";
 import {
   getContactInfo,
@@ -28,140 +27,154 @@ interface ContactStore {
   lastFetched: number;
   currentFetch: AbortController | null;
   isFetching: boolean;
+  update: (id: string, data: ContactFormData) => Promise<void>;
+  create: (data: ContactFormData) => Promise<void>;
+  remove: (id: string) => Promise<void>;
+  fetchContacts: (vendorWebsite?: string) => Promise<void>;
+  reset: () => void;
 }
+
+type ContactStorePersist = Pick<ContactStore, "contacts" | "lastFetched">;
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-export const useContactStore = create<
-  ContactStore & {
-    update: (id: string, data: ContactFormData) => Promise<void>;
-    create: (data: ContactFormData) => Promise<void>;
-    remove: (id: string) => Promise<void>;
-    fetchContacts: (vendorWebsite?: string) => Promise<void>;
-    reset: () => void;
-  }
->((set, get) => ({
-  contacts: [],
-  isLoading: false,
-  error: null,
-  lastFetched: 0,
-  currentFetch: null,
-  isFetching: false,
+const persistOptions: PersistOptions<ContactStore, ContactStorePersist> = {
+  name: "contact-store",
+  partialize: state => ({
+    contacts: state.contacts,
+    lastFetched: state.lastFetched,
+  }),
+};
 
-  reset: () => {
-    const { currentFetch } = get();
-    if (currentFetch) {
-      currentFetch.abort();
-    }
-    set({
+export const useContactStore = create<ContactStore>()(
+  persist(
+    (set, get) => ({
       contacts: [],
       isLoading: false,
       error: null,
       lastFetched: 0,
       currentFetch: null,
       isFetching: false,
-    });
-  },
 
-  update: async (id: string, data: ContactFormData) => {
-    set({ isLoading: true, error: null });
-    try {
-      const result = await updateContactInfo(id, data);
-      if (!result.success) throw new Error(result.error || "Update failed");
+      reset: () => {
+        const { currentFetch } = get();
+        if (currentFetch) {
+          currentFetch.abort();
+        }
+        set({
+          contacts: [],
+          isLoading: false,
+          error: null,
+          lastFetched: 0,
+          currentFetch: null,
+          isFetching: false,
+        });
+      },
 
-      set({
-        contacts: result.data,
-        isLoading: false,
-        error: null,
-        lastFetched: Date.now(),
-      });
-    } catch (error) {
-      set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : "Update failed",
-      });
-      throw error;
-    }
-  },
+      update: async (id: string, data: ContactFormData) => {
+        set({ isLoading: true, error: null });
+        try {
+          const result = await updateContactInfo(id, data);
+          if (!result.success) throw new Error(result.error || "Update failed");
 
-  create: async (data: ContactFormData) => {
-    set({ isLoading: true, error: null });
-    try {
-      const result = await createContactInfo(data);
-      if (!result.success) throw new Error(result.error || "Creation failed");
+          set({
+            contacts: result.data,
+            isLoading: false,
+            error: null,
+            lastFetched: Date.now(),
+          });
+        } catch (error) {
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : "Update failed",
+          });
+          throw error;
+        }
+      },
 
-      set({
-        contacts: result.data,
-        isLoading: false,
-        error: null,
-        lastFetched: Date.now(),
-      });
-    } catch (error) {
-      set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : "Creation failed",
-      });
-      throw error;
-    }
-  },
+      create: async (data: ContactFormData) => {
+        set({ isLoading: true, error: null });
+        try {
+          const result = await createContactInfo(data);
+          if (!result.success)
+            throw new Error(result.error || "Creation failed");
 
-  remove: async (id: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      const result = await deleteContactInfo(id);
-      if (!result.success) throw new Error(result.error || "Deletion failed");
+          set({
+            contacts: result.data,
+            isLoading: false,
+            error: null,
+            lastFetched: Date.now(),
+          });
+        } catch (error) {
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : "Creation failed",
+          });
+          throw error;
+        }
+      },
 
-      set({
-        contacts: result.data,
-        isLoading: false,
-        error: null,
-        lastFetched: Date.now(),
-      });
-    } catch (error) {
-      set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : "Deletion failed",
-      });
-      throw error;
-    }
-  },
+      remove: async (id: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const result = await deleteContactInfo(id);
+          if (!result.success)
+            throw new Error(result.error || "Deletion failed");
 
-  fetchContacts: async (vendorWebsite?: string) => {
-    const { lastFetched, isFetching } = get();
+          set({
+            contacts: result.data,
+            isLoading: false,
+            error: null,
+            lastFetched: Date.now(),
+          });
+        } catch (error) {
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : "Deletion failed",
+          });
+          throw error;
+        }
+      },
 
-    // Prevent multiple fetches
-    if (isFetching) return;
+      fetchContacts: async (vendorWebsite?: string) => {
+        const { lastFetched, isFetching } = get();
 
-    // Check cache
-    if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) {
-      return;
-    }
+        // Prevent multiple fetches
+        if (isFetching) return;
 
-    set({ isFetching: true, isLoading: true, error: null });
+        // Check cache
+        if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) {
+          return;
+        }
 
-    try {
-      const result = vendorWebsite
-        ? await getVendorContactsBySlug(vendorWebsite)
-        : await getContactInfo();
+        set({ isFetching: true, isLoading: true, error: null });
 
-      if (!result.success) throw new Error(result.error || "Fetch failed");
+        try {
+          const result = vendorWebsite
+            ? await getVendorContactsBySlug(vendorWebsite)
+            : await getContactInfo();
 
-      set({
-        contacts: result.data || [],
-        isLoading: false,
-        error: null,
-        lastFetched: Date.now(),
-        isFetching: false,
-      });
-    } catch (error) {
-      set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : "Fetch failed",
-        isFetching: false,
-      });
-    }
-  },
-}));
+          if (!result.success) throw new Error(result.error || "Fetch failed");
+
+          set({
+            contacts: result.data || [],
+            isLoading: false,
+            error: null,
+            lastFetched: Date.now(),
+            isFetching: false,
+          });
+        } catch (error) {
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : "Fetch failed",
+            isFetching: false,
+          });
+        }
+      },
+    }),
+    persistOptions
+  )
+);
 
 export const useContactData = (vendorWebsite?: string) => {
   const fetchContacts = useContactStore(state => state.fetchContacts);
