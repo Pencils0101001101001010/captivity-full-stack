@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "@/app/(vendor)/SessionProvider";
 import useVendorCartStore from "./useCartStore";
+import { useParams, useRouter } from "next/navigation";
 
 // Import exact types from your prisma client
 import type {
@@ -88,6 +89,10 @@ const calculateItemPrice = (item: VendorCartItem): number => {
 };
 
 const VendorViewCart: React.FC = () => {
+  const params = useParams();
+  const router = useRouter();
+  const vendorWebsite = params?.vendor_website as string;
+
   const cart = useVendorCartStore(
     state => state.cart
   ) as VendorCartWithItems | null;
@@ -104,6 +109,14 @@ const VendorViewCart: React.FC = () => {
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
+
+  const handleContinueShopping = () => {
+    if (vendorWebsite) {
+      router.push(
+        `/vendor/${vendorWebsite}/shopping/product_categories/summer`
+      );
+    }
+  };
 
   if (
     !user ||
@@ -138,12 +151,12 @@ const VendorViewCart: React.FC = () => {
         <h1 className="text-3xl font-semibold mb-4">
           Your Vendor Cart is Empty
         </h1>
-        <Link
-          href="/vendor/shopping"
+        <button
+          onClick={handleContinueShopping}
           className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-md font-medium hover:bg-primary/90"
         >
           Continue Shopping
-        </Link>
+        </button>
       </div>
     );
   }
@@ -309,12 +322,12 @@ const VendorViewCart: React.FC = () => {
               >
                 Proceed to Checkout
               </Link>
-              <Link
-                href="/vendor/shopping"
+              <button
+                onClick={handleContinueShopping}
                 className="block w-full bg-secondary text-secondary-foreground text-center py-3 rounded-md font-medium hover:bg-secondary/90"
               >
                 Continue Shopping
-              </Link>
+              </button>
             </div>
           </div>
         </div>
