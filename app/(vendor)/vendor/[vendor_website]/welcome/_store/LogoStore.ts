@@ -16,6 +16,7 @@ interface LogoState {
   isLoading: boolean;
   error: string | null;
   lastFetched: number;
+  isHydrated: boolean;
 }
 
 interface LogoActions {
@@ -23,10 +24,19 @@ interface LogoActions {
   remove: () => Promise<void>;
   fetchLogo: (vendorWebsite?: string) => Promise<void>;
   setLogo: (url: string | null) => void;
+  setHydrated: (state: boolean) => void;
 }
 
 type LogoStore = LogoState & LogoActions;
 type LogoStorePersist = Pick<LogoStore, "logoUrl" | "lastFetched">;
+
+const initialState: LogoState = {
+  logoUrl: null,
+  isLoading: false,
+  error: null,
+  lastFetched: 0,
+  isHydrated: false,
+};
 
 const persistOptions: PersistOptions<LogoStore, LogoStorePersist> = {
   name: "vendor-logo-storage",
@@ -35,15 +45,17 @@ const persistOptions: PersistOptions<LogoStore, LogoStorePersist> = {
     logoUrl: state.logoUrl,
     lastFetched: state.lastFetched,
   }),
+  onRehydrateStorage: () => state => {
+    state?.setHydrated(true);
+  },
 };
 
 export const useLogoStore = create<LogoStore>()(
   persist(
     (set, get) => ({
-      logoUrl: null,
-      isLoading: false,
-      error: null,
-      lastFetched: 0,
+      ...initialState,
+
+      setHydrated: (state: boolean) => set({ isHydrated: state }),
 
       setLogo: (url: string | null) => {
         set({ logoUrl: url, lastFetched: Date.now() });
@@ -92,7 +104,10 @@ export const useLogoStore = create<LogoStore>()(
       },
 
       fetchLogo: async (vendorWebsite?: string) => {
-        const { lastFetched, isLoading } = get();
+        const { lastFetched, isLoading, isHydrated } = get();
+
+        // Don't fetch if not hydrated yet
+        if (!isHydrated) return;
 
         // Don't fetch if already loading
         if (isLoading) return;
@@ -133,22 +148,23 @@ export const useLogoStore = create<LogoStore>()(
 export const useLogo = () => useLogoStore(state => state.logoUrl);
 export const useLogoLoading = () => useLogoStore(state => state.isLoading);
 export const useLogoError = () => useLogoStore(state => state.error);
+export const useLogoHydrated = () => useLogoStore(state => state.isHydrated);
 
 export const useLogoData = (vendorWebsite?: string) => {
   const fetchLogo = useLogoStore(state => state.fetchLogo);
   const lastFetched = useLogoStore(state => state.lastFetched);
   const logoUrl = useLogo();
+  const isHydrated = useLogoHydrated();
 
   useEffect(() => {
-    // Only fetch if we don't have a logo or cache is expired
+    // Only fetch if store is hydrated and we either don't have a logo or cache is expired
     if (
-      !logoUrl ||
-      !lastFetched ||
-      Date.now() - lastFetched >= CACHE_DURATION
+      isHydrated &&
+      (!logoUrl || !lastFetched || Date.now() - lastFetched >= CACHE_DURATION)
     ) {
       fetchLogo(vendorWebsite);
     }
-  }, [fetchLogo, lastFetched, logoUrl, vendorWebsite]);
+  }, [fetchLogo, lastFetched, logoUrl, vendorWebsite, isHydrated]);
 
   return {
     logoUrl: useLogo(),
