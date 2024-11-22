@@ -21,14 +21,15 @@ interface BasicInfoTabProps {
 const PRODUCT_CATEGORIES = [
   "summer-collection",
   "winter-collection",
-  "Accessories",
-  "Home & Garden",
-  "Sports",
-  "Beauty",
-  "Books",
-  "Toys",
-  "Food & Beverage",
-  "Other",
+  "african-collection",
+  "baseball-collection",
+  "camo-collection",
+  "fashion-collection",
+  "industrial-collection",
+  "kids-collection",
+  "leisure-collection",
+  "signature-collection",
+  "sport-collection",
 ];
 
 const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ control }) => {
