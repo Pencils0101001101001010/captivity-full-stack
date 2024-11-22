@@ -2,15 +2,21 @@
 
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import { OrderStatus, Prisma } from "@prisma/client";
+import { OrderStatus, Prisma, User, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { VendorFormValues, VendorOrderActionResult } from "./_lib/types";
+
+interface AuthUser {
+  id: string;
+  role: UserRole;
+  storeSlug: string | null;
+}
 
 export async function createVendorOrder(
   formData: VendorFormValues
 ): Promise<VendorOrderActionResult> {
   try {
-    const { user } = await validateRequest();
+    const { user } = (await validateRequest()) as { user: AuthUser | null };
     if (!user || (user.role !== "VENDOR" && user.role !== "VENDORCUSTOMER")) {
       return {
         success: false,
@@ -130,9 +136,9 @@ export async function createVendorOrder(
         return newOrder;
       },
       {
-        maxWait: 10000, // 10 seconds maximum wait time
-        timeout: 20000, // 20 seconds timeout
-        isolationLevel: "Serializable", // Highest isolation level
+        maxWait: 10000,
+        timeout: 20000,
+        isolationLevel: "Serializable",
       }
     );
 
@@ -164,7 +170,6 @@ export async function createVendorOrder(
   } catch (error) {
     console.error("Error creating vendor order:", error);
 
-    // Properly type check for Prisma errors
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2028") {
         return {
@@ -175,7 +180,6 @@ export async function createVendorOrder(
       }
     }
 
-    // Handle generic errors
     return {
       success: false,
       message: "Failed to create order",
@@ -189,49 +193,105 @@ export async function getVendorOrder(
   orderId?: string
 ): Promise<VendorOrderActionResult> {
   try {
-    const { user } = await validateRequest();
+    const { user } = (await validateRequest()) as { user: AuthUser | null };
     if (!user || (user.role !== "VENDOR" && user.role !== "VENDORCUSTOMER")) {
       return {
         success: false,
         message: "Authentication required",
-        error: "Please login to place an order",
+        error: "Please login to view orders",
       };
     }
 
-    const order = await prisma.vendorOrder.findFirst({
-      where: {
-        userId: user.id,
-        ...(orderId ? { id: orderId } : {}), // Only include id in where clause if provided
-      },
-      orderBy: {
-        createdAt: "desc", // Get the most recent order
-      },
-      include: {
-        vendorOrderItems: {
-          include: {
-            vendorVariation: {
-              include: {
-                vendorProduct: true,
+    if (user.role === "VENDOR" && user.storeSlug) {
+      // For vendors: get all orders from their customers and their own orders
+      const allOrders = await prisma.vendorOrder.findMany({
+        where: {
+          OR: [
+            // Vendor's own orders
+            { userId: user.id },
+            // Orders from vendor's customers
+            {
+              user: {
+                AND: [
+                  { role: "VENDORCUSTOMER" },
+                  {
+                    storeSlug: {
+                      startsWith: `${user.storeSlug}-customer-`,
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+          ...(orderId ? { id: orderId } : {}),
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        include: {
+          vendorOrderItems: {
+            include: {
+              vendorVariation: {
+                include: {
+                  vendorProduct: true,
+                },
+              },
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              role: true,
+              storeSlug: true,
+              username: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      if (!allOrders.length) {
+        return {
+          success: false,
+          message: "No orders found",
+          error: "No orders available",
+        };
+      }
+
+      return {
+        success: true,
+        message: "Orders retrieved successfully",
+        data: allOrders,
+      };
+    } else {
+      // For vendor customers: get only their own orders
+      const customerOrders = await prisma.vendorOrder.findMany({
+        where: {
+          userId: user.id,
+          ...(orderId ? { id: orderId } : {}),
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        include: {
+          vendorOrderItems: {
+            include: {
+              vendorVariation: {
+                include: {
+                  vendorProduct: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    if (!order) {
       return {
-        success: false,
-        message: "Order not found",
-        error: "No orders found",
+        success: true,
+        message: "Orders retrieved successfully",
+        data: customerOrders,
       };
     }
-
-    return {
-      success: true,
-      message: "Order retrieved successfully",
-      data: order,
-    };
   } catch (error) {
     console.error("Error retrieving vendor order:", error);
     return {
@@ -245,12 +305,12 @@ export async function getVendorOrder(
 
 export async function getVendorUserDetails() {
   try {
-    const { user } = await validateRequest();
+    const { user } = (await validateRequest()) as { user: AuthUser | null };
     if (!user || (user.role !== "VENDOR" && user.role !== "VENDORCUSTOMER")) {
       return {
         success: false,
         message: "Authentication required",
-        error: "Please login to place an order",
+        error: "Please login to view details",
       };
     }
 

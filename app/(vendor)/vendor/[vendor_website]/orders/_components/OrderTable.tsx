@@ -1,7 +1,6 @@
-// app/(vendor)/vendor/[vendor_website]/orders/_components/OrderTable.tsx
 "use client";
 
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect } from "react";
 import { useSession } from "@/app/(vendor)/SessionProvider";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -15,11 +14,34 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, AlertTriangle } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowUpDown,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { format, subWeeks } from "date-fns";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { format } from "date-fns";
 import { VendorOrder } from "../../shop_product/checkout/_lib/types";
-import useVendorOrderStore, { PriceRange } from "../_store/useOrderStore";
+import useVendorOrderStore, {
+  PriceRange,
+  TimeFilter,
+  StatusFilter,
+  SortField,
+  SortDirection,
+} from "../_store/useOrderStore";
+import { OrderStatus } from "@prisma/client";
+
+const PAGE_SIZES = [10, 20, 50, 100];
 
 const getStatusColor = (status: string): string => {
   switch (status) {
@@ -38,50 +60,43 @@ const getStatusColor = (status: string): string => {
   }
 };
 
-type TimeFilter = "all" | "recent" | "old";
-
-const OrderTable: React.FC = () => {
+const OrdersTable = () => {
   const session = useSession();
   const params = useParams();
   const vendorWebsite = params?.vendor_website as string;
-  const [timeFilter, setTimeFilter] = React.useState<TimeFilter>("all");
 
   const {
-    currentOrder,
+    currentOrders,
     filteredOrders,
     loading,
     error,
     selectedPriceRange,
-    fetchOrder,
-    filterByPriceRange,
+    selectedTimeFilter,
+    selectedStatus,
+    sortDirection,
+    sortField,
+    totalOrders,
+    totalAmount,
+    currentPage,
+    itemsPerPage,
+    totalPages,
+    searchQuery,
+    fetchOrders,
+    filterOrders,
+    sortOrders,
+    searchOrders,
+    setPage,
+    setItemsPerPage,
     getOrdersByAge,
+    getOrderStats,
   } = useVendorOrderStore();
 
-  const initializeTable = useCallback(async () => {
-    await fetchOrder();
-  }, [fetchOrder]);
-
-  const initializeFilter = useCallback(() => {
-    if (currentOrder && !selectedPriceRange) {
-      filterByPriceRange("less_than_twoK");
-    }
-  }, [currentOrder, filterByPriceRange, selectedPriceRange]);
-
   useEffect(() => {
-    initializeTable();
-  }, [initializeTable]);
+    fetchOrders();
+  }, [fetchOrders]);
 
-  useEffect(() => {
-    initializeFilter();
-  }, [initializeFilter]);
-
-  // If not authenticated or not a vendor, don't render the table
   if (!session || session?.user?.role !== "VENDOR") {
     return null;
-  }
-
-  if (loading) {
-    return <div className="flex justify-center p-8">Loading...</div>;
   }
 
   if (error) {
@@ -89,31 +104,49 @@ const OrderTable: React.FC = () => {
   }
 
   const { oldOrders, recentOrders } = getOrdersByAge();
-  let displayOrders = filteredOrders.length > 0 ? filteredOrders : [];
+  const stats = getOrderStats();
 
-  // Apply time filter
-  switch (timeFilter) {
-    case "recent":
-      displayOrders = displayOrders.filter(
-        order => new Date(order.createdAt) > subWeeks(new Date(), 1)
-      );
-      break;
-    case "old":
-      displayOrders = displayOrders.filter(
-        order => new Date(order.createdAt) <= subWeeks(new Date(), 1)
-      );
-      break;
-    // 'all' shows everything
-  }
+  const handleSort = (field: SortField) => {
+    const newDirection: SortDirection =
+      field === sortField && sortDirection === "asc" ? "desc" : "asc";
+    sortOrders(field, newDirection);
+  };
 
-  if (!currentOrder) {
-    return <div className="text-gray-500 p-4">No orders found</div>;
+  // Show loading state only on initial load
+  if (loading && !currentOrders.length) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-gray-500">Loading orders...</div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      {/* Old Orders Warning */}
-      {oldOrders.length > 0 && timeFilter !== "old" && (
+      {/* Stats Cards */}
+      <div className="grid grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <div className="text-sm text-gray-500">Total Orders</div>
+          <div className="text-2xl font-semibold">{totalOrders}</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <div className="text-sm text-gray-500">Pending</div>
+          <div className="text-2xl font-semibold">{stats.pending}</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <div className="text-sm text-gray-500">Processing</div>
+          <div className="text-2xl font-semibold">{stats.processing}</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <div className="text-sm text-gray-500">Total Amount</div>
+          <div className="text-2xl font-semibold">
+            R{totalAmount.toFixed(2)}
+          </div>
+        </div>
+      </div>
+
+      {/* Warning Alert */}
+      {oldOrders.length > 0 && selectedTimeFilter !== "old" && (
         <Alert className="bg-yellow-50 border-yellow-200">
           <AlertTriangle className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="text-yellow-800">
@@ -122,13 +155,43 @@ const OrderTable: React.FC = () => {
         </Alert>
       )}
 
-      {/* Time Filter Tabs */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
+      {/* Filters Section */}
+      <div className="bg-white p-4 rounded-lg shadow-sm border space-y-4">
+        {/* Search and Status Filter */}
+        <div className="flex items-center space-x-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search orders..."
+              value={searchQuery}
+              onChange={e => searchOrders(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select
+            value={selectedStatus}
+            onValueChange={value =>
+              filterOrders(undefined, undefined, value as StatusFilter)
+            }
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              {Object.values(OrderStatus).map(status => (
+                <SelectItem key={status} value={status}>
+                  {status}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Time Filter */}
         <Tabs
-          defaultValue="all"
-          value={timeFilter}
-          className="w-full mb-4"
-          onValueChange={value => setTimeFilter(value as TimeFilter)}
+          value={selectedTimeFilter}
+          onValueChange={value => filterOrders(undefined, value as TimeFilter)}
         >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="all">All Orders</TabsTrigger>
@@ -141,12 +204,10 @@ const OrderTable: React.FC = () => {
           </TabsList>
         </Tabs>
 
-        {/* Price Range Tabs */}
+        {/* Price Range Filter */}
         <Tabs
-          defaultValue="less_than_twoK"
-          value={selectedPriceRange || "less_than_twoK"}
-          className="w-full"
-          onValueChange={value => filterByPriceRange(value as PriceRange)}
+          value={selectedPriceRange}
+          onValueChange={value => filterOrders(value as PriceRange)}
         >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="less_than_twoK">Less than R2K</TabsTrigger>
@@ -157,22 +218,46 @@ const OrderTable: React.FC = () => {
       </div>
 
       {/* Orders Table */}
-      <div className="rounded-md border">
+      <div className="rounded-lg border bg-white">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Order ID</TableHead>
+              <TableHead>
+                <button
+                  onClick={() => handleSort("date")}
+                  className="flex items-center space-x-1 hover:text-gray-700"
+                >
+                  <span>Order ID</span>
+                  <ArrowUpDown className="h-4 w-4" />
+                </button>
+              </TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>Items</TableHead>
-              <TableHead>Total Amount</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>
+                <button
+                  onClick={() => handleSort("amount")}
+                  className="flex items-center space-x-1 hover:text-gray-700"
+                >
+                  <span>Total Amount</span>
+                  <ArrowUpDown className="h-4 w-4" />
+                </button>
+              </TableHead>
+              <TableHead>
+                <button
+                  onClick={() => handleSort("status")}
+                  className="flex items-center space-x-1 hover:text-gray-700"
+                >
+                  <span>Status</span>
+                  <ArrowUpDown className="h-4 w-4" />
+                </button>
+              </TableHead>
               <TableHead>Collection Method</TableHead>
               <TableHead>Branch</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayOrders.map((order: VendorOrder) => (
+            {filteredOrders.map((order: VendorOrder) => (
               <TableRow key={order.id}>
                 <TableCell>
                   <Link
@@ -204,16 +289,68 @@ const OrderTable: React.FC = () => {
             ))}
           </TableBody>
         </Table>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between p-4 border-t">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-500">Rows per page:</span>
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={value => setItemsPerPage(Number(value))}
+            >
+              <SelectTrigger className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZES.map(size => (
+                  <SelectItem key={size} value={size.toString()}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center space-x-6">
+            <span className="text-sm text-gray-500">
+              Page {currentPage} of {totalPages}
+            </span>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-2 rounded-md hover:bg-gray-100 disabled:opacity-50"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-md hover:bg-gray-100 disabled:opacity-50"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* No Results Message */}
-      {displayOrders.length === 0 && (
+      {filteredOrders.length === 0 && !loading && (
         <div className="text-center py-6 text-gray-500">
           No orders found for the selected filters
+        </div>
+      )}
+
+      {/* Loading Overlay */}
+      {loading && currentOrders.length > 0 && (
+        <div className="fixed inset-0 bg-black/10 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded-lg shadow-lg">
+            Updating orders...
+          </div>
         </div>
       )}
     </div>
   );
 };
 
-export default OrderTable;
+export default OrdersTable;
