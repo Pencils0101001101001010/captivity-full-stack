@@ -20,6 +20,7 @@ interface BannerState {
   error: string | null;
   lastFetched: number;
   isHydrated: boolean;
+  initialized: boolean;
 }
 
 interface BannerActions {
@@ -33,7 +34,7 @@ interface BannerActions {
 
 type BannerStore = BannerState & BannerActions;
 
-const CACHE_DURATION = 365 * 24 * 60 * 60 * 1000; // 1 year
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache to ensure fresh data
 
 const initialState: BannerState = {
   banners: [],
@@ -41,6 +42,7 @@ const initialState: BannerState = {
   error: null,
   lastFetched: 0,
   isHydrated: false,
+  initialized: false,
 };
 
 export const useBannerStore = create<BannerStore>()(
@@ -51,7 +53,11 @@ export const useBannerStore = create<BannerStore>()(
       setHydrated: (state: boolean) => set({ isHydrated: state }),
 
       setBanners: (banners: BannerItem[]) => {
-        set({ banners, lastFetched: Date.now() });
+        set({
+          banners,
+          lastFetched: Date.now(),
+          initialized: true,
+        });
       },
 
       reset: () => {
@@ -74,6 +80,7 @@ export const useBannerStore = create<BannerStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
@@ -98,6 +105,7 @@ export const useBannerStore = create<BannerStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
@@ -109,13 +117,8 @@ export const useBannerStore = create<BannerStore>()(
       },
 
       fetchBanners: async (storeSlug?: string) => {
-        const { isLoading, lastFetched } = get();
+        const { isLoading } = get();
         if (isLoading) return;
-
-        // Check if cache is still valid
-        if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) {
-          return;
-        }
 
         set({ isLoading: true, error: null });
         try {
@@ -130,11 +133,13 @@ export const useBannerStore = create<BannerStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
             isLoading: false,
             error: error instanceof Error ? error.message : "Fetch failed",
+            lastFetched: Date.now(),
           });
         }
       },
@@ -145,6 +150,7 @@ export const useBannerStore = create<BannerStore>()(
       partialize: state => ({
         banners: state.banners,
         lastFetched: state.lastFetched,
+        initialized: state.initialized,
       }),
       onRehydrateStorage: () => state => {
         state?.setHydrated(true);
@@ -159,6 +165,8 @@ export const useBannerLoading = () => useBannerStore(state => state.isLoading);
 export const useBannerError = () => useBannerStore(state => state.error);
 export const useBannerHydrated = () =>
   useBannerStore(state => state.isHydrated);
+export const useBannerInitialized = () =>
+  useBannerStore(state => state.initialized);
 
 export const useBannerData = (storeSlug?: string) => {
   const fetchBanners = useBannerStore(state => state.fetchBanners);
@@ -167,15 +175,14 @@ export const useBannerData = (storeSlug?: string) => {
   const lastFetched = useBannerStore(state => state.lastFetched);
 
   useEffect(() => {
+    // Always fetch on mount and when cache expires
     if (
       isHydrated &&
-      (!banners.length ||
-        !lastFetched ||
-        Date.now() - lastFetched >= CACHE_DURATION)
+      (!lastFetched || Date.now() - lastFetched >= CACHE_DURATION)
     ) {
       fetchBanners(storeSlug);
     }
-  }, [isHydrated, banners.length, lastFetched, fetchBanners, storeSlug]);
+  }, [isHydrated, lastFetched, fetchBanners, storeSlug]);
 
   return {
     banners,

@@ -26,6 +26,7 @@ interface SocialLinkState {
   error: string | null;
   lastFetched: number;
   isHydrated: boolean;
+  initialized: boolean;
 }
 
 interface SocialLinkActions {
@@ -40,7 +41,7 @@ interface SocialLinkActions {
 
 type SocialLinkStore = SocialLinkState & SocialLinkActions;
 
-const CACHE_DURATION = 365 * 24 * 60 * 60 * 1000; // 1 year
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache to ensure fresh data
 
 const initialState: SocialLinkState = {
   links: [],
@@ -48,6 +49,7 @@ const initialState: SocialLinkState = {
   error: null,
   lastFetched: 0,
   isHydrated: false,
+  initialized: false,
 };
 
 export const useSocialLinkStore = create<SocialLinkStore>()(
@@ -58,7 +60,11 @@ export const useSocialLinkStore = create<SocialLinkStore>()(
       setHydrated: (state: boolean) => set({ isHydrated: state }),
 
       setLinks: (links: SocialLink[]) => {
-        set({ links, lastFetched: Date.now() });
+        set({
+          links,
+          lastFetched: Date.now(),
+          initialized: true,
+        });
       },
 
       reset: () => {
@@ -81,6 +87,7 @@ export const useSocialLinkStore = create<SocialLinkStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
@@ -106,6 +113,7 @@ export const useSocialLinkStore = create<SocialLinkStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
@@ -131,6 +139,7 @@ export const useSocialLinkStore = create<SocialLinkStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
@@ -142,13 +151,8 @@ export const useSocialLinkStore = create<SocialLinkStore>()(
       },
 
       fetchLinks: async (vendorWebsite?: string) => {
-        const { isLoading, lastFetched } = get();
+        const { isLoading } = get();
         if (isLoading) return;
-
-        // Check if cache is still valid
-        if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) {
-          return;
-        }
 
         set({ isLoading: true, error: null });
         try {
@@ -163,11 +167,13 @@ export const useSocialLinkStore = create<SocialLinkStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
             isLoading: false,
             error: error instanceof Error ? error.message : "Fetch failed",
+            lastFetched: Date.now(),
           });
         }
       },
@@ -178,6 +184,7 @@ export const useSocialLinkStore = create<SocialLinkStore>()(
       partialize: state => ({
         links: state.links,
         lastFetched: state.lastFetched,
+        initialized: state.initialized,
       }),
       onRehydrateStorage: () => state => {
         state?.setHydrated(true);
@@ -194,6 +201,8 @@ export const useSocialLinkError = () =>
   useSocialLinkStore(state => state.error);
 export const useSocialLinkHydrated = () =>
   useSocialLinkStore(state => state.isHydrated);
+export const useSocialLinkInitialized = () =>
+  useSocialLinkStore(state => state.initialized);
 
 export const useSocialLinkData = (vendorWebsite?: string) => {
   const fetchLinks = useSocialLinkStore(state => state.fetchLinks);
@@ -202,15 +211,14 @@ export const useSocialLinkData = (vendorWebsite?: string) => {
   const lastFetched = useSocialLinkStore(state => state.lastFetched);
 
   useEffect(() => {
+    // Always fetch on mount and when cache expires
     if (
       isHydrated &&
-      (!links.length ||
-        !lastFetched ||
-        Date.now() - lastFetched >= CACHE_DURATION)
+      (!lastFetched || Date.now() - lastFetched >= CACHE_DURATION)
     ) {
       fetchLinks(vendorWebsite);
     }
-  }, [isHydrated, links.length, lastFetched, fetchLinks, vendorWebsite]);
+  }, [isHydrated, lastFetched, fetchLinks, vendorWebsite]);
 
   return {
     links,

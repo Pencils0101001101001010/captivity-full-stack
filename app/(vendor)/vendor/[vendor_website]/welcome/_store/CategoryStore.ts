@@ -21,6 +21,7 @@ interface CategoryState {
   error: string | null;
   lastFetched: number;
   isHydrated: boolean;
+  initialized: boolean;
 }
 
 interface CategoryActions {
@@ -29,28 +30,47 @@ interface CategoryActions {
   fetchCategories: (storeSlug?: string) => Promise<void>;
   setCategories: (categories: CategoryItem[]) => void;
   setHydrated: (state: boolean) => void;
+  reset: () => void;
 }
 
 type CategoryStore = CategoryState & CategoryActions;
 
-const CACHE_DURATION = 365 * 24 * 60 * 60 * 1000; // 1 year
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache to ensure fresh data
+
+const initialState: CategoryState = {
+  categories: [],
+  isLoading: false,
+  error: null,
+  lastFetched: 0,
+  isHydrated: false,
+  initialized: false,
+};
 
 export const useCategoryStore = create<CategoryStore>()(
   persist(
     (set, get) => ({
-      categories: [],
-      isLoading: false,
-      error: null,
-      lastFetched: 0,
-      isHydrated: false,
+      ...initialState,
 
       setHydrated: (state: boolean) => set({ isHydrated: state }),
 
       setCategories: (categories: CategoryItem[]) => {
-        set({ categories, lastFetched: Date.now() });
+        set({
+          categories,
+          lastFetched: Date.now(),
+          initialized: true,
+        });
+      },
+
+      reset: () => {
+        const { isLoading } = get();
+        if (isLoading) return;
+        set(initialState);
       },
 
       upload: async (formData: FormData) => {
+        const { isLoading } = get();
+        if (isLoading) return;
+
         set({ isLoading: true, error: null });
         try {
           const result = await uploadCategory(formData);
@@ -61,6 +81,7 @@ export const useCategoryStore = create<CategoryStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
@@ -72,6 +93,9 @@ export const useCategoryStore = create<CategoryStore>()(
       },
 
       remove: async (url: string) => {
+        const { isLoading } = get();
+        if (isLoading) return;
+
         set({ isLoading: true, error: null });
         try {
           const result = await removeCategory(url);
@@ -82,6 +106,7 @@ export const useCategoryStore = create<CategoryStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
@@ -93,13 +118,8 @@ export const useCategoryStore = create<CategoryStore>()(
       },
 
       fetchCategories: async (storeSlug?: string) => {
-        const { isLoading, lastFetched } = get();
+        const { isLoading } = get();
         if (isLoading) return;
-
-        // Check if cache is still valid
-        if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) {
-          return;
-        }
 
         set({ isLoading: true, error: null });
 
@@ -115,6 +135,7 @@ export const useCategoryStore = create<CategoryStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
@@ -131,6 +152,7 @@ export const useCategoryStore = create<CategoryStore>()(
       partialize: state => ({
         categories: state.categories,
         lastFetched: state.lastFetched,
+        initialized: state.initialized,
       }),
       onRehydrateStorage: () => state => {
         state?.setHydrated(true);
@@ -146,6 +168,8 @@ export const useCategoryLoading = () =>
 export const useCategoryError = () => useCategoryStore(state => state.error);
 export const useCategoryHydrated = () =>
   useCategoryStore(state => state.isHydrated);
+export const useCategoryInitialized = () =>
+  useCategoryStore(state => state.initialized);
 
 export const useCategoryData = (storeSlug?: string) => {
   const fetchCategories = useCategoryStore(state => state.fetchCategories);
@@ -154,15 +178,14 @@ export const useCategoryData = (storeSlug?: string) => {
   const lastFetched = useCategoryStore(state => state.lastFetched);
 
   useEffect(() => {
+    // Always fetch on mount and when cache expires
     if (
       isHydrated &&
-      (!categories.length ||
-        !lastFetched ||
-        Date.now() - lastFetched >= CACHE_DURATION)
+      (!lastFetched || Date.now() - lastFetched >= CACHE_DURATION)
     ) {
       fetchCategories(storeSlug);
     }
-  }, [isHydrated, categories.length, lastFetched, fetchCategories, storeSlug]);
+  }, [isHydrated, lastFetched, fetchCategories, storeSlug]);
 
   return {
     categories,

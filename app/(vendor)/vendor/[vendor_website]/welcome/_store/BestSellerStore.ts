@@ -21,6 +21,7 @@ interface BestSellerState {
   error: string | null;
   lastFetched: number;
   isHydrated: boolean;
+  initialized: boolean;
 }
 
 interface BestSellerActions {
@@ -34,7 +35,7 @@ interface BestSellerActions {
 
 type BestSellerStore = BestSellerState & BestSellerActions;
 
-const CACHE_DURATION = 365 * 24 * 60 * 60 * 1000; // 1 year
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache to ensure fresh data
 
 const initialState: BestSellerState = {
   bestSellers: [],
@@ -42,6 +43,7 @@ const initialState: BestSellerState = {
   error: null,
   lastFetched: 0,
   isHydrated: false,
+  initialized: false,
 };
 
 export const useBestSellerStore = create<BestSellerStore>()(
@@ -52,7 +54,11 @@ export const useBestSellerStore = create<BestSellerStore>()(
       setHydrated: (state: boolean) => set({ isHydrated: state }),
 
       setBestSellers: (bestSellers: BestSellerItem[]) => {
-        set({ bestSellers, lastFetched: Date.now() });
+        set({
+          bestSellers,
+          lastFetched: Date.now(),
+          initialized: true,
+        });
       },
 
       reset: () => {
@@ -75,6 +81,7 @@ export const useBestSellerStore = create<BestSellerStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
@@ -99,6 +106,7 @@ export const useBestSellerStore = create<BestSellerStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
@@ -110,13 +118,8 @@ export const useBestSellerStore = create<BestSellerStore>()(
       },
 
       fetchBestSellers: async (storeSlug?: string) => {
-        const { isLoading, lastFetched } = get();
+        const { isLoading } = get();
         if (isLoading) return;
-
-        // Check if cache is still valid
-        if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) {
-          return;
-        }
 
         set({ isLoading: true, error: null });
         try {
@@ -131,11 +134,13 @@ export const useBestSellerStore = create<BestSellerStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
             isLoading: false,
             error: error instanceof Error ? error.message : "Fetch failed",
+            lastFetched: Date.now(),
           });
         }
       },
@@ -146,6 +151,7 @@ export const useBestSellerStore = create<BestSellerStore>()(
       partialize: state => ({
         bestSellers: state.bestSellers,
         lastFetched: state.lastFetched,
+        initialized: state.initialized,
       }),
       onRehydrateStorage: () => state => {
         state?.setHydrated(true);
@@ -163,6 +169,8 @@ export const useBestSellerError = () =>
   useBestSellerStore(state => state.error);
 export const useBestSellerHydrated = () =>
   useBestSellerStore(state => state.isHydrated);
+export const useBestSellerInitialized = () =>
+  useBestSellerStore(state => state.initialized);
 
 export const useBestSellerData = (storeSlug?: string) => {
   const fetchBestSellers = useBestSellerStore(state => state.fetchBestSellers);
@@ -171,21 +179,14 @@ export const useBestSellerData = (storeSlug?: string) => {
   const lastFetched = useBestSellerStore(state => state.lastFetched);
 
   useEffect(() => {
+    // Always fetch on mount and when cache expires
     if (
       isHydrated &&
-      (!bestSellers.length ||
-        !lastFetched ||
-        Date.now() - lastFetched >= CACHE_DURATION)
+      (!lastFetched || Date.now() - lastFetched >= CACHE_DURATION)
     ) {
       fetchBestSellers(storeSlug);
     }
-  }, [
-    isHydrated,
-    bestSellers.length,
-    lastFetched,
-    fetchBestSellers,
-    storeSlug,
-  ]);
+  }, [isHydrated, lastFetched, fetchBestSellers, storeSlug]);
 
   return {
     bestSellers,

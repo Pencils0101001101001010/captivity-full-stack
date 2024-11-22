@@ -31,7 +31,7 @@ interface LogoActions {
 
 type LogoStore = LogoState & LogoActions;
 
-const CACHE_DURATION = 365 * 24 * 60 * 60 * 1000; // 1 year
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache to ensure fresh data
 
 const initialState: LogoState = {
   logoUrl: null,
@@ -50,7 +50,11 @@ export const useLogoStore = create<LogoStore>()(
       setHydrated: (state: boolean) => set({ isHydrated: state }),
 
       setLogo: (url: string | null) => {
-        set({ logoUrl: url, lastFetched: Date.now() });
+        set({
+          logoUrl: url,
+          lastFetched: Date.now(),
+          initialized: true,
+        });
       },
 
       reset: () => {
@@ -110,18 +114,8 @@ export const useLogoStore = create<LogoStore>()(
       },
 
       fetchLogo: async (vendorWebsite?: string) => {
-        const { isLoading, lastFetched, initialized, isHydrated } = get();
-
-        // Don't fetch if not hydrated, loading, or cache is still valid
-        if (
-          !isHydrated ||
-          isLoading ||
-          (initialized &&
-            lastFetched &&
-            Date.now() - lastFetched < CACHE_DURATION)
-        ) {
-          return;
-        }
+        const { isLoading } = get();
+        if (isLoading) return;
 
         set({ isLoading: true, error: null });
 
@@ -175,20 +169,17 @@ export const useLogoData = (vendorWebsite?: string) => {
   const fetchLogo = useLogoStore(state => state.fetchLogo);
   const logoUrl = useLogo();
   const isHydrated = useLogoHydrated();
-  const initialized = useLogoInitialized();
   const lastFetched = useLogoStore(state => state.lastFetched);
 
   useEffect(() => {
-    // Only fetch if hydrated and either not initialized or cache expired
+    // Always fetch on mount and when cache expires
     if (
       isHydrated &&
-      (!initialized ||
-        !lastFetched ||
-        Date.now() - lastFetched >= CACHE_DURATION)
+      (!lastFetched || Date.now() - lastFetched >= CACHE_DURATION)
     ) {
       fetchLogo(vendorWebsite);
     }
-  }, [isHydrated, initialized, lastFetched, fetchLogo, vendorWebsite]);
+  }, [isHydrated, lastFetched, fetchLogo, vendorWebsite]);
 
   return {
     logoUrl,

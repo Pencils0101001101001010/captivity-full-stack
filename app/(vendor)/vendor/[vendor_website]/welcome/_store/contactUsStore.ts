@@ -28,6 +28,7 @@ interface ContactState {
   error: string | null;
   lastFetched: number;
   isHydrated: boolean;
+  initialized: boolean;
 }
 
 interface ContactActions {
@@ -42,7 +43,7 @@ interface ContactActions {
 
 type ContactStore = ContactState & ContactActions;
 
-const CACHE_DURATION = 365 * 24 * 60 * 60 * 1000; // 1 year
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache to ensure fresh data
 
 const initialState: ContactState = {
   contacts: [],
@@ -50,6 +51,7 @@ const initialState: ContactState = {
   error: null,
   lastFetched: 0,
   isHydrated: false,
+  initialized: false,
 };
 
 export const useContactStore = create<ContactStore>()(
@@ -60,7 +62,11 @@ export const useContactStore = create<ContactStore>()(
       setHydrated: (state: boolean) => set({ isHydrated: state }),
 
       setContacts: (contacts: ContactInfo[]) => {
-        set({ contacts, lastFetched: Date.now() });
+        set({
+          contacts,
+          lastFetched: Date.now(),
+          initialized: true,
+        });
       },
 
       reset: () => {
@@ -83,6 +89,7 @@ export const useContactStore = create<ContactStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
@@ -108,6 +115,7 @@ export const useContactStore = create<ContactStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
@@ -133,6 +141,7 @@ export const useContactStore = create<ContactStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
@@ -144,13 +153,8 @@ export const useContactStore = create<ContactStore>()(
       },
 
       fetchContacts: async (vendorWebsite?: string) => {
-        const { isLoading, lastFetched } = get();
+        const { isLoading } = get();
         if (isLoading) return;
-
-        // Check if cache is still valid
-        if (lastFetched && Date.now() - lastFetched < CACHE_DURATION) {
-          return;
-        }
 
         set({ isLoading: true, error: null });
         try {
@@ -165,11 +169,13 @@ export const useContactStore = create<ContactStore>()(
             isLoading: false,
             error: null,
             lastFetched: Date.now(),
+            initialized: true,
           });
         } catch (error) {
           set({
             isLoading: false,
             error: error instanceof Error ? error.message : "Fetch failed",
+            lastFetched: Date.now(),
           });
         }
       },
@@ -180,6 +186,7 @@ export const useContactStore = create<ContactStore>()(
       partialize: state => ({
         contacts: state.contacts,
         lastFetched: state.lastFetched,
+        initialized: state.initialized,
       }),
       onRehydrateStorage: () => state => {
         state?.setHydrated(true);
@@ -195,6 +202,8 @@ export const useContactLoading = () =>
 export const useContactError = () => useContactStore(state => state.error);
 export const useContactHydrated = () =>
   useContactStore(state => state.isHydrated);
+export const useContactInitialized = () =>
+  useContactStore(state => state.initialized);
 
 export const useContactData = (vendorWebsite?: string) => {
   const fetchContacts = useContactStore(state => state.fetchContacts);
@@ -203,15 +212,14 @@ export const useContactData = (vendorWebsite?: string) => {
   const lastFetched = useContactStore(state => state.lastFetched);
 
   useEffect(() => {
+    // Always fetch on mount and when cache expires
     if (
       isHydrated &&
-      (!contacts.length ||
-        !lastFetched ||
-        Date.now() - lastFetched >= CACHE_DURATION)
+      (!lastFetched || Date.now() - lastFetched >= CACHE_DURATION)
     ) {
       fetchContacts(vendorWebsite);
     }
-  }, [isHydrated, contacts.length, lastFetched, fetchContacts, vendorWebsite]);
+  }, [isHydrated, lastFetched, fetchContacts, vendorWebsite]);
 
   return {
     contacts,
