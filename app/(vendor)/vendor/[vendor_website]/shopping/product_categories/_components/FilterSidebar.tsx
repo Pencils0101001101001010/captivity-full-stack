@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useCallback, useEffect, useState } from "react";
 import { useRouter, usePathname, useParams } from "next/navigation";
 
@@ -24,25 +25,32 @@ const FilterSidebar = () => {
   const params = useParams();
   const vendorWebsite = params?.vendor_website as string;
 
-  // Memoize getCurrentCollection to fix dependency warning
+  // Function to extract collection name from pathname
   const getCurrentCollection = useCallback((): Collection | null => {
     if (!pathname) return null;
-    const pathLower = pathname.toLowerCase();
-    return COLLECTIONS.find(c => pathLower.includes(c.toLowerCase())) ?? null;
+
+    // Split the pathname and get the last segment
+    const segments = pathname.split("/");
+    const lastSegment = segments[segments.length - 1];
+
+    // Find matching collection (case-insensitive)
+    return (
+      COLLECTIONS.find(
+        collection => collection.toLowerCase() === lastSegment.toLowerCase()
+      ) ?? null
+    );
   }, [pathname]);
 
   const [selectedCollection, setSelectedCollection] =
     useState<Collection | null>(() => getCurrentCollection());
 
   const handleCollectionChange = (value: Collection) => {
-    // Update state immediately
     setSelectedCollection(value);
 
-    // Use shallow routing for faster navigation
     const basePath = `/vendor/${vendorWebsite}/shopping/product_categories`;
-    const newPath = `${basePath}/${value.toLowerCase()}`;
+    const collectionPath = value.toLowerCase();
+    const newPath = `${basePath}/${collectionPath}`;
 
-    // Use shallow: true for faster route updates when possible
     router.push(newPath, { scroll: false });
   };
 
