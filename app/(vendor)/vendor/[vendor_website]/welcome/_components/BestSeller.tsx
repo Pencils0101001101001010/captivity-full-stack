@@ -105,7 +105,7 @@ const EmptyBlock = memo(
               className="w-full p-2 mb-2 rounded border border-gray-400 text-center text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
             />
             {!productName.trim() && (
-              <div className="absolute line-clamp-1 hover:line-clamp-none -top-2 right-2 transform translate-y-[-50%]">
+              <div className="absolute -top-2 right-2 transform translate-y-[-50%]">
                 <span className="text-[10px] text-red-500 bg-white px-1">
                   Required
                 </span>
@@ -145,7 +145,7 @@ const FilledBlock = memo(
         )}
       </figure>
       <div className="card-body bg-gray-300 rounded-b p-4">
-        <h2 className="text-center font-semibold text-gray-800 mb-2">
+        <h2 className="text-center font-semibold text-gray-800 mb-2 line-clamp-1 hover:line-clamp-none transition-all duration-200 cursor-pointer">
           {bestSeller.productName}
         </h2>
         <StarRating />
@@ -177,7 +177,7 @@ const BestSellerGrid = memo(() => {
       newNames[index] = name;
       return newNames;
     });
-  }, []); // No dependencies needed as it uses function form of setState
+  }, []);
 
   const handleFileSelect = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
@@ -294,7 +294,6 @@ const BestSellerGrid = memo(() => {
 
 BestSellerGrid.displayName = "BestSellerGrid";
 
-// Type guard for checking if user has role
 const isVendorUser = (user: any): user is { role: "VENDOR" } => {
   return user?.role === "VENDOR";
 };
@@ -307,10 +306,8 @@ export default function BestSeller() {
   const vendorWebsite =
     typeof params?.vendor_website === "string" ? params.vendor_website : "";
 
-  // Type guard usage
   const isVendor: boolean = isVendorUser(user);
 
-  // Use the new data hook for fetching
   useBestSellerData(
     user?.role === "VENDORCUSTOMER" ? vendorWebsite : undefined
   );
