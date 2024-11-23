@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
 import {
@@ -24,11 +25,47 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { VendorOrderSuccessViewProps } from "./types";
+import { VendorOrder } from "../../shop_product/checkout/_lib/types";
+
+interface VendorOrderSuccessViewProps {
+  order: VendorOrder[] | null;
+}
 
 export const VendorOrderSuccessView: React.FC<VendorOrderSuccessViewProps> = ({
-  order,
+  order: orderArray,
 }) => {
+  if (!orderArray || orderArray.length === 0) {
+    return (
+      <div className="min-h-screen bg-background py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-foreground mb-3">
+              Order not found
+            </h1>
+            <Button asChild className="mt-4">
+              <Link href="/vendor/orders">View All Orders</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const order = orderArray[0];
+  const displayOrderId = order.id.slice(0, 8);
+  const formattedDate = format(
+    new Date(order.createdAt),
+    "MMMM dd, yyyy 'at' HH:mm"
+  );
+
+  const formatPrice = (amount: number): string => {
+    return `R${amount.toFixed(2)}`;
+  };
+
+  const calculateItemTotal = (price: number, quantity: number): number => {
+    return price * quantity;
+  };
+
   return (
     <div className="min-h-screen bg-background py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,9 +82,7 @@ export const VendorOrderSuccessView: React.FC<VendorOrderSuccessViewProps> = ({
           </h1>
           <p className="text-lg text-muted-foreground">
             Order #{" "}
-            <span className="font-mono font-medium">
-              {order.id.slice(0, 8)}
-            </span>
+            <span className="font-mono font-medium">{displayOrderId}</span>
           </p>
         </div>
 
@@ -74,7 +109,7 @@ export const VendorOrderSuccessView: React.FC<VendorOrderSuccessViewProps> = ({
                   <Package className="h-5 w-5 text-muted-foreground" />
                 </span>
                 <span className="text-sm font-medium text-muted-foreground">
-                  Processing
+                  {order.status}
                 </span>
               </div>
               <div className="flex items-center space-x-2">
@@ -97,14 +132,11 @@ export const VendorOrderSuccessView: React.FC<VendorOrderSuccessViewProps> = ({
                 <CardTitle>Vendor Order Details</CardTitle>
                 <CardDescription className="flex items-center mt-1">
                   <Clock className="h-4 w-4 mr-1" />
-                  {format(
-                    new Date(order.createdAt),
-                    "MMMM dd, yyyy 'at' HH:mm"
-                  )}
+                  {formattedDate}
                 </CardDescription>
               </div>
               <div className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-sm font-medium">
-                Processing
+                {order.status}
               </div>
             </div>
           </CardHeader>
@@ -185,9 +217,9 @@ export const VendorOrderSuccessView: React.FC<VendorOrderSuccessViewProps> = ({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
-                        {order.vendorOrderItems.map((item, index) => (
+                        {order.vendorOrderItems.map(item => (
                           <tr
-                            key={index}
+                            key={item.id}
                             className="hover:bg-muted/50 transition-colors duration-150"
                           >
                             <td className="px-6 py-4">
@@ -202,13 +234,32 @@ export const VendorOrderSuccessView: React.FC<VendorOrderSuccessViewProps> = ({
                                   {item.vendorVariation.size} /{" "}
                                   {item.vendorVariation.color}
                                 </span>
+                                {item.vendorVariation.variationImageURL && (
+                                  <div className="relative w-16 h-16 mt-2">
+                                    <Image
+                                      src={
+                                        item.vendorVariation.variationImageURL
+                                      }
+                                      alt={
+                                        item.vendorVariation.vendorProduct
+                                          .productName
+                                      }
+                                      fill
+                                      sizes="(max-width: 64px) 100vw, 64px"
+                                      className="rounded object-cover"
+                                      priority={true}
+                                    />
+                                  </div>
+                                )}
                               </div>
                             </td>
                             <td className="px-6 py-4 text-sm text-center text-muted-foreground">
                               {item.quantity}
                             </td>
                             <td className="px-6 py-4 text-sm text-right text-foreground font-medium">
-                              R{(item.price * item.quantity).toFixed(2)}
+                              {formatPrice(
+                                calculateItemTotal(item.price, item.quantity)
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -221,7 +272,7 @@ export const VendorOrderSuccessView: React.FC<VendorOrderSuccessViewProps> = ({
                           </td>
                           <td className="px-6 py-4 text-right">
                             <span className="text-lg font-bold text-foreground">
-                              R{order.totalAmount.toFixed(2)}
+                              {formatPrice(order.totalAmount)}
                             </span>
                           </td>
                         </tr>

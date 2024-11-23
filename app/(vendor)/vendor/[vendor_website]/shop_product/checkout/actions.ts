@@ -2,15 +2,64 @@
 
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import { OrderStatus, Prisma, User, UserRole } from "@prisma/client";
+import { OrderStatus, Prisma, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { VendorFormValues, VendorOrderActionResult } from "./_lib/types";
+import {
+  VendorFormValues,
+  VendorOrderActionResult,
+  VendorOrder,
+} from "./_lib/types";
 
 interface AuthUser {
   id: string;
   role: UserRole;
   storeSlug: string | null;
 }
+
+const transformOrder = (order: any): VendorOrder => ({
+  id: order.id,
+  userId: order.userId,
+  status: order.status,
+  totalAmount: order.totalAmount,
+  createdAt: order.createdAt,
+  updatedAt: order.updatedAt,
+  vendorBranch: order.vendorBranch,
+  methodOfCollection: order.methodOfCollection,
+  salesRep: order.salesRep || "",
+  referenceNumber: order.referenceNumber || "",
+  firstName: order.firstName,
+  lastName: order.lastName,
+  companyName: order.companyName,
+  countryRegion: order.countryRegion,
+  streetAddress: order.streetAddress,
+  apartmentSuite: order.apartmentSuite || "",
+  townCity: order.townCity,
+  province: order.province,
+  postcode: order.postcode,
+  phone: order.phone,
+  email: order.email,
+  orderNotes: order.orderNotes || "",
+  agreeTerms: order.agreeTerms,
+  receiveEmailReviews: order.receiveEmailReviews || false,
+  vendorOrderItems: order.vendorOrderItems.map((item: any) => ({
+    id: item.id,
+    quantity: item.quantity,
+    price: item.price,
+    vendorVariation: {
+      size: item.vendorVariation.size,
+      color: item.vendorVariation.color,
+      variationImageURL: item.vendorVariation.variationImageURL,
+      name: item.vendorVariation.name,
+      sku: item.vendorVariation.sku,
+      sku2: item.vendorVariation.sku2,
+      vendorProduct: {
+        id: item.vendorVariation.vendorProduct.id,
+        productName: item.vendorVariation.vendorProduct.productName,
+        sellingPrice: item.vendorVariation.vendorProduct.sellingPrice,
+      },
+    },
+  })),
+});
 
 export async function createVendorOrder(
   formData: VendorFormValues
@@ -25,7 +74,6 @@ export async function createVendorOrder(
       };
     }
 
-    // 1. Verify cart and calculate total
     const existingCart = await prisma.vendorCart.findUnique({
       where: { userId: user.id },
       include: {
@@ -49,7 +97,6 @@ export async function createVendorOrder(
       };
     }
 
-    // 2. Verify stock availability before proceeding
     for (const item of existingCart.vendorCartItems) {
       const variation = await prisma.vendorVariation.findUnique({
         where: { id: item.vendorVariationId },
@@ -70,10 +117,8 @@ export async function createVendorOrder(
       0
     );
 
-    // 3. Create order with a simplified transaction
     const order = await prisma.$transaction(
       async tx => {
-        // Create order
         const newOrder = await tx.vendorOrder.create({
           data: {
             userId: user.id,
@@ -100,7 +145,6 @@ export async function createVendorOrder(
           },
         });
 
-        // Create order items
         await Promise.all(
           existingCart.vendorCartItems.map(item =>
             tx.vendorOrderItem.create({
@@ -114,7 +158,6 @@ export async function createVendorOrder(
           )
         );
 
-        // Update variation quantities
         await Promise.all(
           existingCart.vendorCartItems.map(item =>
             tx.vendorVariation.update({
@@ -128,7 +171,6 @@ export async function createVendorOrder(
           )
         );
 
-        // Delete cart items
         await tx.vendorCartItem.deleteMany({
           where: { vendorCartId: existingCart.id },
         });
@@ -142,7 +184,6 @@ export async function createVendorOrder(
       }
     );
 
-    // 4. Fetch complete order details after transaction
     const completeOrder = await prisma.vendorOrder.findUnique({
       where: { id: order.id },
       include: {
@@ -158,14 +199,21 @@ export async function createVendorOrder(
       },
     });
 
-    // 5. Revalidate paths
+    if (!completeOrder) {
+      return {
+        success: false,
+        message: "Failed to create order",
+        error: "Order creation failed",
+      };
+    }
+
     revalidatePath("/vendor/orders");
     revalidatePath("/vendor");
 
     return {
       success: true,
       message: "Order created successfully",
-      data: completeOrder,
+      data: transformOrder(completeOrder),
     };
   } catch (error) {
     console.error("Error creating vendor order:", error);
@@ -203,13 +251,10 @@ export async function getVendorOrder(
     }
 
     if (user.role === "VENDOR" && user.storeSlug) {
-      // For vendors: get all orders from their customers and their own orders
       const allOrders = await prisma.vendorOrder.findMany({
         where: {
           OR: [
-            // Vendor's own orders
             { userId: user.id },
-            // Orders from vendor's customers
             {
               user: {
                 AND: [
@@ -261,10 +306,9 @@ export async function getVendorOrder(
       return {
         success: true,
         message: "Orders retrieved successfully",
-        data: allOrders,
+        data: allOrders.map(transformOrder),
       };
     } else {
-      // For vendor customers: get only their own orders
       const customerOrders = await prisma.vendorOrder.findMany({
         where: {
           userId: user.id,
@@ -289,7 +333,7 @@ export async function getVendorOrder(
       return {
         success: true,
         message: "Orders retrieved successfully",
-        data: customerOrders,
+        data: customerOrders.map(transformOrder),
       };
     }
   } catch (error) {

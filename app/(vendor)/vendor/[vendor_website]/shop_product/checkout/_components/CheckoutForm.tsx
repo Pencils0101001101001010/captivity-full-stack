@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { createVendorOrder, getVendorUserDetails } from "../actions";
 import { useParams, useRouter } from "next/navigation";
-import { VendorFormValues } from "../_lib/types";
+import {
+  VendorFormValues,
+  VendorOrder,
+  VendorOrderActionResult,
+} from "../_lib/types";
 import { vendorFormSchema } from "../_lib/validation";
 import useVendorCartStore from "../../cart/useCartStore";
 import VendorBillingDetails from "./BillingDetails";
@@ -39,14 +44,17 @@ const defaultVendorFormValues: VendorFormValues = {
   receiveEmailReviews: false,
 } as const;
 
-// Memoized components
-const LoadingSpinner = React.memo(() => (
+interface LoadingSpinnerProps {}
+const LoadingSpinner: React.FC<LoadingSpinnerProps> = React.memo(() => (
   <div className="flex justify-center items-center min-h-[200px]">
     <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
   </div>
 ));
 
-const OrderNote = React.memo(() => (
+LoadingSpinner.displayName = "LoadingSpinner";
+
+interface OrderNoteProps {}
+const OrderNote: React.FC<OrderNoteProps> = React.memo(() => (
   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
     <p className="text-sm text-yellow-800">
       Note: By placing your order, you agree to our vendor terms and conditions.
@@ -57,16 +65,14 @@ const OrderNote = React.memo(() => (
 
 OrderNote.displayName = "OrderNote";
 
-const NavigationButtons = React.memo(
-  ({
-    isLoading,
-    isSubmitting,
-    hasItems,
-  }: {
-    isLoading: boolean;
-    isSubmitting: boolean;
-    hasItems: boolean;
-  }) => (
+interface NavigationButtonsProps {
+  isLoading: boolean;
+  isSubmitting: boolean;
+  hasItems: boolean;
+}
+
+const NavigationButtons: React.FC<NavigationButtonsProps> = React.memo(
+  ({ isLoading, isSubmitting, hasItems }) => (
     <div className="flex justify-between items-center">
       <Button type="button" variant="outline" className="w-[200px]" asChild>
         <Link href="/vendor/shopping/cart">Go to Cart</Link>
@@ -92,7 +98,22 @@ const NavigationButtons = React.memo(
 
 NavigationButtons.displayName = "NavigationButtons";
 
-const CheckoutForm = () => {
+interface VendorUserDetails {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  salesRep?: string;
+  phoneNumber?: string;
+  companyName?: string;
+  country?: string;
+  streetAddress?: string;
+  addressLine2?: string;
+  townCity?: string;
+  suburb?: string;
+  postcode?: string;
+}
+
+const CheckoutForm: React.FC = () => {
   const params = useParams();
   const vendorWebsite = params?.vendor_website as string;
   const router = useRouter();
@@ -111,35 +132,33 @@ const CheckoutForm = () => {
     mode: "onChange",
   });
 
-  // Use individual selectors for cart store
+  // Use individual selectors for cart store with proper method names
   const cart = useVendorCartStore(state => state.cart);
   const isLoading = useVendorCartStore(state => state.isLoading);
   const error = useVendorCartStore(state => state.error);
-  const fetchCart = useVendorCartStore(state => state.fetchCart);
-  const updateCartItemQuantity = useVendorCartStore(
-    state => state.updateCartItemQuantity
-  );
-  const removeFromCart = useVendorCartStore(state => state.removeFromCart);
+  const initialize = useVendorCartStore(state => state.initialize);
+  const updateQuantity = useVendorCartStore(state => state.updateQuantity);
+  const removeItem = useVendorCartStore(state => state.removeItem);
   const setCart = useVendorCartStore(state => state.setCart);
 
   // Memoize handlers
   const handleQuantityChange = useCallback(
     async (cartItemId: string, newQuantity: number) => {
       if (newQuantity < 1) return;
-      await updateCartItemQuantity(cartItemId, newQuantity);
+      await updateQuantity(cartItemId, newQuantity);
     },
-    [updateCartItemQuantity]
+    [updateQuantity]
   );
 
   const handleRemoveItem = useCallback(
     async (cartItemId: string) => {
-      await removeFromCart(cartItemId);
+      await removeItem(cartItemId);
       toast({
         title: "Item removed",
         description: "The item has been removed from your cart.",
       });
     },
-    [removeFromCart, toast]
+    [removeItem, toast]
   );
 
   const onSubmit = useCallback(
@@ -149,7 +168,8 @@ const CheckoutForm = () => {
       setIsSubmitting(true);
       try {
         const result = await createVendorOrder(formData);
-        if (result.success) {
+        if (result.success && result.data) {
+          const orderData = result.data as VendorOrder;
           setCart(null);
           toast({
             title: "Success",
@@ -157,7 +177,7 @@ const CheckoutForm = () => {
           });
           // Use replace instead of push to prevent back navigation to the checkout page
           router.replace(
-            `/vendor/${vendorWebsite}/order-success/${result.data.id}`
+            `/vendor/${vendorWebsite}/order-success/${orderData.id}`
           );
         } else {
           toast({
@@ -176,7 +196,7 @@ const CheckoutForm = () => {
         setIsSubmitting(false);
       }
     },
-    [isSubmitting, setCart, toast, router, vendorWebsite] // Add isSubmitting to dependencies
+    [isSubmitting, setCart, toast, router, vendorWebsite]
   );
 
   // Load user data
@@ -191,20 +211,21 @@ const CheckoutForm = () => {
         if (!mounted) return;
 
         if (result.success && result.data) {
+          const userData = result.data as VendorUserDetails;
           form.reset({
             ...defaultVendorFormValues,
-            firstName: result.data.firstName || "",
-            lastName: result.data.lastName || "",
-            email: result.data.email || "",
-            salesRep: result.data.salesRep || "",
-            phone: result.data.phoneNumber?.toString() || "",
-            companyName: result.data.companyName || "",
-            countryRegion: result.data.country || "",
-            streetAddress: result.data.streetAddress || "",
-            apartmentSuite: result.data.addressLine2 || "",
-            townCity: result.data.townCity || "",
-            province: result.data.suburb || "",
-            postcode: result.data.postcode || "",
+            firstName: userData.firstName || "",
+            lastName: userData.lastName || "",
+            email: userData.email || "",
+            salesRep: userData.salesRep || "",
+            phone: userData.phoneNumber?.toString() || "",
+            companyName: userData.companyName || "",
+            countryRegion: userData.country || "",
+            streetAddress: userData.streetAddress || "",
+            apartmentSuite: userData.addressLine2 || "",
+            townCity: userData.townCity || "",
+            province: userData.suburb || "",
+            postcode: userData.postcode || "",
           });
         }
       } catch (error) {
@@ -222,12 +243,12 @@ const CheckoutForm = () => {
     };
   }, [form]);
 
-  // Fetch cart
+  // Initialize cart
   useEffect(() => {
     if (!cart) {
-      fetchCart();
+      initialize();
     }
-  }, [cart, fetchCart]);
+  }, [cart, initialize]);
 
   if (isLoadingPreviousOrder) {
     return <LoadingSpinner />;
@@ -269,7 +290,5 @@ const CheckoutForm = () => {
     </Form>
   );
 };
-
-LoadingSpinner.displayName = "LoadingSpinner";
 
 export default React.memo(CheckoutForm);

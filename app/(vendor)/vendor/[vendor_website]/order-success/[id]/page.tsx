@@ -1,11 +1,20 @@
+// app/vendor/[vendor_website]/order-success/[id]/page.tsx
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { VendorOrderSuccessView } from "./OrderSuccessView";
 import { getVendorOrder } from "../../shop_product/checkout/actions";
 
-export default async function VendorOrderSuccessPage() {
-  // Fetch latest order
-  const result = await getVendorOrder();
+interface VendorOrderSuccessPageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default async function VendorOrderSuccessPage({
+  params,
+}: VendorOrderSuccessPageProps) {
+  // Fetch specific order using ID
+  const result = await getVendorOrder(params.id);
 
   // Handle error states
   if (!result.success) {
@@ -16,7 +25,7 @@ export default async function VendorOrderSuccessPage() {
             Unable to Load Vendor Order
           </h1>
           <p className="text-gray-600 text-center mb-6">
-            {result.error || "No recent vendor orders found."}
+            {result.error || "Order not found."}
           </p>
           <div className="flex justify-center">
             <Link
@@ -36,5 +45,8 @@ export default async function VendorOrderSuccessPage() {
     return notFound();
   }
 
-  return <VendorOrderSuccessView order={result.data} />;
+  // Take the first order if it's an array, otherwise use the single order
+  const order = Array.isArray(result.data) ? result.data[0] : result.data;
+
+  return <VendorOrderSuccessView order={[order]} />;
 }

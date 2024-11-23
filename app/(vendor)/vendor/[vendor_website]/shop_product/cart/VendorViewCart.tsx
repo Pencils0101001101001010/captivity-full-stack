@@ -8,62 +8,14 @@ import { useSession } from "@/app/(vendor)/SessionProvider";
 import useVendorCartStore from "./useCartStore";
 import { useParams, useRouter } from "next/navigation";
 
-// Import exact types from your prisma client
+// Import your types
 import type {
   VendorCart,
+  VendorCartItem,
   VendorVariation,
   VendorProduct,
   VendorDynamicPricing,
-} from "@prisma/client";
-
-// Dynamic pricing rule type
-interface DynamicPricingRule {
-  id: string;
-  vendorProductId: string;
-  from: string;
-  to: string;
-  type: "fixed_price" | "percentage";
-  amount: string;
-}
-
-// Product details
-interface VendorProductWithDetails extends VendorProduct {
-  featuredImage?: {
-    medium: string;
-  } | null;
-  dynamicPricing: DynamicPricingRule[];
-}
-
-// Variation with product
-interface VendorVariationWithProduct extends VendorVariation {
-  vendorProduct: VendorProductWithDetails;
-}
-
-// Cart item
-interface VendorCartItem {
-  id: string;
-  vendorCartId: string;
-  vendorVariationId: string;
-  quantity: number;
-  vendorVariation: VendorVariationWithProduct;
-}
-
-// Cart with items
-interface VendorCartWithItems extends VendorCart {
-  vendorCartItems: VendorCartItem[];
-}
-
-// User and session types
-interface User {
-  id: string;
-  username: string;
-  displayName: string;
-  role: string;
-}
-
-interface SessionData {
-  user: User | null;
-}
+} from "../checkout/_lib/types"; // Adjust path as needed
 
 // Calculate price helper
 const calculateItemPrice = (item: VendorCartItem): number => {
@@ -93,18 +45,17 @@ const VendorViewCart: React.FC = () => {
   const router = useRouter();
   const vendorWebsite = params?.vendor_website as string;
 
-  const cart = useVendorCartStore(
-    state => state.cart
-  ) as VendorCartWithItems | null;
-  const fetchCart = useVendorCartStore(state => state.fetchCart);
+  // Access cart state and actions from the store
+  const cart = useVendorCartStore(state => state.cart) as VendorCart | null;
+  const fetchCart = useVendorCartStore(state => state.initialize);
   const updateCartItemQuantity = useVendorCartStore(
-    state => state.updateCartItemQuantity
+    state => state.updateQuantity
   );
-  const removeFromCart = useVendorCartStore(state => state.removeFromCart);
+  const removeFromCart = useVendorCartStore(state => state.removeItem);
 
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
-  const { user } = useSession() as SessionData;
+  const { user } = useSession();
 
   useEffect(() => {
     fetchCart();
@@ -197,7 +148,7 @@ const VendorViewCart: React.FC = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-semibold mb-8">
           {user?.username
-            ? `${user.displayName}'s Vendor Cart`
+            ? `${user.username}'s Vendor Cart`
             : "Vendor Shopping Cart"}
         </h1>
       </div>
@@ -309,26 +260,18 @@ const VendorViewCart: React.FC = () => {
                 <span>R{shipping.toFixed(2)}</span>
               </div>
               <div className="h-px bg-border" />
-              <div className="flex justify-between font-semibold text-lg text-card-foreground">
+              <div className="flex justify-between font-semibold text-lg">
                 <span>Total</span>
                 <span>R{total.toFixed(2)}</span>
               </div>
             </div>
 
-            <div className="space-y-3">
-              <Link
-                href="/vendor/shopping/checkout"
-                className="block w-full bg-primary text-primary-foreground text-center py-3 rounded-md font-medium hover:bg-primary/90"
-              >
-                Proceed to Checkout
-              </Link>
-              <button
-                onClick={handleContinueShopping}
-                className="block w-full bg-secondary text-secondary-foreground text-center py-3 rounded-md font-medium hover:bg-secondary/90"
-              >
-                Continue Shopping
-              </button>
-            </div>
+            <button
+              onClick={() => router.push(`/vendor/${vendorWebsite}/checkout`)}
+              className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-md font-medium hover:bg-primary/90"
+            >
+              Proceed to Checkout
+            </button>
           </div>
         </div>
       </div>
