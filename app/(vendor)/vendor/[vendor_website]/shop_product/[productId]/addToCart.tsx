@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { VendorVariation } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/app/(vendor)/SessionProvider";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import useVendorCartStore from "./useCartStore";
+import useVendorCartStore from "../cart/useCartStore";
 
 interface VendorAddToCartButtonProps {
   selectedVariation: VendorVariation | null;
@@ -30,16 +30,23 @@ const VendorAddToCartButton: React.FC<VendorAddToCartButtonProps> = ({
   disabled,
   className = "",
 }) => {
-  const addToCart = useVendorCartStore(state => state.addToCart);
-  const error = useVendorCartStore(state => state.error);
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { user } = useSession() as SessionData;
+  const { addToCart, isLoading, initialize, isInitialized } =
+    useVendorCartStore();
+
+  React.useEffect(() => {
+    if (!isInitialized) {
+      initialize();
+    }
+  }, [isInitialized, initialize]);
 
   const handleAddToCart = async () => {
+    if (!selectedVariation) return;
+
     if (!user) {
       toast({
         title: "Authentication Required",
-        description: "Please login as a vendor customer to add items to cart",
+        description: "Please login to add items to cart",
         variant: "destructive",
       });
       return;
@@ -58,43 +65,46 @@ const VendorAddToCartButton: React.FC<VendorAddToCartButtonProps> = ({
       return;
     }
 
-    if (selectedVariation) {
-      try {
-        setIsAddingToCart(true);
-        await addToCart(selectedVariation.id, quantity);
+    if (quantity > selectedVariation.quantity) {
+      toast({
+        title: "Error",
+        description: "Not enough stock available",
+        variant: "destructive",
+      });
+      return;
+    }
 
-        if (error) {
-          toast({
-            title: "Error",
-            description: error,
-            variant: "destructive",
-          });
-          return;
-        }
+    try {
+      const success = await addToCart(selectedVariation.id, quantity);
 
+      if (success) {
         toast({
           title: "Success",
-          description: "Item added to cart successfully",
+          description: "Item added to cart",
         });
-      } catch (error) {
+      } else {
         toast({
           title: "Error",
-          description: "Failed to add item to cart. Please try again.",
+          description: "Failed to add item to cart",
           variant: "destructive",
         });
-      } finally {
-        setIsAddingToCart(false);
       }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to add item to cart",
+        variant: "destructive",
+      });
     }
   };
 
-  // Only use local loading state, not the global one
   const isButtonDisabled =
     disabled ||
-    isAddingToCart ||
+    isLoading ||
     !selectedVariation ||
     quantity < 1 ||
-    (selectedVariation && quantity > selectedVariation.quantity);
+    quantity > (selectedVariation?.quantity || 0);
 
   return (
     <Button
@@ -103,10 +113,10 @@ const VendorAddToCartButton: React.FC<VendorAddToCartButtonProps> = ({
       onClick={handleAddToCart}
       variant="default"
     >
-      {isAddingToCart ? (
+      {isLoading ? (
         <span className="flex items-center justify-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Adding to Cart...
+          Adding...
         </span>
       ) : (
         "Add to Cart"

@@ -1,4 +1,3 @@
-// Navbar.tsx
 "use client";
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
@@ -36,8 +35,8 @@ const Navbar = () => {
   const isCartInitialized = useVendorCartStore(
     useCallback(state => state.isInitialized, [])
   );
-  const fetchCart = useVendorCartStore(
-    useCallback(state => state.fetchCart, [])
+  const initialize = useVendorCartStore(
+    useCallback(state => state.initialize, [])
   );
 
   const cartItemCount =
@@ -56,9 +55,15 @@ const Navbar = () => {
   // Initialize cart
   useEffect(() => {
     if (session?.user && (isVendor || isVendorCustomer) && !isCartInitialized) {
-      fetchCart();
+      initialize();
     }
-  }, [session?.user, isVendor, isVendorCustomer, fetchCart, isCartInitialized]);
+  }, [
+    session?.user,
+    isVendor,
+    isVendorCustomer,
+    initialize,
+    isCartInitialized,
+  ]);
 
   // Logo handling
   const {

@@ -16,7 +16,7 @@ import {
 import VendorProductImage from "./VendorProductImage";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
-import VendorAddToCartButton from "../cart/addToCart";
+import VendorAddToCartButton from "./addToCart";
 import { useParams } from "next/navigation";
 
 const transformVendorProductForImage = (

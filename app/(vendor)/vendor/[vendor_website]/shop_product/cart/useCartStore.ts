@@ -18,14 +18,11 @@ interface VendorCartState {
 }
 
 interface VendorCartActions {
-  fetchCart: () => Promise<void>;
-  addToCart: (variationId: string, quantity: number) => Promise<void>;
-  updateCartItemQuantity: (
-    cartItemId: string,
-    quantity: number
-  ) => Promise<void>;
-  removeFromCart: (cartItemId: string) => Promise<void>;
-  clearCart: () => Promise<void>;
+  initialize: () => Promise<void>;
+  addToCart: (variationId: string, quantity: number) => Promise<boolean>;
+  updateQuantity: (cartItemId: string, quantity: number) => Promise<boolean>;
+  removeItem: (cartItemId: string) => Promise<boolean>;
+  clearCart: () => Promise<boolean>;
   setCart: (cart: VendorCart | null) => void;
 }
 
@@ -88,8 +85,8 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
     set({ cart });
   },
 
-  fetchCart: async () => {
-    if (get().isLoading) return;
+  initialize: async () => {
+    if (get().isInitialized || get().isLoading) return;
 
     set({ isLoading: true, error: null });
     try {
@@ -109,7 +106,7 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
       }
     } catch (error) {
       set({
-        error: "Failed to fetch vendor cart",
+        error: "Failed to initialize cart",
         isLoading: false,
         isInitialized: true,
       });
@@ -117,23 +114,26 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
   },
 
   addToCart: async (variationId: string, quantity: number) => {
-    if (get().isLoading) return;
+    if (get().isLoading) return false;
 
     set({ isLoading: true, error: null });
     try {
       const result = await addToVendorCartAction(variationId, quantity);
       if (result.success) {
         set({ cart: result.data as VendorCart, isLoading: false });
+        return true;
       } else {
         set({ error: result.error, isLoading: false });
+        return false;
       }
     } catch (error) {
-      set({ error: "Failed to add item to vendor cart", isLoading: false });
+      set({ error: "Failed to add item to cart", isLoading: false });
+      return false;
     }
   },
 
-  updateCartItemQuantity: async (cartItemId: string, quantity: number) => {
-    if (get().isLoading) return;
+  updateQuantity: async (cartItemId: string, quantity: number) => {
+    if (get().isLoading) return false;
 
     set({ isLoading: true, error: null });
     try {
@@ -143,49 +143,52 @@ const useVendorCartStore = create<VendorCartStore>((set, get) => ({
       );
       if (result.success) {
         set({ cart: result.data as VendorCart, isLoading: false });
+        return true;
       } else {
         set({ error: result.error, isLoading: false });
+        return false;
       }
     } catch (error) {
-      set({
-        error: "Failed to update vendor cart item quantity",
-        isLoading: false,
-      });
+      set({ error: "Failed to update quantity", isLoading: false });
+      return false;
     }
   },
 
-  removeFromCart: async (cartItemId: string) => {
-    if (get().isLoading) return;
+  removeItem: async (cartItemId: string) => {
+    if (get().isLoading) return false;
 
     set({ isLoading: true, error: null });
     try {
       const result = await removeFromVendorCartAction(cartItemId);
       if (result.success) {
         set({ cart: result.data as VendorCart, isLoading: false });
+        return true;
       } else {
         set({ error: result.error, isLoading: false });
+        return false;
       }
     } catch (error) {
-      set({
-        error: "Failed to remove item from vendor cart",
-        isLoading: false,
-      });
+      set({ error: "Failed to remove item", isLoading: false });
+      return false;
     }
   },
 
   clearCart: async () => {
-    if (get().isLoading) return;
+    if (get().isLoading) return false;
 
     set({ isLoading: true, error: null });
     try {
       const result = await clearVendorCartAction();
       if (result.success) {
         set({ cart: result.data as VendorCart, isLoading: false });
+        return true;
       } else {
         set({ error: result.error, isLoading: false });
+        return false;
       }
     } catch (error) {
-      set({ error: "Failed to clear vendor cart", isLoading: false });
+      set({ error: "Failed to clear cart", isLoading: false });
+      return false;
     }
   },
 
