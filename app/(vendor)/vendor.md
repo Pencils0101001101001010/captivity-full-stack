@@ -10,6 +10,6 @@
 
 [x] Dynamic Pricing is not working on the create product form
 
-[] The order table only filters one order at a time.
+[x] The order table only filters one order at a time.
 
-[] The order fiter dont filter the vendor_website/customer orders
+[] The order filter dont filter the vendor_website/customer orders only the vendor orders
