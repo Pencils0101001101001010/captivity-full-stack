@@ -3,7 +3,6 @@
 import { put, del } from "@vercel/blob";
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/auth";
-import { revalidatePath } from "next/cache";
 import { cache } from "react";
 
 interface BestSellerActionResult {

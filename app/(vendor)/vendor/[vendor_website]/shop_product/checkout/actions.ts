@@ -3,7 +3,6 @@
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { OrderStatus, Prisma, UserRole } from "@prisma/client";
-import { revalidatePath } from "next/cache";
 import {
   VendorFormValues,
   VendorOrderActionResult,
@@ -206,9 +205,6 @@ export async function createVendorOrder(
         error: "Order creation failed",
       };
     }
-
-    revalidatePath("/vendor/orders");
-    revalidatePath("/vendor");
 
     return {
       success: true,
