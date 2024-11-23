@@ -81,10 +81,10 @@ const useVendorOrderStore = create<OrderState>()(
 
     fetchOrders: async () => {
       try {
-        set(state => ({ ...state, loading: true, error: null }));
+        set({ loading: true, error: null });
         const response = await getVendorOrder();
 
-        if (!response.success) {
+        if (!response.success || !response.data) {
           throw new Error(response.error || "Failed to fetch orders");
         }
 
@@ -107,11 +107,12 @@ const useVendorOrderStore = create<OrderState>()(
         } = get();
         filterOrders(selectedPriceRange, selectedTimeFilter, selectedStatus);
       } catch (error) {
-        set(state => ({
-          ...state,
+        set({
           error: error instanceof Error ? error.message : "An error occurred",
           loading: false,
-        }));
+          currentOrders: [], // Reset orders on error
+          filteredOrders: [], // Reset filtered orders on error
+        });
       }
     },
 
@@ -189,8 +190,7 @@ const useVendorOrderStore = create<OrderState>()(
       const start = (state.currentPage - 1) * state.itemsPerPage;
       const paginatedOrders = filtered.slice(start, start + state.itemsPerPage);
 
-      set(state => ({
-        ...state,
+      set({
         filteredOrders: paginatedOrders,
         selectedPriceRange: priceRange || state.selectedPriceRange,
         selectedTimeFilter: timeFilter || state.selectedTimeFilter,
@@ -201,30 +201,26 @@ const useVendorOrderStore = create<OrderState>()(
           0
         ),
         totalPages,
-      }));
+      });
     },
 
     sortOrders: (field: SortField, direction: SortDirection) => {
-      set(state => ({
-        ...state,
-        sortField: field,
-        sortDirection: direction,
-      }));
+      set({ sortField: field, sortDirection: direction });
       get().filterOrders();
     },
 
     searchOrders: (query: string) => {
-      set(state => ({ ...state, searchQuery: query, currentPage: 1 }));
+      set({ searchQuery: query, currentPage: 1 });
       get().filterOrders();
     },
 
     setPage: (page: number) => {
-      set(state => ({ ...state, currentPage: page }));
+      set({ currentPage: page });
       get().filterOrders();
     },
 
     setItemsPerPage: (items: number) => {
-      set(state => ({ ...state, itemsPerPage: items, currentPage: 1 }));
+      set({ itemsPerPage: items, currentPage: 1 });
       get().filterOrders();
     },
 

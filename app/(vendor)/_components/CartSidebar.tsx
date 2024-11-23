@@ -1,11 +1,12 @@
-"use client";
-
 import { ShoppingBag, X, Trash2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import useVendorCartStore from "../vendor/[vendor_website]/shop_product/cart/useCartStore";
+import { VendorCartItem } from "../vendor/[vendor_website]/shop_product/checkout/_lib/types";
+
+// Import custom types
 
 interface VendorCartSidebarProps {
   isOpen: boolean;
@@ -13,22 +14,48 @@ interface VendorCartSidebarProps {
   vendorWebsite: string;
 }
 
+const calculateItemPrice = (item: VendorCartItem): number => {
+  const basePrice = item.vendorVariation.vendorProduct.sellingPrice;
+  const dynamicPricing = item.vendorVariation.vendorProduct.dynamicPricing;
+
+  if (!dynamicPricing?.length) return basePrice * item.quantity;
+
+  const applicableRule = dynamicPricing.find(rule => {
+    const from = parseInt(rule.from);
+    const to = parseInt(rule.to);
+    return item.quantity >= from && item.quantity <= to;
+  });
+
+  if (!applicableRule) return basePrice * item.quantity;
+
+  if (applicableRule.type === "fixed_price") {
+    return parseFloat(applicableRule.amount) * item.quantity;
+  } else {
+    const discount = parseFloat(applicableRule.amount) / 100;
+    return basePrice * item.quantity * (1 - discount);
+  }
+};
+
 const VendorCartSidebar = ({
   isOpen,
   onClose,
   vendorWebsite,
 }: VendorCartSidebarProps) => {
-  const { cart, updateCartItemQuantity, removeFromCart } = useVendorCartStore();
+  const { cart, updateQuantity, removeItem } = useVendorCartStore();
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
   const [updateSuccess, setUpdateSuccess] = useState<Set<string>>(new Set());
+
+  const cartItems = cart?.vendorCartItems || [];
+  const subtotal =
+    cartItems.reduce((sum, item) => sum + calculateItemPrice(item), 0) || 0;
 
   const handleUpdateQuantity = async (
     cartItemId: string,
     newQuantity: number
   ) => {
     setUpdatingItems(prev => new Set(prev).add(cartItemId));
-    await updateCartItemQuantity(cartItemId, newQuantity);
+    await updateQuantity(cartItemId, newQuantity); // Correct method name
     setUpdatingItems(prev => {
       const newSet = new Set(prev);
       newSet.delete(cartItemId);
@@ -47,37 +74,13 @@ const VendorCartSidebar = ({
 
   const handleRemoveItem = async (cartItemId: string) => {
     setRemovingItems(prev => new Set(prev).add(cartItemId));
-    await removeFromCart(cartItemId);
+    await removeItem(cartItemId); // Correct method name
     setRemovingItems(prev => {
       const newSet = new Set(prev);
       newSet.delete(cartItemId);
       return newSet;
     });
   };
-
-  const cartItems = cart?.vendorCartItems || [];
-  const subtotal =
-    cart?.vendorCartItems?.reduce((sum, item) => {
-      const basePrice = item.vendorVariation.vendorProduct.sellingPrice;
-      const dynamicPricing = item.vendorVariation.vendorProduct.dynamicPricing;
-
-      if (!dynamicPricing?.length) return sum + basePrice * item.quantity;
-
-      const applicableRule = dynamicPricing.find(rule => {
-        const from = parseInt(rule.from);
-        const to = parseInt(rule.to);
-        return item.quantity >= from && item.quantity <= to;
-      });
-
-      if (!applicableRule) return sum + basePrice * item.quantity;
-
-      if (applicableRule.type === "fixed_price") {
-        return sum + parseFloat(applicableRule.amount) * item.quantity;
-      } else {
-        const discount = parseFloat(applicableRule.amount) / 100;
-        return sum + basePrice * item.quantity * (1 - discount);
-      }
-    }, 0) || 0;
 
   return (
     <>
@@ -123,28 +126,9 @@ const VendorCartSidebar = ({
           ) : (
             <div className="p-4 space-y-4">
               {cartItems.map(item => {
+                const itemTotal = calculateItemPrice(item);
                 const basePrice =
                   item.vendorVariation.vendorProduct.sellingPrice;
-                const dynamicPricing =
-                  item.vendorVariation.vendorProduct.dynamicPricing;
-                let itemTotal = basePrice * item.quantity;
-
-                const applicableRule = dynamicPricing?.find(rule => {
-                  const from = parseInt(rule.from);
-                  const to = parseInt(rule.to);
-                  return item.quantity >= from && item.quantity <= to;
-                });
-
-                if (applicableRule) {
-                  if (applicableRule.type === "fixed_price") {
-                    itemTotal =
-                      parseFloat(applicableRule.amount) * item.quantity;
-                  } else {
-                    const discount = parseFloat(applicableRule.amount) / 100;
-                    itemTotal = basePrice * item.quantity * (1 - discount);
-                  }
-                }
-
                 const hasDiscount = itemTotal < basePrice * item.quantity;
 
                 return (
@@ -251,10 +235,10 @@ const VendorCartSidebar = ({
               Checkout
             </Link>
             <Link
-              href={`/vendor/${vendorWebsite}/shop_product/cart`}
+              href={`/vendor/${vendorWebsite}/shop_product`}
               className={cn(
-                "block w-full bg-secondary text-secondary-foreground text-center py-2.5 sm:py-3 rounded-md",
-                "hover:bg-secondary/90 transition-colors",
+                "block w-full bg-accent text-accent-foreground text-center py-2.5 sm:py-3 rounded-md",
+                "hover:bg-accent/90 transition-colors",
                 "text-sm sm:text-base font-medium"
               )}
               onClick={onClose}
