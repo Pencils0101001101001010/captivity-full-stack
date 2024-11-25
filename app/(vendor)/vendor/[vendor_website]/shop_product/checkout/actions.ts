@@ -15,50 +15,107 @@ interface AuthUser {
   storeSlug: string | null;
 }
 
-const transformOrder = (order: any): VendorOrder => ({
-  id: order.id,
-  userId: order.userId,
-  status: order.status,
-  totalAmount: order.totalAmount,
-  createdAt: order.createdAt,
-  updatedAt: order.updatedAt,
-  vendorBranch: order.vendorBranch,
-  methodOfCollection: order.methodOfCollection,
-  salesRep: order.salesRep || "",
-  referenceNumber: order.referenceNumber || "",
-  firstName: order.firstName,
-  lastName: order.lastName,
-  companyName: order.companyName,
-  countryRegion: order.countryRegion,
-  streetAddress: order.streetAddress,
-  apartmentSuite: order.apartmentSuite || "",
-  townCity: order.townCity,
-  province: order.province,
-  postcode: order.postcode,
-  phone: order.phone,
-  email: order.email,
-  orderNotes: order.orderNotes || "",
-  agreeTerms: order.agreeTerms,
-  receiveEmailReviews: order.receiveEmailReviews || false,
-  vendorOrderItems: order.vendorOrderItems.map((item: any) => ({
-    id: item.id,
-    quantity: item.quantity,
-    price: item.price,
+interface PrismaVendorOrder {
+  id: string;
+  userId: string;
+  status: OrderStatus;
+  totalAmount: number;
+  createdAt: Date;
+  updatedAt: Date;
+  vendorBranch: string;
+  methodOfCollection: string;
+  salesRep: string | null;
+  referenceNumber: string | null;
+  firstName: string;
+  lastName: string;
+  companyName: string;
+  countryRegion: string;
+  streetAddress: string;
+  apartmentSuite: string | null;
+  townCity: string;
+  province: string;
+  postcode: string;
+  phone: string;
+  email: string;
+  orderNotes: string | null;
+  agreeTerms: boolean;
+  receiveEmailReviews: boolean | null;
+  user?: {
+    id: string;
+    role: UserRole;
+    storeSlug: string | null;
+    username: string;
+    email: string;
+  };
+  vendorOrderItems: Array<{
+    id: string;
+    quantity: number;
+    price: number;
+    vendorOrderId: string;
+    vendorVariationId: string;
     vendorVariation: {
-      size: item.vendorVariation.size,
-      color: item.vendorVariation.color,
-      variationImageURL: item.vendorVariation.variationImageURL,
-      name: item.vendorVariation.name,
-      sku: item.vendorVariation.sku,
-      sku2: item.vendorVariation.sku2,
+      id: string;
+      name: string;
+      color: string;
+      size: string;
+      sku: string;
+      sku2: string;
+      quantity: number;
+      variationImageURL: string;
+      vendorProductId: string;
       vendorProduct: {
-        id: item.vendorVariation.vendorProduct.id,
-        productName: item.vendorVariation.vendorProduct.productName,
-        sellingPrice: item.vendorVariation.vendorProduct.sellingPrice,
-      },
-    },
-  })),
-});
+        id: string;
+        productName: string;
+        description: string;
+        sellingPrice: number;
+        isPublished: boolean;
+        category: string[];
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string;
+      };
+    };
+  }>;
+}
+
+const transformOrder = (order: PrismaVendorOrder): VendorOrder => {
+  return {
+    id: order.id,
+    userId: order.userId,
+    status: order.status,
+    totalAmount: order.totalAmount,
+    createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
+    vendorBranch: order.vendorBranch,
+    methodOfCollection: order.methodOfCollection,
+    salesRep: order.salesRep || "",
+    referenceNumber: order.referenceNumber || "",
+    firstName: order.firstName,
+    lastName: order.lastName,
+    companyName: order.companyName,
+    countryRegion: order.countryRegion,
+    streetAddress: order.streetAddress,
+    apartmentSuite: order.apartmentSuite || "",
+    townCity: order.townCity,
+    province: order.province,
+    postcode: order.postcode,
+    phone: order.phone,
+    email: order.email,
+    orderNotes: order.orderNotes || "",
+    agreeTerms: order.agreeTerms,
+    receiveEmailReviews: order.receiveEmailReviews || false,
+    vendorOrderItems: order.vendorOrderItems,
+    user: order.user
+      ? {
+          id: order.user.id,
+          role: order.user.role,
+          storeSlug: order.user.storeSlug,
+          username: order.user.username,
+          email: order.user.email,
+        }
+      : undefined,
+  };
+};
 
 export async function createVendorOrder(
   formData: VendorFormValues
@@ -212,8 +269,6 @@ export async function createVendorOrder(
       data: transformOrder(completeOrder),
     };
   } catch (error) {
-    console.error("Error creating vendor order:", error);
-
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2028") {
         return {
@@ -238,6 +293,7 @@ export async function getVendorOrder(
 ): Promise<VendorOrderActionResult> {
   try {
     const { user } = (await validateRequest()) as { user: AuthUser | null };
+
     if (!user || (user.role !== "VENDOR" && user.role !== "VENDORCUSTOMER")) {
       return {
         success: false,
@@ -246,39 +302,35 @@ export async function getVendorOrder(
       };
     }
 
-    if (user.role === "VENDOR" && user.storeSlug) {
+    if (user.role === "VENDOR") {
+      const vendorDetails = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { storeSlug: true },
+      });
+
+      if (!vendorDetails?.storeSlug) {
+        return {
+          success: false,
+          message: "Vendor store not found",
+          error: "Invalid vendor configuration",
+        };
+      }
+
       const allOrders = await prisma.vendorOrder.findMany({
         where: {
           OR: [
             { userId: user.id },
             {
               user: {
-                AND: [
-                  { role: "VENDORCUSTOMER" },
-                  {
-                    storeSlug: {
-                      startsWith: `${user.storeSlug}-customer-`,
-                    },
-                  },
-                ],
+                storeSlug: {
+                  startsWith: `${vendorDetails.storeSlug}-customer-`,
+                },
               },
             },
           ],
           ...(orderId ? { id: orderId } : {}),
         },
-        orderBy: {
-          createdAt: "desc",
-        },
         include: {
-          vendorOrderItems: {
-            include: {
-              vendorVariation: {
-                include: {
-                  vendorProduct: true,
-                },
-              },
-            },
-          },
           user: {
             select: {
               id: true,
@@ -288,6 +340,18 @@ export async function getVendorOrder(
               email: true,
             },
           },
+          vendorOrderItems: {
+            include: {
+              vendorVariation: {
+                include: {
+                  vendorProduct: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
         },
       });
 
@@ -299,10 +363,12 @@ export async function getVendorOrder(
         };
       }
 
+      const transformedOrders = allOrders.map(transformOrder);
+
       return {
         success: true,
         message: "Orders retrieved successfully",
-        data: allOrders.map(transformOrder),
+        data: transformedOrders,
       };
     } else {
       const customerOrders = await prisma.vendorOrder.findMany({
@@ -314,6 +380,15 @@ export async function getVendorOrder(
           createdAt: "desc",
         },
         include: {
+          user: {
+            select: {
+              id: true,
+              role: true,
+              storeSlug: true,
+              username: true,
+              email: true,
+            },
+          },
           vendorOrderItems: {
             include: {
               vendorVariation: {
@@ -333,7 +408,6 @@ export async function getVendorOrder(
       };
     }
   } catch (error) {
-    console.error("Error retrieving vendor order:", error);
     return {
       success: false,
       message: "Failed to retrieve order",
@@ -386,7 +460,6 @@ export async function getVendorUserDetails() {
       data: userDetails,
     };
   } catch (error) {
-    console.error("Error retrieving vendor user details:", error);
     return {
       success: false,
       message: "Failed to retrieve user details",

@@ -98,6 +98,14 @@ export interface VendorUser {
   phoneNumber: string;
 }
 
+export interface OrderUser {
+  id: string;
+  role: UserRole;
+  storeSlug: string | null;
+  username: string;
+  email: string;
+}
+
 export interface VendorOrder {
   id: string;
   userId: string;
@@ -124,6 +132,7 @@ export interface VendorOrder {
   agreeTerms: boolean;
   receiveEmailReviews: boolean;
   vendorOrderItems: VendorOrderItem[];
+  user?: OrderUser;
 }
 
 export interface VendorFormValues {
@@ -147,7 +156,6 @@ export interface VendorFormValues {
   receiveEmailReviews: boolean;
 }
 
-// Response types
 export type VendorOrderActionResult = {
   success: boolean;
   message: string;

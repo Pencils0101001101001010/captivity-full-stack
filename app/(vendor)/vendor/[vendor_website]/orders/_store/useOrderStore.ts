@@ -19,17 +19,23 @@ export type PriceRange =
   | "greater_than_fiveK";
 export type TimeFilter = "all" | "recent" | "old";
 export type StatusFilter = OrderStatus | "all";
+export type CustomerTypeFilter = "all" | "vendor" | "customer";
 export type SortDirection = "asc" | "desc";
 export type SortField = "date" | "amount" | "status";
 
 interface OrderState {
-  currentOrders: VendorOrder[];
-  filteredOrders: VendorOrder[];
+  currentOrders: (VendorOrder & {
+    user?: { role: string; storeSlug: string | null };
+  })[];
+  filteredOrders: (VendorOrder & {
+    user?: { role: string; storeSlug: string | null };
+  })[];
   loading: boolean;
   error: string | null;
   selectedPriceRange: PriceRange;
   selectedTimeFilter: TimeFilter;
   selectedStatus: StatusFilter;
+  selectedCustomerType: CustomerTypeFilter;
   sortDirection: SortDirection;
   sortField: SortField;
   searchQuery: string;
@@ -43,7 +49,8 @@ interface OrderState {
   filterOrders: (
     priceRange?: PriceRange,
     timeFilter?: TimeFilter,
-    status?: StatusFilter
+    status?: StatusFilter,
+    customerType?: CustomerTypeFilter
   ) => void;
   sortOrders: (field: SortField, direction: SortDirection) => void;
   searchOrders: (query: string) => void;
@@ -70,6 +77,7 @@ const useVendorOrderStore = create<OrderState>()(
     selectedPriceRange: "less_than_twoK",
     selectedTimeFilter: "all",
     selectedStatus: "all",
+    selectedCustomerType: "all",
     sortDirection: "desc",
     sortField: "date",
     searchQuery: "",
@@ -98,20 +106,25 @@ const useVendorOrderStore = create<OrderState>()(
           loading: false,
         }));
 
-        // Apply initial filters
         const {
           filterOrders,
           selectedPriceRange,
           selectedTimeFilter,
           selectedStatus,
+          selectedCustomerType,
         } = get();
-        filterOrders(selectedPriceRange, selectedTimeFilter, selectedStatus);
+        filterOrders(
+          selectedPriceRange,
+          selectedTimeFilter,
+          selectedStatus,
+          selectedCustomerType
+        );
       } catch (error) {
         set({
           error: error instanceof Error ? error.message : "An error occurred",
           loading: false,
-          currentOrders: [], // Reset orders on error
-          filteredOrders: [], // Reset filtered orders on error
+          currentOrders: [],
+          filteredOrders: [],
         });
       }
     },
@@ -119,10 +132,22 @@ const useVendorOrderStore = create<OrderState>()(
     filterOrders: (
       priceRange?: PriceRange,
       timeFilter?: TimeFilter,
-      status?: StatusFilter
+      status?: StatusFilter,
+      customerType?: CustomerTypeFilter
     ) => {
       const state = get();
       let filtered = [...state.currentOrders];
+
+      // Apply customer type filter
+      if (customerType && customerType !== "all") {
+        filtered = filtered.filter(order => {
+          if (customerType === "vendor") {
+            return !order.user?.storeSlug?.includes("-customer-");
+          } else {
+            return order.user?.storeSlug?.includes("-customer-");
+          }
+        });
+      }
 
       // Apply time filter
       if (timeFilter && timeFilter !== "all") {
@@ -195,6 +220,7 @@ const useVendorOrderStore = create<OrderState>()(
         selectedPriceRange: priceRange || state.selectedPriceRange,
         selectedTimeFilter: timeFilter || state.selectedTimeFilter,
         selectedStatus: status || state.selectedStatus,
+        selectedCustomerType: customerType || state.selectedCustomerType,
         totalOrders: filtered.length,
         totalAmount: filtered.reduce(
           (sum, order) => sum + order.totalAmount,

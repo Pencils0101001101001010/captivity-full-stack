@@ -36,6 +36,7 @@ import useVendorOrderStore, {
   PriceRange,
   TimeFilter,
   StatusFilter,
+  CustomerTypeFilter,
   SortField,
   SortDirection,
 } from "../_store/useOrderStore";
@@ -73,6 +74,7 @@ const OrdersTable = () => {
     selectedPriceRange,
     selectedTimeFilter,
     selectedStatus,
+    selectedCustomerType,
     sortDirection,
     sortField,
     totalOrders,
@@ -112,7 +114,6 @@ const OrdersTable = () => {
     sortOrders(field, newDirection);
   };
 
-  // Show loading state only on initial load
   if (loading && !currentOrders.length) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -157,7 +158,7 @@ const OrdersTable = () => {
 
       {/* Filters Section */}
       <div className="bg-white p-4 rounded-lg shadow-sm border space-y-4">
-        {/* Search and Status Filter */}
+        {/* Search, Status, and Customer Type Filters */}
         <div className="flex items-center space-x-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -184,6 +185,26 @@ const OrdersTable = () => {
                   {status}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={selectedCustomerType}
+            onValueChange={value =>
+              filterOrders(
+                undefined,
+                undefined,
+                undefined,
+                value as CustomerTypeFilter
+              )
+            }
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Customer Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Orders</SelectItem>
+              <SelectItem value="vendor">My Orders</SelectItem>
+              <SelectItem value="customer">Customer Orders</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -254,39 +275,61 @@ const OrdersTable = () => {
               </TableHead>
               <TableHead>Collection Method</TableHead>
               <TableHead>Branch</TableHead>
+              <TableHead>Order Type</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredOrders.map((order: VendorOrder) => (
-              <TableRow key={order.id}>
-                <TableCell>
-                  <Link
-                    href={`/vendor/${vendorWebsite}/orders/customer/${order.id}`}
-                    className="text-blue-600 hover:text-blue-800 underline"
-                  >
-                    {order.id}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  {format(new Date(order.createdAt), "MMM dd, yyyy")}
-                </TableCell>
-                <TableCell>
-                  <div className="space-y-1">
-                    <p className="font-medium">{`${order.firstName} ${order.lastName}`}</p>
-                    <p className="text-sm text-gray-500">{order.companyName}</p>
-                  </div>
-                </TableCell>
-                <TableCell>{order.vendorOrderItems.length}</TableCell>
-                <TableCell>R{order.totalAmount.toFixed(2)}</TableCell>
-                <TableCell>
-                  <Badge className={getStatusColor(order.status)}>
-                    {order.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>{order.methodOfCollection}</TableCell>
-                <TableCell>{order.vendorBranch}</TableCell>
-              </TableRow>
-            ))}
+            {filteredOrders.map(
+              (
+                order: VendorOrder & {
+                  user?: { role: string; storeSlug: string | null };
+                }
+              ) => (
+                <TableRow key={order.id}>
+                  <TableCell>
+                    <Link
+                      href={`/vendor/${vendorWebsite}/orders/customer/${order.id}`}
+                      className="text-blue-600 hover:text-blue-800 underline"
+                    >
+                      {order.id}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(order.createdAt), "MMM dd, yyyy")}
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <p className="font-medium">{`${order.firstName} ${order.lastName}`}</p>
+                      <p className="text-sm text-gray-500">
+                        {order.companyName}
+                      </p>
+                    </div>
+                  </TableCell>
+                  <TableCell>{order.vendorOrderItems.length}</TableCell>
+                  <TableCell>R{order.totalAmount.toFixed(2)}</TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(order.status)}>
+                      {order.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{order.methodOfCollection}</TableCell>
+                  <TableCell>{order.vendorBranch}</TableCell>
+                  <TableCell>
+                    <Badge
+                      className={
+                        order.user?.storeSlug?.includes("-customer-")
+                          ? "bg-purple-100 text-purple-800"
+                          : "bg-blue-100 text-blue-800"
+                      }
+                    >
+                      {order.user?.storeSlug?.includes("-customer-")
+                        ? "Customer"
+                        : "Vendor"}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              )
+            )}
           </TableBody>
         </Table>
 
