@@ -17,18 +17,22 @@ interface VendorAdditionalInformationProps {
 export const VendorAdditionalInformation: React.FC<VendorAdditionalInformationProps> =
   React.memo(({ form }) => {
     return (
-      <div className="bg-white shadow-2xl shadow-black rounded-lg p-6">
-        <h3 className="text-xl font-semibold mb-6">Additional Information</h3>
+      <div className="bg-background border rounded-lg p-4 md:p-6 transition-colors shadow-2xl shadow-black">
+        <h3 className="text-xl font-semibold mb-6 text-foreground">
+          Additional Information
+        </h3>
         <FormField
           control={form.control}
           name="orderNotes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Order Notes (optional)</FormLabel>
+              <FormLabel className="text-foreground">
+                Order Notes (optional)
+              </FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Notes about your order, e.g. special notes for delivery"
-                  className="min-h-[100px]"
+                  className="min-h-[100px] bg-background text-foreground border-input"
                   {...field}
                 />
               </FormControl>

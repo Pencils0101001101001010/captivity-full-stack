@@ -22,7 +22,6 @@ import { VendorAdditionalInformation } from "./AdditionalInformation";
 import { VendorTermsAndConditions } from "./TermsAndConditions";
 import VendorOrderSummary from "./OrderSummary";
 
-// Memoize form default values
 const defaultVendorFormValues: VendorFormValues = {
   vendorBranch: "",
   methodOfCollection: "",
@@ -44,19 +43,17 @@ const defaultVendorFormValues: VendorFormValues = {
   receiveEmailReviews: false,
 } as const;
 
-interface LoadingSpinnerProps {}
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = React.memo(() => (
-  <div className="flex justify-center items-center min-h-[200px]">
-    <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+const LoadingSpinner: React.FC = React.memo(() => (
+  <div className="flex justify-center items-center min-h-[200px] dark:bg-gray-800">
+    <Loader2 className="h-8 w-8 animate-spin text-gray-500 dark:text-gray-400" />
   </div>
 ));
 
 LoadingSpinner.displayName = "LoadingSpinner";
 
-interface OrderNoteProps {}
-const OrderNote: React.FC<OrderNoteProps> = React.memo(() => (
-  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-    <p className="text-sm text-yellow-800">
+const OrderNote: React.FC = React.memo(() => (
+  <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 transition-colors duration-200">
+    <p className="text-sm text-yellow-800 dark:text-yellow-200">
       Note: By placing your order, you agree to our vendor terms and conditions.
       A proforma invoice will be sent to your email address.
     </p>
@@ -73,14 +70,19 @@ interface NavigationButtonsProps {
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = React.memo(
   ({ isLoading, isSubmitting, hasItems }) => (
-    <div className="flex justify-between items-center">
-      <Button type="button" variant="outline" className="w-[200px]" asChild>
+    <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full sm:w-[200px] dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors duration-200"
+        asChild
+      >
         <Link href="/vendor/shopping/cart">Go to Cart</Link>
       </Button>
 
       <Button
         type="submit"
-        className="w-[200px]"
+        className="w-full sm:w-[200px] dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 transition-colors duration-200"
         disabled={isLoading || !hasItems || isSubmitting}
       >
         {isSubmitting ? (
@@ -122,17 +124,14 @@ const CheckoutForm: React.FC = () => {
   const [isLoadingPreviousOrder, setIsLoadingPreviousOrder] =
     React.useState(true);
 
-  // Memoize the form resolver
   const formResolver = useMemo(() => zodResolver(vendorFormSchema), []);
 
-  // Initialize form with memoized values
   const form = useForm<VendorFormValues>({
     resolver: formResolver,
     defaultValues: defaultVendorFormValues,
     mode: "onChange",
   });
 
-  // Use individual selectors for cart store with proper method names
   const cart = useVendorCartStore(state => state.cart);
   const isLoading = useVendorCartStore(state => state.isLoading);
   const error = useVendorCartStore(state => state.error);
@@ -141,7 +140,6 @@ const CheckoutForm: React.FC = () => {
   const removeItem = useVendorCartStore(state => state.removeItem);
   const setCart = useVendorCartStore(state => state.setCart);
 
-  // Memoize handlers
   const handleQuantityChange = useCallback(
     async (cartItemId: string, newQuantity: number) => {
       if (newQuantity < 1) return;
@@ -163,7 +161,7 @@ const CheckoutForm: React.FC = () => {
 
   const onSubmit = useCallback(
     async (formData: VendorFormValues) => {
-      if (isSubmitting) return; // Prevent multiple submissions
+      if (isSubmitting) return;
 
       setIsSubmitting(true);
       try {
@@ -175,7 +173,6 @@ const CheckoutForm: React.FC = () => {
             title: "Success",
             description: "Order placed successfully!",
           });
-          // Use replace instead of push to prevent back navigation to the checkout page
           router.replace(
             `/vendor/${vendorWebsite}/order-success/${orderData.id}`
           );
@@ -199,7 +196,6 @@ const CheckoutForm: React.FC = () => {
     [isSubmitting, setCart, toast, router, vendorWebsite]
   );
 
-  // Load user data
   useEffect(() => {
     let mounted = true;
 
@@ -243,7 +239,6 @@ const CheckoutForm: React.FC = () => {
     };
   }, [form]);
 
-  // Initialize cart
   useEffect(() => {
     if (!cart) {
       initialize();
@@ -258,7 +253,7 @@ const CheckoutForm: React.FC = () => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="max-w-7xl mx-auto p-6 mb-16"
+        className="max-w-7xl mx-auto p-4 sm:p-6 mb-16 dark:bg-background transition-colors duration-200 "
       >
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="w-full lg:w-2/3 space-y-8">
@@ -268,13 +263,15 @@ const CheckoutForm: React.FC = () => {
           </div>
 
           <div className="w-full lg:w-1/3">
-            <VendorOrderSummary
-              cart={cart}
-              isLoading={isLoading}
-              error={error}
-              handleQuantityChange={handleQuantityChange}
-              handleRemoveItem={handleRemoveItem}
-            />
+            <div className="sticky top-4">
+              <VendorOrderSummary
+                cart={cart}
+                isLoading={isLoading}
+                error={error}
+                handleQuantityChange={handleQuantityChange}
+                handleRemoveItem={handleRemoveItem}
+              />
+            </div>
           </div>
         </div>
 

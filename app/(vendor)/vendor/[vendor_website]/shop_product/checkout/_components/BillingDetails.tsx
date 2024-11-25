@@ -26,7 +26,6 @@ interface VendorBillingDetailsProps {
   form: UseFormReturn<VendorFormValues>;
 }
 
-// Pre-render select options components
 const VendorBranchOptionsContent = React.memo(() => (
   <>
     {VENDOR_BRANCHES.map(option => (
@@ -88,9 +87,9 @@ const FormInput = React.memo(
       name={name}
       render={({ field }) => (
         <FormItem className={className}>
-          <FormLabel>
+          <FormLabel className="text-foreground">
             {label}
-            {required && "*"}
+            {required && <span className="text-destructive">*</span>}
           </FormLabel>
           <FormControl>
             <Input
@@ -98,9 +97,10 @@ const FormInput = React.memo(
               type={type}
               {...field}
               value={field.value?.toString() ?? ""}
+              className="bg-background border-input hover:border-ring focus:border-ring transition-colors"
             />
           </FormControl>
-          <FormMessage />
+          <FormMessage className="text-destructive" />
         </FormItem>
       )}
     />
@@ -132,9 +132,9 @@ const FormSelect = React.memo(
         name={name}
         render={({ field }) => (
           <FormItem className={className}>
-            <FormLabel>
+            <FormLabel className="text-foreground">
               {label}
-              {required && "*"}
+              {required && <span className="text-destructive">*</span>}
             </FormLabel>
             <Select
               onValueChange={field.onChange}
@@ -142,13 +142,15 @@ const FormSelect = React.memo(
               defaultValue={field.value?.toString()}
             >
               <FormControl>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full bg-background border-input hover:border-ring focus:border-ring transition-colors">
                   <SelectValue placeholder={placeholder} />
                 </SelectTrigger>
               </FormControl>
-              <SelectContent>{optionsContent}</SelectContent>
+              <SelectContent className="bg-background border-input">
+                {optionsContent}
+              </SelectContent>
             </Select>
-            <FormMessage />
+            <FormMessage className="text-destructive" />
           </FormItem>
         )}
       />
@@ -162,135 +164,140 @@ export const VendorBillingDetails: React.FC<VendorBillingDetailsProps> =
     const { control } = form;
 
     return (
-      <div className="bg-white shadow-2xl shadow-black rounded-lg p-6">
-        <h3 className="text-xl font-semibold mb-6">Vendor Billing Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormSelect
-            label="Branch"
-            name="vendorBranch"
-            placeholder="Select branch"
-            optionsContent={<VendorBranchOptionsContent />}
-            control={control}
-            required
-            className="col-span-2 md:col-span-1"
-          />
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-card shadow-2xl shadow-black dark:shadow-none rounded-lg p-4 sm:p-6 lg:p-8 border border-border transition-colors">
+          <h3 className="text-xl sm:text-2xl font-semibold mb-6 text-card-foreground">
+            Vendor Billing Details
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            <FormSelect
+              label="Branch"
+              name="vendorBranch"
+              placeholder="Select branch"
+              optionsContent={<VendorBranchOptionsContent />}
+              control={control}
+              required
+              className="col-span-1 sm:col-span-2 md:col-span-1"
+            />
 
-          <FormSelect
-            label="Collection Method"
-            name="methodOfCollection"
-            placeholder="Select method"
-            optionsContent={<CollectionOptionsContent />}
-            control={control}
-            required
-            className="col-span-2 md:col-span-1"
-          />
+            <FormSelect
+              label="Collection Method"
+              name="methodOfCollection"
+              placeholder="Select method"
+              optionsContent={<CollectionOptionsContent />}
+              control={control}
+              required
+              className="col-span-1 sm:col-span-2 md:col-span-1"
+            />
 
-          <FormInput
-            label="Sales Rep"
-            name="salesRep"
-            control={control}
-            placeholder="Sales rep name"
-          />
+            <FormInput
+              label="Sales Rep"
+              name="salesRep"
+              control={control}
+              placeholder="Sales rep name"
+            />
 
-          <FormInput
-            label="Reference Number"
-            name="referenceNumber"
-            control={control}
-            placeholder="Your reference"
-          />
+            <FormInput
+              label="Reference Number"
+              name="referenceNumber"
+              control={control}
+              placeholder="Your reference"
+            />
 
-          <FormInput
-            label="First Name"
-            name="firstName"
-            control={control}
-            placeholder="First name"
-            required
-          />
+            <FormInput
+              label="First Name"
+              name="firstName"
+              control={control}
+              placeholder="First name"
+              required
+            />
 
-          <FormInput
-            label="Last Name"
-            name="lastName"
-            control={control}
-            placeholder="Last name"
-            required
-          />
+            <FormInput
+              label="Last Name"
+              name="lastName"
+              control={control}
+              placeholder="Last name"
+              required
+            />
 
-          <FormInput
-            label="Company Name"
-            name="companyName"
-            control={control}
-            placeholder="Company name"
-            required
-          />
+            <FormInput
+              label="Company Name"
+              name="companyName"
+              control={control}
+              placeholder="Company name"
+              required
+            />
 
-          <FormSelect
-            label="Country / Region"
-            name="countryRegion"
-            placeholder="Select country/region"
-            optionsContent={<CountryOptionsContent />}
-            control={control}
-            required
-          />
+            <FormSelect
+              label="Country / Region"
+              name="countryRegion"
+              placeholder="Select country/region"
+              optionsContent={<CountryOptionsContent />}
+              control={control}
+              required
+            />
 
-          <FormInput
-            label="Street Address"
-            name="streetAddress"
-            control={control}
-            placeholder="House number and street name"
-            required
-            className="col-span-2"
-          />
+            <FormInput
+              label="Street Address"
+              name="streetAddress"
+              control={control}
+              placeholder="House number and street name"
+              required
+              className="col-span-1 sm:col-span-2"
+            />
 
-          <FormInput
-            label="Apartment, Suite, etc."
-            name="apartmentSuite"
-            control={control}
-            placeholder="Apartment, suite, unit, etc."
-            className="col-span-2"
-          />
+            <FormInput
+              label="Apartment, Suite, etc."
+              name="apartmentSuite"
+              control={control}
+              placeholder="Apartment, suite, unit, etc."
+              className="col-span-1 sm:col-span-2"
+            />
 
-          <FormInput
-            label="Town / City"
-            name="townCity"
-            control={control}
-            placeholder="Town / City"
-            required
-          />
+            <FormInput
+              label="Town / City"
+              name="townCity"
+              control={control}
+              placeholder="Town / City"
+              required
+            />
 
-          <FormSelect
-            label="Province"
-            name="province"
-            placeholder="Select province"
-            optionsContent={<ProvinceOptionsContent />}
-            control={control}
-            required
-          />
+            <FormSelect
+              label="Province"
+              name="province"
+              placeholder="Select province"
+              optionsContent={<ProvinceOptionsContent />}
+              control={control}
+              required
+            />
 
-          <FormInput
-            label="Postcode"
-            name="postcode"
-            control={control}
-            placeholder="Postcode"
-            required
-          />
+            <FormInput
+              label="Postcode"
+              name="postcode"
+              control={control}
+              placeholder="Postcode"
+              required
+            />
 
-          <FormInput
-            label="Phone"
-            name="phone"
-            control={control}
-            placeholder="Phone number"
-            type="tel"
-            required
-          />
+            <FormInput
+              label="Phone"
+              name="phone"
+              control={control}
+              placeholder="Phone number"
+              type="tel"
+              required
+            />
 
-          <FormInput
-            label="Email Address"
-            name="email"
-            control={control}
-            placeholder="Email address"
-            type="email"
-            required
-          />
+            <FormInput
+              label="Email Address"
+              name="email"
+              control={control}
+              placeholder="Email address"
+              type="email"
+              required
+              className="col-span-1 sm:col-span-2"
+            />
+          </div>
         </div>
       </div>
     );

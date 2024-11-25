@@ -41,19 +41,24 @@ const VendorOrderSummary: React.FC<VendorOrderSummaryProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg p-6 sticky top-6 shadow-2xl shadow-black">
-      <h3 className="text-xl font-semibold mb-6">Order Summary</h3>
+    <div className="bg-background border rounded-lg p-4 md:p-6 sticky top-6 transition-colors shadow-2xl shadow-black">
+      <h3 className="text-xl font-semibold mb-6 text-foreground">
+        Order Summary
+      </h3>
 
       {isLoading ? (
         <div className="flex justify-center items-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : error ? (
-        <div className="text-red-500 text-center py-4">{error}</div>
+        <div className="text-destructive text-center py-4">{error}</div>
       ) : cart?.vendorCartItems && cart.vendorCartItems.length > 0 ? (
         <div className="space-y-6">
           {cart.vendorCartItems.map(item => (
-            <div key={item.id} className="flex items-start border-b pb-4">
+            <div
+              key={item.id}
+              className="flex items-start border-b border-input pb-4"
+            >
               <div className="relative h-16 w-16 rounded-md overflow-hidden">
                 <Image
                   src={
@@ -67,10 +72,10 @@ const VendorOrderSummary: React.FC<VendorOrderSummaryProps> = ({
                 />
               </div>
               <div className="flex-grow ml-4">
-                <h4 className="font-semibold text-sm">
+                <h4 className="font-semibold text-sm text-foreground">
                   {item.vendorVariation.vendorProduct.productName}
                 </h4>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-muted-foreground">
                   Size: {item.vendorVariation.size}, Color:{" "}
                   {item.vendorVariation.color}
                 </p>
@@ -81,9 +86,7 @@ const VendorOrderSummary: React.FC<VendorOrderSummaryProps> = ({
                       handleQuantityChange(item.id, Number(e.target.value))
                     }
                     disabled={isLoading}
-                    className={`text-sm border rounded px-2 py-1 mr-4 ${
-                      isLoading ? "opacity-50" : ""
-                    }`}
+                    className="text-sm border rounded px-2 py-1 mr-4 bg-background text-foreground border-input disabled:opacity-50"
                   >
                     {[...Array(item.vendorVariation.quantity)].map((_, i) => (
                       <option key={i + 1} value={i + 1}>
@@ -95,20 +98,18 @@ const VendorOrderSummary: React.FC<VendorOrderSummaryProps> = ({
                     type="button"
                     onClick={() => handleRemoveItem(item.id)}
                     disabled={isLoading}
-                    className={`text-red-500 hover:text-red-700 text-sm ${
-                      isLoading ? "opacity-50" : ""
-                    }`}
+                    className="text-destructive hover:text-destructive/90 text-sm disabled:opacity-50"
                   >
                     Remove
                   </button>
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-sm">
+                <p className="font-semibold text-sm text-foreground">
                   R{item.vendorVariation.vendorProduct.sellingPrice.toFixed(2)}{" "}
                   each
                 </p>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-muted-foreground">
                   Subtotal: R
                   {calculateSubtotal(
                     item.quantity,
@@ -119,25 +120,31 @@ const VendorOrderSummary: React.FC<VendorOrderSummaryProps> = ({
             </div>
           ))}
 
-          <div className="border-t pt-4">
+          <div className="border-t border-input pt-4">
             <div className="flex justify-between items-center text-sm mb-2">
-              <span>Subtotal:</span>
-              <span>R{calculateTotal().toFixed(2)}</span>
+              <span className="text-foreground">Subtotal:</span>
+              <span className="text-foreground">
+                R{calculateTotal().toFixed(2)}
+              </span>
             </div>
             <div className="flex justify-between items-center text-sm mb-2">
-              <span>Shipping:</span>
-              <span>Calculated at next step</span>
+              <span className="text-foreground">Shipping:</span>
+              <span className="text-muted-foreground">
+                Calculated at next step
+              </span>
             </div>
             <div className="flex justify-between items-center font-semibold text-lg mt-4">
-              <span>Total:</span>
-              <span>R{calculateTotal().toFixed(2)}</span>
+              <span className="text-foreground">Total:</span>
+              <span className="text-foreground">
+                R{calculateTotal().toFixed(2)}
+              </span>
             </div>
           </div>
         </div>
       ) : (
         <div className="text-center py-8">
-          <p className="text-gray-500 mb-4">Your cart is empty</p>
-          <Button type="button" variant="outline" asChild>
+          <p className="text-muted-foreground mb-4">Your cart is empty</p>
+          <Button variant="outline" asChild>
             <Link href="/vendor/shopping/products">Continue Shopping</Link>
           </Button>
         </div>

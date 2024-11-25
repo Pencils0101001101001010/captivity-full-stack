@@ -17,9 +17,11 @@ interface VendorTermsAndConditionsProps {
 export const VendorTermsAndConditions: React.FC<VendorTermsAndConditionsProps> =
   React.memo(({ form }) => {
     return (
-      <div className="bg-white shadow-2xl shadow-black rounded-lg p-6">
-        <p className="mb-4 text-sm">Pay upon Proforma Invoice receipt</p>
-        <p className="mb-6 text-sm">
+      <div className="bg-background border rounded-lg p-4 md:p-6 transition-colors shadow-2xl shadow-black">
+        <p className="mb-4 text-sm text-foreground">
+          Pay upon Proforma Invoice receipt
+        </p>
+        <p className="mb-6 text-sm text-muted-foreground">
           Your personal data will be used to process your order, support your
           experience throughout this website, and for other purposes described
           in our privacy policy.
@@ -37,7 +39,7 @@ export const VendorTermsAndConditions: React.FC<VendorTermsAndConditionsProps> =
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
-                <FormLabel>
+                <FormLabel className="text-foreground">
                   Check here to receive an email to review our vendor products.
                 </FormLabel>
               </div>
@@ -58,13 +60,13 @@ export const VendorTermsAndConditions: React.FC<VendorTermsAndConditionsProps> =
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>
+                  <FormLabel className="text-foreground">
                     I have read and agree to the vendor website terms and
                     conditions*
                   </FormLabel>
                 </div>
               </div>
-              <FormMessage className="text-red-500 text-sm" />
+              <FormMessage />
             </FormItem>
           )}
         />
