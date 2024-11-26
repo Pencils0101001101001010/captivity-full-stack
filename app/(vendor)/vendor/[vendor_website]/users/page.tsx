@@ -1,5 +1,5 @@
+import VendorCustomersContainer from "./_components";
 import { fetchVendorCustomers } from "./actions";
-import { VendorCustomersTable } from "./VendorCustomersTable";
 
 export default async function VendorCustomersPage() {
   // Fetch initial data server-side
@@ -14,7 +14,7 @@ export default async function VendorCustomersPage() {
         </p>
       </div>
 
-      <VendorCustomersTable initialData={initialData} />
+      <VendorCustomersContainer initialData={initialData} />
     </div>
   );
 }
