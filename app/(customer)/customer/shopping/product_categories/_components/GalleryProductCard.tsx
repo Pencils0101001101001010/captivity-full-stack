@@ -15,13 +15,15 @@ import DetailedReviewCard from "../reviews/ReviewSection";
 
 interface GalleryProductCardProps {
   product: ProductWithRelations;
-  selectedColor: string | null; // Add this prop for filter sync
-  onColorChange?: (color: string | null) => void; // Add this for filter sync
+  selectedColors: string[];
+  selectedSizes: string[];
+  onColorChange?: (color: string | null) => void;
 }
 
 const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
   product,
-  selectedColor,
+  selectedColors,
+  selectedSizes,
   onColorChange,
 }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -30,21 +32,41 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
   );
   const [quantity, setQuantity] = useState(1);
 
-  // Initialize with filtered color if present
+  // Initialize with filtered variations based on both color and size
   useEffect(() => {
-    if (selectedColor) {
-      const variation = product.variations.find(
-        v => v.color.toLowerCase() === selectedColor.toLowerCase()
+    let variation: Variation | undefined;
+
+    if (selectedSizes.length > 0) {
+      // First try to find a variation that matches both color and size
+      variation = product.variations.find(
+        v =>
+          selectedSizes.includes(v.size) &&
+          (!selectedColors.length ||
+            selectedColors.some(
+              color => v.color.toLowerCase() === color.toLowerCase()
+            ))
       );
-      if (variation) {
-        setSelectedVariation(variation);
-        setSelectedImage(variation.variationImageURL);
-      }
+    } else if (selectedColors.length > 0) {
+      // If no size filter, look for color match only
+      variation = product.variations.find(v =>
+        selectedColors.some(
+          color => v.color.toLowerCase() === color.toLowerCase()
+        )
+      );
     } else {
+      // If no filters, use first variation
+      variation = product.variations[0];
+    }
+
+    if (variation) {
+      setSelectedVariation(variation);
+      setSelectedImage(variation.variationImageURL);
+    } else {
+      // Reset if no matching variation found
       setSelectedVariation(product.variations[0]);
       setSelectedImage(null);
     }
-  }, [selectedColor, product.variations]);
+  }, [selectedColors, selectedSizes, product.variations]);
 
   // Get all unique images with their associated variations
   const imageVariationMap = React.useMemo(() => {
@@ -60,12 +82,44 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
     return map;
   }, [product]);
 
+  // Get filtered variations based on selected colors and sizes
+  const filteredVariations = React.useMemo(() => {
+    return product.variations.filter(
+      v =>
+        (!selectedColors.length ||
+          selectedColors.some(
+            color => v.color.toLowerCase() === color.toLowerCase()
+          )) &&
+        (!selectedSizes.length || selectedSizes.includes(v.size))
+    );
+  }, [product.variations, selectedColors, selectedSizes]);
+
   const allImages = Array.from(imageVariationMap.keys());
   const uniqueColors = Array.from(
-    new Set(product.variations.map(v => v.color))
+    new Set(filteredVariations.map(v => v.color))
   );
-  const uniqueSizes = Array.from(new Set(product.variations.map(v => v.size)));
-  const totalStock = product.variations.reduce((sum, v) => sum + v.quantity, 0);
+
+  // Get available sizes for the current color selection, considering sidebar filters
+  const availableSizes = React.useMemo(() => {
+    let sizes: string[] = [];
+
+    if (selectedSizes.length > 0) {
+      // If sizes are selected in sidebar, only show those sizes
+      sizes = selectedSizes;
+    } else if (selectedVariation?.color) {
+      // Otherwise show all sizes for the selected color
+      sizes = filteredVariations
+        .filter(v => v.color === selectedVariation.color)
+        .map(v => v.size);
+    } else {
+      // If no color selected, show all available sizes
+      sizes = Array.from(new Set(filteredVariations.map(v => v.size)));
+    }
+
+    return sizes;
+  }, [filteredVariations, selectedVariation?.color, selectedSizes]);
+
+  const totalStock = filteredVariations.reduce((sum, v) => sum + v.quantity, 0);
 
   // Update variation when thumbnail is clicked
   const handleThumbnailClick = (image: string) => {
@@ -73,7 +127,7 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
     const variation = imageVariationMap.get(image);
     if (variation) {
       setSelectedVariation(variation);
-      onColorChange?.(variation.color); // Sync with global filter
+      onColorChange?.(variation.color);
     }
   };
 
@@ -85,21 +139,24 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
       return;
     }
 
-    const newVariation = product.variations.find(
+    const newVariation = filteredVariations.find(
       v => v.color.toLowerCase() === color.toLowerCase()
     );
+
     if (newVariation) {
       setSelectedVariation(newVariation);
       setSelectedImage(newVariation.variationImageURL);
       setQuantity(1);
-      onColorChange?.(color); // Sync with global filter
+      onColorChange?.(color);
     }
   };
 
   const handleSizeSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const size = e.target.value;
-    const newVariation = product.variations.find(
-      v => v.size === size && v.color === selectedVariation?.color
+    const newVariation = filteredVariations.find(
+      v =>
+        v.size === size &&
+        (!selectedVariation?.color || v.color === selectedVariation.color)
     );
     if (newVariation) {
       setSelectedVariation(newVariation);
@@ -145,8 +202,9 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
                   src={image}
                   alt={`${product.productName} view ${index + 1}`}
                   fill
-                  sizes="60"
-                  className="object-cover"
+                  sizes="(max-width: 768px) 60vw, 40vw"
+                  className="object-cover rounded-lg"
+                  priority={false}
                 />
               </button>
             ))}
@@ -187,15 +245,17 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
             />
 
             <SizeSelector
-              sizes={uniqueSizes}
+              sizes={availableSizes}
               selectedSize={selectedVariation?.size}
               onSizeSelect={handleSizeSelect}
+              productId={product.id}
             />
 
             <QuantitySelector
               quantity={quantity}
               maxQuantity={selectedVariation?.quantity || 1}
               onQuantityChange={e => setQuantity(parseInt(e.target.value))}
+              productId={product.id}
             />
 
             <DetailedReviewCard product={product} />

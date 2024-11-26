@@ -62,9 +62,9 @@ const CustomerLanding = ({ initialOrderId }: CustomerLandingProps) => {
             <h2 className="text-2xl font-semibold text-foreground">
               Welcome {user.displayName}
             </h2>
-            <p className="text-muted-foreground">
+            {/* <p className="text-muted-foreground">
               Last login: Today at 10:30 AM
-            </p>
+            </p> */}
           </div>
         </div>
         <Button

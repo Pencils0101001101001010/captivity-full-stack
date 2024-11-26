@@ -27,7 +27,7 @@ const ProductSortFilter: React.FC<ProductSortFilterProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const sortOptions: SortOption[] = [
-    { value: "relevance", label: "Sort By Relevance" },
+    { value: "relevance", label: "Sort By" },
     { value: "code-asc", label: "Code A-Z" },
     { value: "code-desc", label: "Code Z-A" },
     { value: "name-asc", label: "Name A-Z" },

@@ -1,5 +1,10 @@
 import React, { memo, useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -84,6 +89,12 @@ const ProductCard: React.FC<ProductCardProps> = memo(
 
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+            <DialogTitle className="text-xl font-semibold">
+              {product.productName}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500">
+              View detailed information about this product variation.
+            </DialogDescription>
             {variationData && <VariationDetails data={variationData} />}
           </DialogContent>
         </Dialog>

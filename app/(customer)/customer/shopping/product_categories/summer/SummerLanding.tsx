@@ -11,16 +11,23 @@ import {
 } from "../../../_store/useSummerStore";
 import { Variation } from "@prisma/client";
 import ProductCardColorPicker from "../_components/ProductCardColorPicker";
-
 import ProductSortFilter from "../_components/SortCategoriesFilter";
 import LayoutSwitcher from "../_components/LayoutSwither";
+import { useFilterStore } from "../../../_store/useFilterStore";
 import DetailedProductCard from "../_components/DetailProductPageCard";
-import ColorPicker from "../_components/ColorPicker";
 import GalleryProductCard from "../_components/GalleryProductCard";
+import ProductCard from "../_components/ProductCardColorPicker";
+import { ProductWithRelations } from "../types";
+
+interface EnhancedProduct extends ProductWithRelations {
+  displayCategory?: string;
+  displayColor?: string;
+  totalStock?: number;
+}
 
 const ITEMS_PER_PAGE = 12;
 
-const SummerCollectionPage: React.FC = () => {
+const SummerLanding: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { products: summerProducts, hasInitiallyFetched } = useSummerProducts();
   const loading = useSummerLoading();
@@ -30,17 +37,19 @@ const SummerCollectionPage: React.FC = () => {
 
   //Layout switcher
   const [layout, setLayout] = useState<"grid" | "detail" | "gallery">("grid");
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
-  //sort filter--------------------------
+
+  //sort filter
   const { sortBy, setSortBy } = useSummerSort();
+
+  // Get filters from the store
+  const { selectedColors, selectedSizes } = useFilterStore();
 
   // Create flat array of products with category for unique identification
   const allProducts = useMemo(() => {
-    const productMap = new Map();
+    const productMap = new Map<string, EnhancedProduct>();
 
     Object.entries(summerProducts).forEach(([category, products]) => {
       products.forEach(product => {
-        // Only add the product if it hasn't been added yet
         if (!productMap.has(product.id)) {
           productMap.set(product.id, {
             ...product,
@@ -52,26 +61,58 @@ const SummerCollectionPage: React.FC = () => {
     return Array.from(productMap.values());
   }, [summerProducts]);
 
-  // Optimize color filtering with memoization
-  const lowercaseSelectedColor = useMemo(
-    () => selectedColor?.toLowerCase(),
-    [selectedColor]
-  );
-
-  //sort filter
+  // Apply filters and sorting
   const filteredAndSortedProducts = useMemo(() => {
-    let products = lowercaseSelectedColor
-      ? allProducts.filter(product =>
-          product.variations.some(
-            (variation: Variation) =>
-              variation.color?.toLowerCase() === lowercaseSelectedColor
-          )
-        )
-      : allProducts;
+    let products: EnhancedProduct[] = [];
 
+    // Start with all products
+    let baseProducts = allProducts;
+
+    // Apply size filters first if any
+    if (selectedSizes.length > 0) {
+      baseProducts = baseProducts.filter(product =>
+        product.variations.some((variation: Variation) =>
+          selectedSizes.includes(variation.size)
+        )
+      );
+    }
+
+    // Then handle color filtering and duplication
+    if (selectedColors.length > 0) {
+      // Create duplicates for color-filtered products
+      baseProducts.forEach(product => {
+        selectedColors.forEach(selectedColor => {
+          const matchingVariations = product.variations.filter(
+            (variation: Variation) =>
+              variation.color.toLowerCase() === selectedColor.toLowerCase() &&
+              (!selectedSizes.length || selectedSizes.includes(variation.size))
+          );
+
+          if (matchingVariations.length > 0) {
+            products.push({
+              ...product,
+              displayColor: selectedColor,
+              variations: matchingVariations,
+            });
+          }
+        });
+      });
+    } else {
+      // If no colors selected, use the size-filtered products
+      products = baseProducts.map(product => ({
+        ...product,
+        variations:
+          selectedSizes.length > 0
+            ? product.variations.filter((v: Variation) =>
+                selectedSizes.includes(v.size)
+              )
+            : product.variations,
+      }));
+    }
+
+    // Apply sorting
     switch (sortBy) {
       case "stock-asc": {
-        // First calculate and store total stock for each product
         const productsWithStock = products.map(product => {
           const totalStock = product.variations.reduce(
             (total: number, variation: Variation) => total + variation.quantity,
@@ -79,19 +120,16 @@ const SummerCollectionPage: React.FC = () => {
           );
           return {
             ...product,
-            totalStock, // Store the calculated total stock
+            totalStock,
           };
         });
 
-        // Sort by total stock
-        const sortedProducts = productsWithStock.sort((a, b) => {
+        return productsWithStock.sort((a, b) => {
           if (a.totalStock === b.totalStock) {
             return a.productName.localeCompare(b.productName);
           }
-          return a.totalStock - b.totalStock;
+          return (a.totalStock || 0) - (b.totalStock || 0);
         });
-
-        return sortedProducts;
       }
 
       case "stock-desc": {
@@ -110,7 +148,7 @@ const SummerCollectionPage: React.FC = () => {
           if (a.totalStock === b.totalStock) {
             return b.productName.localeCompare(a.productName);
           }
-          return b.totalStock - a.totalStock;
+          return (b.totalStock || 0) - (a.totalStock || 0);
         });
       }
 
@@ -129,36 +167,9 @@ const SummerCollectionPage: React.FC = () => {
       default:
         return products;
     }
-  }, [allProducts, lowercaseSelectedColor, sortBy]);
-  //-----------------------------------------------------------
+  }, [allProducts, selectedColors, selectedSizes, sortBy]);
 
-  // Get unique colors from products
-  const uniqueColors = useMemo(() => {
-    const colorSet = new Set<string>();
-    allProducts.forEach(product =>
-      product.variations.forEach((variation: Variation) => {
-        if (typeof variation.color === "string") {
-          colorSet.add(variation.color);
-        }
-      })
-    );
-    return Array.from(colorSet);
-  }, [allProducts]);
-
-  // Initial fetch
-  useEffect(() => {
-    if (!hasInitiallyFetched && !initializationRef.current) {
-      initializationRef.current = true;
-      fetchSummerCollection();
-    }
-  }, [hasInitiallyFetched, fetchSummerCollection]);
-
-  // Reset to first page whenever products array changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [allProducts.length]);
-
-  // Memoize pagination calculations
+  // Pagination calculations
   const paginationData = useMemo(() => {
     const totalPages = Math.ceil(
       filteredAndSortedProducts.length / ITEMS_PER_PAGE
@@ -183,18 +194,26 @@ const SummerCollectionPage: React.FC = () => {
     };
   }, [filteredAndSortedProducts, currentPage]);
 
+  // Initial fetch
+  useEffect(() => {
+    if (!hasInitiallyFetched && !initializationRef.current) {
+      initializationRef.current = true;
+      fetchSummerCollection();
+    }
+  }, [hasInitiallyFetched, fetchSummerCollection]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedColors, selectedSizes]);
+
   if (loading) return <div>Loading summer collection...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <>
+    <div className="space-y-6">
       <div className="mb-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex flex-wrap gap-2 items-center">
-          <ColorPicker
-            colors={uniqueColors}
-            selectedColor={selectedColor}
-            onColorChange={setSelectedColor}
-          />
           <ProductSortFilter currentSort={sortBy} onSortChange={setSortBy} />
         </div>
         <LayoutSwitcher layout={layout} onLayoutChange={setLayout} />
@@ -203,49 +222,51 @@ const SummerCollectionPage: React.FC = () => {
       {filteredAndSortedProducts.length === 0 ? (
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-foreground">
-            No products found in the summer collection.
+            No products found matching your filters. Try in another category.
           </h2>
         </div>
       ) : (
         <>
           {layout === "grid" ? (
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-              {paginationData.currentProducts.map(product => (
+              {paginationData.currentProducts.map((product, index) => (
                 <div
-                  key={`${product.displayCategory}-${product.id}`}
+                  key={`${product.displayCategory}-${product.id}-${product.displayColor || index}`}
                   className="w-full"
                 >
-                  <ProductCardColorPicker
+                  <ProductCard
                     product={product}
-                    selectedColor={selectedColor}
+                    selectedColors={[product.displayColor || ""]}
+                    selectedSizes={selectedSizes}
                   />
                 </div>
               ))}
             </div>
           ) : layout === "detail" ? (
             <div className="space-y-6 mb-8">
-              {paginationData.currentProducts.map(product => (
+              {paginationData.currentProducts.map((product, index) => (
                 <DetailedProductCard
-                  key={`${product.displayCategory}-${product.id}`}
+                  key={`${product.displayCategory}-${product.id}-${product.displayColor || index}`}
                   product={product}
-                  selectedColor={selectedColor}
-                  onColorChange={setSelectedColor}
+                  selectedColors={[product.displayColor || ""]}
+                  selectedSizes={selectedSizes}
                 />
               ))}
             </div>
           ) : (
             <div className="space-y-6 mb-8">
-              {paginationData.currentProducts.map(product => (
+              {paginationData.currentProducts.map((product, index) => (
                 <GalleryProductCard
-                  key={`${product.displayCategory}-${product.id}`}
+                  key={`${product.displayCategory}-${product.id}-${product.displayColor || index}`}
                   product={product}
-                  selectedColor={selectedColor}
-                  onColorChange={setSelectedColor}
+                  selectedColors={[product.displayColor || ""]}
+                  selectedSizes={selectedSizes}
                 />
               ))}
             </div>
           )}
 
+          {/* Pagination */}
           {paginationData.totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
               <button
@@ -306,8 +327,8 @@ const SummerCollectionPage: React.FC = () => {
           </div>
         </>
       )}
-    </>
+    </div>
   );
 };
 
-export default React.memo(SummerCollectionPage);
+export default SummerLanding;

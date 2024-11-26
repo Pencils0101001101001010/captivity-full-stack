@@ -157,12 +157,14 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             sizes={uniqueSizes}
             selectedSize={selectedVariation?.size}
             onSizeSelect={handleSizeSelect}
+            productId={product.id}
           />
 
           <QuantitySelector
             quantity={quantity}
             maxQuantity={selectedVariation?.quantity || 1}
             onQuantityChange={handleQuantityChange}
+            productId={product.id}
           />
 
           <p className="mb-4 text-muted-foreground">

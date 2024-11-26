@@ -14,6 +14,18 @@ export type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
+//sort by filter:
+export type SortValue =
+  | "relevance"
+  | "code-asc"
+  | "code-desc"
+  | "name-asc"
+  | "name-desc"
+  | "stock-asc"
+  | "stock-desc"
+  | "price-asc"
+  | "price-desc";
+
 export type Category = "kids-collection";
 
 export type CategorizedProducts = {
@@ -28,6 +40,7 @@ interface KidsState {
   error: string | null;
   hasInitiallyFetched: boolean;
   isInitializing: boolean;
+  sortBy: SortValue; // sort by
 }
 
 interface KidsActions {
@@ -37,6 +50,7 @@ interface KidsActions {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   fetchKidsCollection: () => Promise<void>;
+  setSortBy: (sortBy: SortValue) => void; //sort by
 }
 
 const initialState: KidsState = {
@@ -51,6 +65,7 @@ const initialState: KidsState = {
   error: null,
   hasInitiallyFetched: false,
   isInitializing: false,
+  sortBy: "relevance", //sort by
 };
 
 let fetchPromise: Promise<void> | null = null;
@@ -100,6 +115,60 @@ const useKidsCollectionStore = create<KidsState & KidsActions>()(
 
     setError: error => set({ error }),
 
+    //sort by --------------------------------------------
+    setSortBy: sortBy => {
+      set({ sortBy });
+      const { filteredProducts } = get();
+      const products = [...filteredProducts["kids-collection"]];
+
+      // Sort the products
+      let sortedProducts = [...products];
+      switch (sortBy) {
+        case "code-asc":
+          sortedProducts.sort((a, b) => a.id.localeCompare(b.id));
+          break;
+        case "code-desc":
+          sortedProducts.sort((a, b) => b.id.localeCompare(a.id));
+          break;
+        case "name-asc":
+          sortedProducts.sort((a, b) =>
+            a.productName.localeCompare(b.productName)
+          );
+          break;
+        case "name-desc":
+          sortedProducts.sort((a, b) =>
+            b.productName.localeCompare(a.productName)
+          );
+          break;
+        case "stock-asc":
+          sortedProducts.sort((a, b) => {
+            const aStock = a.variations.reduce((sum, v) => sum + v.quantity, 0);
+            const bStock = b.variations.reduce((sum, v) => sum + v.quantity, 0);
+            return aStock - bStock;
+          });
+          break;
+        case "stock-desc":
+          sortedProducts.sort((a, b) => {
+            const aStock = a.variations.reduce((sum, v) => sum + v.quantity, 0);
+            const bStock = b.variations.reduce((sum, v) => sum + v.quantity, 0);
+            return bStock - aStock;
+          });
+          break;
+        case "price-asc":
+          sortedProducts.sort((a, b) => a.sellingPrice - b.sellingPrice);
+          break;
+        case "price-desc":
+          sortedProducts.sort((a, b) => b.sellingPrice - a.sellingPrice);
+          break;
+      }
+
+      set({
+        filteredProducts: {
+          "kids-collection": sortedProducts,
+        },
+      });
+    },
+    //---------------------------------------------------------------------------------
     fetchKidsCollection: async () => {
       const { loading, hasInitiallyFetched, isInitializing } = get();
 
@@ -157,10 +226,20 @@ export const useKidsLoading = () =>
 
 export const useKidsError = () => useKidsCollectionStore(state => state.error);
 
+//sort by
+export const useKidsSort = () =>
+  useKidsCollectionStore(
+    useShallow(state => ({
+      sortBy: state.sortBy,
+      setSortBy: state.setSortBy,
+    }))
+  );
+//--------
+
 export const useKidsActions = () =>
   useKidsCollectionStore(
     useShallow(state => ({
-      setIndustrialProducts: state.setKidsProducts,
+      setKidsProducts: state.setKidsProducts,
       setSearchQuery: state.setSearchQuery,
       setLoading: state.setLoading,
       setError: state.setError,

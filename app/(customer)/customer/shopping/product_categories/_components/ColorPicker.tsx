@@ -154,6 +154,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
             {getColorDisplayName(selectedColor)}
           </span>
         </div>
+
         <span
           className={`text-xl transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""

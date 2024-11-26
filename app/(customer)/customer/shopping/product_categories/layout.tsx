@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unescaped-entities */
 import React, { ReactNode } from "react";
 import prisma from "@/lib/prisma";
 import FilterSidebar from "./_components/FilterSidebar";
@@ -7,9 +6,38 @@ import SearchField from "@/app/(customer)/_components/SearchField";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Filter } from "lucide-react";
+import { ProductWithRelations } from "./types";
 
 interface LayoutProps {
   children: ReactNode;
+}
+
+async function fetchAllProducts(): Promise<ProductWithRelations[]> {
+  const products = await prisma.product.findMany({
+    where: {
+      isPublished: true,
+    },
+    include: {
+      dynamicPricing: true,
+      featuredImage: true,
+      variations: true,
+      reviews: {
+        include: {
+          user: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return products as ProductWithRelations[];
 }
 
 async function fetchNewProducts() {
@@ -58,7 +86,10 @@ async function fetchNewProducts() {
 export default async function Layout({
   children,
 }: LayoutProps): Promise<JSX.Element> {
-  const newProducts = await fetchNewProducts();
+  const [newProducts, allProducts] = await Promise.all([
+    fetchNewProducts(),
+    fetchAllProducts(),
+  ]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -77,7 +108,7 @@ export default async function Layout({
           </SheetTrigger>
           <SheetContent side="left" className="w-[300px] sm:w-[350px] p-0">
             <div className="p-4 space-y-6 h-full overflow-y-auto">
-              <FilterSidebar />
+              <FilterSidebar products={allProducts} />
               {newProducts.length > 0 && (
                 <div className="mt-6">
                   <h2 className="text-xl font-bold text-foreground mb-4">
@@ -107,12 +138,9 @@ export default async function Layout({
             {/* Filters */}
             <div className="sticky top-4">
               <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-3 sm:mb-4">
-                Categories
+                Filter
               </h1>
-              <FilterSidebar />
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-3 sm:mb-4 mt-3 sm:mt4">
-                Filters
-              </h1>
+              <FilterSidebar products={allProducts} />
 
               {/* New Products Carousel */}
               {newProducts.length > 0 && (
@@ -130,7 +158,7 @@ export default async function Layout({
               {/* Shop Name Banner */}
               <div className="mt-8 bg-black shadow-2xl shadow-black text-white p-4 sm:p-6 rounded-lg">
                 <h2 className="text-xl sm:text-2xl font-medium text-center">
-                  Welcome to Captivity's new Express Shop.
+                  Welcome to Captivity Express Shop.
                 </h2>
               </div>
             </div>

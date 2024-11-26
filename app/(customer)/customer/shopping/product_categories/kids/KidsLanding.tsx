@@ -1,15 +1,28 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   useKidsActions,
   useKidsError,
   useKidsLoading,
   useKidsProducts,
+  useKidsSort,
 } from "../../../_store/useKidsCollectionStore";
-import ColorPicker from "../_components/ColorPicker";
-import ProductCardColorPicker from "../_components/ProductCardColorPicker";
+import { useFilterStore } from "../../../_store/useFilterStore";
+import ProductSortFilter from "../_components/SortCategoriesFilter";
+import LayoutSwitcher from "../_components/LayoutSwither";
+import DetailedProductCard from "../_components/DetailProductPageCard";
+import GalleryProductCard from "../_components/GalleryProductCard";
+import { Variation } from "@prisma/client";
+import ProductCard from "../_components/ProductCardColorPicker";
+import { ProductWithRelations } from "../types";
+
+interface EnhancedProduct extends ProductWithRelations {
+  displayCategory?: string;
+  displayColor?: string;
+  totalStock?: number;
+}
 
 const ITEMS_PER_PAGE = 12;
 
@@ -19,70 +32,149 @@ const KidsCollectionPage: React.FC = () => {
   const loading = useKidsLoading();
   const error = useKidsError();
   const { fetchKidsCollection } = useKidsActions();
+  const { sortBy, setSortBy } = useKidsSort();
+  const { selectedColors, selectedSizes } = useFilterStore();
+  const [layout, setLayout] = useState<"grid" | "detail" | "gallery">("grid");
   const initializationRef = useRef(false);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
-  // Memoize flattened products array
-  const allProducts = useMemo(
-    () => Object.values(kidsProducts).flat().filter(Boolean),
-    [kidsProducts]
-  );
 
-  // Memoize lowercase selected color
-  const lowercaseSelectedColor = useMemo(
-    () => selectedColor?.toLowerCase(),
-    [selectedColor]
-  );
+  // Create base products array
+  const allProducts = useMemo(() => {
+    const productMap = new Map<string, EnhancedProduct>();
 
-  // Memoize filtered products
-  const filteredProducts = useMemo(
-    () =>
-      lowercaseSelectedColor
-        ? allProducts.filter(product =>
-            product.variations.some(
-              variation =>
-                variation.color?.toLowerCase() === lowercaseSelectedColor
-            )
-          )
-        : allProducts,
-    [allProducts, lowercaseSelectedColor]
-  );
-
-  // Memoize unique colors
-  const uniqueColors = useMemo(() => {
-    const colorSet = new Set<string>();
-    allProducts.forEach(product =>
-      product.variations.forEach(variation => {
-        if (typeof variation.color === "string") {
-          colorSet.add(variation.color);
+    Object.entries(kidsProducts).forEach(([category, products]) => {
+      products.forEach(product => {
+        if (!productMap.has(product.id)) {
+          productMap.set(product.id, {
+            ...product,
+            displayCategory: category,
+          });
         }
-      })
-    );
-    return Array.from(colorSet);
-  }, [allProducts]);
+      });
+    });
+    return Array.from(productMap.values());
+  }, [kidsProducts]);
 
-  // Initial fetch
-  useEffect(() => {
-    if (!hasInitiallyFetched && !initializationRef.current) {
-      initializationRef.current = true;
-      fetchKidsCollection();
+  // Apply filters and sorting
+  const filteredAndSortedProducts = useMemo(() => {
+    let products: EnhancedProduct[] = [];
+
+    // Start with all products
+    let baseProducts = allProducts;
+
+    // Apply size filters first if any
+    if (selectedSizes.length > 0) {
+      baseProducts = baseProducts.filter(product =>
+        product.variations.some((variation: Variation) =>
+          selectedSizes.includes(variation.size)
+        )
+      );
     }
-  }, [hasInitiallyFetched, fetchKidsCollection]);
 
-  // Reset to first page whenever products array changes (including search)
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [allProducts.length]);
+    // Then handle color filtering and duplication
+    if (selectedColors.length > 0) {
+      baseProducts.forEach(product => {
+        selectedColors.forEach(selectedColor => {
+          const matchingVariations = product.variations.filter(
+            (variation: Variation) =>
+              variation.color.toLowerCase() === selectedColor.toLowerCase() &&
+              (!selectedSizes.length || selectedSizes.includes(variation.size))
+          );
 
-  // Memoize pagination calculations
+          if (matchingVariations.length > 0) {
+            products.push({
+              ...product,
+              displayColor: selectedColor,
+              variations: matchingVariations,
+            });
+          }
+        });
+      });
+    } else {
+      products = baseProducts.map(product => ({
+        ...product,
+        variations:
+          selectedSizes.length > 0
+            ? product.variations.filter((v: Variation) =>
+                selectedSizes.includes(v.size)
+              )
+            : product.variations,
+      }));
+    }
+
+    // Apply sorting
+    switch (sortBy) {
+      case "stock-asc": {
+        const productsWithStock = products.map(product => {
+          const totalStock = product.variations.reduce(
+            (total: number, variation: Variation) => total + variation.quantity,
+            0
+          );
+          return {
+            ...product,
+            totalStock,
+          };
+        });
+
+        return productsWithStock.sort((a, b) => {
+          if (a.totalStock === b.totalStock) {
+            return a.productName.localeCompare(b.productName);
+          }
+          return (a.totalStock || 0) - (b.totalStock || 0);
+        });
+      }
+
+      case "stock-desc": {
+        const productsWithStock = products.map(product => {
+          const totalStock = product.variations.reduce(
+            (total: number, variation: Variation) => total + variation.quantity,
+            0
+          );
+          return {
+            ...product,
+            totalStock,
+          };
+        });
+
+        return productsWithStock.sort((a, b) => {
+          if (a.totalStock === b.totalStock) {
+            return b.productName.localeCompare(a.productName);
+          }
+          return (b.totalStock || 0) - (a.totalStock || 0);
+        });
+      }
+
+      case "price-asc":
+        return [...products].sort((a, b) => a.sellingPrice - b.sellingPrice);
+      case "price-desc":
+        return [...products].sort((a, b) => b.sellingPrice - a.sellingPrice);
+      case "name-asc":
+        return [...products].sort((a, b) =>
+          a.productName.localeCompare(b.productName)
+        );
+      case "name-desc":
+        return [...products].sort((a, b) =>
+          b.productName.localeCompare(a.productName)
+        );
+      default:
+        return products;
+    }
+  }, [allProducts, selectedColors, selectedSizes, sortBy]);
+
+  // Pagination calculations
   const paginationData = useMemo(() => {
-    const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+    const totalPages = Math.ceil(
+      filteredAndSortedProducts.length / ITEMS_PER_PAGE
+    );
     const safeCurrentPage = Math.min(currentPage, totalPages);
     const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = Math.min(
       startIndex + ITEMS_PER_PAGE,
-      filteredProducts.length
+      filteredAndSortedProducts.length
     );
-    const currentProducts = filteredProducts.slice(startIndex, endIndex);
+    const currentProducts = filteredAndSortedProducts.slice(
+      startIndex,
+      endIndex
+    );
 
     return {
       totalPages,
@@ -91,41 +183,77 @@ const KidsCollectionPage: React.FC = () => {
       endIndex,
       currentProducts,
     };
-  }, [filteredProducts, currentPage]);
+  }, [filteredAndSortedProducts, currentPage]);
+
+  useEffect(() => {
+    if (!hasInitiallyFetched && !initializationRef.current) {
+      initializationRef.current = true;
+      fetchKidsCollection();
+    }
+  }, [hasInitiallyFetched, fetchKidsCollection]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedColors, selectedSizes]);
 
   if (loading) return <div>Loading kid&apos;s collection...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <>
-      {/* COLOR PICKER */}
-      <div className="mb-8">
-        <ColorPicker
-          colors={uniqueColors}
-          selectedColor={selectedColor}
-          onColorChange={setSelectedColor}
-        />
+    <div className="space-y-6">
+      <div className="mb-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <ProductSortFilter currentSort={sortBy} onSortChange={setSortBy} />
+        <LayoutSwitcher layout={layout} onLayoutChange={setLayout} />
       </div>
 
-      {filteredProducts.length === 0 ? (
+      {filteredAndSortedProducts.length === 0 ? (
         <div className="text-center py-8">
-          <h2 className="text-2xl font-bold text-foreground">
-            No products found in the winter collection.
+         <h2 className="text-2xl font-bold text-foreground">
+            No products found matching your filters. Try in another category.
           </h2>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-            {paginationData.currentProducts.map(product => (
-              <div key={product.id} className="w-full">
-                <ProductCardColorPicker
+          {layout === "grid" ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              {paginationData.currentProducts.map((product, index) => (
+                <div
+                  key={`${product.id}-${product.displayColor || index}`}
+                  className="w-full"
+                >
+                  <ProductCard
+                    product={product}
+                    selectedColors={[product.displayColor || ""]}
+                    selectedSizes={selectedSizes}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : layout === "detail" ? (
+            <div className="space-y-6 mb-8">
+              {paginationData.currentProducts.map((product, index) => (
+                <DetailedProductCard
+                  key={`${product.id}-${product.displayColor || index}`}
                   product={product}
-                  selectedColor={selectedColor}
+                  selectedColors={[product.displayColor || ""]}
+                  selectedSizes={selectedSizes}
                 />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-6 mb-8">
+              {paginationData.currentProducts.map((product, index) => (
+                <GalleryProductCard
+                  key={`${product.id}-${product.displayColor || index}`}
+                  product={product}
+                  selectedColors={[product.displayColor || ""]}
+                  selectedSizes={selectedSizes}
+                />
+              ))}
+            </div>
+          )}
 
+          {/* Pagination */}
           {paginationData.totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
               <button
@@ -182,12 +310,12 @@ const KidsCollectionPage: React.FC = () => {
 
           <div className="text-sm text-muted-foreground text-center mt-4">
             Showing {paginationData.startIndex + 1}-{paginationData.endIndex} of{" "}
-            {filteredProducts.length} products
+            {filteredAndSortedProducts.length} products
           </div>
         </>
       )}
-    </>
+    </div>
   );
 };
 
-export default React.memo(KidsCollectionPage);
+export default KidsCollectionPage;

@@ -13,47 +13,66 @@ import DetailedReviewCard from "../reviews/ReviewSection";
 
 interface DetailedProductCardProps {
   product: ProductWithRelations;
-  selectedColor: string | null;
+  selectedColors: string[];
+  selectedSizes: string[];
   onColorChange?: (color: string | null) => void;
 }
 
 const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
   product,
-  selectedColor,
+  selectedColors,
+  selectedSizes,
   onColorChange,
 }) => {
   const setGlobalSelectedColor = useColorStore(state => state.setSelectedColor);
-
   const defaultVariation = product.variations[0];
-  const initialVariation = selectedColor
-    ? (product.variations.find(
-        v => v.color.toLowerCase() === selectedColor.toLowerCase()
-      ) ?? defaultVariation)
-    : defaultVariation;
+
+  // Find first matching variation based on selected filters
+  const initialVariation =
+    product.variations.find(
+      v =>
+        selectedColors.some(
+          color => v.color.toLowerCase() === color.toLowerCase()
+        ) &&
+        (!selectedSizes.length || selectedSizes.includes(v.size))
+    ) ?? defaultVariation;
 
   const [selectedVariation, setSelectedVariation] =
     useState<Variation>(initialVariation);
   const [quantity, setQuantity] = useState(1);
 
+  // Get available sizes for the selected color
+  const availableSizes = React.useMemo(() => {
+    if (!selectedVariation?.color) return [];
+    return product.variations
+      .filter(v => v.color === selectedVariation.color)
+      .map(v => v.size);
+  }, [product.variations, selectedVariation?.color]);
+
   const handleColorChange = useCallback(
     (newColor: string | null) => {
-      const variation = newColor
-        ? (product.variations.find(
-            v => v.color.toLowerCase() === newColor.toLowerCase()
-          ) ?? defaultVariation)
-        : defaultVariation;
+      if (!newColor) {
+        setSelectedVariation(defaultVariation);
+        onColorChange?.(null);
+        return;
+      }
+
+      const variation =
+        product.variations.find(
+          v =>
+            v.color.toLowerCase() === newColor.toLowerCase() &&
+            (!selectedSizes.length || selectedSizes.includes(v.size))
+        ) ?? defaultVariation;
 
       setSelectedVariation(variation);
       setQuantity(1);
-
       onColorChange?.(newColor);
-      if (newColor) {
-        setGlobalSelectedColor(product.id, newColor);
-      }
+      setGlobalSelectedColor(product.id, newColor);
     },
     [
       product.id,
       product.variations,
+      selectedSizes,
       defaultVariation,
       onColorChange,
       setGlobalSelectedColor,
@@ -61,36 +80,14 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
   );
 
   useEffect(() => {
-    handleColorChange(selectedColor);
-  }, [selectedColor, handleColorChange]);
+    const currentColor = selectedColors[0] || null;
+    handleColorChange(currentColor);
+  }, [selectedColors, handleColorChange]);
 
   const totalStock = product.variations.reduce(
     (sum, variation) => sum + variation.quantity,
     0
   );
-
-  const handleColorSelect = (color: string | null) => {
-    onColorChange?.(color);
-
-    if (!color) {
-      setSelectedVariation(defaultVariation);
-      return;
-    }
-
-    const newVariation = product.variations.find(
-      v => v.color.toLowerCase() === color.toLowerCase()
-    );
-
-    if (newVariation) {
-      setSelectedVariation(newVariation);
-      setQuantity(1);
-      setGlobalSelectedColor(product.id, color);
-    }
-  };
-
-  const viewMoreUrl = selectedVariation
-    ? `/customer/shopping/${product.id}/${selectedVariation.id}`
-    : `/customer/shopping/product/${product.id}`;
 
   const handleSizeSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const size = e.target.value;
@@ -104,8 +101,8 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
   };
 
   return (
-    <Card className=" shadow-2xl shadow-black transition-transform duration-300 hover:scale-95 p-3">
-      <div className="flex flex-col md:flex-row gap-6  p-3">
+    <Card className="shadow-2xl shadow-black transition-transform duration-300 hover:scale-95 p-3">
+      <div className="flex flex-col md:flex-row gap-6 p-3">
         {/* Left Column - Product Image */}
         <div className="w-full md:w-1/3 space-y-4">
           <div className="relative aspect-square w-full overflow-hidden rounded-lg">
@@ -152,19 +149,21 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
             <ColorPicker
               colors={Array.from(new Set(product.variations.map(v => v.color)))}
               selectedColor={selectedVariation?.color || null}
-              onColorChange={handleColorSelect}
+              onColorChange={handleColorChange}
             />
 
             <SizeSelector
-              sizes={Array.from(new Set(product.variations.map(v => v.size)))}
+              sizes={availableSizes}
               selectedSize={selectedVariation?.size}
               onSizeSelect={handleSizeSelect}
+              productId={product.id}
             />
 
             <QuantitySelector
               quantity={quantity}
               maxQuantity={selectedVariation?.quantity || 1}
               onQuantityChange={e => setQuantity(parseInt(e.target.value))}
+              productId={product.id}
             />
 
             <DetailedReviewCard product={product} />
@@ -177,7 +176,7 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
               />
 
               <ViewMore
-                href={viewMoreUrl}
+                href={`/customer/shopping/${product.id}/${selectedVariation?.id || ""}`}
                 variant="default"
                 size="md"
                 className="w-full"
