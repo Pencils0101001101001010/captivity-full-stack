@@ -16,11 +16,10 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { logout } from "../vendor_auth/actions";
 
-// Update the User interface in SessionProvider or import it if defined elsewhere
 interface User {
   id: string;
   name?: string;
@@ -42,7 +41,6 @@ interface UserButtonProps {
 
 export default function UserButton({ className }: UserButtonProps) {
   const { user } = useSession();
-
   const { theme, setTheme } = useTheme();
 
   if (!user) {
@@ -52,13 +50,23 @@ export default function UserButton({ className }: UserButtonProps) {
   const displayName = user.username || user.name || user.email || "User";
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={true}>
       <DropdownMenuTrigger asChild>
-        <button className={cn("flex-none rounded-full", className)}>
+        <button
+          className={cn(
+            "flex-none rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            className
+          )}
+        >
           <UserAvatar avatarUrl={user.avatarUrl} size={40} />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent
+        align="end"
+        className="w-56"
+        sideOffset={8}
+        alignOffset={0}
+      >
         <DropdownMenuLabel>Logged in as @{displayName}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {user.username && (
@@ -70,32 +78,52 @@ export default function UserButton({ className }: UserButtonProps) {
           </Link>
         )}
         <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
+          <DropdownMenuSubTrigger className="w-full">
             <Monitor className="mr-2 size-4" />
             Theme
           </DropdownMenuSubTrigger>
           <DropdownMenuPortal>
-            <DropdownMenuSubContent>
-              <DropdownMenuItem onClick={() => setTheme("system")}>
-                <Monitor className="mr-2 size-4" />
-                System default
-                {theme === "system" && <Check className="ms-2 size-4" />}
+            <DropdownMenuSubContent
+              className="min-w-[8rem]"
+              sideOffset={2}
+              alignOffset={-5}
+            >
+              <DropdownMenuItem
+                className="flex items-center justify-between"
+                onClick={() => setTheme("system")}
+              >
+                <div className="flex items-center">
+                  <Monitor className="mr-2 size-4" />
+                  <span>System</span>
+                </div>
+                {theme === "system" && <Check className="ml-2 size-4" />}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("light")}>
-                <Sun className="mr-2 size-4" />
-                Light
-                {theme === "light" && <Check className="ms-2 size-4" />}
+              <DropdownMenuItem
+                className="flex items-center justify-between"
+                onClick={() => setTheme("light")}
+              >
+                <div className="flex items-center">
+                  <Sun className="mr-2 size-4" />
+                  <span>Light</span>
+                </div>
+                {theme === "light" && <Check className="ml-2 size-4" />}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("dark")}>
-                <Moon className="mr-2 size-4" />
-                Dark
-                {theme === "dark" && <Check className="ms-2 size-4" />}
+              <DropdownMenuItem
+                className="flex items-center justify-between"
+                onClick={() => setTheme("dark")}
+              >
+                <div className="flex items-center">
+                  <Moon className="mr-2 size-4" />
+                  <span>Dark</span>
+                </div>
+                {theme === "dark" && <Check className="ml-2 size-4" />}
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuPortal>
         </DropdownMenuSub>
         <DropdownMenuSeparator />
         <DropdownMenuItem
+          className="flex items-center"
           onClick={async () => {
             await logout();
           }}
