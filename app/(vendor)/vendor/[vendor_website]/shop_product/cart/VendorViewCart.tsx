@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "@/app/(vendor)/SessionProvider";
@@ -74,13 +74,13 @@ const VendorViewCart: React.FC = () => {
     !["VENDOR", "VENDORCUSTOMER", "APPROVEDVENDORCUSTOMER"].includes(user.role)
   ) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-3xl font-semibold mb-4">
+      <div className="container mx-auto px-4 py-8 sm:py-16 text-center">
+        <h1 className="text-2xl sm:text-3xl font-semibold mb-4">
           Please login to view your vendor cart
         </h1>
         <Link
           href="/vendor/auth/login"
-          className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-md font-medium hover:bg-primary/90"
+          className="inline-block bg-primary text-primary-foreground px-4 sm:px-6 py-2 sm:py-3 rounded-md font-medium hover:bg-primary/90"
         >
           Login as Vendor Customer
         </Link>
@@ -90,24 +90,29 @@ const VendorViewCart: React.FC = () => {
 
   if (cart === null) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-3xl font-semibold mb-4">Loading cart...</h1>
+      <div className="container mx-auto px-4 py-8 sm:py-16 text-center">
+        <h1 className="text-2xl sm:text-3xl font-semibold mb-4">
+          Loading cart...
+        </h1>
       </div>
     );
   }
 
   if (!cart.vendorCartItems || cart.vendorCartItems.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-3xl font-semibold mb-4">
-          Your Vendor Cart is Empty
-        </h1>
-        <button
-          onClick={handleContinueShopping}
-          className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-md font-medium hover:bg-primary/90"
-        >
-          Continue Shopping
-        </button>
+      <div className="container mx-auto px-4 py-8 sm:py-16 text-center">
+        <div className="space-y-4">
+          <ShoppingBag className="w-12 h-12 mx-auto text-muted-foreground" />
+          <h1 className="text-2xl sm:text-3xl font-semibold">
+            Your Vendor Cart is Empty
+          </h1>
+          <button
+            onClick={handleContinueShopping}
+            className="inline-block bg-primary text-primary-foreground px-4 sm:px-6 py-2 sm:py-3 rounded-md font-medium hover:bg-primary/90 mt-4"
+          >
+            Continue Shopping
+          </button>
+        </div>
       </div>
     );
   }
@@ -144,16 +149,16 @@ const VendorViewCart: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-semibold mb-8">
+    <div className="container mx-auto px-4 py-6 sm:py-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-0">
           {user?.username
             ? `${user.username}'s Vendor Cart`
             : "Vendor Shopping Cart"}
         </h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         <div className="lg:col-span-2 space-y-4">
           {cart.vendorCartItems.map(item => {
             const itemTotal = calculateItemPrice(item);
@@ -163,9 +168,9 @@ const VendorViewCart: React.FC = () => {
             return (
               <div
                 key={item.id}
-                className="flex gap-4 bg-card p-6 rounded-lg shadow"
+                className="flex flex-col sm:flex-row gap-4 bg-card p-4 sm:p-6 rounded-lg shadow"
               >
-                <div className="relative w-32 h-32">
+                <div className="relative w-full sm:w-32 h-48 sm:h-32 shrink-0">
                   <Image
                     src={
                       item.vendorVariation.variationImageURL ||
@@ -177,29 +182,30 @@ const VendorViewCart: React.FC = () => {
                   />
                 </div>
 
-                <div className="flex-1">
-                  <h3 className="text-xl font-medium text-card-foreground">
-                    {item.vendorVariation.vendorProduct.productName}
-                  </h3>
-                  <p className="text-muted-foreground mb-2">
-                    {item.vendorVariation.color} / {item.vendorVariation.size}
-                  </p>
+                <div className="flex-1 space-y-4">
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-medium text-card-foreground">
+                      {item.vendorVariation.vendorProduct.productName}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {item.vendorVariation.color} / {item.vendorVariation.size}
+                    </p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      SKU: {item.vendorVariation.sku}
+                      {item.vendorVariation.sku2 &&
+                        ` / ${item.vendorVariation.sku2}`}
+                    </p>
+                  </div>
 
-                  <p className="text-sm text-muted-foreground">
-                    SKU: {item.vendorVariation.sku}
-                    {item.vendorVariation.sku2 &&
-                      ` / ${item.vendorVariation.sku2}`}
-                  </p>
-
-                  <div className="flex justify-between items-center mt-4">
-                    <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
                       <select
                         value={item.quantity}
                         onChange={e =>
                           handleUpdateQuantity(item.id, Number(e.target.value))
                         }
                         disabled={updatingItems.has(item.id)}
-                        className="border rounded-md px-3 py-2 bg-background text-foreground"
+                        className="border rounded-md px-3 py-2 bg-background text-foreground w-full sm:w-auto"
                       >
                         {[...Array(item.vendorVariation.quantity)].map(
                           (_, i) => (
@@ -211,7 +217,7 @@ const VendorViewCart: React.FC = () => {
                       </select>
 
                       <button
-                        className="text-destructive hover:text-destructive/90 disabled:opacity-50 flex items-center gap-2"
+                        className="text-destructive hover:text-destructive/90 disabled:opacity-50 flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
                         onClick={() => handleRemoveItem(item.id)}
                         disabled={
                           removingItems.has(item.id) ||
@@ -222,15 +228,15 @@ const VendorViewCart: React.FC = () => {
                           <span className="text-sm">Removing...</span>
                         ) : (
                           <>
-                            <Trash2 size={20} />
+                            <Trash2 className="w-4 h-4" />
                             <span>Remove</span>
                           </>
                         )}
                       </button>
                     </div>
 
-                    <div className="text-right">
-                      <p className="text-xl font-semibold text-card-foreground">
+                    <div className="text-right w-full sm:w-auto">
+                      <p className="text-lg sm:text-xl font-semibold text-card-foreground">
                         R{itemTotal.toFixed(2)}
                       </p>
                       {hasDiscount && (
@@ -247,8 +253,10 @@ const VendorViewCart: React.FC = () => {
         </div>
 
         <div className="lg:col-span-1">
-          <div className="bg-card rounded-lg shadow p-6 sticky top-4">
-            <h2 className="text-2xl font-semibold mb-6">Order Summary</h2>
+          <div className="bg-card rounded-lg shadow p-4 sm:p-6 sticky top-4">
+            <h2 className="text-xl sm:text-2xl font-semibold mb-6">
+              Order Summary
+            </h2>
 
             <div className="space-y-4 mb-6">
               <div className="flex justify-between text-muted-foreground">
@@ -267,8 +275,10 @@ const VendorViewCart: React.FC = () => {
             </div>
 
             <button
-              onClick={() => router.push(`/vendor/${vendorWebsite}/checkout`)}
-              className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-md font-medium hover:bg-primary/90"
+              onClick={() =>
+                router.push(`/vendor/${vendorWebsite}/shop_product/checkout`)
+              }
+              className="w-full bg-primary text-primary-foreground px-4 sm:px-6 py-3 rounded-md font-medium hover:bg-primary/90"
             >
               Proceed to Checkout
             </button>
