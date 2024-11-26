@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { Home, Store } from "lucide-react";
+import { Home, Store, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface NavigationButtonsProps {
@@ -9,39 +9,40 @@ interface NavigationButtonsProps {
 
 export const NavigationButtons = React.memo(
   ({ vendorWebsite }: NavigationButtonsProps) => (
-    <div className="flex flex-col md:flex-row gap-2 md:gap-3">
+    <div className="flex gap-1.5 md:gap-3">
       <Button
         variant="default"
         size="sm"
-        className="w-full md:w-auto flex items-center gap-2"
+        className="flex-1 md:flex-none h-9 px-2.5 md:px-4"
         asChild
       >
         <Link href={`/vendor/${vendorWebsite}/welcome`}>
-          <Home className="w-4 h-4" />
-          <span className="hidden md:inline">Back</span>
+          <Home className="w-4 h-4 md:mr-2" />
+          <span className="text-xs ml-1.5 md:text-sm md:ml-0">Back</span>
         </Link>
       </Button>
       <Button
         variant="secondary"
         size="sm"
-        className="w-full md:w-auto flex items-center gap-2"
+        className="flex-1 md:flex-none h-9 px-2.5 md:px-4"
         asChild
       >
         <Link href={`/vendor/${vendorWebsite}`}>
-          <Store className="w-4 h-4" />
-          <span className="hidden md:inline">Home</span>
+          <Store className="w-4 h-4 md:mr-2" />
+          <span className="text-xs ml-1.5 md:text-sm md:ml-0">Home</span>
         </Link>
       </Button>
       <Button
         variant="destructive"
         size="sm"
-        className="w-full md:w-auto"
+        className="flex-1 md:flex-none h-9 px-2.5 md:px-4"
         asChild
       >
         <Link
           href={`/vendor/${vendorWebsite}/shopping/product_categories/summer`}
         >
-          Shop
+          <ShoppingBag className="w-4 h-4 md:mr-2" />
+          <span className="text-xs ml-1.5 md:text-sm md:ml-0">Shop</span>
         </Link>
       </Button>
     </div>
