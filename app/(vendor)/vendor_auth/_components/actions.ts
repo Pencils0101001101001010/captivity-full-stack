@@ -45,10 +45,13 @@ export async function vendorCustomerSignUp(
   try {
     const validatedData = vendorCustomerSchema.parse(formData);
 
-    // Verify vendor exists
+    // Case-insensitive vendor store check
     const vendorStore = await prisma.user.findFirst({
       where: {
-        storeSlug: validatedData.storeSlug,
+        storeSlug: {
+          equals: validatedData.storeSlug,
+          mode: "insensitive",
+        },
         role: "VENDOR",
       },
     });
@@ -59,7 +62,7 @@ export async function vendorCustomerSignUp(
       };
     }
 
-    // Check username
+    // Case-insensitive username check
     const existingUsername = await prisma.user.findFirst({
       where: {
         username: {
@@ -75,7 +78,7 @@ export async function vendorCustomerSignUp(
       };
     }
 
-    // Check email
+    // Case-insensitive email check
     const existingEmail = await prisma.user.findFirst({
       where: {
         email: {
@@ -99,13 +102,16 @@ export async function vendorCustomerSignUp(
       parallelism: 1,
     });
 
-    // Create a unique storeSlug for the vendor customer
-    const customerStoreSlug = `${validatedData.storeSlug}-customer-${validatedData.username}`;
+    // Create customer storeSlug using vendor's actual storeSlug
+    const customerStoreSlug = `${vendorStore.storeSlug}-customer-${validatedData.username}`;
 
-    // Check if the customer storeSlug already exists
+    // Case-insensitive check for existing customer slug
     const existingCustomerSlug = await prisma.user.findFirst({
       where: {
-        storeSlug: customerStoreSlug,
+        storeSlug: {
+          equals: customerStoreSlug,
+          mode: "insensitive",
+        },
       },
     });
 
