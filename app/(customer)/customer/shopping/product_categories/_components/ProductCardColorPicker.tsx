@@ -1,10 +1,8 @@
 import React, { memo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { ProductImage, ProductPrice } from "./ProductCardComponents";
-import { StarRating } from "./StarRating";
 import { ProductWithRelations } from "../types";
 import { useColorStore } from "../../../_store/useColorStore";
 import { Variation } from "@prisma/client";
@@ -21,19 +19,25 @@ import DetailedReviewCard from "../reviews/ReviewSection";
 
 interface ProductCardProps {
   product: ProductWithRelations;
-  selectedColor: string | null;
-  selectedVariation?: Variation;
+  selectedColors: string[];
+  selectedSizes: string[];
 }
 
 const ProductCard: React.FC<ProductCardProps> = memo(
-  ({ product, selectedColor, selectedVariation }) => {
+  ({ product, selectedColors, selectedSizes }) => {
     const setSelectedColor = useColorStore(state => state.setSelectedColor);
     const defaultVariation = product.variations?.[0];
-    const currentVariation =
-      product.variations?.find(v => v.color === selectedColor) ||
-      defaultVariation;
 
-    // Calculate total stock across all variations sort filter
+    // Find first matching variation based on selected filters
+    const currentVariation =
+      product.variations?.find(
+        v =>
+          selectedColors.some(
+            color => v.color.toLowerCase() === color.toLowerCase()
+          ) &&
+          (!selectedSizes.length || selectedSizes.includes(v.size))
+      ) || defaultVariation;
+
     const totalStock = product.variations.reduce(
       (sum, variation) => sum + variation.quantity,
       0
@@ -54,8 +58,8 @@ const ProductCard: React.FC<ProductCardProps> = memo(
     };
 
     const handleShopClick = (e: React.MouseEvent) => {
-      if (selectedColor) {
-        setSelectedColor(product.id, selectedColor);
+      if (currentVariation?.color) {
+        setSelectedColor(product.id, currentVariation.color);
       }
     };
 
@@ -75,7 +79,6 @@ const ProductCard: React.FC<ProductCardProps> = memo(
             <h1 className="text-md font-md text-gray-800 font-semibold mb-2 line-clamp-1 hover:line-clamp-none">
               {product.productName}
             </h1>
-            {/* //sort filter */}
             <div className="flex-col justify-start items-center mb-2">
               <div className="text-sm text-gray-600">
                 Total Stock: {totalStock}

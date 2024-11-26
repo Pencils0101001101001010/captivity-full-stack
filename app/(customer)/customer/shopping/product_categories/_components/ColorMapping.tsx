@@ -280,7 +280,7 @@ export const COLOR_MAPPINGS: {
     colors: ["#f0be1a", "#080707", "#03731f", "#fafafa", "#a10c0a", "#0a25a1"],
     pattern: "camo",
   },
-  south_africa_flag: {
+  sa_flag: {
     colors: ["#f0be1a", "#080707", "#03731f", "#fafafa", "#a10c0a", "#0a25a1"],
     pattern: "camo",
   },

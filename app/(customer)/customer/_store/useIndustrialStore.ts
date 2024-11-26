@@ -14,6 +14,17 @@ export type ProductWithRelations = Product & {
   featuredImage: FeaturedImage | null;
 };
 
+export type SortValue =
+  | "relevance"
+  | "code-asc"
+  | "code-desc"
+  | "name-asc"
+  | "name-desc"
+  | "stock-asc"
+  | "stock-desc"
+  | "price-asc"
+  | "price-desc";
+
 export type Category = "industrial-collection";
 
 export type CategorizedProducts = {
@@ -28,6 +39,7 @@ interface IndustrialState {
   error: string | null;
   hasInitiallyFetched: boolean;
   isInitializing: boolean;
+  sortBy: SortValue; //sort filter
 }
 
 interface IndustrialActions {
@@ -37,6 +49,7 @@ interface IndustrialActions {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   fetchIndustrialCollection: () => Promise<void>;
+  setSortBy: (sortBy: SortValue) => void; //sort filter
 }
 
 const initialState: IndustrialState = {
@@ -51,6 +64,7 @@ const initialState: IndustrialState = {
   error: null,
   hasInitiallyFetched: false,
   isInitializing: false,
+  sortBy: "relevance" as SortValue, //sort filter
 };
 
 let fetchPromise: Promise<void> | null = null;
@@ -58,6 +72,7 @@ let fetchPromise: Promise<void> | null = null;
 const useIndustrialStore = create<IndustrialState & IndustrialActions>()(
   (set, get) => ({
     ...initialState,
+    sortBy: "relevance", //sort filter
 
     setIndustrialProducts: products =>
       set({ industrialProducts: products, filteredProducts: products }),
@@ -141,8 +156,100 @@ const useIndustrialStore = create<IndustrialState & IndustrialActions>()(
 
       return fetchPromise;
     },
+    //sort filter
+    setSortBy: sortBy => {
+      set({ sortBy });
+      const { filteredProducts } = get();
+
+      // First, combine all products into a single array
+      const allProducts = Object.values(filteredProducts)
+        .flat()
+        .filter(Boolean);
+
+      // Sort all products together
+      let sortedAllProducts = [...allProducts];
+
+      switch (sortBy) {
+        case "code-asc":
+          sortedAllProducts.sort((a, b) => a.id.localeCompare(b.id));
+          break;
+        case "code-desc":
+          sortedAllProducts.sort((a, b) => b.id.localeCompare(a.id));
+          break;
+        case "name-asc":
+          sortedAllProducts.sort((a, b) =>
+            a.productName.localeCompare(b.productName)
+          );
+          break;
+        case "name-desc":
+          sortedAllProducts.sort((a, b) =>
+            b.productName.localeCompare(a.productName)
+          );
+          break;
+        case "stock-asc":
+          sortedAllProducts.sort((a, b) => {
+            const aStock = a.variations.reduce((sum, v) => sum + v.quantity, 0);
+            const bStock = b.variations.reduce((sum, v) => sum + v.quantity, 0);
+            return aStock - bStock;
+          });
+          break;
+        case "stock-desc":
+          sortedAllProducts.sort((a, b) => {
+            const aStock = a.variations.reduce((sum, v) => sum + v.quantity, 0);
+            const bStock = b.variations.reduce((sum, v) => sum + v.quantity, 0);
+            return bStock - aStock;
+          });
+          break;
+        case "price-asc":
+          sortedAllProducts.sort((a, b) => {
+            const priceA = Number(a.sellingPrice) || 0;
+            const priceB = Number(b.sellingPrice) || 0;
+            return priceA - priceB;
+          });
+          break;
+        case "price-desc":
+          sortedAllProducts.sort((a, b) => {
+            const priceA = Number(a.sellingPrice) || 0;
+            const priceB = Number(b.sellingPrice) || 0;
+            return priceB - priceA;
+          });
+          break;
+        default:
+          // 'relevance' - keep original order
+          break;
+      }
+
+      // Create new categorized products object with proper typing
+      const newSortedProducts: CategorizedProducts = {
+        "industrial-collection": [],
+      };
+
+      // Distribute sorted products into categories
+      sortedAllProducts.forEach(product => {
+        const categories = product.category as string[];
+        let categorized = false;
+
+        (Object.keys(newSortedProducts) as Category[]).forEach(category => {
+          {
+            newSortedProducts[category].push(product);
+            categorized = true;
+          }
+        });
+      });
+
+      set({ filteredProducts: newSortedProducts });
+    },
   })
 );
+
+//sort filter
+export const useIndustrialSort = () =>
+  useIndustrialStore(
+    useShallow(state => ({
+      sortBy: state.sortBy,
+      setSortBy: state.setSortBy,
+    }))
+  );
 
 export const useIndustrialProducts = () =>
   useIndustrialStore(
