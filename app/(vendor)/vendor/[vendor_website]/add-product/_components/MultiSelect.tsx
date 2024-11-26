@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { X } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +9,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
 
 interface MultiSelectProps {
   options: string[];
@@ -46,23 +45,23 @@ export function MultiSelect({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "w-full justify-between",
-            value.length > 0 ? "h-full" : "h-10"
+            "w-full min-h-[2.5rem] h-auto justify-between",
+            className
           )}
         >
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 py-1">
             {value.length > 0 ? (
               value.map(item => (
                 <Badge
                   variant="secondary"
                   key={item}
-                  className="mr-1"
+                  className="mr-1 max-w-[calc(100%-1rem)] sm:max-w-xs"
                   onClick={e => {
                     e.stopPropagation();
                     handleUnselect(item);
                   }}
                 >
-                  {item}
+                  <span className="truncate">{item}</span>
                   <button
                     className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                     onKeyDown={e => {
@@ -80,15 +79,18 @@ export function MultiSelect({
                 </Badge>
               ))
             ) : (
-              <span className="text-muted-foreground">
+              <span className="text-muted-foreground px-1">
                 Select categories...
               </span>
             )}
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
-        <div className="max-h-[200px] overflow-auto">
+      <PopoverContent
+        className="w-full min-w-[200px] max-w-[min(calc(100vw-2rem),400px)] p-0"
+        align="start"
+      >
+        <div className="max-h-[300px] overflow-auto">
           {options.map(option => (
             <div
               key={option}
@@ -98,9 +100,9 @@ export function MultiSelect({
               )}
               onClick={() => handleSelect(option)}
             >
-              {option}
+              <span className="truncate pr-2">{option}</span>
               {value.includes(option) && (
-                <Check className="h-4 w-4 text-primary" />
+                <Check className="h-4 w-4 flex-shrink-0 text-primary" />
               )}
             </div>
           ))}

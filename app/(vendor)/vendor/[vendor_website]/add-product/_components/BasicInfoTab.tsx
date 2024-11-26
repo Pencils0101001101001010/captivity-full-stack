@@ -34,15 +34,19 @@ const PRODUCT_CATEGORIES = [
 
 const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ control }) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <FormField
         control={control}
         name="productName"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Product Name</FormLabel>
+            <FormLabel className="text-base">Product Name</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Enter product name" />
+              <Input
+                {...field}
+                placeholder="Enter product name"
+                className="w-full"
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -53,16 +57,16 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ control }) => {
         control={control}
         name="category"
         render={({ field }) => (
-          <FormItem>
-            <FormLabel>Categories</FormLabel>
+          <FormItem className="w-full">
+            <FormLabel className="text-base">Categories</FormLabel>
             <FormControl>
               <MultiSelect
                 options={PRODUCT_CATEGORIES}
-                value={field.value || []} // Ensure we always pass an array
+                value={field.value || []}
                 onChange={field.onChange}
               />
             </FormControl>
-            <FormDescription>
+            <FormDescription className="text-sm">
               Select one or more categories for your product
             </FormDescription>
             <FormMessage />
@@ -75,15 +79,15 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ control }) => {
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Description</FormLabel>
+            <FormLabel className="text-base">Description</FormLabel>
             <FormControl>
               <Textarea
                 {...field}
                 placeholder="Enter a detailed description of your product"
-                className="min-h-[120px] resize-y"
+                className="min-h-[120px] resize-y w-full"
               />
             </FormControl>
-            <FormDescription>
+            <FormDescription className="text-sm">
               Provide a comprehensive description of your product including key
               features, materials, and specifications
             </FormDescription>
@@ -97,7 +101,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ control }) => {
         name="sellingPrice"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Selling Price</FormLabel>
+            <FormLabel className="text-base">Selling Price</FormLabel>
             <FormControl>
               <Input
                 type="number"
@@ -109,7 +113,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ control }) => {
                 className="w-full"
               />
             </FormControl>
-            <FormDescription>
+            <FormDescription className="text-sm">
               Set your product&apos;s base selling price (before any dynamic
               pricing rules)
             </FormDescription>
@@ -122,10 +126,10 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ control }) => {
         control={control}
         name="isPublished"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
+          <FormItem className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-lg border p-4">
+            <div className="space-y-1.5">
               <FormLabel className="text-base">Published Status</FormLabel>
-              <FormDescription>
+              <FormDescription className="text-sm">
                 Toggle whether this product should be visible in your store. You
                 can change this later.
               </FormDescription>
@@ -142,7 +146,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ control }) => {
         )}
       />
 
-      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mt-6">
+      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
         <p className="text-sm text-yellow-800">
           <strong>Note:</strong> Make sure to fill out all required fields
           before proceeding to the next sections. You can save your product as a
