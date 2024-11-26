@@ -139,7 +139,7 @@ export async function vendorCustomerSignUp(
       },
     });
 
-    redirect("/vendor/registration-pending");
+    redirect("/vendor_auth");
   } catch (error) {
     console.error("Registration error:", error);
     if (isRedirectError(error)) throw error;
