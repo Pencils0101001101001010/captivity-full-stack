@@ -1,76 +1,129 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { Review } from "../types";
 import { getProductReviews } from "./actions";
 
 interface ReviewState {
   reviews: { [productId: string]: Review[] };
   isLoading: { [productId: string]: boolean };
-  fetchReviews: (productId: string) => Promise<void>;
-  addReview: (productId: string, review: Review) => void;
-  updateReviewHelpful: (
-    productId: string,
-    reviewId: string,
-    data: Partial<Review>
-  ) => void;
+  lastFetched: { [productId: string]: number };
+  actions: {
+    fetchReviews: (productId: string) => Promise<void>;
+    addReview: (productId: string, review: Review) => void;
+    updateReviewHelpful: (
+      productId: string,
+      reviewId: string,
+      data: Partial<Review>
+    ) => void;
+    clearReviews: (productId: string) => void;
+  };
 }
 
-export const useReviewStore = create<ReviewState>((set, get) => ({
-  reviews: {},
-  isLoading: {},
+// Cache duration in milliseconds (e.g., 5 minutes)
+const CACHE_DURATION = 5 * 60 * 1000;
 
-  fetchReviews: async (productId: string) => {
-    // Check if we already have reviews for this product
-    if (get().reviews[productId]) return;
+export const useReviewStore = create<ReviewState>()(
+  persist(
+    (set, get) => ({
+      reviews: {},
+      isLoading: {},
+      lastFetched: {},
+      actions: {
+        fetchReviews: async (productId: string) => {
+          const state = get();
+          const lastFetchTime = state.lastFetched[productId];
+          const now = Date.now();
 
-    set(state => ({
-      isLoading: { ...state.isLoading, [productId]: true },
-    }));
+          // Return cached data if it's fresh enough
+          if (
+            state.reviews[productId] &&
+            lastFetchTime &&
+            now - lastFetchTime < CACHE_DURATION
+          ) {
+            return;
+          }
 
-    try {
-      const result = await getProductReviews(productId);
-      if (result.success) {
-        const reviewsWithDates = result.data.map(review => ({
-          ...review,
-          createdAt: new Date(review.createdAt),
-          updatedAt: new Date(review.updatedAt),
-        }));
+          // Prevent multiple simultaneous fetches
+          if (state.isLoading[productId]) {
+            return;
+          }
 
-        set(state => ({
-          reviews: {
-            ...state.reviews,
-            [productId]: reviewsWithDates,
-          },
-        }));
-      }
-    } finally {
-      set(state => ({
-        isLoading: { ...state.isLoading, [productId]: false },
-      }));
+          set(state => ({
+            isLoading: { ...state.isLoading, [productId]: true },
+          }));
+
+          try {
+            const result = await getProductReviews(productId);
+            if (result.success) {
+              const reviewsWithDates = result.data.map(review => ({
+                ...review,
+                createdAt: new Date(review.createdAt),
+                updatedAt: new Date(review.updatedAt),
+              }));
+
+              set(state => ({
+                reviews: {
+                  ...state.reviews,
+                  [productId]: reviewsWithDates,
+                },
+                lastFetched: {
+                  ...state.lastFetched,
+                  [productId]: now,
+                },
+              }));
+            }
+          } finally {
+            set(state => ({
+              isLoading: { ...state.isLoading, [productId]: false },
+            }));
+          }
+        },
+
+        addReview: (productId: string, review: Review) => {
+          set(state => ({
+            reviews: {
+              ...state.reviews,
+              [productId]: [review, ...(state.reviews[productId] || [])],
+            },
+          }));
+        },
+
+        updateReviewHelpful: (
+          productId: string,
+          reviewId: string,
+          data: Partial<Review>
+        ) => {
+          set(state => ({
+            reviews: {
+              ...state.reviews,
+              [productId]:
+                state.reviews[productId]?.map(review =>
+                  review.id === reviewId ? { ...review, ...data } : review
+                ) || [],
+            },
+          }));
+        },
+
+        clearReviews: (productId: string) => {
+          set(state => {
+            const { [productId]: _, ...remainingReviews } = state.reviews;
+            const { [productId]: __, ...remainingLastFetched } =
+              state.lastFetched;
+            return {
+              reviews: remainingReviews,
+              lastFetched: remainingLastFetched,
+            };
+          });
+        },
+      },
+    }),
+    {
+      name: "product-reviews-storage",
+      storage: createJSONStorage(() => sessionStorage), // Using sessionStorage instead of localStorage
+      partialize: state => ({
+        reviews: state.reviews,
+        lastFetched: state.lastFetched,
+      }),
     }
-  },
-
-  addReview: (productId: string, review: Review) => {
-    set(state => ({
-      reviews: {
-        ...state.reviews,
-        [productId]: [review, ...(state.reviews[productId] || [])],
-      },
-    }));
-  },
-
-  updateReviewHelpful: (
-    productId: string,
-    reviewId: string,
-    data: Partial<Review>
-  ) => {
-    set(state => ({
-      reviews: {
-        ...state.reviews,
-        [productId]:
-          state.reviews[productId]?.map(review =>
-            review.id === reviewId ? { ...review, ...data } : review
-          ) || [],
-      },
-    }));
-  },
-}));
+  )
+);
