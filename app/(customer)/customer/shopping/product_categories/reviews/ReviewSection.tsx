@@ -1,37 +1,41 @@
+// DetailedReviewCard.tsx
 "use client";
-import { memo } from "react";
+import { useEffect } from "react";
 import { ProductWithRelations } from "../types";
 import ReviewSection from "./ReviewsComponent";
 import { Card } from "@/components/ui/card";
-import { useProductReviews } from "./hooks/useProductReviews";
+import { useReviewStore } from "./useReviewStore";
 
 interface DetailedReviewCardProps {
   product: ProductWithRelations;
 }
 
-const DetailedReviewCard: React.FC<DetailedReviewCardProps> = memo(
-  ({ product }) => {
-    // Use the custom hook instead of direct store access
-    const { reviews, isLoading, addReview } = useProductReviews(product.id);
+const DetailedReviewCard: React.FC<DetailedReviewCardProps> = ({ product }) => {
+  const { reviews, isLoading, fetchReviews, addReview } = useReviewStore();
 
-    if (!product?.id) {
-      return null;
-    }
+  useEffect(() => {
+    fetchReviews(product.id);
+  }, [product.id, fetchReviews]);
 
-    return (
-      <div>
-        <Card className="mb-5">
-          <ReviewSection
-            productId={product.id}
-            initialReviews={reviews}
-            onReviewAdded={addReview}
-            isLoading={isLoading}
-          />
-        </Card>
-      </div>
-    );
+  const productReviews = reviews[product.id] || [];
+  const isLoadingReviews = isLoading[product.id] || false;
+
+  if (!product?.id) {
+    return null;
   }
-);
 
-DetailedReviewCard.displayName = "DetailedReviewCard";
+  return (
+    <div>
+      <Card className="mb-5">
+        <ReviewSection
+          productId={product.id}
+          initialReviews={productReviews}
+          onReviewAdded={review => addReview(product.id, review)}
+          isLoading={isLoadingReviews}
+        />
+      </Card>
+    </div>
+  );
+};
+
 export default DetailedReviewCard;
