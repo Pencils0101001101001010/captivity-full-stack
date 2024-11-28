@@ -119,10 +119,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
               <span>Subtotal:</span>
               <span>R{calculateTotal().toFixed(2)}</span>
             </div>
-            <div className="flex justify-between items-center text-sm mb-2">
-              <span>Shipping:</span>
-              <span>Calculated at next step</span>
-            </div>
+            <div className="flex justify-between items-center text-sm mb-2"></div>
             <div className="flex justify-between items-center font-semibold text-lg mt-4">
               <span>Total:</span>
               <span>R{calculateTotal().toFixed(2)}</span>
