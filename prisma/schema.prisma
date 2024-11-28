@@ -35,6 +35,7 @@ model User {
   companyName        String
   ckNumber           String?
   avatarUrl          String?
+  backgroundUrl      String?
   bio                String?
   agreeTerms         Boolean         @default(false)
   role               UserRole        @default(USER)
