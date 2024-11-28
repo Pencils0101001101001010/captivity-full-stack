@@ -9,7 +9,7 @@ import AddToCartButton from "../../[id]/AddToCartButton";
 import ColorPicker from "../../[id]/DetailPageColorPicker";
 import { useColorStore } from "../../../_store/useColorStore";
 import ViewMore from "@/app/(customer)/_components/ViewMore";
-import DetailedReviewCard from "../reviews/ReviewSection";
+import DetailedReviewCard from "../_reviews/ReviewSection";
 
 interface DetailedProductCardProps {
   product: ProductWithRelations;

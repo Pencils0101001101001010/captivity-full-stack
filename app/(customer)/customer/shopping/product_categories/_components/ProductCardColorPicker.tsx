@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import VariationDetails from "../../[id]/[variationId]/VariationDetails";
-import DetailedReviewCard from "../reviews/ReviewSection";
+import DetailedReviewCard from "../_reviews/ReviewSection";
 
 interface ProductCardProps {
   product: ProductWithRelations;
