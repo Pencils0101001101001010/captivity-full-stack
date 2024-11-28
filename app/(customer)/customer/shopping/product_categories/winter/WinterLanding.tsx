@@ -209,7 +209,7 @@ const WinterCollectionPage: React.FC = () => {
       {filteredAndSortedProducts.length === 0 ? (
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-foreground">
-            No products found matching your filters.
+            No products found matching your filters.Try in another
           </h2>
         </div>
       ) : (

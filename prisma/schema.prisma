@@ -9,8 +9,6 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
-// USER AND RELATIONS
-
 model User {
   id                 String          @id @default(uuid())
   username           String          @unique
@@ -68,9 +66,9 @@ model User {
   reviews            Review[]
   sessions           Session[]
   UserSettings       UserSettings?
+  VendorCart         VendorCart?
   vendorOrders       VendorOrder[]
   vendorProducts     VendorProduct[]
-  VendorCart         VendorCart?
 
   @@map("users")
 }
@@ -161,7 +159,6 @@ model FeaturedImage {
   @@map("featured_images")
 }
 
-// ORDER SYSTEM
 model Cart {
   id        String     @id @default(uuid())
   userId    String     @unique
@@ -227,8 +224,6 @@ model OrderItem {
   @@map("order_items")
 }
 
-// USER SETTINGS AND RELATIONS
-
 model UserSettings {
   id               String            @id @default(cuid())
   userId           String            @unique
@@ -253,8 +248,8 @@ model UserSettings {
   CategoryImage    CategoryImage[]
   OfficeLocation   OfficeLocation[]
   OpeningHours     OpeningHours[]
-  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   SocialMediaLink  SocialMediaLink[]
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_settings")
 }
@@ -338,8 +333,6 @@ model SocialMediaLink {
   @@map("social_media_links")
 }
 
-// VENDOR MODEL AND RELATIONS
-
 model VendorProduct {
   id             String                 @id @default(uuid())
   userId         String
@@ -380,9 +373,9 @@ model VendorVariation {
   variationImageURL String            @map("variation_image_URL")
   quantity          Int
   vendorProductId   String
+  VendorCartItem    VendorCartItem[]
   vendorOrderItems  VendorOrderItem[]
   vendorProduct     VendorProduct     @relation(fields: [vendorProductId], references: [id], onDelete: Cascade)
-  VendorCartItem    VendorCartItem[]
 
   @@map("vendor_variations")
 }
@@ -401,7 +394,6 @@ model VendorFeaturedImage {
 model VendorOrder {
   id                  String            @id @default(uuid())
   userId              String
-  vendorBranch        String
   methodOfCollection  String
   salesRep            String?
   referenceNumber     String?
@@ -423,6 +415,7 @@ model VendorOrder {
   receiveEmailReviews Boolean?          @default(false)
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
+  vendorBranch        String
   vendorOrderItems    VendorOrderItem[]
   user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -462,8 +455,6 @@ model VendorCartItem {
 
   @@map("vendor_cart_items")
 }
-
-// ENUMS
 
 enum UserRole {
   USER
