@@ -12,4 +12,4 @@
 
 [x] The order table only filters one order at a time.
 
-[] The order filter dont filter the vendor_website/customer orders only the vendor orders
+[x] The order filter dont filter the vendor_website/customer orders only the vendor orders
