@@ -45,21 +45,38 @@ import { OrderStatus } from "@prisma/client";
 const PAGE_SIZES = [10, 20, 50, 100];
 
 const getStatusColor = (status: string): string => {
-  switch (status) {
-    case "PENDING":
-      return "bg-yellow-100 text-yellow-800";
-    case "PROCESSING":
-      return "bg-blue-100 text-blue-800";
-    case "SHIPPED":
-      return "bg-green-100 text-green-800";
-    case "DELIVERED":
-      return "bg-green-500 text-white";
-    case "CANCELLED":
-      return "bg-red-100 text-red-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
+  const colors = {
+    PENDING:
+      "bg-[#FEF3C7] text-[#92400E] dark:bg-[#78350F] dark:text-[#FEF3C7]",
+    PROCESSING:
+      "bg-[#DBEAFE] text-[#1E40AF] dark:bg-[#1E3A8A] dark:text-[#DBEAFE]",
+    SHIPPED:
+      "bg-[#D1FAE5] text-[#065F46] dark:bg-[#064E3B] dark:text-[#D1FAE5]",
+    DELIVERED: "bg-[#6EE7B7] text-[#064E3B] dark:bg-[#059669] dark:text-white",
+    CANCELLED:
+      "bg-[#FEE2E2] text-[#991B1B] dark:bg-[#7F1D1D] dark:text-[#FEE2E2]",
+    REFUNDED:
+      "bg-[#E5E7EB] text-[#1F2937] dark:bg-[#374151] dark:text-[#E5E7EB]",
+  };
+  return (
+    colors[status as keyof typeof colors] || "bg-muted text-muted-foreground"
+  );
 };
+
+const StatCard = ({
+  title,
+  value,
+}: {
+  title: string;
+  value: string | number;
+}) => (
+  <div className="bg-card p-4 rounded-lg shadow-sm border border-border">
+    <div className="text-sm text-muted-foreground">{title}</div>
+    <div className="text-xl sm:text-2xl font-semibold text-card-foreground">
+      {value}
+    </div>
+  </div>
+);
 
 const OrdersTable = () => {
   const session = useSession();
@@ -102,7 +119,7 @@ const OrdersTable = () => {
   }
 
   if (error) {
-    return <div className="text-red-500 p-4">{error}</div>;
+    return <div className="text-destructive p-4">{error}</div>;
   }
 
   const { oldOrders, recentOrders } = getOrdersByAge();
@@ -117,7 +134,7 @@ const OrdersTable = () => {
   if (loading && !currentOrders.length) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-gray-500">Loading orders...</div>
+        <div className="text-lg text-muted-foreground">Loading orders...</div>
       </div>
     );
   }
@@ -125,32 +142,21 @@ const OrdersTable = () => {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-500">Total Orders</div>
-          <div className="text-2xl font-semibold">{totalOrders}</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-500">Pending</div>
-          <div className="text-2xl font-semibold">{stats.pending}</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-500">Processing</div>
-          <div className="text-2xl font-semibold">{stats.processing}</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-500">Total Amount</div>
-          <div className="text-2xl font-semibold">
-            R{totalAmount.toFixed(2)}
-          </div>
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <StatCard title="Total Orders" value={totalOrders} />
+        <StatCard title="Pending" value={stats.pending} />
+        <StatCard title="Processing" value={stats.processing} />
+        <StatCard title="Total Amount" value={`R${totalAmount.toFixed(2)}`} />
       </div>
 
       {/* Warning Alert */}
       {oldOrders.length > 0 && selectedTimeFilter !== "old" && (
-        <Alert className="bg-yellow-50 border-yellow-200">
-          <AlertTriangle className="h-4 w-4 text-yellow-600" />
-          <AlertDescription className="text-yellow-800">
+        <Alert
+          variant="destructive"
+          className="bg-[#FFFBEB] dark:bg-[#78350F]/10 border-[#F59E0B] dark:border-[#F59E0B]/30"
+        >
+          <AlertTriangle className="h-4 w-4 text-[#D97706] dark:text-[#F59E0B]" />
+          <AlertDescription className="text-[#92400E] dark:text-[#FCD34D]">
             You have {oldOrders.length} pending orders that are older than one
             week
           </AlertDescription>
@@ -158,11 +164,11 @@ const OrdersTable = () => {
       )}
 
       {/* Filters Section */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border space-y-4">
-        {/* Search, Status, and Customer Type Filters */}
-        <div className="flex items-center space-x-4">
+      <div className="bg-card p-4 rounded-lg shadow-sm border border-border space-y-4">
+        {/* Search and Filters */}
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search orders..."
               value={searchQuery}
@@ -170,113 +176,121 @@ const OrdersTable = () => {
               className="pl-10"
             />
           </div>
-          <Select
-            value={selectedStatus}
-            onValueChange={value =>
-              filterOrders(undefined, undefined, value as StatusFilter)
-            }
-          >
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              {Object.values(OrderStatus).map(status => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={selectedCustomerType}
-            onValueChange={value =>
-              filterOrders(
-                undefined,
-                undefined,
-                undefined,
-                value as CustomerTypeFilter
-              )
-            }
-          >
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Customer Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Orders</SelectItem>
-              <SelectItem value="vendor">My Orders</SelectItem>
-              <SelectItem value="customer">Customer Orders</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-4 flex-col sm:flex-row">
+            <Select
+              value={selectedStatus}
+              onValueChange={value =>
+                filterOrders(undefined, undefined, value as StatusFilter)
+              }
+            >
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                {Object.values(OrderStatus).map(status => (
+                  <SelectItem key={status} value={status}>
+                    {status}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={selectedCustomerType}
+              onValueChange={value =>
+                filterOrders(
+                  undefined,
+                  undefined,
+                  undefined,
+                  value as CustomerTypeFilter
+                )
+              }
+            >
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Customer Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Orders</SelectItem>
+                <SelectItem value="vendor">My Orders</SelectItem>
+                <SelectItem value="customer">Customer Orders</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Time Filter */}
-        <Tabs
-          value={selectedTimeFilter}
-          onValueChange={value => filterOrders(undefined, value as TimeFilter)}
-        >
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">All Orders</TabsTrigger>
-            <TabsTrigger value="recent">
-              Recent ({recentOrders.length})
-            </TabsTrigger>
-            <TabsTrigger value="old">
-              Older than 1 Week ({oldOrders.length})
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="overflow-x-auto">
+          <Tabs
+            value={selectedTimeFilter}
+            onValueChange={value =>
+              filterOrders(undefined, value as TimeFilter)
+            }
+          >
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="all">All Orders</TabsTrigger>
+              <TabsTrigger value="recent">
+                Recent ({recentOrders.length})
+              </TabsTrigger>
+              <TabsTrigger value="old">
+                Older than 1 Week ({oldOrders.length})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
 
         {/* Price Range Filter */}
-        <Tabs
-          value={selectedPriceRange}
-          onValueChange={value => filterOrders(value as PriceRange)}
-        >
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="less_than_twoK">Less than R2K</TabsTrigger>
-            <TabsTrigger value="two_to_fiveK">R2K - R5K</TabsTrigger>
-            <TabsTrigger value="greater_than_fiveK">Above R5K</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="overflow-x-auto">
+          <Tabs
+            value={selectedPriceRange}
+            onValueChange={value => filterOrders(value as PriceRange)}
+          >
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="less_than_twoK">Less than R2K</TabsTrigger>
+              <TabsTrigger value="two_to_fiveK">R2K - R5K</TabsTrigger>
+              <TabsTrigger value="greater_than_fiveK">Above R5K</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </div>
 
       {/* Orders Table */}
-      <div className="rounded-lg border bg-white">
+      <div className="rounded-lg border border-border bg-card overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>
+              <TableHead className="min-w-[100px]">
                 <button
                   onClick={() => handleSort("date")}
-                  className="flex items-center space-x-1 hover:text-gray-700"
+                  className="flex items-center space-x-1 hover:text-accent-foreground"
                 >
                   <span>Order ID</span>
                   <ArrowUpDown className="h-4 w-4" />
                 </button>
               </TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Items</TableHead>
-              <TableHead>
+              <TableHead className="min-w-[120px]">Date</TableHead>
+              <TableHead className="min-w-[200px]">Customer</TableHead>
+              <TableHead className="min-w-[80px]">Items</TableHead>
+              <TableHead className="min-w-[120px]">
                 <button
                   onClick={() => handleSort("amount")}
-                  className="flex items-center space-x-1 hover:text-gray-700"
+                  className="flex items-center space-x-1 hover:text-accent-foreground"
                 >
                   <span>Total Amount</span>
                   <ArrowUpDown className="h-4 w-4" />
                 </button>
               </TableHead>
-              <TableHead>
+              <TableHead className="min-w-[120px]">
                 <button
                   onClick={() => handleSort("status")}
-                  className="flex items-center space-x-1 hover:text-gray-700"
+                  className="flex items-center space-x-1 hover:text-accent-foreground"
                 >
                   <span>Status</span>
                   <ArrowUpDown className="h-4 w-4" />
                 </button>
               </TableHead>
-              <TableHead>Collection Method</TableHead>
-              <TableHead>Branch</TableHead>
-              <TableHead>Order Type</TableHead>
+              <TableHead className="min-w-[150px]">Collection Method</TableHead>
+              <TableHead className="min-w-[120px]">Branch</TableHead>
+              <TableHead className="min-w-[100px]">Order Type</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -290,7 +304,7 @@ const OrdersTable = () => {
                   <TableCell>
                     <Link
                       href={`/vendor/${vendorWebsite}/orders/customer/${order.id}`}
-                      className="text-blue-600 hover:text-blue-800 underline"
+                      className="text-primary hover:text-primary/80 underline"
                     >
                       {order.id}
                     </Link>
@@ -301,7 +315,7 @@ const OrdersTable = () => {
                   <TableCell>
                     <div className="space-y-1">
                       <p className="font-medium">{`${order.firstName} ${order.lastName}`}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         {order.companyName}
                       </p>
                     </div>
@@ -319,8 +333,8 @@ const OrdersTable = () => {
                     <Badge
                       className={
                         order.user?.storeSlug?.includes("-customer-")
-                          ? "bg-purple-100 text-purple-800"
-                          : "bg-blue-100 text-blue-800"
+                          ? "bg-[#F3E8FF] text-[#6B21A8] dark:bg-[#581C87] dark:text-[#F3E8FF]"
+                          : "bg-[#DBEAFE] text-[#1E40AF] dark:bg-[#1E3A8A] dark:text-[#DBEAFE]"
                       }
                     >
                       {order.user?.storeSlug?.includes("-customer-")
@@ -335,9 +349,11 @@ const OrdersTable = () => {
         </Table>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between p-4 border-t">
+        <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-border gap-4">
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">Rows per page:</span>
+            <span className="text-sm text-muted-foreground">
+              Rows per page:
+            </span>
             <Select
               value={itemsPerPage.toString()}
               onValueChange={value => setItemsPerPage(Number(value))}
@@ -355,21 +371,21 @@ const OrdersTable = () => {
             </Select>
           </div>
           <div className="flex items-center space-x-6">
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-muted-foreground">
               Page {currentPage} of {totalPages}
             </span>
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="p-2 rounded-md hover:bg-gray-100 disabled:opacity-50"
+                className="p-2 rounded-md hover:bg-accent disabled:opacity-50"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button
                 onClick={() => setPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-md hover:bg-gray-100 disabled:opacity-50"
+                className="p-2 rounded-md hover:bg-accent disabled:opacity-50"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
@@ -380,7 +396,7 @@ const OrdersTable = () => {
 
       {/* No Results Message */}
       {filteredOrders.length === 0 && !loading && (
-        <div className="text-center py-6 text-gray-500">
+        <div className="text-center py-6 text-muted-foreground">
           No orders found for the selected filters
         </div>
       )}
