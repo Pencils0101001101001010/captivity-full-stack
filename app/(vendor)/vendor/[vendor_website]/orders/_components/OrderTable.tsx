@@ -383,15 +383,6 @@ const OrdersTable = () => {
           No orders found for the selected filters
         </div>
       )}
-
-      {/* Loading Overlay */}
-      {loading && currentOrders.length > 0 && (
-        <div className="fixed inset-0 bg-black/10 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg shadow-lg">
-            Updating orders...
-          </div>
-        </div>
-      )}
     </div>
   );
 };
