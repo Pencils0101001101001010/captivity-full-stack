@@ -1,6 +1,7 @@
 "use client";
-import { useState, useCallback } from "react";
+
 import { OrderStatus } from "@prisma/client";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -18,113 +19,120 @@ import { VendorOrderResponse } from "./types";
 type SuccessResponse = Extract<VendorOrderResponse, { success: true }>;
 
 interface OrderDetailsProps {
-  orderId: string;
+  order: SuccessResponse["data"];
   storeSlug: string;
-  initialData: SuccessResponse;
-  updateOrderStatus: (
-    orderId: string,
-    newStatus: OrderStatus
-  ) => Promise<VendorOrderResponse>;
+  onUpdateStatus: (orderId: string, newStatus: OrderStatus) => Promise<void>;
 }
 
 const StatusBadge = ({ status }: { status: OrderStatus }) => {
-  const colorMap = {
-    PENDING: "bg-yellow-100 text-yellow-800",
-    PROCESSING: "bg-blue-100 text-blue-800",
-    SHIPPED: "bg-purple-100 text-purple-800",
-    DELIVERED: "bg-green-100 text-green-800",
-    CANCELLED: "bg-red-100 text-red-800",
-    REFUNDED: "bg-gray-100 text-gray-800",
+  const statusStyles = {
+    PENDING:
+      "bg-[#FEF3C7] text-[#92400E] dark:bg-[#78350F] dark:text-[#FEF3C7]",
+    PROCESSING:
+      "bg-[#DBEAFE] text-[#1E40AF] dark:bg-[#1E3A8A] dark:text-[#DBEAFE]",
+    SHIPPED:
+      "bg-[#E0E7FF] text-[#4338CA] dark:bg-[#3730A3] dark:text-[#E0E7FF]",
+    DELIVERED:
+      "bg-[#D1FAE5] text-[#065F46] dark:bg-[#064E3B] dark:text-[#D1FAE5]",
+    CANCELLED:
+      "bg-[#FEE2E2] text-[#991B1B] dark:bg-[#7F1D1D] dark:text-[#FEE2E2]",
+    REFUNDED:
+      "bg-[#E5E7EB] text-[#1F2937] dark:bg-[#1F2937] dark:text-[#E5E7EB]",
   };
 
   return (
-    <Badge className={`${colorMap[status]} hover:${colorMap[status]}`}>
+    <Badge className={`${statusStyles[status]} font-medium px-3 py-1`}>
       {status}
     </Badge>
   );
 };
 
 export default function OrderDetails({
-  orderId,
+  order,
   storeSlug,
-  initialData,
-  updateOrderStatus,
+  onUpdateStatus,
 }: OrderDetailsProps) {
-  const [orderData, setOrderData] = useState<SuccessResponse>(initialData);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(order.status);
   const [error, setError] = useState<string | null>(null);
 
-  const handleStatusUpdate = useCallback(
-    async (newStatus: OrderStatus) => {
-      if (isUpdating) return;
-
-      try {
-        setIsUpdating(true);
-        setError(null);
-
-        console.log("Updating order status:", { orderId, newStatus });
-
-        const result = await updateOrderStatus(orderId, newStatus);
-
-        if (result.success) {
-          setOrderData(prev => ({
-            ...prev,
-            data: {
-              ...prev.data,
-              status: newStatus,
-              updatedAt: new Date(),
-            },
-          }));
-        } else {
-          setError(result.error);
-        }
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to update order status"
-        );
-      } finally {
-        setIsUpdating(false);
-      }
-    },
-    [orderId, updateOrderStatus, isUpdating]
-  );
-
-  const order = orderData.data;
   if (!("vendorOrderItems" in order)) return null;
 
+  const canUpdateStatus =
+    order.user?.role === "VENDOR" ||
+    (order.user?.role === "VENDORCUSTOMER" &&
+      order.user?.storeSlug?.startsWith(storeSlug));
+
+  const handleStatusUpdate = async (newStatus: OrderStatus) => {
+    if (isUpdating) return;
+
+    try {
+      setIsUpdating(true);
+      setError(null);
+      await onUpdateStatus(order.id, newStatus);
+      setCurrentStatus(newStatus);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to update order status"
+      );
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle>Order #{order.id.slice(-6)}</CardTitle>
-          <StatusBadge status={order.status} />
+    <Card className="w-full bg-card">
+      <CardHeader className="space-y-2 px-4 sm:px-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <CardTitle className="text-lg sm:text-xl text-card-foreground">
+            Order #{order.id.slice(-6)}
+          </CardTitle>
+          <StatusBadge status={currentStatus} />
         </div>
       </CardHeader>
 
       {error && (
-        <Alert variant="destructive" className="mx-6">
+        <Alert variant="destructive" className="mx-4 sm:mx-6 mb-4">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h3 className="font-semibold mb-2">Customer Details</h3>
-            <div className="space-y-1 text-sm">
+      <CardContent className="space-y-6 px-4 sm:px-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <h3 className="font-semibold text-card-foreground">
+              Customer Details
+            </h3>
+            <div className="space-y-1.5 text-sm text-muted-foreground">
               <p>
-                Name: {order.firstName} {order.lastName}
+                Name:{" "}
+                <span className="text-card-foreground">
+                  {order.firstName} {order.lastName}
+                </span>
               </p>
-              <p>Email: {order.email}</p>
-              <p>Phone: {order.phone}</p>
-              <p>Company: {order.companyName}</p>
+              <p>
+                Email:{" "}
+                <span className="text-card-foreground">{order.email}</span>
+              </p>
+              <p>
+                Phone:{" "}
+                <span className="text-card-foreground">{order.phone}</span>
+              </p>
+              <p>
+                Company:{" "}
+                <span className="text-card-foreground">
+                  {order.companyName}
+                </span>
+              </p>
             </div>
           </div>
 
-          <div>
-            <h3 className="font-semibold mb-2">Shipping Address</h3>
-            <div className="space-y-1 text-sm">
+          <div className="space-y-2">
+            <h3 className="font-semibold text-card-foreground">
+              Shipping Address
+            </h3>
+            <div className="space-y-1.5 text-sm text-card-foreground">
               <p>{order.streetAddress}</p>
               {order.apartmentSuite && <p>{order.apartmentSuite}</p>}
               <p>
@@ -136,54 +144,57 @@ export default function OrderDetails({
           </div>
         </div>
 
-        <Separator />
+        <Separator className="bg-border" />
 
-        <div>
-          <h3 className="font-semibold mb-4">Order Items</h3>
-          <div className="space-y-4">
+        <div className="space-y-4">
+          <h3 className="font-semibold text-card-foreground">Order Items</h3>
+          <div className="space-y-3">
             {order.vendorOrderItems.map(item => (
               <div
                 key={item.id}
-                className="flex justify-between items-start p-4 bg-gray-50 rounded-lg"
+                className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-muted rounded-lg gap-3"
               >
-                <div>
-                  <p className="font-medium">
+                <div className="space-y-1 w-full sm:w-auto">
+                  <p className="font-medium text-card-foreground">
                     {item.vendorVariation.vendorProduct.productName}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     SKU: {item.vendorVariation.sku} |{" "}
                     {item.vendorVariation.color} | {item.vendorVariation.size}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p>
+                <div className="text-right w-full sm:w-auto">
+                  <p className="text-card-foreground">
                     ${item.price.toFixed(2)} × {item.quantity}
                   </p>
-                  <p className="text-sm text-gray-600">
-                    Total: ${(item.price * item.quantity).toFixed(2)}
+                  <p className="text-sm text-muted-foreground">
+                    Total:{" "}
+                    <span className="text-card-foreground">
+                      ${(item.price * item.quantity).toFixed(2)}
+                    </span>
                   </p>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="mt-6 text-right">
-            <p className="text-lg font-semibold">
+          <div className="flex justify-end">
+            <p className="text-lg font-semibold text-card-foreground">
               Total: ${order.totalAmount.toFixed(2)}
             </p>
           </div>
         </div>
       </CardContent>
 
-      {order.user?.role === "VENDOR" && (
-        <CardFooter className="flex flex-wrap gap-2 justify-end">
+      {canUpdateStatus && (
+        <CardFooter className="flex flex-wrap gap-2 justify-end px-4 sm:px-6 py-4">
           {Object.values(OrderStatus).map(status => (
             <Button
               key={status}
-              variant={order.status === status ? "outline" : "default"}
+              variant={currentStatus === status ? "outline" : "default"}
               onClick={() => handleStatusUpdate(status)}
-              disabled={isUpdating || order.status === status}
-              className="min-w-[120px]"
+              disabled={isUpdating || currentStatus === status}
+              className="min-w-[120px] h-9"
             >
               {status}
             </Button>

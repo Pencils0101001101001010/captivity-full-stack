@@ -1,9 +1,10 @@
-// app/(vendor)/[vendor_website]/orders/customer/[id]/page.tsx
-import { getVendorOrderById, updateOrderStatus } from "./actions";
-import OrderDetails from "./OrderDetails";
 import { Card } from "@/components/ui/card";
 import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { getVendorOrderById, updateOrderStatus } from "./actions";
+import OrderDetails from "./OrderDetails";
+import { OrderStatus } from "@prisma/client";
+import { VendorOrderResponse } from "./types";
 
 interface OrderDetailsPageProps {
   params: {
@@ -21,7 +22,6 @@ export default async function OrderDetailsPage({
     return notFound();
   }
 
-  // First verify the vendor exists
   const vendor = await prisma.user.findFirst({
     where: {
       storeSlug: vendor_website,
@@ -60,14 +60,18 @@ export default async function OrderDetailsPage({
     );
   }
 
+  async function handleStatusUpdate(orderId: string, newStatus: OrderStatus) {
+    "use server";
+    await updateOrderStatus(orderId, newStatus);
+  }
+
   return (
     <div className="container mx-auto p-6">
       <div className="max-w-4xl mx-auto">
         <OrderDetails
-          orderId={id}
+          order={orderData.data}
           storeSlug={vendor_website}
-          initialData={orderData}
-          updateOrderStatus={updateOrderStatus}
+          onUpdateStatus={handleStatusUpdate}
         />
       </div>
     </div>
