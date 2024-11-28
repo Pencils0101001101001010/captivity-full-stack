@@ -13,3 +13,5 @@
 [x] The order table only filters one order at a time.
 
 [x] The order filter dont filter the vendor_website/customer orders only the vendor orders
+
+[] The previous-orders customer profile's filters needs to be adjusted to only filter the user orders and not for the vendors
