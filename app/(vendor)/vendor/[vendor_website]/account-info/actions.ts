@@ -4,51 +4,176 @@ import { put, del } from "@vercel/blob";
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/auth";
 import { cache } from "react";
+import { User as DbUser, UserRole, Prisma } from "@prisma/client";
+import {
+  ProfileActionResult,
+  ProfileImageType,
+  UserProfileData,
+  profileUpdateSchema,
+  ProfileUpdateData,
+  userProfileSelect,
+  IMAGE_CONFIG,
+  ALLOWED_MIME_TYPES,
+  AllowedMimeType,
+  fileValidationSchema,
+  VendorRoles,
+} from "./profile";
 
-interface ProfileImageActionResult {
-  success: boolean;
-  avatarUrl: string | null;
-  backgroundUrl: string | null;
-  error?: string;
+// Define a minimal type for authenticated user from auth
+interface AuthUser {
+  id: string;
+  role: UserRole;
 }
 
-// Cache the fetch function for profile images
+// Type guard for checking if user is a vendor or vendor customer
+function isVendorUser(user: AuthUser): boolean {
+  return ["VENDOR", "VENDORCUSTOMER"].includes(user.role);
+}
+
+// Type guard for file type checking
+function isAllowedMimeType(type: string): type is AllowedMimeType {
+  return ALLOWED_MIME_TYPES.includes(type as AllowedMimeType);
+}
+
+// Cache function for user profiles
 const getCachedUserProfile = cache(async (userId: string) => {
   return prisma.user.findUnique({
     where: { id: userId },
-    select: {
-      avatarUrl: true,
-      backgroundUrl: true,
-      role: true,
-    },
+    select: userProfileSelect,
   });
 });
 
+// Get user profile details
+export async function getUserProfile(
+  userId?: string
+): Promise<ProfileActionResult> {
+  try {
+    const session = await validateRequest();
+    if (!session.user) {
+      return {
+        success: false,
+        avatarUrl: null,
+        backgroundUrl: null,
+        error: "Unauthorized access",
+      };
+    }
+
+    // If userId is provided, verify permission to view that profile
+    const targetUserId = userId || session.user.id;
+    if (
+      userId &&
+      session.user.id !== userId &&
+      !["VENDOR", "ADMIN"].includes(session.user.role)
+    ) {
+      return {
+        success: false,
+        avatarUrl: null,
+        backgroundUrl: null,
+        error: "Insufficient permissions to view this profile",
+      };
+    }
+
+    const profile = await getCachedUserProfile(targetUserId);
+    if (!profile) {
+      return {
+        success: false,
+        avatarUrl: null,
+        backgroundUrl: null,
+        error: "Profile not found",
+      };
+    }
+
+    return {
+      success: true,
+      avatarUrl: profile.avatarUrl,
+      backgroundUrl: profile.backgroundUrl,
+      userData: profile as UserProfileData,
+    };
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return {
+      success: false,
+      avatarUrl: null,
+      backgroundUrl: null,
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
+  }
+}
+
+// Update user profile details
+export async function updateUserProfile(
+  data: ProfileUpdateData
+): Promise<ProfileActionResult> {
+  try {
+    const session = await validateRequest();
+    if (!session.user) throw new Error("Unauthorized access");
+
+    const validatedData = profileUpdateSchema.parse(data);
+
+    const updatedProfile = await prisma.user.update({
+      where: { id: session.user.id },
+      data: validatedData,
+      select: userProfileSelect,
+    });
+
+    return {
+      success: true,
+      avatarUrl: updatedProfile.avatarUrl,
+      backgroundUrl: updatedProfile.backgroundUrl,
+      userData: updatedProfile as UserProfileData,
+    };
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    return {
+      success: false,
+      avatarUrl: null,
+      backgroundUrl: null,
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
+  }
+}
+
+// Upload profile image (avatar or background)
 export async function uploadProfileImage(
   formData: FormData,
-  imageType: "avatar" | "background"
-): Promise<ProfileImageActionResult> {
+  imageType: ProfileImageType
+): Promise<ProfileActionResult> {
   try {
-    const { user } = await validateRequest();
-    if (!user) throw new Error("Unauthorized access");
-    if (!["VENDOR", "VENDORCUSTOMER"].includes(user.role)) {
+    const session = await validateRequest();
+    if (!session.user) throw new Error("Unauthorized access");
+    if (!isVendorUser(session.user)) {
       throw new Error("Unauthorized role");
     }
 
     const file = formData.get(imageType) as File;
-    if (!file || !file.size) throw new Error("No file provided");
-    if (!file.type.startsWith("image/")) {
-      throw new Error("File must be an image");
+    if (!file) throw new Error("No file provided");
+
+    // Validate file type
+    if (!isAllowedMimeType(file.type)) {
+      throw new Error(
+        "Invalid file type. Only JPEG, PNG, and WebP images are allowed"
+      );
     }
 
-    // Set different size limits for avatar and background
-    const maxSize = imageType === "avatar" ? 2 : 5; // 2MB for avatar, 5MB for background
+    // Validate file using schema
+    const validation = fileValidationSchema.safeParse({
+      size: file.size,
+      type: file.type,
+    });
+
+    if (!validation.success) {
+      throw new Error(validation.error.errors[0].message);
+    }
+
+    const maxSize = IMAGE_CONFIG.maxSizes[imageType];
     if (file.size > maxSize * 1024 * 1024) {
       throw new Error(`File size must be less than ${maxSize}MB`);
     }
 
     // Delete existing image if present
-    const currentProfile = await getCachedUserProfile(user.id);
+    const currentProfile = await getCachedUserProfile(session.user.id);
     const currentUrl =
       imageType === "avatar"
         ? currentProfile?.avatarUrl
@@ -62,7 +187,7 @@ export async function uploadProfileImage(
     // Upload new image
     const fileExt = file.name.split(".").pop() || "png";
     const timestamp = Date.now();
-    const path = `profile/${imageType}s/${user.id}_${timestamp}.${fileExt}`;
+    const path = `${IMAGE_CONFIG.paths[imageType]}/${session.user.id}_${timestamp}.${fileExt}`;
 
     const blob = await put(path, file, {
       access: "public",
@@ -71,22 +196,19 @@ export async function uploadProfileImage(
 
     if (!blob.url) throw new Error("Failed to get URL from blob storage");
 
-    // Update user profile
     const updatedUser = await prisma.user.update({
-      where: { id: user.id },
+      where: { id: session.user.id },
       data: {
         [imageType === "avatar" ? "avatarUrl" : "backgroundUrl"]: blob.url,
       },
-      select: {
-        avatarUrl: true,
-        backgroundUrl: true,
-      },
+      select: userProfileSelect,
     });
 
     return {
       success: true,
       avatarUrl: updatedUser.avatarUrl,
       backgroundUrl: updatedUser.backgroundUrl,
+      userData: updatedUser as UserProfileData,
     };
   } catch (error) {
     console.error(`Error uploading ${imageType}:`, error);
@@ -100,17 +222,18 @@ export async function uploadProfileImage(
   }
 }
 
+// Remove profile image (avatar or background)
 export async function removeProfileImage(
-  imageType: "avatar" | "background"
-): Promise<ProfileImageActionResult> {
+  imageType: ProfileImageType
+): Promise<ProfileActionResult> {
   try {
-    const { user } = await validateRequest();
-    if (!user) throw new Error("Unauthorized access");
-    if (!["VENDOR", "VENDORCUSTOMER"].includes(user.role)) {
+    const session = await validateRequest();
+    if (!session.user) throw new Error("Unauthorized access");
+    if (!isVendorUser(session.user)) {
       throw new Error("Unauthorized role");
     }
 
-    const currentProfile = await getCachedUserProfile(user.id);
+    const currentProfile = await getCachedUserProfile(session.user.id);
     const currentUrl =
       imageType === "avatar"
         ? currentProfile?.avatarUrl
@@ -120,26 +243,22 @@ export async function removeProfileImage(
       throw new Error(`No ${imageType} image found`);
     }
 
-    // Delete from blob storage
     const path = new URL(currentUrl).pathname.slice(1);
     await del(path);
 
-    // Update user profile
     const updatedUser = await prisma.user.update({
-      where: { id: user.id },
+      where: { id: session.user.id },
       data: {
         [imageType === "avatar" ? "avatarUrl" : "backgroundUrl"]: null,
       },
-      select: {
-        avatarUrl: true,
-        backgroundUrl: true,
-      },
+      select: userProfileSelect,
     });
 
     return {
       success: true,
       avatarUrl: updatedUser.avatarUrl,
       backgroundUrl: updatedUser.backgroundUrl,
+      userData: updatedUser as UserProfileData,
     };
   } catch (error) {
     console.error(`Error removing ${imageType}:`, error);
@@ -153,58 +272,45 @@ export async function removeProfileImage(
   }
 }
 
-export const getProfileImages = cache(
-  async (userId?: string): Promise<ProfileImageActionResult> => {
-    try {
-      const { user } = await validateRequest();
-      if (!user) {
-        return {
-          success: false,
-          avatarUrl: null,
-          backgroundUrl: null,
-          error: "Unauthorized access",
-        };
-      }
+// Get vendor customers (for vendor accounts)
+export async function getVendorCustomers(): Promise<ProfileActionResult[]> {
+  try {
+    const session = await validateRequest();
+    if (!session.user) throw new Error("Unauthorized access");
 
-      // If userId is provided, get that user's profile (for viewing other profiles)
-      const targetUserId = userId || user.id;
+    const vendorProfile = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true, storeSlug: true },
+    });
 
-      const profile = await prisma.user.findUnique({
-        where: { id: targetUserId },
-        select: {
-          avatarUrl: true,
-          backgroundUrl: true,
-          role: true,
+    if (
+      !vendorProfile ||
+      vendorProfile.role !== "VENDOR" ||
+      !vendorProfile.storeSlug
+    ) {
+      throw new Error("Unauthorized role or invalid vendor configuration");
+    }
+
+    const customers = await prisma.user.findMany({
+      where: {
+        role: "VENDORCUSTOMER",
+        storeSlug: {
+          startsWith: vendorProfile.storeSlug.split("-customer-")[0],
         },
-      });
+      },
+      select: userProfileSelect,
+    });
 
-      if (!profile) {
-        return {
-          success: false,
-          avatarUrl: null,
-          backgroundUrl: null,
-          error: "Profile not found",
-        };
-      }
-
-      // Only allow viewing profiles of vendors and vendor customers
-      if (!["VENDOR", "VENDORCUSTOMER"].includes(profile.role)) {
-        return {
-          success: false,
-          avatarUrl: null,
-          backgroundUrl: null,
-          error: "Unauthorized access",
-        };
-      }
-
-      return {
-        success: true,
-        avatarUrl: profile.avatarUrl,
-        backgroundUrl: profile.backgroundUrl,
-      };
-    } catch (error) {
-      console.error("Error getting profile images:", error);
-      return {
+    return customers.map(customer => ({
+      success: true,
+      avatarUrl: customer.avatarUrl,
+      backgroundUrl: customer.backgroundUrl,
+      userData: customer as UserProfileData,
+    }));
+  } catch (error) {
+    console.error("Error fetching vendor customers:", error);
+    return [
+      {
         success: false,
         avatarUrl: null,
         backgroundUrl: null,
@@ -212,7 +318,7 @@ export const getProfileImages = cache(
           error instanceof Error
             ? error.message
             : "An unexpected error occurred",
-      };
-    }
+      },
+    ];
   }
-);
+}
