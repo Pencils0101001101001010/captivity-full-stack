@@ -9,6 +9,7 @@ import { getVendorOrder } from "../../shop_product/checkout/actions";
 import { subWeeks } from "date-fns";
 import { OrderStatus } from "@prisma/client";
 
+// Type definitions for filters and sorting
 export type PriceRange =
   | "less_than_twoK"
   | "two_to_fiveK"
@@ -19,13 +20,18 @@ export type CustomerTypeFilter = "all" | "vendor" | "customer";
 export type SortDirection = "asc" | "desc";
 export type SortField = "date" | "amount" | "status";
 
+// Extended VendorOrder type with user information
+type ExtendedVendorOrder = VendorOrder & {
+  user?: {
+    role: string;
+    storeSlug: string | null;
+  };
+};
+
+// Main store state interface
 interface OrderState {
-  currentOrders: (VendorOrder & {
-    user?: { role: string; storeSlug: string | null };
-  })[];
-  filteredOrders: (VendorOrder & {
-    user?: { role: string; storeSlug: string | null };
-  })[];
+  currentOrders: ExtendedVendorOrder[];
+  filteredOrders: ExtendedVendorOrder[];
   loading: boolean;
   error: string | null;
   selectedPriceRange: PriceRange;
@@ -53,8 +59,8 @@ interface OrderState {
   setPage: (page: number) => void;
   setItemsPerPage: (items: number) => void;
   getOrdersByAge: () => {
-    recentOrders: VendorOrder[];
-    oldOrders: VendorOrder[];
+    recentOrders: ExtendedVendorOrder[];
+    oldOrders: ExtendedVendorOrder[];
   };
   getOrderStats: () => {
     pending: number;
@@ -66,6 +72,7 @@ interface OrderState {
 
 const useVendorOrderStore = create<OrderState>()(
   devtools((set, get) => ({
+    // Initial state
     currentOrders: [],
     filteredOrders: [],
     loading: false,
@@ -83,6 +90,7 @@ const useVendorOrderStore = create<OrderState>()(
     itemsPerPage: 10,
     totalPages: 1,
 
+    // Fetch orders from the API
     fetchOrders: async () => {
       try {
         set({ loading: true, error: null });
@@ -97,7 +105,6 @@ const useVendorOrderStore = create<OrderState>()(
           : [response.data];
 
         set(state => ({
-          ...state,
           currentOrders: orders,
           loading: false,
         }));
@@ -109,6 +116,7 @@ const useVendorOrderStore = create<OrderState>()(
           selectedStatus,
           selectedCustomerType,
         } = get();
+
         filterOrders(
           selectedPriceRange,
           selectedTimeFilter,
@@ -125,6 +133,7 @@ const useVendorOrderStore = create<OrderState>()(
       }
     },
 
+    // Filter orders based on multiple criteria
     filterOrders: (
       priceRange?: PriceRange,
       timeFilter?: TimeFilter,
@@ -132,64 +141,68 @@ const useVendorOrderStore = create<OrderState>()(
       customerType?: CustomerTypeFilter
     ) => {
       const state = get();
+      const newPriceRange = priceRange || state.selectedPriceRange;
+      const newTimeFilter = timeFilter || state.selectedTimeFilter;
+      const newStatus = status || state.selectedStatus;
+      const newCustomerType = customerType || state.selectedCustomerType;
+
       let filtered = [...state.currentOrders];
+      const oneWeekAgo = subWeeks(new Date(), 1);
 
       // Apply customer type filter
-      if (customerType && customerType !== "all") {
+      if (newCustomerType !== "all") {
         filtered = filtered.filter(order => {
-          if (customerType === "vendor") {
-            return !order.user?.storeSlug?.includes("-customer-");
-          } else {
-            return order.user?.storeSlug?.includes("-customer-");
-          }
+          const isCustomerOrder = order.user?.storeSlug?.includes("-customer-");
+          return newCustomerType === "customer"
+            ? isCustomerOrder
+            : !isCustomerOrder;
         });
       }
 
       // Apply time filter
-      if (timeFilter && timeFilter !== "all") {
-        const oneWeekAgo = subWeeks(new Date(), 1);
+      if (newTimeFilter !== "all") {
         filtered = filtered.filter(order => {
           const orderDate = new Date(order.createdAt);
-          return timeFilter === "recent"
+          return newTimeFilter === "recent"
             ? orderDate > oneWeekAgo
             : orderDate <= oneWeekAgo;
         });
       }
 
-      // Apply price filter
-      if (priceRange) {
-        filtered = filtered.filter(order => {
-          switch (priceRange) {
-            case "less_than_twoK":
-              return order.totalAmount < 2000;
-            case "two_to_fiveK":
-              return order.totalAmount >= 2000 && order.totalAmount <= 5000;
-            case "greater_than_fiveK":
-              return order.totalAmount > 5000;
-          }
-        });
-      }
+      // Apply price range filter
+      filtered = filtered.filter(order => {
+        const amount = order.totalAmount;
+        switch (newPriceRange) {
+          case "less_than_twoK":
+            return amount < 2000;
+          case "two_to_fiveK":
+            return amount >= 2000 && amount <= 5000;
+          case "greater_than_fiveK":
+            return amount > 5000;
+          default:
+            return true;
+        }
+      });
 
       // Apply status filter
-      if (status && status !== "all") {
-        filtered = filtered.filter(order => order.status === status);
+      if (newStatus !== "all") {
+        filtered = filtered.filter(order => order.status === newStatus);
       }
 
-      // Apply search
+      // Apply search filter
       if (state.searchQuery) {
-        const query = state.searchQuery.toLowerCase();
-        filtered = filtered.filter(
-          order =>
-            order.id.toLowerCase().includes(query) ||
-            order.firstName.toLowerCase().includes(query) ||
-            order.lastName.toLowerCase().includes(query) ||
-            order.companyName.toLowerCase().includes(query)
+        const query = state.searchQuery.toLowerCase().trim();
+        filtered = filtered.filter(order =>
+          [order.id, order.firstName, order.lastName, order.companyName].some(
+            field => field?.toLowerCase().includes(query)
+          )
         );
       }
 
       // Apply sorting
-      filtered.sort((a, b) => {
+      const sortedFiltered = [...filtered].sort((a, b) => {
         const direction = state.sortDirection === "asc" ? 1 : -1;
+
         switch (state.sortField) {
           case "date":
             return (
@@ -206,19 +219,24 @@ const useVendorOrderStore = create<OrderState>()(
         }
       });
 
-      // Update pagination
-      const totalPages = Math.ceil(filtered.length / state.itemsPerPage);
-      const start = (state.currentPage - 1) * state.itemsPerPage;
-      const paginatedOrders = filtered.slice(start, start + state.itemsPerPage);
+      // Calculate pagination
+      const totalOrders = sortedFiltered.length;
+      const totalPages = Math.ceil(totalOrders / state.itemsPerPage);
+      const startIndex = (state.currentPage - 1) * state.itemsPerPage;
+      const paginatedOrders = sortedFiltered.slice(
+        startIndex,
+        startIndex + state.itemsPerPage
+      );
 
+      // Update state
       set({
         filteredOrders: paginatedOrders,
-        selectedPriceRange: priceRange || state.selectedPriceRange,
-        selectedTimeFilter: timeFilter || state.selectedTimeFilter,
-        selectedStatus: status || state.selectedStatus,
-        selectedCustomerType: customerType || state.selectedCustomerType,
-        totalOrders: filtered.length,
-        totalAmount: filtered.reduce(
+        selectedPriceRange: newPriceRange,
+        selectedTimeFilter: newTimeFilter,
+        selectedStatus: newStatus,
+        selectedCustomerType: newCustomerType,
+        totalOrders,
+        totalAmount: sortedFiltered.reduce(
           (sum, order) => sum + order.totalAmount,
           0
         ),
@@ -226,26 +244,31 @@ const useVendorOrderStore = create<OrderState>()(
       });
     },
 
+    // Sort orders
     sortOrders: (field: SortField, direction: SortDirection) => {
       set({ sortField: field, sortDirection: direction });
       get().filterOrders();
     },
 
+    // Search orders
     searchOrders: (query: string) => {
       set({ searchQuery: query, currentPage: 1 });
       get().filterOrders();
     },
 
+    // Update current page
     setPage: (page: number) => {
       set({ currentPage: page });
       get().filterOrders();
     },
 
+    // Update items per page
     setItemsPerPage: (items: number) => {
       set({ itemsPerPage: items, currentPage: 1 });
       get().filterOrders();
     },
 
+    // Get orders grouped by age
     getOrdersByAge: () => {
       const { currentOrders } = get();
       const oneWeekAgo = subWeeks(new Date(), 1);
@@ -260,6 +283,7 @@ const useVendorOrderStore = create<OrderState>()(
       };
     },
 
+    // Get order statistics
     getOrderStats: () => {
       const { currentOrders } = get();
       return {
