@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ProductImage, ProductPrice } from "./ProductCardComponents";
 import { ProductWithRelations } from "../types";
 import { useColorStore } from "../../../_store/useColorStore";
-import { Variation } from "@prisma/client";
 import { VariationWithRelations } from "../../[id]/[variationId]/_types/types";
 import { fetchVariationById } from "../../[id]/[variationId]/actions";
 import {
