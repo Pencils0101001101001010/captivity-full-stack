@@ -11,7 +11,6 @@ import ColorPicker from "../../[id]/DetailPageColorPicker";
 import { QuantitySelector, SizeSelector } from "../../[id]/ProductSelectors";
 import AddToCartButton from "../../[id]/AddToCartButton";
 import { ProductWithRelations } from "../types";
-import DetailedReviewCard from "../_reviews/ReviewSection";
 
 interface GalleryProductCardProps {
   product: ProductWithRelations;
@@ -257,8 +256,6 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
               onQuantityChange={e => setQuantity(parseInt(e.target.value))}
               productId={product.id}
             />
-
-            <DetailedReviewCard product={product} />
 
             <div className="space-y-2">
               <AddToCartButton
