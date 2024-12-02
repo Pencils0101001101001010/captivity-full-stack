@@ -121,7 +121,7 @@ const UpdateUserForm = ({ user }: UpdateUserFormProps) => {
   };
 
   return (
-    <div className="relative space-y-12 max-w-2xl mx-auto py-8 bg-background text-foreground">
+    <div className="relative space-y-12  mx-auto py-8 bg-background text-foreground">
       <div className="rounded-lg shadow-2xl shadow-black border border-border bg-card p-6">
         <PersonalInfoSection form={personalForm} onSubmit={onSubmitPersonal} />
       </div>
