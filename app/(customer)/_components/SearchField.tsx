@@ -16,11 +16,10 @@ import { useSignatureActions } from "../customer/_store/useSignatureStore";
 import { useSportActions } from "../customer/_store/useSportStore";
 import { useKidsActions } from "../customer/_store/useKidsCollectionStore";
 
-
 export default function SearchField() {
   const pathname = usePathname() || "";
   const [searchValue, setSearchValue] = useState("");
-  
+
   const { setSearchQuery: setSummerSearch } = useSummerActions();
   const { setSearchQuery: setWinterSearch } = useWinterActions();
   const { setSearchQuery: setFashionSearch } = useFashionActions();
@@ -105,8 +104,18 @@ export default function SearchField() {
     setLeisureSearch,
     setSignatureSearch,
     setSportSearch,
-  ])
-  , [pathname, setSummerSearch, setWinterSearch, setFashionSearch,setCamoSearch, setKidsSearch, setLeisureSearch, setSignatureSearch, setSportSearch];
+  ]),
+    [
+      pathname,
+      setSummerSearch,
+      setWinterSearch,
+      setFashionSearch,
+      setCamoSearch,
+      setKidsSearch,
+      setLeisureSearch,
+      setSignatureSearch,
+      setSportSearch,
+    ];
 
   return (
     <form onSubmit={handleSubmit}>
