@@ -1,5 +1,5 @@
 import React from "react";
-import WinterCollectionPage from "./WinterLanding";
+import CollectionPage from "../CollectionPage";
 
 export default async function WinterPage(): Promise<JSX.Element> {
   return (
@@ -14,7 +14,7 @@ export default async function WinterPage(): Promise<JSX.Element> {
           </p>
         </div>
       </div>
-      <WinterCollectionPage />
+      <CollectionPage category="winter" />
     </div>
   );
 }

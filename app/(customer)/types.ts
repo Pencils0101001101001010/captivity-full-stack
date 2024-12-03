@@ -1,6 +1,19 @@
 // types.ts
 import { OrderStatus } from "@prisma/client";
 
+import {
+  Product,
+  DynamicPricing,
+  Variation,
+  FeaturedImage,
+} from "@prisma/client";
+
+export type ProductWithRelations = Product & {
+  dynamicPricing: DynamicPricing[];
+  variations: Variation[];
+  featuredImage: FeaturedImage | null;
+};
+
 export interface OrderItem {
   id: string;
   quantity: number;
@@ -44,3 +57,30 @@ export interface ActionResponse<T = void> {
   data?: T;
   error?: string;
 }
+
+export type CategoryType =
+  | "winter"
+  | "summer"
+  | "sport"
+  | "leisure"
+  | "fashion"
+  | "african"
+  | "signature"
+  | "industrial"
+  | "baseball"
+  | "camo"
+  | "kids";
+
+export type SubCategory =
+  | "men"
+  | "women"
+  | "kids"
+  | "hats"
+  | "golfers"
+  | "bottoms"
+  | "caps"
+  | "uncategorised";
+
+export type CategorizedProducts = {
+  [key in SubCategory]: ProductWithRelations[];
+};

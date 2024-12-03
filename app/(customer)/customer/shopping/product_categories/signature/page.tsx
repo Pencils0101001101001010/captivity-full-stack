@@ -1,5 +1,5 @@
 import React from "react";
-import SignatureCollectionPage from "./SignatureLanding";
+import CollectionPage from "../CollectionPage";
 
 export default async function SignaturePage(): Promise<JSX.Element> {
   return (
@@ -14,7 +14,7 @@ export default async function SignaturePage(): Promise<JSX.Element> {
           </p>
         </div>
       </div>
-      <SignatureCollectionPage />
+      <CollectionPage category="signature" />
     </div>
   );
 }

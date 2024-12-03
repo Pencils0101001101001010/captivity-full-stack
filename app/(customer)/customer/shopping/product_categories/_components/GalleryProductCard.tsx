@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from "react";
+"use client";
+
+import React, { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
-import Link from "next/link";
-import { StarRating } from "./StarRating";
 import { ProductPrice } from "./ProductCardComponents";
-import { Badge } from "@/components/ui/badge";
 import { Variation } from "@prisma/client";
 import ViewMore from "@/app/(customer)/_components/ViewMore";
 import ColorPicker from "../../[id]/DetailPageColorPicker";
 import { QuantitySelector, SizeSelector } from "../../[id]/ProductSelectors";
 import AddToCartButton from "../../[id]/AddToCartButton";
 import { ProductWithRelations } from "../types";
+import { useColorStore } from "../../../_store/useColorStore";
 
 interface GalleryProductCardProps {
   product: ProductWithRelations;
@@ -25,47 +25,25 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
   selectedSizes,
   onColorChange,
 }) => {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedVariation, setSelectedVariation] = useState<Variation | null>(
-    null
-  );
-  const [quantity, setQuantity] = useState(1);
+  const setGlobalSelectedColor = useColorStore(state => state.setSelectedColor);
+  const defaultVariation = product.variations[0];
 
-  // Initialize with filtered variations based on both color and size
-  useEffect(() => {
-    let variation: Variation | undefined;
-
-    if (selectedSizes.length > 0) {
-      // First try to find a variation that matches both color and size
-      variation = product.variations.find(
-        v =>
-          selectedSizes.includes(v.size) &&
-          (!selectedColors.length ||
-            selectedColors.some(
-              color => v.color.toLowerCase() === color.toLowerCase()
-            ))
-      );
-    } else if (selectedColors.length > 0) {
-      // If no size filter, look for color match only
-      variation = product.variations.find(v =>
+  // Find first matching variation based on selected filters
+  const initialVariation =
+    product.variations.find(
+      v =>
         selectedColors.some(
           color => v.color.toLowerCase() === color.toLowerCase()
-        )
-      );
-    } else {
-      // If no filters, use first variation
-      variation = product.variations[0];
-    }
+        ) &&
+        (!selectedSizes.length || selectedSizes.includes(v.size))
+    ) ?? defaultVariation;
 
-    if (variation) {
-      setSelectedVariation(variation);
-      setSelectedImage(variation.variationImageURL);
-    } else {
-      // Reset if no matching variation found
-      setSelectedVariation(product.variations[0]);
-      setSelectedImage(null);
-    }
-  }, [selectedColors, selectedSizes, product.variations]);
+  const [selectedVariation, setSelectedVariation] =
+    useState<Variation>(initialVariation);
+  const [quantity, setQuantity] = useState(1);
+  const [selectedImage, setSelectedImage] = useState<string>(
+    initialVariation?.variationImageURL || product.featuredImage?.large || ""
+  );
 
   // Get all unique images with their associated variations
   const imageVariationMap = React.useMemo(() => {
@@ -81,81 +59,65 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
     return map;
   }, [product]);
 
-  // Get filtered variations based on selected colors and sizes
-  const filteredVariations = React.useMemo(() => {
-    return product.variations.filter(
-      v =>
-        (!selectedColors.length ||
-          selectedColors.some(
-            color => v.color.toLowerCase() === color.toLowerCase()
-          )) &&
-        (!selectedSizes.length || selectedSizes.includes(v.size))
-    );
-  }, [product.variations, selectedColors, selectedSizes]);
+  // Get available sizes for the selected color
+  const availableSizes = React.useMemo(() => {
+    if (!selectedVariation?.color) return [];
+    return product.variations
+      .filter(v => v.color === selectedVariation.color)
+      .map(v => v.size);
+  }, [product.variations, selectedVariation?.color]);
 
-  const allImages = Array.from(imageVariationMap.keys());
-  const uniqueColors = Array.from(
-    new Set(filteredVariations.map(v => v.color))
+  const handleColorChange = useCallback(
+    (newColor: string | null) => {
+      if (!newColor) {
+        setSelectedVariation(defaultVariation);
+        setSelectedImage(defaultVariation.variationImageURL);
+        onColorChange?.(null);
+        return;
+      }
+
+      const variation =
+        product.variations.find(
+          v =>
+            v.color.toLowerCase() === newColor.toLowerCase() &&
+            (!selectedSizes.length || selectedSizes.includes(v.size))
+        ) ?? defaultVariation;
+
+      setSelectedVariation(variation);
+      setSelectedImage(variation.variationImageURL);
+      setQuantity(1);
+      onColorChange?.(newColor);
+      setGlobalSelectedColor(product.id, newColor);
+    },
+    [
+      product.id,
+      product.variations,
+      selectedSizes,
+      defaultVariation,
+      onColorChange,
+      setGlobalSelectedColor,
+    ]
   );
 
-  // Get available sizes for the current color selection, considering sidebar filters
-  const availableSizes = React.useMemo(() => {
-    let sizes: string[] = [];
+  useEffect(() => {
+    const currentColor = selectedColors[0] || null;
+    handleColorChange(currentColor);
+  }, [selectedColors, handleColorChange]);
 
-    if (selectedSizes.length > 0) {
-      // If sizes are selected in sidebar, only show those sizes
-      sizes = selectedSizes;
-    } else if (selectedVariation?.color) {
-      // Otherwise show all sizes for the selected color
-      sizes = filteredVariations
-        .filter(v => v.color === selectedVariation.color)
-        .map(v => v.size);
-    } else {
-      // If no color selected, show all available sizes
-      sizes = Array.from(new Set(filteredVariations.map(v => v.size)));
-    }
-
-    return sizes;
-  }, [filteredVariations, selectedVariation?.color, selectedSizes]);
-
-  const totalStock = filteredVariations.reduce((sum, v) => sum + v.quantity, 0);
-
-  // Update variation when thumbnail is clicked
   const handleThumbnailClick = (image: string) => {
     setSelectedImage(image);
     const variation = imageVariationMap.get(image);
     if (variation) {
       setSelectedVariation(variation);
       onColorChange?.(variation.color);
-    }
-  };
-
-  const handleColorSelect = (color: string | null) => {
-    if (!color) {
-      setSelectedVariation(null);
-      setSelectedImage(null);
-      onColorChange?.(null);
-      return;
-    }
-
-    const newVariation = filteredVariations.find(
-      v => v.color.toLowerCase() === color.toLowerCase()
-    );
-
-    if (newVariation) {
-      setSelectedVariation(newVariation);
-      setSelectedImage(newVariation.variationImageURL);
-      setQuantity(1);
-      onColorChange?.(color);
+      setGlobalSelectedColor(product.id, variation.color);
     }
   };
 
   const handleSizeSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const size = e.target.value;
-    const newVariation = filteredVariations.find(
-      v =>
-        v.size === size &&
-        (!selectedVariation?.color || v.color === selectedVariation.color)
+    const newVariation = product.variations.find(
+      v => v.size === size && v.color === selectedVariation?.color
     );
     if (newVariation) {
       setSelectedVariation(newVariation);
@@ -163,11 +125,12 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
     }
   };
 
-  const mainImageSrc =
-    selectedImage ||
-    selectedVariation?.variationImageURL ||
-    product.featuredImage?.large ||
-    "/placeholder.jpg";
+  const totalStock = product.variations.reduce(
+    (sum, variation) => sum + variation.quantity,
+    0
+  );
+
+  const allImages = Array.from(imageVariationMap.keys());
 
   return (
     <Card className="p-3 shadow-2xl shadow-black transition-transform duration-300 hover:scale-95">
@@ -176,7 +139,7 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
         <div className="w-full md:w-1/3 space-y-4">
           <div className="relative aspect-square w-full overflow-hidden rounded-lg">
             <Image
-              src={mainImageSrc}
+              src={selectedImage || "/placeholder.jpg"}
               alt={product.productName}
               fill
               sizes="300"
@@ -238,9 +201,9 @@ const GalleryProductCard: React.FC<GalleryProductCardProps> = ({
 
           <div className="space-y-4">
             <ColorPicker
-              colors={uniqueColors}
+              colors={Array.from(new Set(product.variations.map(v => v.color)))}
               selectedColor={selectedVariation?.color || null}
-              onColorChange={handleColorSelect}
+              onColorChange={handleColorChange}
             />
 
             <SizeSelector

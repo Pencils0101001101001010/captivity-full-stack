@@ -1,22 +1,24 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+
+import { FaSpinner } from "react-icons/fa";
+import { CategoryType, ProductWithRelations } from "@/app/(customer)/types";
 import {
-  useFashionActions,
-  useFashionError,
-  useFashionLoading,
-  useFashionProducts,
-  useFashionSort,
-} from "../../../_store/useFashionStore";
+  useCategoryError,
+  useCategoryLoading,
+  useCategoryProducts,
+  useCategorySort,
+  useCategoryStore,
+} from "./_categoryStore/useCategoryStore";
+import { useFilterStore } from "../../_store/useFilterStore";
 import { Variation } from "@prisma/client";
-import ProductSortFilter from "../_components/SortCategoriesFilter";
-import LayoutSwitcher from "../_components/LayoutSwither";
-import { useFilterStore } from "../../../_store/useFilterStore";
-import DetailedProductCard from "../_components/DetailProductPageCard";
-import GalleryProductCard from "../_components/GalleryProductCard";
-import ProductCard from "../_components/ProductCardColorPicker";
-import { ProductWithRelations } from "../types";
+import ProductSortFilter from "./_components/SortCategoriesFilter";
+import LayoutSwitcher from "./_components/LayoutSwither";
+import ProductCard from "./_components/ProductCardColorPicker";
+import DetailedProductCard from "./_components/DetailProductPageCard";
+import GalleryProductCard from "./_components/GalleryProductCard";
 
 interface EnhancedProduct extends ProductWithRelations {
   displayCategory?: string;
@@ -24,31 +26,30 @@ interface EnhancedProduct extends ProductWithRelations {
   totalStock?: number;
 }
 
+interface CollectionPageProps {
+  category: CategoryType;
+}
+
 const ITEMS_PER_PAGE = 12;
 
-const FashionCollectionPage: React.FC = () => {
+const CollectionPage: React.FC<CollectionPageProps> = ({ category }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const { products: fashionProducts, hasInitiallyFetched } =
-    useFashionProducts();
-  const loading = useFashionLoading();
-  const error = useFashionError();
-  const { fetchFashionCollection } = useFashionActions();
+  const { products, hasInitiallyFetched } = useCategoryProducts(category);
+  const loading = useCategoryLoading();
+  const error = useCategoryError();
+  const { setCurrentCategory } = useCategoryStore();
+  const { sortBy, setSortBy } = useCategorySort();
+  const { selectedColors, selectedSizes } = useFilterStore();
+  const [layout, setLayout] = useState<"grid" | "detail" | "gallery">("grid");
   const initializationRef = useRef(false);
 
-  //Layout switcher
-  const [layout, setLayout] = useState<"grid" | "detail" | "gallery">("grid");
-
-  //sort filter
-  const { sortBy, setSortBy } = useFashionSort();
-
-  // Get filters from the store
-  const { selectedColors, selectedSizes } = useFilterStore();
-
-  // Create flat array of products with category for unique identification
+  // Create base products array with enhanced typing
   const allProducts = useMemo(() => {
+    if (!products) return [];
+
     const productMap = new Map<string, EnhancedProduct>();
 
-    Object.entries(fashionProducts).forEach(([category, products]) => {
+    Object.entries(products).forEach(([category, products]) => {
       products.forEach(product => {
         if (!productMap.has(product.id)) {
           productMap.set(product.id, {
@@ -59,7 +60,7 @@ const FashionCollectionPage: React.FC = () => {
       });
     });
     return Array.from(productMap.values());
-  }, [fashionProducts]);
+  }, [products]);
 
   // Apply filters and sorting
   const filteredAndSortedProducts = useMemo(() => {
@@ -79,7 +80,6 @@ const FashionCollectionPage: React.FC = () => {
 
     // Then handle color filtering and duplication
     if (selectedColors.length > 0) {
-      // Create duplicates for color-filtered products
       baseProducts.forEach(product => {
         selectedColors.forEach(selectedColor => {
           const matchingVariations = product.variations.filter(
@@ -98,7 +98,6 @@ const FashionCollectionPage: React.FC = () => {
         });
       });
     } else {
-      // If no colors selected, use the size-filtered products
       products = baseProducts.map(product => ({
         ...product,
         variations:
@@ -194,44 +193,58 @@ const FashionCollectionPage: React.FC = () => {
     };
   }, [filteredAndSortedProducts, currentPage]);
 
-  // Initial fetch
+  // Initialize category and handle category changes
   useEffect(() => {
     if (!hasInitiallyFetched && !initializationRef.current) {
       initializationRef.current = true;
-      fetchFashionCollection();
+      setCurrentCategory(category);
     }
-  }, [hasInitiallyFetched, fetchFashionCollection]);
+  }, [hasInitiallyFetched, category, setCurrentCategory]);
 
-  // Reset to first page when filters change
+  // Handle category changes
+  useEffect(() => {
+    if (category) {
+      setCurrentCategory(category);
+      setCurrentPage(1); // Reset pagination when category changes
+    }
+  }, [category, setCurrentCategory]);
+
+  // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedColors, selectedSizes]);
 
-  if (loading) return <div>Loading fashion collection...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <FaSpinner className="animate-spin mr-2" />
+        Loading {category} collection...
+      </div>
+    );
+  }
+
+  if (error) return <div className="text-red-500 p-8">Error: {error}</div>;
 
   return (
     <div className="space-y-6">
       <div className="mb-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex flex-wrap gap-2 items-center">
-          <ProductSortFilter currentSort={sortBy} onSortChange={setSortBy} />
-        </div>
+        <ProductSortFilter currentSort={sortBy} onSortChange={setSortBy} />
         <LayoutSwitcher layout={layout} onLayoutChange={setLayout} />
       </div>
 
       {filteredAndSortedProducts.length === 0 ? (
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-foreground">
-            No products found matching your filters. Try in another category.
+            No products found matching your filters. Try in another category
           </h2>
         </div>
       ) : (
         <>
           {layout === "grid" ? (
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
               {paginationData.currentProducts.map((product, index) => (
                 <div
-                  key={`${product.displayCategory}-${product.id}-${product.displayColor || index}`}
+                  key={`${product.id}-${product.displayColor || index}`}
                   className="w-full"
                 >
                   <ProductCard
@@ -246,7 +259,7 @@ const FashionCollectionPage: React.FC = () => {
             <div className="space-y-6 mb-8">
               {paginationData.currentProducts.map((product, index) => (
                 <DetailedProductCard
-                  key={`${product.displayCategory}-${product.id}-${product.displayColor || index}`}
+                  key={`${product.id}-${product.displayColor || index}`}
                   product={product}
                   selectedColors={[product.displayColor || ""]}
                   selectedSizes={selectedSizes}
@@ -257,7 +270,7 @@ const FashionCollectionPage: React.FC = () => {
             <div className="space-y-6 mb-8">
               {paginationData.currentProducts.map((product, index) => (
                 <GalleryProductCard
-                  key={`${product.displayCategory}-${product.id}-${product.displayColor || index}`}
+                  key={`${product.id}-${product.displayColor || index}`}
                   product={product}
                   selectedColors={[product.displayColor || ""]}
                   selectedSizes={selectedSizes}
@@ -331,4 +344,4 @@ const FashionCollectionPage: React.FC = () => {
   );
 };
 
-export default React.memo(FashionCollectionPage);
+export default React.memo(CollectionPage);

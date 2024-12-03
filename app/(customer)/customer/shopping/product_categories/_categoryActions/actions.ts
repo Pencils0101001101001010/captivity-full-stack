@@ -1,40 +1,21 @@
 "use server";
+
+import {
+  CategorizedProducts,
+  CategoryType,
+  SubCategory,
+} from "@/app/(customer)/types";
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import {
-  Product,
-  DynamicPricing,
-  Variation,
-  FeaturedImage,
-} from "@prisma/client";
 
-export type ProductWithRelations = Product & {
-  dynamicPricing: DynamicPricing[];
-  variations: Variation[];
-  featuredImage: FeaturedImage | null;
-};
-
-type Category =
-  | "men"
-  | "women"
-  | "kids"
-  | "hats"
-  | "golfers"
-  | "bottoms"
-  | "caps"
-  | "pre-curved-peaks"
-  | "uncategorised";
-
-type CategorizedProducts = {
-  [key in Category]: ProductWithRelations[];
-};
-
-type FetchBaseballCollectionResult =
+type FetchCategoryResult =
   | { success: true; data: CategorizedProducts }
   | { success: false; error: string };
 
-export async function fetchBaseballCollection(): Promise<FetchBaseballCollectionResult> {
+export async function fetchCategoryProducts(
+  category: CategoryType
+): Promise<FetchCategoryResult> {
   try {
     const { user } = await validateRequest();
     if (!user) {
@@ -44,7 +25,7 @@ export async function fetchBaseballCollection(): Promise<FetchBaseballCollection
     const products = await prisma.product.findMany({
       where: {
         category: {
-          has: "baseball-collection",
+          has: `${category}-collection`,
         },
         isPublished: true,
       },
@@ -63,30 +44,22 @@ export async function fetchBaseballCollection(): Promise<FetchBaseballCollection
       golfers: [],
       bottoms: [],
       caps: [],
-      "pre-curved-peaks": [],
       uncategorised: [],
     };
 
-    const processedProductIds = new Set<string>();
-
     products.forEach(product => {
-      if (processedProductIds.has(product.id)) return;
-
       const categories = product.category as string[];
       const primaryCategory =
-        (categories.find(
-          category => category in categorizedProducts
-        ) as Category) || "uncategorised";
-
+        (categories.find(cat =>
+          Object.keys(categorizedProducts).includes(cat)
+        ) as SubCategory) || "uncategorised";
       categorizedProducts[primaryCategory].push(product);
-      processedProductIds.add(product.id);
     });
 
-    revalidatePath("/customer/shopping/baseball");
-
+    revalidatePath(`/customer/shopping/${category}`);
     return { success: true, data: categorizedProducts };
   } catch (error) {
-    console.error("Error fetching baseball collection:", error);
+    console.error(`Error fetching ${category} collection:`, error);
     return {
       success: false,
       error:

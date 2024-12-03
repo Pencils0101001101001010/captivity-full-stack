@@ -1,5 +1,5 @@
 import React from "react";
-import LeisureCollectionPage from "./LeisureLanding";
+import CollectionPage from "../CollectionPage";
 
 export default async function LeisurePage(): Promise<JSX.Element> {
   return (
@@ -14,7 +14,7 @@ export default async function LeisurePage(): Promise<JSX.Element> {
           </p>
         </div>
       </div>
-      <LeisureCollectionPage />
+      <CollectionPage category="leisure" />
     </div>
   );
 }

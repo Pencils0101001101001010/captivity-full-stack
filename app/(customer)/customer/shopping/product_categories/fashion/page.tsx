@@ -1,6 +1,6 @@
 // shopping/(product_categories)/fashion/page.tsx
 import React from "react";
-import FashionCollectionPage from "./FashionLanding"
+import CollectionPage from "../CollectionPage";
 
 export default async function FashionPage(): Promise<JSX.Element> {
   return (
@@ -15,7 +15,7 @@ export default async function FashionPage(): Promise<JSX.Element> {
           </p>
         </div>
       </div>
-      <FashionCollectionPage />
+      <CollectionPage category="fashion" />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import SportCollectionPage from "./SportLanding";
+import CollectionPage from "../CollectionPage";
 
 export default async function SportPage(): Promise<JSX.Element> {
   return (
@@ -14,7 +14,7 @@ export default async function SportPage(): Promise<JSX.Element> {
           </p>
         </div>
       </div>
-      <SportCollectionPage />
+      <CollectionPage category="sport" />
     </div>
   );
 }
