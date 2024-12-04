@@ -3,7 +3,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
+import Link from "next/link";
+import { StarRating } from "./StarRating";
 import { ProductPrice } from "./ProductCardComponents";
+import { Badge } from "@/components/ui/badge";
 import { Variation } from "@prisma/client";
 import ViewMore from "@/app/(customer)/_components/ViewMore";
 import ColorPicker from "../../[id]/DetailPageColorPicker";

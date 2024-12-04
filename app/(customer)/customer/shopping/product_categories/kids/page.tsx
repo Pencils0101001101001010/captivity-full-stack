@@ -1,6 +1,6 @@
 // shopping/(product_categories)/kids/page.tsx
 import React from "react";
-import CollectionPage from "../CollectionPage";
+import CollectionPage from "../_components/CollectionPage";
 
 export default async function KidsPage(): Promise<JSX.Element> {
   return (

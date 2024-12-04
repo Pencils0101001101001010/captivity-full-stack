@@ -11,14 +11,14 @@ import {
   useCategoryProducts,
   useCategorySort,
   useCategoryStore,
-} from "./_categoryStore/useCategoryStore";
-import { useFilterStore } from "../../_store/useFilterStore";
+} from "../_categoryStore/useCategoryStore";
+import { useFilterStore } from "../../../_store/useFilterStore";
 import { Variation } from "@prisma/client";
-import ProductSortFilter from "./_components/SortCategoriesFilter";
-import LayoutSwitcher from "./_components/LayoutSwither";
-import ProductCard from "./_components/ProductCardColorPicker";
-import DetailedProductCard from "./_components/DetailProductPageCard";
-import GalleryProductCard from "./_components/GalleryProductCard";
+import ProductSortFilter from "./SortCategoriesFilter";
+import LayoutSwitcher from "./LayoutSwither";
+import DetailedProductCard from "./DetailProductPageCard";
+import GalleryProductCard from "./GalleryProductCard";
+import ProductCard from "./ProductCardColorPicker";
 
 interface EnhancedProduct extends ProductWithRelations {
   displayCategory?: string;

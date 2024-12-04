@@ -1,5 +1,5 @@
 import React from "react";
-import CollectionPage from "../CollectionPage";
+import CollectionPage from "../_components/CollectionPage";
 
 export default async function SportPage(): Promise<JSX.Element> {
   return (
