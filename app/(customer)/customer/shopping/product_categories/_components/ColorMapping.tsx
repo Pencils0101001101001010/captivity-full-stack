@@ -19,7 +19,7 @@ export const COLOR_MAPPINGS: {
   army_green: "#273808",
   mustard: "#E4B44C",
   coral_red: "#e01969",
-  charcoal: "#343942",
+  charcoal: "#575656",
   charcoal_charcoal: "#adb1ba",
   stone: "#edda85",
   ruby_red: "#c70230",
@@ -31,7 +31,7 @@ export const COLOR_MAPPINGS: {
   burgundy_melange: "#61291c",
   charcoal_melange: "#5e6063",
   royal_melange: "#10316e",
-  emerald: "#18663a",
+  emerald: "#21c46b",
   lilac: "#e8b6f0",
   lemon: "#ede18e",
   peach: "#ffc59c",
@@ -59,6 +59,7 @@ export const COLOR_MAPPINGS: {
   military_green: "#3c4229",
   military_brown: "#915e20",
   camel: "#75655b",
+  fuchsia: "#e84869",
 
   //Leisure collection
 
