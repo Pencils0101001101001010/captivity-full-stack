@@ -227,7 +227,7 @@ const CollectionPage: React.FC<CollectionPageProps> = ({ category }) => {
 
   return (
     <div className="space-y-6">
-      <div className="mb-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <div className="mb-8 flex flex-row sm:flex-row gap-4 items-start sm:items-center justify-between">
         <ProductSortFilter currentSort={sortBy} onSortChange={setSortBy} />
         <LayoutSwitcher layout={layout} onLayoutChange={setLayout} />
       </div>
