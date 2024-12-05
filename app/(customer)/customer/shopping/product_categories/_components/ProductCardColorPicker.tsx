@@ -1,4 +1,4 @@
-import React, { memo, useState } from "react";
+import React, { memo, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -27,19 +27,27 @@ const ProductCard: React.FC<ProductCardProps> = memo(
     const defaultVariation = product.variations?.[0];
 
     // Find first matching variation based on selected filters
-    const currentVariation =
-      product.variations?.find(
-        v =>
-          selectedColors.some(
-            color => v.color.toLowerCase() === color.toLowerCase()
-          ) &&
-          (!selectedSizes.length || selectedSizes.includes(v.size))
-      ) || defaultVariation;
+    const { currentVariation, totalStock } = useMemo(() => {
+      const defaultVariation = product.variations?.[0];
+      const matchingVariation =
+        product.variations?.find(
+          v =>
+            selectedColors.some(
+              color => v.color.toLowerCase() === color.toLowerCase()
+            ) &&
+            (!selectedSizes.length || selectedSizes.includes(v.size))
+        ) || defaultVariation;
 
-    const totalStock = product.variations.reduce(
-      (sum, variation) => sum + variation.quantity,
-      0
-    );
+      const total = product.variations.reduce(
+        (sum, variation) => sum + variation.quantity,
+        0
+      );
+
+      return {
+        currentVariation: matchingVariation,
+        totalStock: total,
+      };
+    }, [product.variations, selectedColors, selectedSizes]);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [variationData, setVariationData] =

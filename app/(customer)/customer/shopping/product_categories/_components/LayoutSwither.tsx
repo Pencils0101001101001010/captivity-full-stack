@@ -12,7 +12,7 @@ const LayoutSwitcher: React.FC<LayoutSwitcherProps> = ({
   onLayoutChange,
 }) => {
   return (
-    <div className="flex items-center gap-2 border rounded-lg p-1">
+    <div className="flex items-center shadow-2xl shadow-black gap-2 border rounded-lg p-1">
       <Toggle
         pressed={layout === "grid"}
         onPressedChange={() => onLayoutChange("grid")}
