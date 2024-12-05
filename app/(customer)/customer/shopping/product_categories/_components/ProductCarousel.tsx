@@ -51,7 +51,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
             animation: `slide-${direction} 500ms forwards`,
           }}
         >
-          <Card className="bg-white overflow-hidden">
+          <Card className="bg-background overflow-hidden">
             <div className="relative aspect-square w-full">
               <Image
                 src={
@@ -77,7 +77,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
         </div>
 
         {/* Progress indicators */}
-        <div className="absolute bottom-4 left-0 right-0">
+        <div className="absolute bottom-24 left-0 right-0">
           <div className="flex justify-center gap-1.5">
             {products.map((_, idx) => (
               <button

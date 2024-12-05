@@ -53,7 +53,7 @@ const ProductSortFilter: React.FC<ProductSortFilterProps> = ({
     <div className="relative ">
       <Button
         variant="outline"
-        className="mb-4 flex w-full items-center justify-between bg-white px-4 py-2 shadow-2xl shadow-black transition-transform duration-300 hover:scale-95"
+        className="mb-4 flex w-full items-center justify-between px-4 py-2 shadow-2xl shadow-black transition-transform duration-300 hover:scale-95"
         onClick={toggleDropdown}
       >
         <span className="text-sm font-medium">{getCurrentLabel()}</span>
@@ -67,7 +67,7 @@ const ProductSortFilter: React.FC<ProductSortFilterProps> = ({
       </Button>
 
       {isOpen && (
-        <div className="absolute z-10 mt-2 w-full min-w-[200px] rounded-lg bg-white p-2 shadow-2xl  max-h-[300px] overflow-y-scroll">
+        <div className="absolute z-10 mt-2 w-full min-w-[200px] rounded-lg bg-background p-2 shadow-2xl  max-h-[300px] overflow-y-scroll">
           <div className="flex flex-col gap-2">
             {sortOptions.map(option => (
               <button

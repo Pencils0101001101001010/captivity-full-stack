@@ -161,7 +161,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ products = [] }) => {
               variant="outline"
               role="combobox"
               aria-expanded={categoryOpen}
-              className="mb-4 flex w-full items-center justify-between bg-white px-4 py-2 shadow-2xl shadow-black transition-transform duration-300 hover:scale-95"
+              className="mb-4 flex w-full items-center justify-between bg-background px-4 py-2 shadow-2xl shadow-black transition-transform duration-300 hover:scale-95"
             >
               {selectedCollection ?? "Select collection..."}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -202,7 +202,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ products = [] }) => {
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className="mb-4 flex w-full items-center justify-between bg-white px-4 py-2 shadow-2xl shadow-black transition-transform duration-300 hover:scale-95"
+              className="mb-4 flex w-full items-center justify-between bg-background px-4 py-2 shadow-2xl shadow-black transition-transform duration-300 hover:scale-95"
             >
               <div className="flex items-center gap-2">
                 {selectedColors.length > 0 ? (
@@ -269,7 +269,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ products = [] }) => {
             <Button
               variant="outline"
               role="combobox"
-              className="w-full justify-between bg-white shadow-2xl shadow-black transition-transform duration-300 hover:scale-95"
+              className="w-full justify-between bg-background shadow-2xl shadow-black transition-transform duration-300 hover:scale-95"
             >
               {selectedSizes.length > 0
                 ? `${selectedSizes.length} sizes selected`
@@ -336,6 +336,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ products = [] }) => {
                         word.slice(1).toLowerCase()
                     )
                     .join(" ")}
+                  F
                 </span>
                 <span className="ml-1">×</span>
               </Button>

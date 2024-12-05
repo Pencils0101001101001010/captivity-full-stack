@@ -118,8 +118,8 @@ const Navbar = () => {
         </nav>
 
         {/* Mobile search bar - now part of fixed header */}
-        <div className="md:hidden bg-white">
-          <div className="flex items-center justify-center border-b-2 p-2">
+        <div className="md:hidden bg-background">
+          <div className="flex items-center text-foreground justify-center border-b-2 p-2">
             <SearchBar />
           </div>
         </div>
@@ -129,7 +129,7 @@ const Navbar = () => {
       <div className="h-[120px] md:h-[88px]"></div>
 
       {/* Mobile bottom Nav */}
-      <div className="md:hidden fixed inset-x-0 bottom-0 bg-white shadow-xl shadow-gray-400 border-t-2 border-t-gray-400 border-2 ml-5 mr-5 mb-2 z-50 rounded-xl">
+      <div className="md:hidden fixed inset-x-0 bottom-0 bg-background shadow-xl shadow-gray-400 border-t-2 border-t-gray-400 border-2 ml-5 mr-5 mb-2 z-50 rounded-xl">
         <div className="flex justify-around text-gray-500 m-auto">
           <Link
             href="/"

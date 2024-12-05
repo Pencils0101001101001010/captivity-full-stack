@@ -227,13 +227,13 @@ const CollectionPage: React.FC<CollectionPageProps> = ({ category }) => {
 
   return (
     <div className="space-y-6">
-      <div className="mb-8 flex flex-row sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <div className="mb-8 flex flex-row gap-4 items-start sm:items-center justify-between">
         <ProductSortFilter currentSort={sortBy} onSortChange={setSortBy} />
         <LayoutSwitcher layout={layout} onLayoutChange={setLayout} />
       </div>
 
       {filteredAndSortedProducts.length === 0 ? (
-        <div className="text-center py-8">
+        <div className="text-center py-6">
           <h2 className="text-2xl font-bold text-foreground">
             No products found matching your filters. Try in another category
           </h2>

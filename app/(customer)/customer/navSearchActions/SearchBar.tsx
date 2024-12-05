@@ -37,7 +37,7 @@ export const SearchBar = () => {
         value={query}
         onChange={e => setQuery(e.target.value)}
         placeholder="Search for product..."
-        className="flex-1 text-black"
+        className="flex-1 text-foreground"
         disabled={isSearching}
       />
       <Button
