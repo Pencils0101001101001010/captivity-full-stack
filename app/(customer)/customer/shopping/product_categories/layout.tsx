@@ -100,7 +100,7 @@ export default async function Layout({
             <Button
               variant="ghost"
               size="lg"
-              className="rounded-full hover:bg-red-500  absolute bottom-16 right-4 shadow-lg flex items-center gap-2"
+              className="rounded-full hover:bg-red-500  absolute bottom-16 right-2 shadow-lg flex items-center gap-2"
             >
               <Filter className="h-5 w-5" />
               Filters
