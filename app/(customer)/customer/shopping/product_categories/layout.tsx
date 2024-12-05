@@ -98,16 +98,16 @@ export default async function Layout({
         <Sheet>
           <SheetTrigger asChild>
             <Button
-              variant="default"
+              variant="ghost"
               size="lg"
-              className="rounded-full shadow-lg flex items-center gap-2"
+              className="rounded-full hover:bg-red-500  absolute bottom-16 right-4 shadow-lg flex items-center gap-2"
             >
               <Filter className="h-5 w-5" />
               Filters
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-[300px] sm:w-[350px] p-0">
-            <div className="p-4 space-y-6 h-full overflow-y-auto">
+            <div className="p-4 space-y-6 h-full  overflow-y-auto">
               <FilterSidebar products={allProducts} />
               {newProducts.length > 0 && (
                 <div className="mt-6">

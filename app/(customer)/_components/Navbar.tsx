@@ -165,7 +165,7 @@ const Navbar = () => {
             <div className="text-xs mt-2">Favourites</div>
           </Link>
           <Link
-            href={session?.user ? `/users/${session.user.username}` : "/Login"}
+            href="/customer"
             className="flex flex-col items-center py-2 hover:text-red-500"
           >
             <MdAccountCircle />

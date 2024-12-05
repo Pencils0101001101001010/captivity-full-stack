@@ -228,7 +228,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ products = [] }) => {
             </Button>
           </PopoverTrigger>
           {/* //!Side bar filters are not scrollable on mobile devices*/}
-          <PopoverContent className="w-full p-4 shadow-2xl min-w-[300px] max-h-[300px] overflow-y-auto">
+          <PopoverContent className="w-full p-4 shadow-2xl min-w-[300px] max-h-[300px] overflow-auto">
             <div className="grid grid-cols-6 gap-2">
               {uniqueColors.map(colorOption => (
                 <button
