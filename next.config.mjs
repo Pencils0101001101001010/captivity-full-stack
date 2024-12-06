@@ -11,7 +11,7 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "g4ffbh0dmxiksqrq.public.blob.vercel-storage.com",
-        pathname: "/profile/avatars/**",
+        pathname: "/**",
       },
     ],
   },
