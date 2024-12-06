@@ -21,16 +21,6 @@ async function fetchAllProducts(): Promise<ProductWithRelations[]> {
       dynamicPricing: true,
       featuredImage: true,
       variations: true,
-      reviews: {
-        include: {
-          user: {
-            select: {
-              firstName: true,
-              lastName: true,
-            },
-          },
-        },
-      },
     },
     orderBy: {
       createdAt: "desc",

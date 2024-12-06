@@ -15,7 +15,6 @@ import Link from "next/link";
 import ViewMore from "@/app/(customer)/_components/ViewMore";
 import { useColorStore } from "../../_store/useColorStore";
 import ColorPicker from "./DetailPageColorPicker";
-import DetailedReviewCard from "../product_categories/_reviews/ReviewSection";
 
 // Helper function to transform product data for ProductImage component
 const transformProductForImage = (
