@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { Camera, Upload, X } from "lucide-react";
 import {
@@ -23,171 +23,257 @@ interface ProfileImageSectionProps {
   onProfileUpdate: (profile: ProfileActionResult) => void;
 }
 
+type ImageType = "avatar" | "background";
+type LoadingState = "idle" | "loading" | "success" | "error";
+
+interface ImageState {
+  errors: Record<ImageType, boolean>;
+  loadingState: Record<ImageType, LoadingState>;
+}
+
+interface ImageStateLog {
+  url: string | null;
+  timestamp: string;
+  previousLoadingState: LoadingState;
+  newLoadingState: LoadingState;
+  duration?: string;
+  attempt?: number;
+}
+
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000;
+
 export function ProfileImageSection({
   profile,
   isLoading,
   setIsLoading,
   onProfileUpdate,
 }: ProfileImageSectionProps) {
-  const [imageErrors, setImageErrors] = useState<{
-    avatar: boolean;
-    background: boolean;
-  }>({ avatar: false, background: false });
-
-  const [imageLoadingState, setImageLoadingState] = useState<{
-    avatar: "idle" | "loading" | "success" | "error";
-    background: "idle" | "loading" | "success" | "error";
-  }>({
-    avatar: "idle",
-    background: "idle",
+  const [imageState, setImageState] = useState<ImageState>({
+    errors: {
+      avatar: false,
+      background: false,
+    },
+    loadingState: {
+      avatar: "idle",
+      background: "idle",
+    },
   });
 
-  useEffect(() => {
-    if (profile) {
-      console.log("Profile Image Details:", {
-        avatarUrl: profile.avatarUrl,
-        backgroundUrl: profile.backgroundUrl,
-        avatarLoadingState: imageLoadingState.avatar,
-        backgroundLoadingState: imageLoadingState.background,
-        timestamp: new Date().toISOString(),
-        windowWidth:
-          typeof window !== "undefined" ? window.innerWidth : "unknown",
-      });
-    }
-  }, [profile, imageLoadingState]);
+  const retryAttemptsRef = useRef({
+    avatar: 0,
+    background: 0,
+  });
 
-  async function handleImageUpload(
-    event: React.ChangeEvent<HTMLInputElement>,
-    type: "avatar" | "background"
-  ) {
-    try {
-      const startTime = Date.now();
-      console.log(`Starting ${type} image upload`, {
-        timestamp: new Date().toISOString(),
-        previousState: imageLoadingState[type],
-      });
+  const updateImageState = useCallback(
+    (
+      type: ImageType,
+      newLoadingState: LoadingState,
+      error: boolean = false,
+      attempt: number = 0
+    ) => {
+      const startTime = performance.now();
 
-      setIsLoading(true);
-      setImageErrors(prev => ({ ...prev, [type]: false }));
-      setImageLoadingState(prev => ({ ...prev, [type]: "loading" }));
+      setImageState(prev => {
+        const previousLoadingState = prev.loadingState[type];
+        const url =
+          type === "avatar" ? profile.avatarUrl : profile.backgroundUrl;
 
-      const file = event.target.files?.[0];
-      if (!file) {
-        console.log("No file selected for upload", {
+        const logData: ImageStateLog = {
+          url,
           timestamp: new Date().toISOString(),
-        });
-        return;
-      }
+          previousLoadingState,
+          newLoadingState,
+          duration: `${(performance.now() - startTime).toFixed(2)}ms`,
+          attempt: attempt > 0 ? attempt : undefined,
+        };
 
-      console.log("Processing file:", {
-        type,
-        name: file.name,
-        size: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
-        mimeType: file.type,
-        timestamp: new Date().toISOString(),
+        if (newLoadingState === "success") {
+          console.log(`${type} image loaded successfully:`, logData);
+        } else if (newLoadingState === "error") {
+          console.error(`Error loading ${type} image:`, logData);
+        } else if (newLoadingState === "loading") {
+          console.log(`${type} image loading:`, logData);
+        }
+
+        return {
+          ...prev,
+          errors: { ...prev.errors, [type]: error },
+          loadingState: { ...prev.loadingState, [type]: newLoadingState },
+        };
       });
+    },
+    [profile.avatarUrl, profile.backgroundUrl]
+  );
 
-      const formData = new FormData();
-      formData.append(type, file);
+  const preloadImage = useCallback(async (url: string): Promise<boolean> => {
+    return new Promise(resolve => {
+      const img = document.createElement("img");
+      let timeoutId: NodeJS.Timeout;
 
-      const result = await uploadProfileImage(formData, type);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+      const cleanup = () => {
+        img.removeEventListener("load", handleLoad);
+        img.removeEventListener("error", handleError);
+        clearTimeout(timeoutId);
+      };
 
-      const duration = Date.now() - startTime;
-      console.log(`${type} image upload successful:`, {
-        newUrl: type === "avatar" ? result.avatarUrl : result.backgroundUrl,
-        duration: `${duration}ms`,
-        timestamp: new Date().toISOString(),
-      });
+      const handleLoad = () => {
+        cleanup();
+        resolve(true);
+      };
 
-      setImageLoadingState(prev => ({ ...prev, [type]: "success" }));
-      onProfileUpdate(result);
-      toast.success(
-        `${type.charAt(0).toUpperCase() + type.slice(1)} updated successfully`
-      );
-    } catch (error) {
-      console.error(`Error uploading ${type} image:`, {
-        error: error instanceof Error ? error.message : "Unknown error",
-        timestamp: new Date().toISOString(),
-      });
-      setImageLoadingState(prev => ({ ...prev, [type]: "error" }));
-      toast.error(
-        error instanceof Error ? error.message : "Failed to upload image"
-      );
-      setImageErrors(prev => ({ ...prev, [type]: true }));
-    } finally {
-      setIsLoading(false);
-    }
-  }
+      const handleError = () => {
+        cleanup();
+        resolve(false);
+      };
 
-  async function handleImageRemove(type: "avatar" | "background") {
-    try {
-      const startTime = Date.now();
-      console.log(`Starting ${type} image removal`, {
-        currentUrl:
-          type === "avatar" ? profile.avatarUrl : profile.backgroundUrl,
-        timestamp: new Date().toISOString(),
-      });
+      timeoutId = setTimeout(() => {
+        cleanup();
+        resolve(false);
+      }, 10000); // 10 second timeout
 
-      setIsLoading(true);
-      setImageLoadingState(prev => ({ ...prev, [type]: "loading" }));
-
-      const result = await removeProfileImage(type);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      const duration = Date.now() - startTime;
-      console.log(`${type} image removed successfully`, {
-        duration: `${duration}ms`,
-        timestamp: new Date().toISOString(),
-      });
-
-      setImageLoadingState(prev => ({ ...prev, [type]: "idle" }));
-      onProfileUpdate(result);
-      toast.success(
-        `${type.charAt(0).toUpperCase() + type.slice(1)} removed successfully`
-      );
-    } catch (error) {
-      console.error(`Error removing ${type} image:`, {
-        error: error instanceof Error ? error.message : "Unknown error",
-        timestamp: new Date().toISOString(),
-      });
-      setImageLoadingState(prev => ({ ...prev, [type]: "error" }));
-      toast.error(
-        error instanceof Error ? error.message : "Failed to remove image"
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  const handleImageError = (type: "avatar" | "background") => {
-    console.error(`Error loading ${type} image:`, {
-      url: type === "avatar" ? profile.avatarUrl : profile.backgroundUrl,
-      timestamp: new Date().toISOString(),
-      loadingState: imageLoadingState[type],
-      currentErrors: imageErrors,
-      imageWidth: type === "avatar" ? "96px" : "100%",
-      windowWidth:
-        typeof window !== "undefined" ? window.innerWidth : "unknown",
+      img.addEventListener("load", handleLoad);
+      img.addEventListener("error", handleError);
+      img.src = url;
     });
-    setImageErrors(prev => ({ ...prev, [type]: true }));
-    setImageLoadingState(prev => ({ ...prev, [type]: "error" }));
-  };
+  }, []);
 
-  const handleImageLoad = (type: "avatar" | "background") => {
-    console.log(`${type} image loaded successfully:`, {
-      url: type === "avatar" ? profile.avatarUrl : profile.backgroundUrl,
-      timestamp: new Date().toISOString(),
-      loadingState: imageLoadingState[type],
-      windowWidth:
-        typeof window !== "undefined" ? window.innerWidth : "unknown",
-    });
-    setImageLoadingState(prev => ({ ...prev, [type]: "success" }));
-  };
+  const handleImageError = useCallback(
+    async (type: ImageType) => {
+      const url = type === "avatar" ? profile.avatarUrl : profile.backgroundUrl;
+      if (!url) return;
+
+      const currentAttempt = retryAttemptsRef.current[type];
+
+      if (currentAttempt < MAX_RETRIES) {
+        retryAttemptsRef.current[type] = currentAttempt + 1;
+        updateImageState(type, "loading", false, currentAttempt + 1);
+
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+
+        // Try to preload the image
+        const success = await preloadImage(url);
+
+        if (success) {
+          updateImageState(type, "success", false);
+          return;
+        }
+      }
+
+      updateImageState(type, "error", true);
+    },
+    [profile.avatarUrl, profile.backgroundUrl, preloadImage, updateImageState]
+  );
+
+  const handleImageLoad = useCallback(
+    (type: ImageType) => {
+      retryAttemptsRef.current[type] = 0;
+      updateImageState(type, "success", false);
+    },
+    [updateImageState]
+  );
+
+  // Initial image validation
+  useEffect(() => {
+    const validateImage = async (type: ImageType, url: string | null) => {
+      if (!url) return;
+
+      updateImageState(type, "loading", false);
+      const success = await preloadImage(url);
+
+      if (success) {
+        updateImageState(type, "success", false);
+      } else {
+        await handleImageError(type);
+      }
+    };
+
+    if (profile.avatarUrl) {
+      validateImage("avatar", profile.avatarUrl);
+    }
+    if (profile.backgroundUrl) {
+      validateImage("background", profile.backgroundUrl);
+    }
+
+    // Reset retry attempts when URLs change
+    retryAttemptsRef.current = {
+      avatar: 0,
+      background: 0,
+    };
+  }, [
+    profile.avatarUrl,
+    profile.backgroundUrl,
+    preloadImage,
+    updateImageState,
+    handleImageError,
+  ]);
+
+  const handleImageUpload = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>, type: ImageType) => {
+      try {
+        setIsLoading(true);
+        updateImageState(type, "loading", false);
+        retryAttemptsRef.current[type] = 0;
+
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append(type, file);
+
+        const result = await uploadProfileImage(formData, type);
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        updateImageState(type, "success", false);
+        onProfileUpdate(result);
+        toast.success(
+          `${type.charAt(0).toUpperCase() + type.slice(1)} updated successfully`
+        );
+      } catch (error) {
+        console.error(`Error uploading ${type} image:`, error);
+        updateImageState(type, "error", true);
+        toast.error(
+          error instanceof Error ? error.message : "Failed to upload image"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [setIsLoading, onProfileUpdate, updateImageState]
+  );
+
+  const handleImageRemove = useCallback(
+    async (type: ImageType) => {
+      try {
+        setIsLoading(true);
+        updateImageState(type, "loading", false);
+        retryAttemptsRef.current[type] = 0;
+
+        const result = await removeProfileImage(type);
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        updateImageState(type, "idle", false);
+        onProfileUpdate(result);
+        toast.success(
+          `${type.charAt(0).toUpperCase() + type.slice(1)} removed successfully`
+        );
+      } catch (error) {
+        console.error(`Error removing ${type} image:`, error);
+        updateImageState(type, "error", true);
+        toast.error(
+          error instanceof Error ? error.message : "Failed to remove image"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [setIsLoading, onProfileUpdate, updateImageState]
+  );
 
   return (
     <Card>
@@ -201,23 +287,26 @@ export function ProfileImageSection({
         {/* Avatar Section */}
         <div className="flex items-center gap-4">
           <div className="relative h-24 w-24">
-            {profile.avatarUrl && !imageErrors.avatar ? (
+            {profile.avatarUrl && !imageState.errors.avatar ? (
               <>
-                <Image
-                  src={profile.avatarUrl}
-                  alt="Profile Avatar"
-                  className="rounded-full object-cover"
-                  fill
-                  priority
-                  sizes="(max-width: 768px) 96px, 96px"
-                  onError={() => handleImageError("avatar")}
-                  onLoad={() => handleImageLoad("avatar")}
-                  quality={90}
-                />
+                <div className="relative h-24 w-24">
+                  <Image
+                    src={profile.avatarUrl}
+                    alt="Profile Avatar"
+                    width={96}
+                    height={96}
+                    className="rounded-full w-full h-full object-cover"
+                    quality={90}
+                    priority
+                    onError={() => handleImageError("avatar")}
+                    onLoad={() => handleImageLoad("avatar")}
+                    unoptimized
+                  />
+                </div>
                 <Button
                   variant="destructive"
                   size="icon"
-                  className="absolute -top-2 -right-2"
+                  className="absolute -top-2 -right-2 z-10"
                   onClick={() => handleImageRemove("avatar")}
                   disabled={isLoading}
                 >
@@ -247,22 +336,26 @@ export function ProfileImageSection({
         {/* Background Image Section */}
         <div className="space-y-4">
           <div className="relative aspect-[3/1] w-full overflow-hidden rounded-lg">
-            {profile.backgroundUrl && !imageErrors.background ? (
+            {profile.backgroundUrl && !imageState.errors.background ? (
               <>
-                <Image
-                  src={profile.backgroundUrl}
-                  alt="Profile Background"
-                  className="object-cover"
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  onError={() => handleImageError("background")}
-                  onLoad={() => handleImageLoad("background")}
-                  quality={85}
-                />
+                <div className="relative w-full h-full">
+                  <Image
+                    src={profile.backgroundUrl}
+                    alt="Profile Background"
+                    width={1920}
+                    height={640}
+                    className="w-full h-full object-cover"
+                    quality={85}
+                    priority
+                    onError={() => handleImageError("background")}
+                    onLoad={() => handleImageLoad("background")}
+                    unoptimized
+                  />
+                </div>
                 <Button
                   variant="destructive"
                   size="icon"
-                  className="absolute top-2 right-2"
+                  className="absolute top-2 right-2 z-10"
                   onClick={() => handleImageRemove("background")}
                   disabled={isLoading}
                 >
