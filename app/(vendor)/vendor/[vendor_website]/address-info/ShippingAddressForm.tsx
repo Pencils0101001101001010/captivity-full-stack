@@ -208,10 +208,11 @@ export default function ShippingAddressForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                Street address <span className="text-red-500">*</span>
+                Street address & Area name{" "}
+                <span className="text-red-500">*</span>
               </FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter your street address" />
+                <Input {...field} placeholder="eg... 112 main str, Seapoint" />
               </FormControl>
               <FormMessage />
             </FormItem>

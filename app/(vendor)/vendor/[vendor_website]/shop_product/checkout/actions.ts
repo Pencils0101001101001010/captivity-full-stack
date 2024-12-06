@@ -443,6 +443,7 @@ export async function getVendorUserDetails() {
         townCity: true,
         suburb: true,
         postcode: true,
+        storeLocation: true, // Get shipping address
       },
     });
 
@@ -454,10 +455,33 @@ export async function getVendorUserDetails() {
       };
     }
 
+    // Transform data to match form field names
+    const transformedData = {
+      firstName: userDetails.firstName || "",
+      lastName: userDetails.lastName || "",
+      email: userDetails.email || "",
+      phone: userDetails.phoneNumber || "",
+      salesRep: userDetails.salesRep || "",
+      companyName: userDetails.companyName || "",
+      countryRegion: userDetails.country || "southAfrica",
+      streetAddress: userDetails.streetAddress || "",
+      apartmentSuite: userDetails.addressLine2 || "",
+      townCity: userDetails.townCity || "",
+      province: userDetails.suburb || "", // Map suburb to province
+      postcode: userDetails.postcode || "",
+      // Add shipping address if it exists
+      shippingAddress:
+        userDetails.storeLocation &&
+        typeof userDetails.storeLocation === "object" &&
+        (userDetails.storeLocation as any).type === "shipping"
+          ? userDetails.storeLocation
+          : null,
+    };
+
     return {
       success: true,
       message: "User details retrieved successfully",
-      data: userDetails,
+      data: transformedData,
     };
   } catch (error) {
     return {
