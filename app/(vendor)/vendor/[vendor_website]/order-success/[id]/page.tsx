@@ -2,7 +2,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { VendorOrderSuccessView } from "./OrderSuccessView";
-import { getVendorOrder } from "../../shop_product/checkout/actions";
+import { getVendorOrder } from "../../shop_product/checkout/vendor-orders";
 
 interface VendorOrderSuccessPageProps {
   params: {

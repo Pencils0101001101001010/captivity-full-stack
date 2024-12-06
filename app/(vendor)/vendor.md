@@ -15,3 +15,7 @@
 [x] The order filter dont filter the vendor_website/customer orders only the vendor orders
 
 [] The previous-orders customer profile's filters needs to be adjusted to only filter the user orders and not for the vendors
+
+[] in production certain category collection featured images dont work.
+
+[] in production the avatar upload works but it only displays in development but not in production

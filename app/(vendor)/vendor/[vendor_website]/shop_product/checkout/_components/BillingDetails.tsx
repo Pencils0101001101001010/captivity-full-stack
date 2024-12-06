@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import {
   FormField,
@@ -24,7 +24,6 @@ import {
 
 interface VendorBillingDetailsProps {
   form: UseFormReturn<VendorFormValues>;
-  initialData?: Partial<VendorFormValues>;
 }
 
 const VendorBranchOptionsContent = React.memo(() => (
@@ -130,72 +129,38 @@ const FormSelect = React.memo(
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem className={className}>
-          <FormLabel className="text-foreground">
-            {label}
-            {required && <span className="text-destructive">*</span>}
-          </FormLabel>
-          <Select
-            onValueChange={field.onChange}
-            value={typeof field.value === "string" ? field.value : undefined}
-          >
-            <FormControl>
-              <SelectTrigger className="w-full bg-background border-input hover:border-ring focus:border-ring transition-colors">
-                <SelectValue placeholder={placeholder} />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent className="bg-background border-input">
-              {optionsContent}
-            </SelectContent>
-          </Select>
-          <FormMessage className="text-destructive" />
-        </FormItem>
-      )}
+      render={({ field }) => {
+        // Ensure we only pass string values to Select
+        const value = typeof field.value === "string" ? field.value : undefined;
+
+        return (
+          <FormItem className={className}>
+            <FormLabel className="text-foreground">
+              {label}
+              {required && <span className="text-destructive">*</span>}
+            </FormLabel>
+            <Select onValueChange={field.onChange} value={value}>
+              <FormControl>
+                <SelectTrigger className="w-full bg-background border-input hover:border-ring focus:border-ring transition-colors">
+                  <SelectValue placeholder={placeholder} />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent className="bg-background border-input">
+                {optionsContent}
+              </SelectContent>
+            </Select>
+            <FormMessage className="text-destructive" />
+          </FormItem>
+        );
+      }}
     />
   )
 );
 FormSelect.displayName = "FormSelect";
 
 export const VendorBillingDetails: React.FC<VendorBillingDetailsProps> =
-  React.memo(({ form, initialData }) => {
-    const { control, setValue } = form;
-
-    useEffect(() => {
-      if (initialData) {
-        // First set critical fields with validation
-        if (initialData.countryRegion) {
-          setValue("countryRegion", initialData.countryRegion, {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
-        }
-
-        if (initialData.province) {
-          setValue("province", initialData.province, {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
-        }
-
-        if (initialData.phone) {
-          setValue("phone", initialData.phone, {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
-        }
-
-        // Then set remaining fields
-        Object.entries(initialData).forEach(([key, value]) => {
-          if (
-            !["countryRegion", "province", "phone"].includes(key) &&
-            value !== undefined
-          ) {
-            setValue(key as keyof VendorFormValues, value);
-          }
-        });
-      }
-    }, [initialData, setValue]);
+  React.memo(({ form }) => {
+    const { control } = form;
 
     return (
       <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

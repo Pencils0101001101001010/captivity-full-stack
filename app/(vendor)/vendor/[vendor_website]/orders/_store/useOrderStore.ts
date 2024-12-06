@@ -5,7 +5,7 @@ import {
   VendorOrder,
   VendorOrderActionResult,
 } from "../../shop_product/checkout/_lib/types";
-import { getVendorOrder } from "../../shop_product/checkout/actions";
+import { getVendorOrder } from "../../shop_product/checkout/vendor-orders";
 import { subWeeks } from "date-fns";
 import { OrderStatus } from "@prisma/client";
 

@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { createVendorOrder, getVendorUserDetails } from "../actions";
+import { createVendorOrder } from "../vendor-orders";
 import { useParams, useRouter } from "next/navigation";
 import {
   VendorFormValues,
@@ -21,6 +21,7 @@ import VendorBillingDetails from "./BillingDetails";
 import { VendorAdditionalInformation } from "./AdditionalInformation";
 import { VendorTermsAndConditions } from "./TermsAndConditions";
 import VendorOrderSummary from "./OrderSummary";
+import { getVendorUserDetails } from "../vendor-user";
 
 const defaultVendorFormValues: VendorFormValues = {
   vendorBranch: "",
@@ -100,21 +101,6 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = React.memo(
 
 NavigationButtons.displayName = "NavigationButtons";
 
-interface VendorUserDetails {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  salesRep?: string;
-  phoneNumber?: string;
-  companyName?: string;
-  country?: string;
-  streetAddress?: string;
-  addressLine2?: string;
-  townCity?: string;
-  suburb?: string;
-  postcode?: string;
-}
-
 const CheckoutForm: React.FC = () => {
   const params = useParams();
   const vendorWebsite = params?.vendor_website as string;
@@ -129,7 +115,7 @@ const CheckoutForm: React.FC = () => {
   const form = useForm<VendorFormValues>({
     resolver: formResolver,
     defaultValues: defaultVendorFormValues,
-    mode: "onChange",
+    mode: "onSubmit", // Only validate on form submission
   });
 
   const cart = useVendorCartStore(state => state.cart);
@@ -204,28 +190,51 @@ const CheckoutForm: React.FC = () => {
 
       try {
         const result = await getVendorUserDetails();
-        if (!mounted) return;
+        if (!mounted || !result.success || !result.data) return;
 
-        if (result.success && result.data) {
-          const userData = result.data as VendorUserDetails;
-          form.reset({
+        const userData = result.data;
+
+        // Process address fields
+        const countryRegion =
+          userData.countryRegion?.toLowerCase() === "south africa"
+            ? "southafrica"
+            : userData.countryRegion || "";
+
+        // Set user-related fields
+        const userFields = {
+          firstName: userData.firstName || "",
+          lastName: userData.lastName || "",
+          email: userData.email || "",
+          phone: userData.phone || "",
+          companyName: userData.companyName || "",
+          countryRegion,
+          streetAddress: userData.streetAddress || "",
+          apartmentSuite: userData.apartmentSuite || "",
+          townCity: userData.townCity || "",
+          province: userData.province || "",
+          postcode: userData.postcode || "",
+          salesRep: userData.salesRep || "",
+        };
+
+        // Reset form while preserving checkout-specific fields as empty
+        form.reset(
+          {
             ...defaultVendorFormValues,
-            firstName: userData.firstName || "",
-            lastName: userData.lastName || "",
-            email: userData.email || "",
-            salesRep: userData.salesRep || "",
-            phone: userData.phoneNumber?.toString() || "",
-            companyName: userData.companyName || "",
-            countryRegion: userData.country || "",
-            streetAddress: userData.streetAddress || "",
-            apartmentSuite: userData.addressLine2 || "",
-            townCity: userData.townCity || "",
-            province: userData.suburb || "",
-            postcode: userData.postcode || "",
-          });
-        }
+            ...userFields,
+          },
+          {
+            keepDefaultValues: false,
+            keepDirty: false,
+          }
+        );
       } catch (error) {
         console.error("Error loading user data:", error);
+        toast({
+          title: "Error",
+          description:
+            "Failed to load your saved details. Please enter them manually.",
+          variant: "destructive",
+        });
       } finally {
         if (mounted) {
           setIsLoadingPreviousOrder(false);
@@ -237,7 +246,7 @@ const CheckoutForm: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, [form]);
+  }, [form, toast]);
 
   useEffect(() => {
     if (!cart) {
@@ -253,7 +262,7 @@ const CheckoutForm: React.FC = () => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="max-w-7xl mx-auto p-4 sm:p-6 mb-16 dark:bg-background transition-colors duration-200 "
+        className="max-w-7xl mx-auto p-4 sm:p-6 mb-16 dark:bg-background transition-colors duration-200"
       >
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="w-full lg:w-2/3 space-y-8">
