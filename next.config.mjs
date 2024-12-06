@@ -10,16 +10,8 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "captivity.co.za",
-      },
-      {
-        protocol: "https",
-        hostname: "**.public.blob.vercel-storage.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "captivity-full-stack-app1.vercel.app",
+        hostname: "g4ffbh0dmxiksqrq.public.blob.vercel-storage.com",
+        pathname: "/profile/avatars/**",
       },
     ],
   },

@@ -19,37 +19,77 @@ import {
   VendorRoles,
 } from "./profile";
 
-// Define a minimal type for authenticated user from auth
 interface AuthUser {
   id: string;
   role: UserRole;
 }
 
-// Type guard for checking if user is a vendor or vendor customer
+function generateRequestId(): string {
+  return `req_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+}
+
 function isVendorUser(user: AuthUser): boolean {
   return ["VENDOR", "VENDORCUSTOMER"].includes(user.role);
 }
 
-// Type guard for file type checking
 function isAllowedMimeType(type: string): type is AllowedMimeType {
   return ALLOWED_MIME_TYPES.includes(type as AllowedMimeType);
 }
 
-// Cache function for user profiles
 const getCachedUserProfile = cache(async (userId: string) => {
-  return prisma.user.findUnique({
+  const requestId = generateRequestId();
+  console.log("Fetching cached user profile:", {
+    requestId,
+    userId,
+    timestamp: new Date().toISOString(),
+  });
+
+  const profile = await prisma.user.findUnique({
     where: { id: userId },
     select: userProfileSelect,
   });
+
+  if (profile) {
+    console.log("Profile image details:", {
+      requestId,
+      avatarUrl: profile.avatarUrl,
+      urlStructure: profile.avatarUrl
+        ? new URL(profile.avatarUrl).toString()
+        : null,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  console.log("Cached profile result:", {
+    requestId,
+    found: !!profile,
+    hasAvatar: !!profile?.avatarUrl,
+    hasBackground: !!profile?.backgroundUrl,
+    timestamp: new Date().toISOString(),
+  });
+
+  return profile;
 });
 
-// Get user profile details
 export async function getUserProfile(
   userId?: string
 ): Promise<ProfileActionResult> {
+  const startTime = Date.now();
+  const requestId = generateRequestId();
+
+  console.log("getUserProfile initiated:", {
+    requestId,
+    requestedUserId: userId,
+    timestamp: new Date().toISOString(),
+  });
+
   try {
     const session = await validateRequest();
     if (!session.user) {
+      console.log("getUserProfile unauthorized access attempt:", {
+        requestId,
+        timestamp: new Date().toISOString(),
+      });
       return {
         success: false,
         avatarUrl: null,
@@ -58,13 +98,26 @@ export async function getUserProfile(
       };
     }
 
-    // If userId is provided, verify permission to view that profile
     const targetUserId = userId || session.user.id;
+    console.log("Fetching profile for:", {
+      requestId,
+      targetUserId,
+      requestingUserId: session.user.id,
+      requestingUserRole: session.user.role,
+      timestamp: new Date().toISOString(),
+    });
+
     if (
       userId &&
       session.user.id !== userId &&
       !["VENDOR", "ADMIN"].includes(session.user.role)
     ) {
+      console.log("Insufficient permissions:", {
+        requestId,
+        targetUserId,
+        requestingRole: session.user.role,
+        timestamp: new Date().toISOString(),
+      });
       return {
         success: false,
         avatarUrl: null,
@@ -74,7 +127,13 @@ export async function getUserProfile(
     }
 
     const profile = await getCachedUserProfile(targetUserId);
+
     if (!profile) {
+      console.log("Profile not found:", {
+        requestId,
+        targetUserId,
+        timestamp: new Date().toISOString(),
+      });
       return {
         success: false,
         avatarUrl: null,
@@ -83,6 +142,33 @@ export async function getUserProfile(
       };
     }
 
+    if (profile.avatarUrl || profile.backgroundUrl) {
+      console.log("Profile image URLs:", {
+        requestId,
+        avatarUrl: profile.avatarUrl,
+        avatarUrlStructure: profile.avatarUrl
+          ? new URL(profile.avatarUrl).toString()
+          : null,
+        backgroundUrl: profile.backgroundUrl,
+        backgroundUrlStructure: profile.backgroundUrl
+          ? new URL(profile.backgroundUrl).toString()
+          : null,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const duration = Date.now() - startTime;
+    console.log("getUserProfile completed:", {
+      requestId,
+      success: true,
+      duration: `${duration}ms`,
+      hasAvatar: !!profile.avatarUrl,
+      hasBackground: !!profile.backgroundUrl,
+      role: profile.role,
+      storeSlug: profile.storeSlug,
+      timestamp: new Date().toISOString(),
+    });
+
     return {
       success: true,
       avatarUrl: profile.avatarUrl,
@@ -90,7 +176,20 @@ export async function getUserProfile(
       userData: profile as UserProfileData,
     };
   } catch (error) {
-    console.error("Error fetching user profile:", error);
+    const duration = Date.now() - startTime;
+    console.error("getUserProfile error:", {
+      requestId,
+      error:
+        error instanceof Error
+          ? {
+              message: error.message,
+              stack: error.stack,
+            }
+          : "Unknown error",
+      duration: `${duration}ms`,
+      timestamp: new Date().toISOString(),
+    });
+
     return {
       success: false,
       avatarUrl: null,
@@ -101,13 +200,32 @@ export async function getUserProfile(
   }
 }
 
-// Update user profile details
 export async function updateUserProfile(
   data: ProfileUpdateData
 ): Promise<ProfileActionResult> {
+  const startTime = Date.now();
+  const requestId = generateRequestId();
+
+  console.log("updateUserProfile initiated:", {
+    requestId,
+    timestamp: new Date().toISOString(),
+  });
+
   try {
     const session = await validateRequest();
-    if (!session.user) throw new Error("Unauthorized access");
+    if (!session.user) {
+      console.log("updateUserProfile unauthorized access attempt:", {
+        requestId,
+        timestamp: new Date().toISOString(),
+      });
+      throw new Error("Unauthorized access");
+    }
+
+    console.log("Validating profile update data:", {
+      requestId,
+      userId: session.user.id,
+      timestamp: new Date().toISOString(),
+    });
 
     const validatedData = profileUpdateSchema.parse(data);
 
@@ -117,6 +235,15 @@ export async function updateUserProfile(
       select: userProfileSelect,
     });
 
+    const duration = Date.now() - startTime;
+    console.log("updateUserProfile completed:", {
+      requestId,
+      success: true,
+      duration: `${duration}ms`,
+      userId: session.user.id,
+      timestamp: new Date().toISOString(),
+    });
+
     return {
       success: true,
       avatarUrl: updatedProfile.avatarUrl,
@@ -124,7 +251,20 @@ export async function updateUserProfile(
       userData: updatedProfile as UserProfileData,
     };
   } catch (error) {
-    console.error("Error updating user profile:", error);
+    const duration = Date.now() - startTime;
+    console.error("updateUserProfile error:", {
+      requestId,
+      error:
+        error instanceof Error
+          ? {
+              message: error.message,
+              stack: error.stack,
+            }
+          : "Unknown error",
+      duration: `${duration}ms`,
+      timestamp: new Date().toISOString(),
+    });
+
     return {
       success: false,
       avatarUrl: null,
@@ -135,44 +275,92 @@ export async function updateUserProfile(
   }
 }
 
-// Upload profile image (avatar or background)
 export async function uploadProfileImage(
   formData: FormData,
   imageType: ProfileImageType
 ): Promise<ProfileActionResult> {
+  const startTime = Date.now();
+  const requestId = generateRequestId();
+
+  console.log("uploadProfileImage initiated:", {
+    requestId,
+    imageType,
+    timestamp: new Date().toISOString(),
+  });
+
   try {
     const session = await validateRequest();
-    if (!session.user) throw new Error("Unauthorized access");
+    if (!session.user) {
+      console.log("uploadProfileImage unauthorized access attempt:", {
+        requestId,
+        timestamp: new Date().toISOString(),
+      });
+      throw new Error("Unauthorized access");
+    }
+
     if (!isVendorUser(session.user)) {
+      console.log("uploadProfileImage unauthorized role:", {
+        requestId,
+        role: session.user.role,
+        timestamp: new Date().toISOString(),
+      });
       throw new Error("Unauthorized role");
     }
 
     const file = formData.get(imageType) as File;
-    if (!file) throw new Error("No file provided");
+    if (!file) {
+      console.log("uploadProfileImage no file provided:", {
+        requestId,
+        timestamp: new Date().toISOString(),
+      });
+      throw new Error("No file provided");
+    }
 
-    // Validate file type
+    console.log("Processing upload:", {
+      requestId,
+      imageType,
+      fileName: file.name,
+      fileSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
+      fileType: file.type,
+      timestamp: new Date().toISOString(),
+    });
+
     if (!isAllowedMimeType(file.type)) {
+      console.log("Invalid file type:", {
+        requestId,
+        providedType: file.type,
+        timestamp: new Date().toISOString(),
+      });
       throw new Error(
         "Invalid file type. Only JPEG, PNG, and WebP images are allowed"
       );
     }
 
-    // Validate file using schema
     const validation = fileValidationSchema.safeParse({
       size: file.size,
       type: file.type,
     });
 
     if (!validation.success) {
+      console.log("File validation failed:", {
+        requestId,
+        errors: validation.error.errors,
+        timestamp: new Date().toISOString(),
+      });
       throw new Error(validation.error.errors[0].message);
     }
 
     const maxSize = IMAGE_CONFIG.maxSizes[imageType];
     if (file.size > maxSize * 1024 * 1024) {
+      console.log("File size exceeds limit:", {
+        requestId,
+        fileSize: file.size,
+        maxSize: maxSize * 1024 * 1024,
+        timestamp: new Date().toISOString(),
+      });
       throw new Error(`File size must be less than ${maxSize}MB`);
     }
 
-    // Delete existing image if present
     const currentProfile = await getCachedUserProfile(session.user.id);
     const currentUrl =
       imageType === "avatar"
@@ -180,21 +368,43 @@ export async function uploadProfileImage(
         : currentProfile?.backgroundUrl;
 
     if (currentUrl) {
+      console.log("Deleting existing image:", {
+        requestId,
+        currentUrl,
+        timestamp: new Date().toISOString(),
+      });
       const oldPath = new URL(currentUrl).pathname.slice(1);
       await del(oldPath);
     }
 
-    // Upload new image
     const fileExt = file.name.split(".").pop() || "png";
     const timestamp = Date.now();
     const path = `${IMAGE_CONFIG.paths[imageType]}/${session.user.id}_${timestamp}.${fileExt}`;
+
+    console.log("Uploading to blob storage:", {
+      requestId,
+      path,
+      timestamp: new Date().toISOString(),
+    });
 
     const blob = await put(path, file, {
       access: "public",
       addRandomSuffix: false,
     });
 
-    if (!blob.url) throw new Error("Failed to get URL from blob storage");
+    if (!blob.url) {
+      console.log("Failed to get URL from blob storage:", {
+        requestId,
+        timestamp: new Date().toISOString(),
+      });
+      throw new Error("Failed to get URL from blob storage");
+    }
+
+    console.log("Image uploaded successfully:", {
+      requestId,
+      blobUrl: blob.url,
+      timestamp: new Date().toISOString(),
+    });
 
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
@@ -204,6 +414,16 @@ export async function uploadProfileImage(
       select: userProfileSelect,
     });
 
+    const duration = Date.now() - startTime;
+    console.log("uploadProfileImage completed:", {
+      requestId,
+      success: true,
+      duration: `${duration}ms`,
+      imageType,
+      newUrl: blob.url,
+      timestamp: new Date().toISOString(),
+    });
+
     return {
       success: true,
       avatarUrl: updatedUser.avatarUrl,
@@ -211,7 +431,21 @@ export async function uploadProfileImage(
       userData: updatedUser as UserProfileData,
     };
   } catch (error) {
-    console.error(`Error uploading ${imageType}:`, error);
+    const duration = Date.now() - startTime;
+    console.error("uploadProfileImage error:", {
+      requestId,
+      error:
+        error instanceof Error
+          ? {
+              message: error.message,
+              stack: error.stack,
+            }
+          : "Unknown error",
+      imageType,
+      duration: `${duration}ms`,
+      timestamp: new Date().toISOString(),
+    });
+
     return {
       success: false,
       avatarUrl: null,
@@ -222,16 +456,20 @@ export async function uploadProfileImage(
   }
 }
 
-// Remove profile image (avatar or background)
+// Image removal operation
 export async function removeProfileImage(
   imageType: ProfileImageType
 ): Promise<ProfileActionResult> {
+  const startTime = Date.now();
+  console.log("removeProfileImage initiated:", {
+    imageType,
+    timestamp: new Date().toISOString(),
+  });
+
   try {
     const session = await validateRequest();
     if (!session.user) throw new Error("Unauthorized access");
-    if (!isVendorUser(session.user)) {
-      throw new Error("Unauthorized role");
-    }
+    if (!isVendorUser(session.user)) throw new Error("Unauthorized role");
 
     const currentProfile = await getCachedUserProfile(session.user.id);
     const currentUrl =
@@ -254,6 +492,14 @@ export async function removeProfileImage(
       select: userProfileSelect,
     });
 
+    const duration = Date.now() - startTime;
+    console.log("removeProfileImage completed:", {
+      success: true,
+      duration: `${duration}ms`,
+      imageType,
+      timestamp: new Date().toISOString(),
+    });
+
     return {
       success: true,
       avatarUrl: updatedUser.avatarUrl,
@@ -261,7 +507,12 @@ export async function removeProfileImage(
       userData: updatedUser as UserProfileData,
     };
   } catch (error) {
-    console.error(`Error removing ${imageType}:`, error);
+    console.error("removeProfileImage error:", {
+      error: error instanceof Error ? error.message : "Unknown error",
+      imageType,
+      duration: `${Date.now() - startTime}ms`,
+      timestamp: new Date().toISOString(),
+    });
     return {
       success: false,
       avatarUrl: null,
@@ -272,8 +523,13 @@ export async function removeProfileImage(
   }
 }
 
-// Get vendor customers (for vendor accounts)
+// Vendor customer operations
 export async function getVendorCustomers(): Promise<ProfileActionResult[]> {
+  const startTime = Date.now();
+  console.log("getVendorCustomers initiated", {
+    timestamp: new Date().toISOString(),
+  });
+
   try {
     const session = await validateRequest();
     if (!session.user) throw new Error("Unauthorized access");
@@ -291,14 +547,23 @@ export async function getVendorCustomers(): Promise<ProfileActionResult[]> {
       throw new Error("Unauthorized role or invalid vendor configuration");
     }
 
+    const storePrefix = vendorProfile.storeSlug.split("-customer-")[0];
     const customers = await prisma.user.findMany({
       where: {
         role: "VENDORCUSTOMER",
         storeSlug: {
-          startsWith: vendorProfile.storeSlug.split("-customer-")[0],
+          startsWith: storePrefix,
         },
       },
       select: userProfileSelect,
+    });
+
+    const duration = Date.now() - startTime;
+    console.log("getVendorCustomers completed:", {
+      success: true,
+      duration: `${duration}ms`,
+      customerCount: customers.length,
+      timestamp: new Date().toISOString(),
     });
 
     return customers.map(customer => ({
@@ -308,7 +573,11 @@ export async function getVendorCustomers(): Promise<ProfileActionResult[]> {
       userData: customer as UserProfileData,
     }));
   } catch (error) {
-    console.error("Error fetching vendor customers:", error);
+    console.error("getVendorCustomers error:", {
+      error: error instanceof Error ? error.message : "Unknown error",
+      duration: `${Date.now() - startTime}ms`,
+      timestamp: new Date().toISOString(),
+    });
     return [
       {
         success: false,
