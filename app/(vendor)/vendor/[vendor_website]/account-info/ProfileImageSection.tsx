@@ -1,3 +1,4 @@
+// components/vendor/account/ProfileImageSection.tsx
 "use client";
 
 import { useState } from "react";
@@ -29,66 +30,28 @@ export function ProfileImageSection({
   setIsLoading,
   onProfileUpdate,
 }: ProfileImageSectionProps) {
-  const [imageVersions, setImageVersions] = useState({
-    avatar: 0,
-    background: 0,
-  });
-  const [imageErrors, setImageErrors] = useState({
-    avatar: false,
-    background: false,
-  });
-
-  const getImageUrl = (
-    url: string | null,
-    type: "avatar" | "background"
-  ): string => {
-    if (!url) {
-      throw new Error("Image URL is required");
-    }
-    console.log(`Loading ${type} image URL:`, url);
-    const version = imageVersions[type];
-    return `${url}?v=${version}`;
-  };
-
-  const handleImageError = (type: "avatar" | "background") => {
-    console.error(`Error loading ${type} image`);
-    setImageErrors(prev => ({ ...prev, [type]: true }));
-    toast.error(`Failed to load ${type} image`);
-  };
-
   async function handleImageUpload(
     event: React.ChangeEvent<HTMLInputElement>,
     type: "avatar" | "background"
   ) {
     try {
       setIsLoading(true);
-      setImageErrors(prev => ({ ...prev, [type]: false }));
       const file = event.target.files?.[0];
       if (!file) return;
 
       const formData = new FormData();
       formData.append(type, file);
 
-      console.log(`Uploading ${type} image:`, file.name);
       const result = await uploadProfileImage(formData, type);
-
       if (!result.success) {
         throw new Error(result.error);
       }
-
-      setImageVersions(prev => ({
-        ...prev,
-        [type]: prev[type] + 1,
-      }));
 
       onProfileUpdate(result);
       toast.success(
         `${type.charAt(0).toUpperCase() + type.slice(1)} updated successfully`
       );
-
-      event.target.value = "";
     } catch (error) {
-      console.error(`Error in handleImageUpload for ${type}:`, error);
       toast.error(
         error instanceof Error ? error.message : "Failed to upload image"
       );
@@ -100,26 +63,16 @@ export function ProfileImageSection({
   async function handleImageRemove(type: "avatar" | "background") {
     try {
       setIsLoading(true);
-      setImageErrors(prev => ({ ...prev, [type]: false }));
-
-      console.log(`Removing ${type} image`);
       const result = await removeProfileImage(type);
-
       if (!result.success) {
         throw new Error(result.error);
       }
-
-      setImageVersions(prev => ({
-        ...prev,
-        [type]: 0,
-      }));
 
       onProfileUpdate(result);
       toast.success(
         `${type.charAt(0).toUpperCase() + type.slice(1)} removed successfully`
       );
     } catch (error) {
-      console.error(`Error in handleImageRemove for ${type}:`, error);
       toast.error(
         error instanceof Error ? error.message : "Failed to remove image"
       );
@@ -140,16 +93,15 @@ export function ProfileImageSection({
         {/* Avatar Section */}
         <div className="flex items-center gap-4">
           <div className="relative h-24 w-24">
-            {profile.avatarUrl && !imageErrors.avatar ? (
+            {profile.avatarUrl ? (
               <>
                 <Image
-                  src={getImageUrl(profile.avatarUrl, "avatar")}
+                  src={profile.avatarUrl}
                   alt="Profile Avatar"
                   className="rounded-full object-cover"
                   fill
                   priority
                   sizes="(max-width: 96px) 100vw, 96px"
-                  onError={() => handleImageError("avatar")}
                 />
                 <Button
                   variant="destructive"
@@ -184,15 +136,14 @@ export function ProfileImageSection({
         {/* Background Image Section */}
         <div className="space-y-4">
           <div className="relative aspect-[3/1] w-full overflow-hidden rounded-lg">
-            {profile.backgroundUrl && !imageErrors.background ? (
+            {profile.backgroundUrl ? (
               <>
                 <Image
-                  src={getImageUrl(profile.backgroundUrl, "background")}
+                  src={profile.backgroundUrl}
                   alt="Profile Background"
                   className="object-cover"
                   fill
                   sizes="(max-width: 1280px) 100vw, 1280px"
-                  onError={() => handleImageError("background")}
                 />
                 <Button
                   variant="destructive"

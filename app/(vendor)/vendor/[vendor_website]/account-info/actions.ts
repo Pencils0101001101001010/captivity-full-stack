@@ -19,33 +19,23 @@ import {
   VendorRoles,
 } from "./profile";
 
-// Remove environment from path handling
-function getUploadPath(path: string): string {
-  return path;
-}
-
-function extractPathFromUrl(url: string): string {
-  try {
-    return new URL(url).pathname.slice(1);
-  } catch (error) {
-    console.error("Error extracting path from URL:", error);
-    throw new Error("Invalid image URL format");
-  }
-}
-
+// Define a minimal type for authenticated user from auth
 interface AuthUser {
   id: string;
   role: UserRole;
 }
 
+// Type guard for checking if user is a vendor or vendor customer
 function isVendorUser(user: AuthUser): boolean {
   return ["VENDOR", "VENDORCUSTOMER"].includes(user.role);
 }
 
+// Type guard for file type checking
 function isAllowedMimeType(type: string): type is AllowedMimeType {
   return ALLOWED_MIME_TYPES.includes(type as AllowedMimeType);
 }
 
+// Cache function for user profiles
 const getCachedUserProfile = cache(async (userId: string) => {
   return prisma.user.findUnique({
     where: { id: userId },
@@ -53,6 +43,7 @@ const getCachedUserProfile = cache(async (userId: string) => {
   });
 });
 
+// Get user profile details
 export async function getUserProfile(
   userId?: string
 ): Promise<ProfileActionResult> {
@@ -67,6 +58,7 @@ export async function getUserProfile(
       };
     }
 
+    // If userId is provided, verify permission to view that profile
     const targetUserId = userId || session.user.id;
     if (
       userId &&
@@ -109,6 +101,7 @@ export async function getUserProfile(
   }
 }
 
+// Update user profile details
 export async function updateUserProfile(
   data: ProfileUpdateData
 ): Promise<ProfileActionResult> {
@@ -142,6 +135,7 @@ export async function updateUserProfile(
   }
 }
 
+// Upload profile image (avatar or background)
 export async function uploadProfileImage(
   formData: FormData,
   imageType: ProfileImageType
@@ -156,18 +150,14 @@ export async function uploadProfileImage(
     const file = formData.get(imageType) as File;
     if (!file) throw new Error("No file provided");
 
-    console.log(`Processing ${imageType} upload:`, {
-      fileName: file.name,
-      fileType: file.type,
-      fileSize: file.size,
-    });
-
+    // Validate file type
     if (!isAllowedMimeType(file.type)) {
       throw new Error(
         "Invalid file type. Only JPEG, PNG, and WebP images are allowed"
       );
     }
 
+    // Validate file using schema
     const validation = fileValidationSchema.safeParse({
       size: file.size,
       type: file.type,
@@ -182,7 +172,7 @@ export async function uploadProfileImage(
       throw new Error(`File size must be less than ${maxSize}MB`);
     }
 
-    // Handle existing image deletion
+    // Delete existing image if present
     const currentProfile = await getCachedUserProfile(session.user.id);
     const currentUrl =
       imageType === "avatar"
@@ -190,31 +180,21 @@ export async function uploadProfileImage(
         : currentProfile?.backgroundUrl;
 
     if (currentUrl) {
-      try {
-        const oldPath = extractPathFromUrl(currentUrl);
-        await del(oldPath);
-        console.log(`Successfully deleted old ${imageType} at path:`, oldPath);
-      } catch (error) {
-        console.error(`Error deleting old ${imageType}:`, error);
-        // Continue with upload even if deletion fails
-      }
+      const oldPath = new URL(currentUrl).pathname.slice(1);
+      await del(oldPath);
     }
 
-    // Upload new image with simplified path
+    // Upload new image
     const fileExt = file.name.split(".").pop() || "png";
     const timestamp = Date.now();
-    const path = getUploadPath(
-      `${IMAGE_CONFIG.paths[imageType]}/${session.user.id}_${timestamp}.${fileExt}`
-    );
+    const path = `${IMAGE_CONFIG.paths[imageType]}/${session.user.id}_${timestamp}.${fileExt}`;
 
-    console.log(`Uploading ${imageType} to path:`, path);
     const blob = await put(path, file, {
       access: "public",
       addRandomSuffix: false,
     });
 
     if (!blob.url) throw new Error("Failed to get URL from blob storage");
-    console.log(`Successfully uploaded ${imageType} to:`, blob.url);
 
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
@@ -242,6 +222,7 @@ export async function uploadProfileImage(
   }
 }
 
+// Remove profile image (avatar or background)
 export async function removeProfileImage(
   imageType: ProfileImageType
 ): Promise<ProfileActionResult> {
@@ -262,14 +243,8 @@ export async function removeProfileImage(
       throw new Error(`No ${imageType} image found`);
     }
 
-    try {
-      const path = extractPathFromUrl(currentUrl);
-      await del(path);
-      console.log(`Successfully deleted ${imageType} at path:`, path);
-    } catch (error) {
-      console.error(`Error deleting ${imageType} file:`, error);
-      // Continue with database update even if file deletion fails
-    }
+    const path = new URL(currentUrl).pathname.slice(1);
+    await del(path);
 
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
@@ -297,6 +272,7 @@ export async function removeProfileImage(
   }
 }
 
+// Get vendor customers (for vendor accounts)
 export async function getVendorCustomers(): Promise<ProfileActionResult[]> {
   try {
     const session = await validateRequest();
