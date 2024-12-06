@@ -1,7 +1,6 @@
-// components/vendor/account/ProfileImageSection.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Camera, Upload, X } from "lucide-react";
 import {
@@ -30,14 +29,63 @@ export function ProfileImageSection({
   setIsLoading,
   onProfileUpdate,
 }: ProfileImageSectionProps) {
+  const [imageErrors, setImageErrors] = useState<{
+    avatar: boolean;
+    background: boolean;
+  }>({ avatar: false, background: false });
+
+  const [imageLoadingState, setImageLoadingState] = useState<{
+    avatar: "idle" | "loading" | "success" | "error";
+    background: "idle" | "loading" | "success" | "error";
+  }>({
+    avatar: "idle",
+    background: "idle",
+  });
+
+  useEffect(() => {
+    if (profile) {
+      console.log("Profile Image Details:", {
+        avatarUrl: profile.avatarUrl,
+        backgroundUrl: profile.backgroundUrl,
+        avatarLoadingState: imageLoadingState.avatar,
+        backgroundLoadingState: imageLoadingState.background,
+        timestamp: new Date().toISOString(),
+        windowWidth:
+          typeof window !== "undefined" ? window.innerWidth : "unknown",
+      });
+    }
+  }, [profile, imageLoadingState]);
+
   async function handleImageUpload(
     event: React.ChangeEvent<HTMLInputElement>,
     type: "avatar" | "background"
   ) {
     try {
+      const startTime = Date.now();
+      console.log(`Starting ${type} image upload`, {
+        timestamp: new Date().toISOString(),
+        previousState: imageLoadingState[type],
+      });
+
       setIsLoading(true);
+      setImageErrors(prev => ({ ...prev, [type]: false }));
+      setImageLoadingState(prev => ({ ...prev, [type]: "loading" }));
+
       const file = event.target.files?.[0];
-      if (!file) return;
+      if (!file) {
+        console.log("No file selected for upload", {
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      console.log("Processing file:", {
+        type,
+        name: file.name,
+        size: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
+        mimeType: file.type,
+        timestamp: new Date().toISOString(),
+      });
 
       const formData = new FormData();
       formData.append(type, file);
@@ -47,14 +95,28 @@ export function ProfileImageSection({
         throw new Error(result.error);
       }
 
+      const duration = Date.now() - startTime;
+      console.log(`${type} image upload successful:`, {
+        newUrl: type === "avatar" ? result.avatarUrl : result.backgroundUrl,
+        duration: `${duration}ms`,
+        timestamp: new Date().toISOString(),
+      });
+
+      setImageLoadingState(prev => ({ ...prev, [type]: "success" }));
       onProfileUpdate(result);
       toast.success(
         `${type.charAt(0).toUpperCase() + type.slice(1)} updated successfully`
       );
     } catch (error) {
+      console.error(`Error uploading ${type} image:`, {
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      });
+      setImageLoadingState(prev => ({ ...prev, [type]: "error" }));
       toast.error(
         error instanceof Error ? error.message : "Failed to upload image"
       );
+      setImageErrors(prev => ({ ...prev, [type]: true }));
     } finally {
       setIsLoading(false);
     }
@@ -62,17 +124,38 @@ export function ProfileImageSection({
 
   async function handleImageRemove(type: "avatar" | "background") {
     try {
+      const startTime = Date.now();
+      console.log(`Starting ${type} image removal`, {
+        currentUrl:
+          type === "avatar" ? profile.avatarUrl : profile.backgroundUrl,
+        timestamp: new Date().toISOString(),
+      });
+
       setIsLoading(true);
+      setImageLoadingState(prev => ({ ...prev, [type]: "loading" }));
+
       const result = await removeProfileImage(type);
       if (!result.success) {
         throw new Error(result.error);
       }
 
+      const duration = Date.now() - startTime;
+      console.log(`${type} image removed successfully`, {
+        duration: `${duration}ms`,
+        timestamp: new Date().toISOString(),
+      });
+
+      setImageLoadingState(prev => ({ ...prev, [type]: "idle" }));
       onProfileUpdate(result);
       toast.success(
         `${type.charAt(0).toUpperCase() + type.slice(1)} removed successfully`
       );
     } catch (error) {
+      console.error(`Error removing ${type} image:`, {
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      });
+      setImageLoadingState(prev => ({ ...prev, [type]: "error" }));
       toast.error(
         error instanceof Error ? error.message : "Failed to remove image"
       );
@@ -80,6 +163,31 @@ export function ProfileImageSection({
       setIsLoading(false);
     }
   }
+
+  const handleImageError = (type: "avatar" | "background") => {
+    console.error(`Error loading ${type} image:`, {
+      url: type === "avatar" ? profile.avatarUrl : profile.backgroundUrl,
+      timestamp: new Date().toISOString(),
+      loadingState: imageLoadingState[type],
+      currentErrors: imageErrors,
+      imageWidth: type === "avatar" ? "96px" : "100%",
+      windowWidth:
+        typeof window !== "undefined" ? window.innerWidth : "unknown",
+    });
+    setImageErrors(prev => ({ ...prev, [type]: true }));
+    setImageLoadingState(prev => ({ ...prev, [type]: "error" }));
+  };
+
+  const handleImageLoad = (type: "avatar" | "background") => {
+    console.log(`${type} image loaded successfully:`, {
+      url: type === "avatar" ? profile.avatarUrl : profile.backgroundUrl,
+      timestamp: new Date().toISOString(),
+      loadingState: imageLoadingState[type],
+      windowWidth:
+        typeof window !== "undefined" ? window.innerWidth : "unknown",
+    });
+    setImageLoadingState(prev => ({ ...prev, [type]: "success" }));
+  };
 
   return (
     <Card>
@@ -93,7 +201,7 @@ export function ProfileImageSection({
         {/* Avatar Section */}
         <div className="flex items-center gap-4">
           <div className="relative h-24 w-24">
-            {profile.avatarUrl ? (
+            {profile.avatarUrl && !imageErrors.avatar ? (
               <>
                 <Image
                   src={profile.avatarUrl}
@@ -101,7 +209,10 @@ export function ProfileImageSection({
                   className="rounded-full object-cover"
                   fill
                   priority
-                  sizes="(max-width: 96px) 100vw, 96px"
+                  sizes="(max-width: 768px) 96px, 96px"
+                  onError={() => handleImageError("avatar")}
+                  onLoad={() => handleImageLoad("avatar")}
+                  quality={90}
                 />
                 <Button
                   variant="destructive"
@@ -136,14 +247,17 @@ export function ProfileImageSection({
         {/* Background Image Section */}
         <div className="space-y-4">
           <div className="relative aspect-[3/1] w-full overflow-hidden rounded-lg">
-            {profile.backgroundUrl ? (
+            {profile.backgroundUrl && !imageErrors.background ? (
               <>
                 <Image
                   src={profile.backgroundUrl}
                   alt="Profile Background"
                   className="object-cover"
                   fill
-                  sizes="(max-width: 1280px) 100vw, 1280px"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  onError={() => handleImageError("background")}
+                  onLoad={() => handleImageLoad("background")}
+                  quality={85}
                 />
                 <Button
                   variant="destructive"
