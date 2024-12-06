@@ -4,7 +4,6 @@ import prisma from "@/lib/prisma";
 import { hash, verify } from "@node-rs/argon2";
 import { generateIdFromEntropySize } from "lucia";
 import { isRedirectError } from "next/dist/client/components/redirect";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { lucia } from "@/auth";
 import { cookies } from "next/headers";
@@ -41,7 +40,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 // Registration
 export async function vendorCustomerSignUp(
   formData: VendorCustomerFormData
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; success?: boolean }> {
   try {
     const validatedData = vendorCustomerSchema.parse(formData);
 
@@ -145,7 +144,7 @@ export async function vendorCustomerSignUp(
       },
     });
 
-    redirect("/vendor_auth");
+    return { success: true };
   } catch (error) {
     console.error("Registration error:", error);
     if (isRedirectError(error)) throw error;

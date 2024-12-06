@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ const formSchema = z
 type FormData = z.infer<typeof formSchema>;
 
 export function VendorRegisterForm() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -61,6 +63,9 @@ export function VendorRegisterForm() {
 
       if (result?.error) {
         toast.error(result.error);
+      } else if (result?.success) {
+        toast.success("Registration successful!");
+        router.push("/vendor_auth");
       }
     } catch (error) {
       if (error instanceof Error) {
