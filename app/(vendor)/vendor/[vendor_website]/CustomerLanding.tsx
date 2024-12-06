@@ -191,10 +191,7 @@ const CustomerLanding = () => {
 
       {/* Footer */}
       <footer className="mt-8 text-center text-sm text-muted-foreground border-t border-border pt-4">
-        <p>
-          &copy; {new Date().getFullYear()} Your Company Name. All rights
-          reserved.
-        </p>
+        <p>&copy; {new Date().getFullYear()} All rights reserved.</p>
       </footer>
     </div>
   );
