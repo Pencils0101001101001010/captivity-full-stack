@@ -33,18 +33,27 @@ export function ProfileImageSection({
     avatar: 0,
     background: 0,
   });
+  const [imageErrors, setImageErrors] = useState({
+    avatar: false,
+    background: false,
+  });
 
-  // Function to add cache-busting parameter to image URLs
   const getImageUrl = (
     url: string | null,
     type: "avatar" | "background"
   ): string => {
     if (!url) {
-      // Return a placeholder image URL or throw an error
       throw new Error("Image URL is required");
     }
+    console.log(`Loading ${type} image URL:`, url);
     const version = imageVersions[type];
     return `${url}?v=${version}`;
+  };
+
+  const handleImageError = (type: "avatar" | "background") => {
+    console.error(`Error loading ${type} image`);
+    setImageErrors(prev => ({ ...prev, [type]: true }));
+    toast.error(`Failed to load ${type} image`);
   };
 
   async function handleImageUpload(
@@ -53,13 +62,16 @@ export function ProfileImageSection({
   ) {
     try {
       setIsLoading(true);
+      setImageErrors(prev => ({ ...prev, [type]: false }));
       const file = event.target.files?.[0];
       if (!file) return;
 
       const formData = new FormData();
       formData.append(type, file);
 
+      console.log(`Uploading ${type} image:`, file.name);
       const result = await uploadProfileImage(formData, type);
+
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -76,6 +88,7 @@ export function ProfileImageSection({
 
       event.target.value = "";
     } catch (error) {
+      console.error(`Error in handleImageUpload for ${type}:`, error);
       toast.error(
         error instanceof Error ? error.message : "Failed to upload image"
       );
@@ -87,7 +100,11 @@ export function ProfileImageSection({
   async function handleImageRemove(type: "avatar" | "background") {
     try {
       setIsLoading(true);
+      setImageErrors(prev => ({ ...prev, [type]: false }));
+
+      console.log(`Removing ${type} image`);
       const result = await removeProfileImage(type);
+
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -102,6 +119,7 @@ export function ProfileImageSection({
         `${type.charAt(0).toUpperCase() + type.slice(1)} removed successfully`
       );
     } catch (error) {
+      console.error(`Error in handleImageRemove for ${type}:`, error);
       toast.error(
         error instanceof Error ? error.message : "Failed to remove image"
       );
@@ -122,7 +140,7 @@ export function ProfileImageSection({
         {/* Avatar Section */}
         <div className="flex items-center gap-4">
           <div className="relative h-24 w-24">
-            {profile.avatarUrl ? (
+            {profile.avatarUrl && !imageErrors.avatar ? (
               <>
                 <Image
                   src={getImageUrl(profile.avatarUrl, "avatar")}
@@ -131,6 +149,7 @@ export function ProfileImageSection({
                   fill
                   priority
                   sizes="(max-width: 96px) 100vw, 96px"
+                  onError={() => handleImageError("avatar")}
                 />
                 <Button
                   variant="destructive"
@@ -165,7 +184,7 @@ export function ProfileImageSection({
         {/* Background Image Section */}
         <div className="space-y-4">
           <div className="relative aspect-[3/1] w-full overflow-hidden rounded-lg">
-            {profile.backgroundUrl ? (
+            {profile.backgroundUrl && !imageErrors.background ? (
               <>
                 <Image
                   src={getImageUrl(profile.backgroundUrl, "background")}
@@ -173,6 +192,7 @@ export function ProfileImageSection({
                   className="object-cover"
                   fill
                   sizes="(max-width: 1280px) 100vw, 1280px"
+                  onError={() => handleImageError("background")}
                 />
                 <Button
                   variant="destructive"

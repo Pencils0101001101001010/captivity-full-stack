@@ -19,15 +19,18 @@ import {
   VendorRoles,
 } from "./profile";
 
-// Helper function to get environment-specific path
-function getEnvironmentPath(path: string): string {
-  const environment = process.env.NODE_ENV || "development";
-  return `${environment}/${path}`;
+// Remove environment from path handling
+function getUploadPath(path: string): string {
+  return path;
 }
 
-// Helper function to extract path from URL
 function extractPathFromUrl(url: string): string {
-  return new URL(url).pathname.slice(1);
+  try {
+    return new URL(url).pathname.slice(1);
+  } catch (error) {
+    console.error("Error extracting path from URL:", error);
+    throw new Error("Invalid image URL format");
+  }
 }
 
 interface AuthUser {
@@ -153,6 +156,12 @@ export async function uploadProfileImage(
     const file = formData.get(imageType) as File;
     if (!file) throw new Error("No file provided");
 
+    console.log(`Processing ${imageType} upload:`, {
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+    });
+
     if (!isAllowedMimeType(file.type)) {
       throw new Error(
         "Invalid file type. Only JPEG, PNG, and WebP images are allowed"
@@ -173,7 +182,7 @@ export async function uploadProfileImage(
       throw new Error(`File size must be less than ${maxSize}MB`);
     }
 
-    // Handle existing image deletion with environment path
+    // Handle existing image deletion
     const currentProfile = await getCachedUserProfile(session.user.id);
     const currentUrl =
       imageType === "avatar"
@@ -181,23 +190,31 @@ export async function uploadProfileImage(
         : currentProfile?.backgroundUrl;
 
     if (currentUrl) {
-      const oldPath = extractPathFromUrl(currentUrl);
-      await del(oldPath);
+      try {
+        const oldPath = extractPathFromUrl(currentUrl);
+        await del(oldPath);
+        console.log(`Successfully deleted old ${imageType} at path:`, oldPath);
+      } catch (error) {
+        console.error(`Error deleting old ${imageType}:`, error);
+        // Continue with upload even if deletion fails
+      }
     }
 
-    // Upload new image with environment-specific path
+    // Upload new image with simplified path
     const fileExt = file.name.split(".").pop() || "png";
     const timestamp = Date.now();
-    const path = getEnvironmentPath(
+    const path = getUploadPath(
       `${IMAGE_CONFIG.paths[imageType]}/${session.user.id}_${timestamp}.${fileExt}`
     );
 
+    console.log(`Uploading ${imageType} to path:`, path);
     const blob = await put(path, file, {
       access: "public",
       addRandomSuffix: false,
     });
 
     if (!blob.url) throw new Error("Failed to get URL from blob storage");
+    console.log(`Successfully uploaded ${imageType} to:`, blob.url);
 
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
@@ -245,8 +262,14 @@ export async function removeProfileImage(
       throw new Error(`No ${imageType} image found`);
     }
 
-    const path = extractPathFromUrl(currentUrl);
-    await del(path);
+    try {
+      const path = extractPathFromUrl(currentUrl);
+      await del(path);
+      console.log(`Successfully deleted ${imageType} at path:`, path);
+    } catch (error) {
+      console.error(`Error deleting ${imageType} file:`, error);
+      // Continue with database update even if file deletion fails
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },

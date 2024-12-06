@@ -3,7 +3,6 @@
 import { z } from "zod";
 import { User, UserRole } from "@prisma/client";
 
-// Image Types and Configuration
 export const ALLOWED_MIME_TYPES = [
   "image/jpeg",
   "image/png",
@@ -12,10 +11,8 @@ export const ALLOWED_MIME_TYPES = [
 
 export type AllowedMimeType = (typeof ALLOWED_MIME_TYPES)[number];
 
-// Role Types for Type Safety
 export type VendorRoles = Extract<UserRole, "VENDOR" | "VENDORCUSTOMER">;
 
-// Base User Profile Data Interface remains the same
 export interface BaseUserProfile {
   username: string;
   firstName: string;
@@ -43,13 +40,11 @@ export interface BaseUserProfile {
   storeSlug: string | null;
 }
 
-// Extended User Profile with Image URLs
 export interface UserProfileData extends BaseUserProfile {
   avatarUrl: string | null;
   backgroundUrl: string | null;
 }
 
-// Action Response Types
 export interface ProfileActionResult {
   success: boolean;
   avatarUrl: string | null;
@@ -60,7 +55,6 @@ export interface ProfileActionResult {
 
 export type ProfileImageType = "avatar" | "background";
 
-// Enhanced file validation schema with more specific error messages
 export const fileValidationSchema = z.object({
   size: z.number().max(5 * 1024 * 1024, "File size must be less than 5MB"),
   type: z.enum(ALLOWED_MIME_TYPES, {
@@ -70,7 +64,6 @@ export const fileValidationSchema = z.object({
   }),
 });
 
-// Profile update schema remains the same
 export const profileUpdateSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
@@ -97,7 +90,6 @@ export const profileUpdateSchema = z.object({
 export type ProfileUpdateData = z.infer<typeof profileUpdateSchema>;
 export type FileValidation = z.infer<typeof fileValidationSchema>;
 
-// Prisma select remains the same
 export const userProfileSelect = {
   username: true,
   firstName: true,
@@ -127,7 +119,7 @@ export const userProfileSelect = {
   storeSlug: true,
 } as const;
 
-// Updated image configuration with environment-aware paths
+// Updated image configuration with simplified path handling
 export const IMAGE_CONFIG = {
   maxSizes: {
     avatar: 2, // 2MB
@@ -139,8 +131,7 @@ export const IMAGE_CONFIG = {
     background: "profile/backgrounds",
   },
   getPath: (type: ProfileImageType, userId: string, fileExt: string) => {
-    const environment = process.env.NODE_ENV || "development";
     const timestamp = Date.now();
-    return `${environment}/${IMAGE_CONFIG.paths[type]}/${userId}_${timestamp}.${fileExt}`;
+    return `${IMAGE_CONFIG.paths[type]}/${userId}_${timestamp}.${fileExt}`;
   },
 } as const;
