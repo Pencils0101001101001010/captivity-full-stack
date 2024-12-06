@@ -4,7 +4,6 @@ const nextConfig = {
     serverActions: {
       enabled: true,
     },
-    // If you need to use external packages in edge runtime
     serverComponentsExternalPackages: ["@node-rs/argon2"],
   },
   images: {
@@ -16,6 +15,10 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "*.public.blob.vercel-storage.com",
+      },
+      {
+        protocol: "https",
+        hostname: "captivity-full-stack-app1.vercel.app",
       },
     ],
   },

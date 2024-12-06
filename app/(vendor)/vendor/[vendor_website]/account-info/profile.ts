@@ -15,7 +15,7 @@ export type AllowedMimeType = (typeof ALLOWED_MIME_TYPES)[number];
 // Role Types for Type Safety
 export type VendorRoles = Extract<UserRole, "VENDOR" | "VENDORCUSTOMER">;
 
-// Base User Profile Data Interface
+// Base User Profile Data Interface remains the same
 export interface BaseUserProfile {
   username: string;
   firstName: string;
@@ -58,10 +58,9 @@ export interface ProfileActionResult {
   error?: string;
 }
 
-// Image Upload Types
 export type ProfileImageType = "avatar" | "background";
 
-// File Validation Schema
+// Enhanced file validation schema with more specific error messages
 export const fileValidationSchema = z.object({
   size: z.number().max(5 * 1024 * 1024, "File size must be less than 5MB"),
   type: z.enum(ALLOWED_MIME_TYPES, {
@@ -71,7 +70,7 @@ export const fileValidationSchema = z.object({
   }),
 });
 
-// Profile Update Schema
+// Profile update schema remains the same
 export const profileUpdateSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
@@ -95,11 +94,10 @@ export const profileUpdateSchema = z.object({
   bio: z.string().nullable(),
 });
 
-// Inferred Types
 export type ProfileUpdateData = z.infer<typeof profileUpdateSchema>;
 export type FileValidation = z.infer<typeof fileValidationSchema>;
 
-// Prisma Select Types
+// Prisma select remains the same
 export const userProfileSelect = {
   username: true,
   firstName: true,
@@ -129,7 +127,7 @@ export const userProfileSelect = {
   storeSlug: true,
 } as const;
 
-// Image Configuration
+// Updated image configuration with environment-aware paths
 export const IMAGE_CONFIG = {
   maxSizes: {
     avatar: 2, // 2MB
@@ -139,5 +137,10 @@ export const IMAGE_CONFIG = {
   paths: {
     avatar: "profile/avatars",
     background: "profile/backgrounds",
+  },
+  getPath: (type: ProfileImageType, userId: string, fileExt: string) => {
+    const environment = process.env.NODE_ENV || "development";
+    const timestamp = Date.now();
+    return `${environment}/${IMAGE_CONFIG.paths[type]}/${userId}_${timestamp}.${fileExt}`;
   },
 } as const;

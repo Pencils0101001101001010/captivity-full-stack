@@ -1,4 +1,3 @@
-// components/vendor/account/ProfileImageSection.tsx
 "use client";
 
 import { useState } from "react";
@@ -30,6 +29,24 @@ export function ProfileImageSection({
   setIsLoading,
   onProfileUpdate,
 }: ProfileImageSectionProps) {
+  const [imageVersions, setImageVersions] = useState({
+    avatar: 0,
+    background: 0,
+  });
+
+  // Function to add cache-busting parameter to image URLs
+  const getImageUrl = (
+    url: string | null,
+    type: "avatar" | "background"
+  ): string => {
+    if (!url) {
+      // Return a placeholder image URL or throw an error
+      throw new Error("Image URL is required");
+    }
+    const version = imageVersions[type];
+    return `${url}?v=${version}`;
+  };
+
   async function handleImageUpload(
     event: React.ChangeEvent<HTMLInputElement>,
     type: "avatar" | "background"
@@ -47,10 +64,17 @@ export function ProfileImageSection({
         throw new Error(result.error);
       }
 
+      setImageVersions(prev => ({
+        ...prev,
+        [type]: prev[type] + 1,
+      }));
+
       onProfileUpdate(result);
       toast.success(
         `${type.charAt(0).toUpperCase() + type.slice(1)} updated successfully`
       );
+
+      event.target.value = "";
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to upload image"
@@ -67,6 +91,11 @@ export function ProfileImageSection({
       if (!result.success) {
         throw new Error(result.error);
       }
+
+      setImageVersions(prev => ({
+        ...prev,
+        [type]: 0,
+      }));
 
       onProfileUpdate(result);
       toast.success(
@@ -96,7 +125,7 @@ export function ProfileImageSection({
             {profile.avatarUrl ? (
               <>
                 <Image
-                  src={profile.avatarUrl}
+                  src={getImageUrl(profile.avatarUrl, "avatar")}
                   alt="Profile Avatar"
                   className="rounded-full object-cover"
                   fill
@@ -139,7 +168,7 @@ export function ProfileImageSection({
             {profile.backgroundUrl ? (
               <>
                 <Image
-                  src={profile.backgroundUrl}
+                  src={getImageUrl(profile.backgroundUrl, "background")}
                   alt="Profile Background"
                   className="object-cover"
                   fill
