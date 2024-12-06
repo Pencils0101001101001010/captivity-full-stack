@@ -100,7 +100,7 @@ const DetailedProductCard: React.FC<DetailedProductCardProps> = ({
   };
 
   return (
-    <Card className="shadow-2xl shadow-black transition-transform duration-300 hover:scale-95 p-3">
+    <Card className="shadow-2xl shadow-black transition-transform duration-300 hover:scale-95 p-3 ">
       <div className="flex flex-col md:flex-row gap-6 p-3">
         {/* Left Column - Product Image */}
         <div className="w-full md:w-1/3 space-y-4">

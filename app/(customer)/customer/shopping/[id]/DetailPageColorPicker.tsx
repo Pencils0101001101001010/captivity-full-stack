@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { COLOR_MAPPINGS } from "../product_categories/_components/ColorMapping";
 
-
 interface ColorValue {
   colors: string[];
   pattern: string;
@@ -144,7 +143,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
     <div className="relative">
       <Button
         variant="outline"
-        className="mb-4 flex w-full items-center justify-between bg-white px-4 py-2 shadow-sm"
+        className="mb-4 flex w-full items-center justify-between bg-background px-4 py-2 shadow-sm"
         onClick={toggleDropdown}
       >
         <div className="flex items-center gap-2">
@@ -165,7 +164,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
       </Button>
 
       {isOpen && (
-        <div className="absolute z-10 mt-2 w-full rounded-lg bg-white p-4 shadow-xl">
+        <div className="absolute z-10 mt-2 w-full rounded-lg bg-background p-4 shadow-xl">
           <div className="mb-4 flex flex-wrap gap-3">
             {sortedColors.map(color => (
               <button
