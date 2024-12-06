@@ -1,3 +1,4 @@
+// components/vendor/account/ProfileImageSection.tsx
 "use client";
 
 import { useState } from "react";
@@ -29,19 +30,12 @@ export function ProfileImageSection({
   setIsLoading,
   onProfileUpdate,
 }: ProfileImageSectionProps) {
-  const [imageErrors, setImageErrors] = useState<{
-    avatar: boolean;
-    background: boolean;
-  }>({ avatar: false, background: false });
-
   async function handleImageUpload(
     event: React.ChangeEvent<HTMLInputElement>,
     type: "avatar" | "background"
   ) {
     try {
       setIsLoading(true);
-      setImageErrors(prev => ({ ...prev, [type]: false }));
-
       const file = event.target.files?.[0];
       if (!file) return;
 
@@ -58,7 +52,6 @@ export function ProfileImageSection({
         `${type.charAt(0).toUpperCase() + type.slice(1)} updated successfully`
       );
     } catch (error) {
-      console.error(`Error uploading ${type}:`, error);
       toast.error(
         error instanceof Error ? error.message : "Failed to upload image"
       );
@@ -80,7 +73,6 @@ export function ProfileImageSection({
         `${type.charAt(0).toUpperCase() + type.slice(1)} removed successfully`
       );
     } catch (error) {
-      console.error(`Error removing ${type}:`, error);
       toast.error(
         error instanceof Error ? error.message : "Failed to remove image"
       );
@@ -88,14 +80,6 @@ export function ProfileImageSection({
       setIsLoading(false);
     }
   }
-
-  const handleImageError = (type: "avatar" | "background") => {
-    console.error(
-      `Failed to load ${type} image:`,
-      type === "avatar" ? profile.avatarUrl : profile.backgroundUrl
-    );
-    setImageErrors(prev => ({ ...prev, [type]: true }));
-  };
 
   return (
     <Card>
@@ -109,7 +93,7 @@ export function ProfileImageSection({
         {/* Avatar Section */}
         <div className="flex items-center gap-4">
           <div className="relative h-24 w-24">
-            {profile.avatarUrl && !imageErrors.avatar ? (
+            {profile.avatarUrl ? (
               <>
                 <Image
                   src={profile.avatarUrl}
@@ -118,7 +102,6 @@ export function ProfileImageSection({
                   fill
                   priority
                   sizes="(max-width: 96px) 100vw, 96px"
-                  onError={() => handleImageError("avatar")}
                 />
                 <Button
                   variant="destructive"
@@ -153,7 +136,7 @@ export function ProfileImageSection({
         {/* Background Image Section */}
         <div className="space-y-4">
           <div className="relative aspect-[3/1] w-full overflow-hidden rounded-lg">
-            {profile.backgroundUrl && !imageErrors.background ? (
+            {profile.backgroundUrl ? (
               <>
                 <Image
                   src={profile.backgroundUrl}
@@ -161,7 +144,6 @@ export function ProfileImageSection({
                   className="object-cover"
                   fill
                   sizes="(max-width: 1280px) 100vw, 1280px"
-                  onError={() => handleImageError("background")}
                 />
                 <Button
                   variant="destructive"
